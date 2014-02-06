@@ -1,0 +1,23 @@
+# This file defines settings for all modules that link against Blue with Python 2.6
+Imports:
+- ../../../../../../sdk/python/Python_2.7.yaml
+- ../../../../../../sdk/Telemetry/2.0g/telemetry_2.0g.yaml
+
+General:
+  OutDir: ../../autobuild/$(ProjectName)/python_27/$(Platform)/$(PlatformToolset)/
+  TargetExt: .pyd
+
+Link:
+  AdditionalLibraryDirectories:
+  - ../../../carbon/autobuild/blue/python_27/$(Platform)/$(PlatformToolset)/
+
+Configurations:
+  Debug|Any:
+    Link:
+      AdditionalDependencies:
+      - blue_d.lib
+
+  Release|Any:
+    Link:
+      AdditionalDependencies:
+      - blue.lib

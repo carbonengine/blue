@@ -1,0 +1,81 @@
+////////////////////////////////////////////////////////////////////////////////
+//
+// Creator:		Snorri Sturluson
+// Created:		January 2014
+// Copyright:	CCP 2014
+//
+
+#include "StdAfx.h"
+#include "BlueTimeoutHandler.h"
+
+BlueTimeoutHandler::BlueTimeoutHandler() :
+	m_hasReportedTimeout( false )
+{
+}
+
+void BlueTimeoutHandler::NotifyOfTimeout()
+{
+	if( !m_hasReportedTimeout )
+	{
+		if( BeCrashes )
+		{
+			// Ensure we only do this once
+			m_hasReportedTimeout = true;
+
+#if BLUE_WITH_PYTHON
+			auto pythonDiagnosticThread = CcpCreateThread( PythonDiagnosticFunction, nullptr, CCP_THREAD_PRIORITY_NORMAL );
+			CcpJoinThreadWithTimeout( pythonDiagnosticThread, 10000, nullptr );
+#endif
+
+			BeCrashes->SetCrashKeyValueW(
+				const_cast<wchar_t*>( L"frameTimeTimeout" ),
+				const_cast<wchar_t*>( L"true" ) );
+
+			BeCrashes->ProduceImmediateDump();
+
+			// In case we recover and then crash later
+			BeCrashes->SetCrashKeyValueW(
+				const_cast<wchar_t*>( L"frameTimeTimeout" ),
+				const_cast<wchar_t*>( L"recovered" ) );
+		}
+	}
+}
+
+void BlueTimeoutHandler::Reset()
+{
+	m_hasReportedTimeout = false;
+}
+
+#if BLUE_WITH_PYTHON
+uint32_t BlueTimeoutHandler::PythonDiagnosticFunction( void* context )
+{
+	CCP_LOG( "Running Python diagnostics for freeze detection" );
+
+	PyObject *bluepy;
+	PyGILState_STATE state = PyGILState_Ensure();
+	bluepy = PyImport_ImportModule("bluepy");
+	if( bluepy )
+	{
+		CCP_LOG( "Calling pythonstatus" );
+		PyObject* result = PyObject_CallMethod(bluepy, const_cast<char*>( "pythonstatus" ), const_cast<char*>( "" ) );
+		if( result )
+		{
+			CCP_LOG( "Calling pythonstatus - done" );
+			Py_DECREF(result);
+		}
+		else
+		{
+			PyErr_WriteUnraisable( Py_None );
+		}
+		Py_DECREF(bluepy);
+	}
+	else
+	{
+		CCP_LOGERR( "Failed to import bluepy module" );
+		PyErr_WriteUnraisable( Py_None );
+	}
+	PyGILState_Release(state);
+
+	return 0;
+}
+#endif

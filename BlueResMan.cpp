@@ -1,0 +1,1427 @@
+#include "StdAfx.h"
+
+#include "BlueExposure/include/StringConversions.h"
+
+#include "BlueResMan.h"
+#include "CallbackMan.h"
+#include "YamlWriter.h"
+#include "YamlReader.h"
+#include "BlueMemStream.h"
+#include "BlackWriter.h"
+#include "BlackReader.h"
+#include "IRootReader.h"
+#include "include/BlueAsyncRes.h"
+#include "include/IBlueResource.h"
+#include "include/IBluePersist.h"
+#include "include/IBlueOS.h"
+#include "include/IMotherLode.h"
+#include "include/BlueFileUtil.h"
+#include "include/IBlueObjectBuilder.h"
+#include "include/IBluePaths.h"
+
+#include <cctype>
+#include <cwctype>
+
+BLUE_DEFINE( BlueResMan );
+
+static CcpLogChannel_t s_ch = CCP_LOG_DEFINE_CHANNEL( "ResMan" );
+
+CCP_STATS_DECLARE( resManCancelCount,			"Blue/resMan/CancelCount",			true,	CST_COUNTER_LOW, "Count of calls per frame to the resource manager CancelFromQueue function" );
+CCP_STATS_DECLARE( resManPendingLoads,			"Blue/resMan/PendingLoads",			false,	CST_COUNTER_LOW, "Pending loads in the resource manager" );
+CCP_STATS_DECLARE( resManPendingPrepares,		"Blue/resMan/PendingPrepares",		false,	CST_COUNTER_LOW, "Pending prepares in the resource manager" );
+CCP_STATS_DECLARE( resManLoadObjectCalls,		"Blue/resMan/LoadObjectCalls",		false,	CST_COUNTER_LOW, "Number of calls to LoadObject" );
+CCP_STATS_DECLARE( resManLoadObjectCacheHit,	"Blue/resMan/LoadObjectCacheHit",	false,	CST_COUNTER_LOW, "Number of cache hits in LoadObject" );
+CCP_STATS_DECLARE( resManLoadObjectShared,		"Blue/resMan/LoadObjectShared",		false,	CST_COUNTER_LOW, "Number of times LoadObject results in a shared builder" );
+CCP_STATS_DECLARE( resManGetResourceCalls,		"Blue/resMan/GetResourceCalls",		false,	CST_COUNTER_LOW, "Number of calls to GetResource" );
+CCP_STATS_DECLARE( resManGetResourceCacheHit,	"Blue/resMan/GetResourceCacheHit",	false,	CST_COUNTER_LOW, "Number of cache hits in GetResource" );
+CCP_STATS_DECLARE( resManGetResourceShared,		"Blue/resMan/GetResourceShared",	false,	CST_COUNTER_LOW, "Number of times GetResource results in a shared resource" );
+CCP_STATS_DECLARE( resManLoadObject,			"Blue/resMan/LoadObject",			false,	CST_TIME,		 "Accumulated time in LoadObject" );
+
+typedef TrackableStdMap<std::wstring, BlueResMan::CreateResourceFunction> TypeMap;
+
+namespace
+{
+	// The type map stores factory functions registered under file extensions.
+	// It is accessed via this function to prevent issues with order-of-initialization
+	// when registering file types.
+	TypeMap& GetTypeMap()
+	{
+		static TypeMap s_types( "BlueResMan/s_types" );
+
+		return s_types;
+	}
+}
+
+void BLUEIMPORT BlueResManRegisterFileExtension( const wchar_t* ext, BlueResManCreateResourceFunction factory )
+{
+	std::wstring extension = ext;
+	for( std::wstring::iterator it = extension.begin(); it != extension.end(); ++it )
+	{
+		*it = std::tolower( *it );
+	}
+	GetTypeMap()[extension] = factory;
+}
+
+BlueResMan::BlueResMan( IRoot* lockobj ) :
+	m_substituteBlackForRed( false ),
+	PARENTLOCK( m_loadObjectCache ),
+	m_loadObjectPreloadFiles( true ),
+	m_loadObjectCacheEnabled( true ),
+	m_loadObjectTimeSlice( 0.005f ),
+	m_instances( "BlueResMan/m_instances" ),
+	m_objectInstances( "BlueResMan/m_objectInstances" ),
+	m_objectInstancesReverse( "BlueResMan/m_objectInstancesReverse" ),
+	m_urgentResourceLoads( false ),
+	m_mainThread( 0 ),
+	m_backgroundLoadMemoryBudget( 256*1024*1024 ),
+	m_backgroundLoadMemoryInUse( 0 ),
+	m_mainThreadTimeSlice( 0.001f ),
+	m_mainThreadMaxTime( 0.0f ),
+	m_pendingLoads( 0 ),
+	m_pendingPrepares( 0 ),
+	m_preparesHandledLastTick( 0 ),
+	m_preparesHandledPerTickMax( 0 ),
+	m_preparesHandledTotal( 0 ),
+	m_loadQueueTimeAverage( 0.0f ),
+	m_loadQueueTimeMax( 0.0f ),
+	m_prepareQueueTimeAverage( 0.0f ),
+	m_prepareQueueTimeMax( 0.0 ),
+	m_backgroundLoadMemoryMutex( "BlueResMan", "m_backgroundLoadMemoryMutex" )
+{
+	m_loadObjectCache.SetCacheSize( 1*1024*1024 );
+}
+
+BlueResMan::~BlueResMan()
+{
+#if BLUE_WITH_PYTHON
+	for( DynamicConstructors::iterator it = m_dynamicConstructors.begin();
+		it != m_dynamicConstructors.end(); ++it )
+	{
+		Py_DECREF( it->second );
+	}
+#endif
+}
+
+static const char* s_tickCookie = "BeResMan";
+
+void BlueResMan::Initialize()
+{
+	CCP_ASSERT( m_threadQueues[BRMQ_MAIN] == NULL );
+	CCP_ASSERT( m_threadQueues[BRMQ_BACKGROUND] == NULL );
+
+	// Create an instance to manage tasks to be run on the main thread. This instance does
+	// not create its own thread, but is polled in the main loop.
+	BeClasses->CreateInstance( GetBlueCallbackManClsid(), GetIBlueCallbackManIID(), (void**)&m_threadQueues[BRMQ_MAIN] );
+
+	m_threadQueues[BRMQ_BACKGROUND] = BeCallbackMan;
+
+	m_mainThread = CcpGetCurrentThreadId();
+
+	BeOS->RegisterForTicks( this, (void*)s_tickCookie );
+
+	m_loadObjectCache.Startup();
+}
+
+void BlueResMan::Shutdown()
+{
+	m_loadObjectCache.Shutdown();
+	if( BeOS )
+	{
+		BeOS->UnregisterForTicks(this, (void*)s_tickCookie );
+	}
+
+	m_threadQueues[BRMQ_BACKGROUND].Unlock();
+	m_threadQueues[BRMQ_MAIN].Unlock();
+}
+
+bool BlueResMan::GetResource( const std::string& path, const std::string& ex, const Be::IID& iid, void** resource, IBlueResManNotifications* notifications )
+{
+	CA2W p(path.c_str());
+	CA2W e(ex.c_str());
+
+	std::wstring pathW( p );
+	std::wstring exW( e );
+
+	return GetResourceW( pathW, exW, iid, resource, notifications );
+}
+
+bool BlueResMan::GetResourceW( const std::wstring& path, const std::wstring& ex, const Be::IID& iid, void** resource, IBlueResManNotifications* notifications )
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+	CCP_ASSERT( resource );
+	
+	*resource = nullptr;
+	
+	IBlueResource* tmp = GetResourceHelper( path, ex, notifications );
+	if( !tmp )
+	{
+		return false;
+	}
+
+	bool ok = tmp->QueryInterface( iid, resource, BEQI_SILENT );
+
+	// The QueryInterface call added a reference - release the one we
+	// got from the GetResource call.
+	tmp->Unlock();
+
+	return ok;
+}
+
+IBlueResource* BlueResMan::GetResourceHelper( const std::wstring& path, const std::wstring& ex, IBlueResManNotifications* notifications )
+{
+	if( path.empty() )
+	{ 
+		return NULL;
+	}
+
+	CCP_STATS_INC( resManGetResourceCalls );
+
+	IBlueResource* result = nullptr;
+
+    std::wstring key;
+	NormalizeResPath( path.c_str(), key );
+    key += ex;
+
+	switch( BeMotherLode->Lookup( key.c_str(), GetIBlueResourceIID(), (void**)&result ) )
+	{
+		case IMotherLode::LOOKUP_FAILED:
+			return nullptr;
+
+		case IMotherLode::LOOKUP_CACHED:
+			if( result )
+			{
+				CCP_STATS_INC( resManGetResourceCacheHit );
+				if( notifications )
+				{
+					notifications->OnResourceFromCache( result );
+				}
+
+				// The Lookup call will have added a reference
+				return result;
+			}
+		
+		case IMotherLode::LOOKUP_SUCCESS:
+			if( result )
+			{
+				CCP_STATS_INC( resManGetResourceShared );
+				if( notifications )
+				{
+					notifications->OnResourceFromCache( result );
+				}
+
+				// The Lookup call will have added a reference
+				return result;
+			}
+	}
+
+	// Not found - create new instance
+
+	std::wstring protocol;
+	GetResProtocol( key.c_str(), protocol );
+	if( protocol == L"dynamic" )
+	{
+#if BLUE_WITH_PYTHON
+		const wchar_t* slash = wcschr( key.c_str() + 9, L'/' );
+
+		std::wstring name = slash ? std::wstring( key.c_str() + 9, slash - key.c_str() - 9 ) : std::wstring( key.c_str() + 9 );
+		DynamicConstructors::iterator constructor = m_dynamicConstructors.find( name );
+		if( constructor == m_dynamicConstructors.end() )
+		{
+			char asciiKey[251];
+			wcstombs(asciiKey, key.c_str(), 250);
+			CCP_LOGERR_CH( s_ch, "No dynamic constructor found for resource name, %s", asciiKey );
+			CCP_ASSERT_M( false, "No dynamic constructor found for resource name" );
+			return NULL;
+		}
+
+		PyObject* resultObject = PyObject_CallFunction( constructor->second, const_cast<char*>("u"), slash ? slash + 1 : L"" );
+		if( resultObject == NULL )
+		{
+			CCP_LOGERR_CH( s_ch, "Error while calling Python dynamic resource constructor" );
+			return NULL;
+			// TODO: Must clear python error
+		}
+
+		result = BluePythonCast<IBlueResource*>( resultObject );
+		if( result == NULL )
+		{
+			CCP_LOGERR_CH( s_ch, "Python dynamic resource constructor returned incorrect value (IBlueResource is expected)" );
+			return NULL;
+		}
+
+		result->Lock();
+
+		Py_DECREF( resultObject );
+
+		if( notifications )
+		{
+			notifications->OnResourceCreated( result );
+		}
+
+		bool isOK = BeMotherLode->Insert( key.c_str(), result, true, 0, IMotherLode::CACHING_NOT_ALLOWED );
+		CCP_ASSERT( isOK );
+        CCP_UNUSED( isOK );
+#else
+		CCP_LOGERR_CH( s_ch, "Dynamic resource constructor not supported" );
+		return nullptr;
+
+#endif
+	}
+	else
+	{
+		// Get the extension from the path
+		size_t lastDotIx = path.find_last_of( '.' );
+		std::wstring extension = path.substr( lastDotIx + 1 );
+		if( extension.empty() )
+		{
+			// No extension found
+			CCP_LOGERR_CH( s_ch, "BlueResMan::GetResourceW: Must have an extension to map to a factory (%S, %S)", path.c_str(), ex.c_str() );
+			return result;
+		}
+
+		extension += ex;
+
+		for( std::wstring::iterator it = extension.begin(); it != extension.end(); ++it )
+		{
+			*it = std::tolower( *it );
+		}
+
+		// Find a factory based on the file extension
+		TypeMap::iterator typeIt = GetTypeMap().find( extension );
+		if( typeIt == GetTypeMap().end() )
+		{
+			// No factory found for this extension
+			CCP_LOGERR_CH( s_ch, "BlueResMan::GetResourceW: No factory found for extension (%S, %S)", path.c_str(), ex.c_str() );
+			return result;
+		}
+
+		// Create the resource by calling the factory.
+		result = typeIt->second( path.c_str() );
+
+		IWeakObjectPtr wrp = BlueCastPtr( result );
+		CCP_ASSERT_M( wrp, "Resource class types must support weak references" );
+
+		if( result && notifications )
+		{
+			notifications->OnResourceCreated( result );
+		}
+
+		result->Initialize( path.c_str(), ex.c_str() );
+
+		bool isOK = BeMotherLode->Insert( key.c_str(), result );
+		CCP_ASSERT( isOK );
+        CCP_UNUSED( isOK );
+	}
+
+	return result;
+}
+
+#if BLUE_WITH_PYTHON
+void BlueResMan::RegisterResourceConstructor( const wchar_t* name, PyObject* constructor )
+{
+	std::wstring key = name;
+	for( std::wstring::iterator it = key.begin(); it != key.end(); ++it )
+	{
+		*it = std::towlower( *it );
+	}
+
+	Py_IncRef( constructor );
+	DynamicConstructors::iterator it = m_dynamicConstructors.find( key );
+	if( it != m_dynamicConstructors.end() )
+	{
+		Py_DecRef( it->second );
+		it->second = constructor;
+	}
+	else
+	{
+		m_dynamicConstructors[key] = constructor;
+	}
+}
+
+void BlueResMan::UnregisterResourceConstructor( const wchar_t* name )
+{
+	std::wstring key = name;
+	for( std::wstring::iterator it = key.begin(); it != key.end(); ++it )
+	{
+		*it = std::towlower( *it );
+	}
+
+	DynamicConstructors::iterator it = m_dynamicConstructors.find( key );
+	if( it != m_dynamicConstructors.end() )
+	{
+		Py_DecRef( it->second );
+		m_dynamicConstructors.erase( it );
+	}
+}
+#endif
+
+void BlueResMan::WeakRefNotify( IWeakObject* obj )
+{
+	ReverseObjectMap::iterator it = m_objectInstancesReverse.find( obj );
+	if( it != m_objectInstancesReverse.end() )
+	{
+		const PathExtensionPairType& key = it->second;
+		m_objectInstances.erase( key );
+		m_objectInstancesReverse.erase( it );
+	}
+}
+
+IRoot* BlueResMan::GetObject( const std::string& path, const std::string& ext )
+{
+	CA2W p(path.c_str());
+	std::wstring pathW( p );
+
+	CA2W wExt(ext.c_str());
+	std::wstring extWStr( wExt );
+
+	return GetObjectW( pathW, extWStr );
+}
+
+IRoot* BlueResMan::GetObjectW( const std::wstring& path, const std::wstring& ext )
+{
+    IRoot* result = NULL;
+
+	std::wstring key;
+	NormalizeResPath( path.c_str(), key );
+
+	const PathExtensionPairType pathAndExt = std::make_pair( key, ext );
+
+	// We break out of this loop once something successfully finishes
+	// This is done to prevent a crash that could occur in a weird edge
+	// case where two tasklets requested the same object. The
+	// first one, that performs the load, then releases the object
+	// before the second gets a hold of it. This in turn removes
+	// the object from the m_objectInstances list.
+	// We end up having to reload the object, but this shouldn't
+	// happen frequently and the main concern is to prevent a crash.
+	while( true )
+	{
+		bool found = false;
+		{
+			// Take care not to hold any iterator across a yield.
+			// It could be invalidated and even if we don't use it
+			// after they yield, the validation done in debug will
+			// complain when it goes out of scope.
+			ObjectMap::iterator it = m_objectInstances.find( pathAndExt );
+			found = it != m_objectInstances.end();
+		}
+		if( !found )
+		{
+			// LoadObject may yield, so we add a dummy in here to mark that
+			// it's being loaded.
+			m_objectInstances[pathAndExt] = NULL;
+
+			// Not found - load new instance
+			result = LoadObjectW( key.c_str() );
+
+			if( !result )
+			{
+				return NULL;
+			}
+
+			IWeakObjectPtr weakObj( BlueCastPtr( result ) );
+
+			if( weakObj )
+			{
+				weakObj->WeakRefRegister( this );
+
+				m_objectInstances[pathAndExt] = weakObj;
+				m_objectInstancesReverse[weakObj] = pathAndExt;
+			}
+			break;
+		}
+		else
+		{
+			{
+				ObjectMap::iterator it = m_objectInstances.find( pathAndExt );
+
+				// Object already exists - return a new reference to it.
+				result = it->second;
+			}
+
+#if CCP_STACKLESS
+			// We may have yielded while loading - wait here until
+			// the object has been put in place
+			while( !result )
+			{
+				if( !PyOS->Yield() )
+				{
+					// Tasklet has been interrupted
+					return NULL;
+				}
+				
+				// Can't trust the iterator staying valid across the yield
+				ObjectMap::iterator it = m_objectInstances.find( pathAndExt );
+				if( it == m_objectInstances.end() )
+				{
+					// Break out of the inner loop - this takes us to the
+					// outer loop to retry the load. 
+					break;
+				}
+				result = it->second;
+			}
+#endif
+
+			if( result )
+			{
+				result->Lock();
+				break;
+			}
+		}
+	}
+
+	return result;
+}
+
+void BlueResMan::ClearCachedObject( const std::string& path, const std::string& ext )
+{
+	CA2W p(path.c_str());
+	std::wstring pathW( p );
+
+	CA2W wExt(ext.c_str());
+	std::wstring extWStr( wExt );
+
+	ClearCachedObjectW( pathW, extWStr );
+}
+
+void BlueResMan::ClearCachedObjectW( const std::wstring& path, const std::wstring& ext )
+{
+	// Note that we only keep a weak reference to the object
+	// so we only need to remove it from our records here.
+
+	std::wstring key;
+	NormalizeResPath( path.c_str(), key );
+
+	const PathExtensionPairType pathAndExt = std::make_pair( key, ext );
+
+	ObjectMap::iterator it = m_objectInstances.find( pathAndExt );
+    if( it != m_objectInstances.end() )
+    {
+        m_objectInstancesReverse.erase( it->second );
+        m_objectInstances.erase( pathAndExt );
+    }
+
+	// Ensure that any .red file cached is also reset
+	BeMotherLode->Delete( key.c_str() );
+}
+
+void BlueResMan::ClearAllCachedObjects()
+{
+	// Note that we only keep a weak reference to the object
+	// so we only need to remove it from our records here.
+
+	while( !m_objectInstances.empty() )
+    {
+        ObjectMap::iterator it = m_objectInstances.begin();
+
+		// Ensure that any .red file cached is also reset
+		BeMotherLode->Delete( it->first.first.c_str() );
+
+		m_objectInstances.erase( it );
+    }
+
+    m_objectInstancesReverse.clear();
+}
+
+
+bool BlueResMan::IsOnMainThread()
+{
+	return CcpGetCurrentThreadId() == m_mainThread;
+}
+
+bool BlueResMan::AddToQueue( BlueResManQueue q, IBlueCallbackMan::CallbackFunc pCb, void* pContext, uint32_t flags, CcpAtomic<uint32_t>* pId )
+{
+	CCP_ASSERT( q < BRMQ_COUNT );
+	
+	if( m_threadQueues[q] )
+	{
+		return m_threadQueues[q]->Add( pCb, pContext, flags, pId );
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+void BlueResMan::CancelFromQueue( BlueResManQueue q, uint32_t id )
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+	CCP_ASSERT( q < BRMQ_COUNT );
+
+	CCP_STATS_INC( resManCancelCount );
+
+	if( m_threadQueues[q] )
+	{
+		m_threadQueues[q]->Cancel( id );
+	}
+}
+
+uint32_t BlueResMan::GetNextIdForQueue( BlueResManQueue q )
+{
+	CCP_ASSERT( q < BRMQ_COUNT );
+
+	if( m_threadQueues[q] )
+	{
+		return m_threadQueues[q]->GetNextId();
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+bool BlueResMan::PumpMainThreadQueue()
+{
+	CCP_ASSERT( m_threadQueues[BRMQ_MAIN] );
+
+	return m_threadQueues[BRMQ_MAIN]->Update();
+}
+
+void BlueResMan::PauseQueue( BlueResManQueue q )
+{
+	CCP_ASSERT( q < BRMQ_COUNT );
+
+	if( m_threadQueues[q] )
+	{
+		return m_threadQueues[q]->Pause();
+	}
+}
+
+void BlueResMan::ResumeQueue( BlueResManQueue q )
+{
+	CCP_ASSERT( q < BRMQ_COUNT );
+
+	if( m_threadQueues[q] )
+	{
+		return m_threadQueues[q]->Resume();
+	}
+}
+
+void BlueResMan::ReserveBackgroundLoadMemory( size_t size )
+{
+	for( int numTries = 0; numTries < 50; ++numTries )
+	{
+		{
+			CcpAutoMutex guard( m_backgroundLoadMemoryMutex );
+			if( m_backgroundLoadMemoryInUse + size < m_backgroundLoadMemoryBudget )
+			{
+				m_backgroundLoadMemoryInUse += size;
+				return;
+			}
+
+		}
+		CcpThreadSleep( 20 );
+	}
+
+	CCP_LOGWARN_CH( s_ch, "BlueResMan::ReserveBackgroundLoadMemory timed out - allowing budget overrun to prevent potential deadlock" );
+}
+
+void BlueResMan::ReleaseBackgroundLoadMemory( size_t size )
+{
+	CcpAutoMutex guard( m_backgroundLoadMemoryMutex );
+	if( m_backgroundLoadMemoryInUse < size )
+	{
+		// Our bookkeeping must be off!
+		m_backgroundLoadMemoryInUse = 0;
+	}
+	else
+	{
+		m_backgroundLoadMemoryInUse -= size;
+	}
+}
+
+void BlueResMan::OnTick( Be::Time realTime, Be::Time simTime, void* cookie )
+{
+	Update();
+}
+
+void BlueResMan::Update()
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+	CCP_ASSERT( m_threadQueues[BRMQ_MAIN] );
+	CCP_ASSERT( m_threadQueues[BRMQ_BACKGROUND] );
+
+	BeTimer t;
+	float timeInUpdate = 0.0f;
+	m_preparesHandledLastTick = 0;
+	do
+	{
+		m_threadQueues[BRMQ_BACKGROUND]->Unthrottle();
+		bool didSomething = m_threadQueues[BRMQ_MAIN]->Update();
+		timeInUpdate = (float)t.GetSeconds();
+		if( !didSomething )
+		{
+			// Nothing was processed - no need to continue looping
+			break;
+		}
+		++m_preparesHandledLastTick;
+	}
+	while( timeInUpdate < m_mainThreadTimeSlice );
+
+	m_preparesHandledTotal += m_preparesHandledLastTick;
+	if( m_preparesHandledLastTick > m_preparesHandledPerTickMax )
+	{
+		m_preparesHandledPerTickMax = m_preparesHandledLastTick;
+	}
+
+	if( timeInUpdate > m_mainThreadMaxTime )
+	{
+		m_mainThreadMaxTime = timeInUpdate;
+	}
+
+	m_pendingPrepares = m_threadQueues[BRMQ_MAIN]->GetSize();
+	m_pendingLoads = m_threadQueues[BRMQ_BACKGROUND]->GetSize();
+
+	m_prepareQueueTimeMax = m_threadQueues[BRMQ_MAIN]->GetTimeInQueueMax();
+	m_prepareQueueTimeAverage = m_threadQueues[BRMQ_MAIN]->GetTimeInQueueAverage();
+
+	m_loadQueueTimeMax = m_threadQueues[BRMQ_BACKGROUND]->GetTimeInQueueMax();
+	m_loadQueueTimeAverage = m_threadQueues[BRMQ_BACKGROUND]->GetTimeInQueueAverage();
+
+	CCP_STATS_SET( resManPendingLoads, m_pendingLoads );
+	CCP_STATS_SET( resManPendingPrepares, m_pendingPrepares );
+}
+
+void BlueResMan::SetUrgentResourceLoads( bool b )
+{
+	m_urgentResourceLoads = b;
+}
+
+bool BlueResMan::IsUrgentResourceLoads()
+{
+	return m_urgentResourceLoads;
+}
+
+#if BLUE_WITH_PYTHON
+class PyFunctionCallback
+{
+public:
+	PyFunctionCallback( PyObject* cb, PyObject* args, bool isUrgent ) : m_callback( cb ), m_args( args ), m_isUrgent( isUrgent )
+	{
+	}
+
+	static void PassThroughLoadQueue( void* context )
+	{
+		PyFunctionCallback* pThis = static_cast<PyFunctionCallback*>( context );
+		uint32_t flags = IBlueCallbackMan::BCBF_NONE;
+		if( pThis->m_isUrgent )
+		{
+			flags |= IBlueCallbackMan::BCBF_URGENT;
+		}
+		BeResMan->AddToQueue( BRMQ_MAIN, PyFunctionCallback::Handle, context, flags, NULL );
+	}
+
+	static void Handle( void* context )
+	{
+		PyFunctionCallback* pThis = static_cast<PyFunctionCallback*>( context );
+		pThis->DoIt();
+	}
+
+	void DoIt()
+	{
+		if( !m_callback )
+		{
+			return;
+		}
+
+		PyObject* ret = PyObject_CallFunction( m_callback, const_cast<char*>("O"), m_args );
+		if( !ret )
+		{
+			PyOS->PyFlushError( "Resource load callback failed!" );
+		}
+		else
+		{
+			Py_XDECREF( ret );
+		}
+
+		Py_DECREF( m_callback );
+		Py_DECREF( m_args );
+
+		CCP_DELETE this;
+	}
+
+	PyObject* m_callback;
+	PyObject* m_args;
+	bool m_isUrgent;
+};
+
+void BlueResMan::QueueCallbackForResourceLoads( PyObject* cb, PyObject* args )
+{
+	Py_INCREF( cb );
+	Py_INCREF( args );
+	PyFunctionCallback* context = CCP_NEW( "BlueResMan::QueueCallbackForResourceLoads/context" ) PyFunctionCallback( cb, args, false );
+	m_threadQueues[BRMQ_BACKGROUND]->Add( PyFunctionCallback::PassThroughLoadQueue, context, 0, NULL );
+}
+
+static PyObject* PyQueueCallbackForResourceLoads( PyObject* self, PyObject *args )
+{
+	PyObject* obj;
+	PyObject* context;
+	if( !PyArg_ParseTuple( args, "OO", &obj, &context ) )
+	{
+		return NULL;
+	}
+
+	BeResMan->QueueCallbackForResourceLoads( obj, context );
+
+	Py_INCREF( Py_None );
+	return Py_None;
+}
+
+void BlueResMan::QueueCallbackForUrgentResourceLoads( PyObject* cb, PyObject* args )
+{
+	PyFunctionCallback* context = CCP_NEW( "BlueResMan::QueueCallbackForUrgentResourceLoads/context" ) PyFunctionCallback( cb, args, true );
+	m_threadQueues[BRMQ_BACKGROUND]->Add( PyFunctionCallback::PassThroughLoadQueue, context, IBlueCallbackMan::BCBF_URGENT, NULL );
+}
+#endif
+
+void BlueResMan::ResetQueueStats()
+{
+	m_threadQueues[BRMQ_BACKGROUND]->ResetQueueStats();
+	m_threadQueues[BRMQ_MAIN]->ResetQueueStats();
+}
+
+unsigned int BlueResMan::GetPendingLoads() const
+{
+	return m_threadQueues[BRMQ_BACKGROUND]->GetSize();
+}
+
+unsigned int BlueResMan::GetPendingPrepares() const
+{
+	return m_threadQueues[BRMQ_MAIN]->GetSize();
+}
+
+void BlueResMan::SetLoadingThreadPriority( int prio )
+{
+	m_threadQueues[BRMQ_BACKGROUND]->SetPriority( prio );
+}
+
+void BlueResMan::SetLoadingThreadCount( int n )
+{
+	if( n < 1 )
+	{
+		n = 1;
+	}
+	m_threadQueues[BRMQ_BACKGROUND]->Stop();
+	m_threadQueues[BRMQ_BACKGROUND]->SetThreadCount( n );
+	m_threadQueues[BRMQ_BACKGROUND]->Run();
+}
+
+#if BLUE_WITH_PYTHON
+static PyObject* PyQueueCallbackForUrgentResourceLoads( PyObject* self, PyObject *args )
+{
+	PyObject* obj;
+	PyObject* context;
+	if( !PyArg_ParseTuple( args, "OO", &obj, &context ) )
+	{
+		return NULL;
+	}
+
+	BeResMan->QueueCallbackForUrgentResourceLoads( obj, context );
+
+	Py_INCREF( Py_None );
+	return Py_None;
+}
+
+static PyObject* PySetUrgentResourceLoads( PyObject* self, PyObject* args )
+{
+	bool isUrgent;
+	if( !PyArg_ParseTuple( args, "b", &isUrgent ) )
+	{
+		return NULL;
+	}
+
+	BeResMan->SetUrgentResourceLoads( isUrgent );
+
+	Py_INCREF( Py_None );
+	return Py_None;
+}
+#endif
+
+IRoot* BlueResMan::LoadObject(const char *name, Be::LOADOBJECT_INIT_FLAG init /* = LDOBJ_INITIALIZE */ )
+{
+	CA2W wn(name);
+	return LoadObjectW( wn, init );
+}
+
+class RecursionLimiter
+{
+public:
+	RecursionLimiter( const wchar_t* msg, int maxDepth ) : 
+	  m_name( msg ),
+		  m_maxDepth( maxDepth ), 
+		  m_depth( 0 )
+	  {
+	  }
+
+	  void Enter( const wchar_t* name )
+	  {
+		  ++m_depth;
+		  if( m_depth >= m_maxDepth )
+		  {
+			  CCP_LOGERR_CH( s_ch, "%S: maximum recursion limit reached for '%S'", m_name, name );
+		  }
+	  }
+
+	  void Leave()
+	  {
+		  CCP_ASSERT( m_depth > 0 );
+		  --m_depth;
+	  }
+
+	  bool IsOK()
+	  {
+		  return m_depth < m_maxDepth;
+	  }
+
+	  void Reset()
+	  {
+		  m_depth = 0;
+	  }
+
+	  unsigned int GetDepth()
+	  {
+		  return m_depth;
+	  }
+
+private:
+	const wchar_t* m_name;
+	unsigned int m_maxDepth;
+	unsigned int m_depth;
+};
+
+#if BLUE_WITH_PYTHON
+typedef TrackableStdMap<PyObject*,RecursionLimiter> RecursionLimiterMap_t;
+static RecursionLimiterMap_t s_limiterPerTasklet( "BlueResMan/s_limiterPerTasklet" );
+
+class RecursionLimiterHelper
+{
+public:
+	RecursionLimiterHelper( RecursionLimiter& rl, PyObject* key ) 
+		: m_recursionLimiter( rl ),
+		m_key( key )
+	{
+	}
+
+	~RecursionLimiterHelper()
+	{
+		m_recursionLimiter.Leave();
+		if( m_recursionLimiter.GetDepth() == 0 )
+		{
+			s_limiterPerTasklet.erase( m_key );
+		}
+	}
+
+private:
+	RecursionLimiter& m_recursionLimiter;
+	PyObject* m_key;
+
+};
+#endif
+
+
+IRoot* BlueResMan::LoadObjectW( const wchar_t* unnormalizedName, Be::LOADOBJECT_INIT_FLAG init /* = LDOBJ_INITIALIZE */ )
+{
+	CCP_STATS_SCOPED_TIME( resManLoadObject );
+	CCP_STATS_INC( resManLoadObjectCalls );
+
+	std::wstring nameString;
+	NormalizeResPath( unnormalizedName, nameString );
+	const wchar_t* name = nameString.c_str();
+
+#if CCP_STACKLESS
+
+	// Get a recursion limiter for the current tasklet. Recursion depth has to be tracked
+	// per tasklet, otherwise the preloading of files we do below, which yields to other
+	// tasklets that my in turn start loading objects can look like very deep recursion.
+	// See: PyOS->Yield()
+	PyObject* myTasklet = PyStackless_GetCurrent();
+
+	// Release the reference right away. We use it as a key for the map, but we don't
+	// need to hold a strong reference. Using it as a key without affecting the reference
+	// count ought to be safe - the tasklet object won't die while we're running on it.
+	Py_XDECREF( myTasklet );
+
+	RecursionLimiter* limit = NULL;
+
+	{
+		// The insert function returns an iterator pointing to the value matching the key (myTasklet).
+		// This can be an existing value, or a newly inserted one if they wasn't found in the map.
+		// Note that in debug builds the container keeps track of its iterators. This tracking
+		// is invalidated if we add items to the container on another tasklet before the iterator
+		// is destroyed. This is why we have the pair in its own scope, and requiring us to use a
+		// pointer to the limiter rather than a reference as we can't assign to it after declaring
+		// the variable.
+		std::pair<RecursionLimiterMap_t::iterator, bool> limitInsert;
+		limitInsert = s_limiterPerTasklet.insert( RecursionLimiterMap_t::value_type( myTasklet, RecursionLimiter( L"BlueOS::LoadObjectW", 25 ) ) );
+		limit = &(limitInsert.first->second);
+	}
+
+	limit->Enter( name );
+
+	// Make sure we call Leave - so many returns from this function
+	RecursionLimiterHelper onExit( *limit, myTasklet );
+
+	if( !limit->IsOK() )
+	{
+		return NULL;
+	}
+
+#endif
+
+	if( !name )
+	{
+		BeOS->SetError(BEDEF, 0, "missing filename");
+		return NULL;
+	}
+
+	const wchar_t *dot = wcsrchr(name, L'.');
+	if( !dot )
+	{
+		BeOS->SetError(BEDEF, 0, "invalid filename, missing extension");
+		return NULL;
+	}
+
+	if( wcscmp( dot, L".blue" ) == 0 )
+	{
+		// We have a '.blue' extension - try to load it as such. The stream itself is
+		// cached so we look for it in the object cache. If it's not there, we open the
+		// stream and insert it to the object cache.
+
+		CCP_LOGERR_CH( s_ch, "%s: .blue files are no longer supported", __FUNCTION__ );
+		return nullptr;
+	}
+	else
+	{
+		// We have a '.red' extension or something else - try to load it as a YAML file.
+		// The YamlReader is cached so we look for one in the object cache. If it's not there,
+		// we open the file, parse it, store the reader in the object cache and create an
+		// object with the reader.
+		bool loadFromBlackFile = false;
+		std::wstring filename = name;
+
+		if( m_substituteBlackForRed )
+		{
+			if( wcscmp( dot, L".red" ) == 0 )
+			{
+				filename.resize( filename.size() - 3 ); // strip off red
+				filename.append( L"black" );
+
+				if( BePaths->FileExistsWithoutSubstitution( filename.c_str() ) )
+				{
+					loadFromBlackFile = true;
+				}
+				else
+				{
+					filename = name;
+				}
+			}
+		}
+
+		if( wcscmp( dot, L".black" ) == 0 )
+		{
+			loadFromBlackFile = true;
+		}
+
+		IBlueObjectBuilderPtr builder;
+		if( m_loadObjectCacheEnabled )
+		{
+			switch( m_loadObjectCache.Lookup( filename.c_str(), GetIBlueObjectBuilderIID(), (void**)&builder ) )
+			{
+				case IMotherLode::LOOKUP_FAILED:
+					// The cache lookup itself failed - something must be corrupt
+					CCP_LOGERR_CH( s_ch, "%s: Lookup in loadObjectCache failed", __FUNCTION__ );
+					return nullptr;
+
+				case IMotherLode::LOOKUP_SUCCESS:
+					if( builder )
+					{
+						CCP_STATS_INC( resManLoadObjectShared );
+					}
+					break;
+
+				case IMotherLode::LOOKUP_CACHED:
+					if( builder )
+					{
+						CCP_STATS_INC( resManLoadObjectCacheHit );
+					}
+					break;
+			}
+		}
+
+		if( !builder )
+		{
+			// Builder was not found in cache - create it. First we create the file object
+			// and read the file.
+			IResFilePtr tmp;
+
+			static Be::Clsid resFileClsid( "blue", "ResFile" );
+			if( !tmp.CreateInstance( resFileClsid ) )
+			{
+				return nullptr;
+			}
+
+			if (!tmp->OpenW( filename.c_str(), true ) )
+			{
+				CCP_LOGERR_CH( s_ch, "'%S': no matching file in resource directory.", filename.c_str() );
+
+				return nullptr;
+			}
+
+#if CCP_STACKLESS
+			if( m_loadObjectPreloadFiles && BeResMan->IsOnMainThread() )
+			{
+				if( PyOS->CanYield() )
+				{
+					bool started = false;
+					tmp->Preload( started );
+					while( tmp->PreloadInProgress() )
+					{
+						if( !PyOS->Yield() )
+						{
+							// If we couldn't yield it's likely due the tasklet having been killed.
+							return nullptr;
+						}
+					}
+				}
+			}
+#endif
+
+			IBlueStreamPtr fileStream = BlueCastPtr( tmp );
+
+			IRootReaderPtr reader;
+
+			if( loadFromBlackFile )
+			{
+				BeClasses->CreateInstance( GetBlackReaderClsid(), GetIRootReaderIID(), (void**)&reader );
+			}
+			else
+			{
+				BeClasses->CreateInstance( GetYamlReaderClsid(), GetIRootReaderIID(), (void**)&reader );
+			}
+
+			if( !reader )
+			{
+				return nullptr;
+			}
+
+			CCP_LOG_CH( s_ch, "Reading %S", filename.c_str() );
+			reader->SetFileName( filename.c_str() );
+			if( !reader->ReadForCachingFromStream( fileStream ) )
+			{
+				std::string msg;
+				reader->GetErrorMessage( msg );
+				CCP_LOGERR_CH( s_ch, "Error reading %S: %s", filename.c_str(), msg.c_str() );
+				return nullptr;
+			}
+
+			builder = BlueCastPtr( reader );
+
+			if( m_loadObjectCacheEnabled )
+			{
+				m_loadObjectCache.Insert( filename.c_str(), builder );
+			}
+		}
+
+		IRootReaderPtr rd = BlueCastPtr( builder );
+		if( rd )
+		{
+			rd->SetDoInitialize( init == Be::LDOBJ_INITIALIZE );
+			rd->SetTimeSlice( m_loadObjectTimeSlice );
+		}
+
+		CCP_LOG_CH( s_ch, "Creating object from %S", filename.c_str() );
+		IRoot* obj = builder->CreateObjectWithYield( NULL, NULL );
+
+		if( !obj )
+		{
+			std::string msg;
+			builder->GetErrorMessage( msg );
+			CCP_LOGERR_CH( s_ch, msg.c_str() );
+		}
+		return obj;
+	}
+
+	return NULL;
+}
+
+#if BLUE_WITH_PYTHON
+PyObject* BlueResMan::PyLoadObjectFromYamlString( PyObject* self, PyObject* args )
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+	PyObject* pyCharStream;
+
+	if( !PyArg_ParseTuple( args, "O", &pyCharStream ) )
+	{
+		return NULL;
+	}
+
+	if (!PyString_Check(pyCharStream))
+	{
+		PyErr_SetString(PyExc_TypeError, "LoadObjectFromYamlString expected a non-unicode string.");
+		return NULL;
+	}
+
+	IBlueStreamPtr newStream;
+	newStream.CreateInstance(GetMemStreamClsid());
+	if (newStream)
+	{
+		char* charString = PyString_AsString(pyCharStream);
+		ssize_t len = strlen(charString);
+
+		MemStream *memStream = static_cast<MemStream*>( static_cast<IBlueStream*>( newStream ) );
+		memStream->Write(charString, len);
+		memStream->Seek(0, BS_BEGIN);
+
+		CYamlReader w;
+		IRoot* obj = w.ReadFromStream( memStream );
+		if( obj )
+		{
+			PyObject* pyObj = BlueWrapObjectForPython( obj );
+			obj->Unlock();
+			return pyObj;
+		}
+	}
+	Py_RETURN_NONE;
+}
+#endif
+
+bool BlueResMan::SaveObject( IRoot* obj, const char* name )
+{
+	CA2W wn(name);
+	return SaveObjectW(obj, wn);
+}
+
+bool BlueResMan::SaveObjectW( IRoot* obj, const wchar_t* name )
+{
+	if( !name )
+	{
+		BeOS->SetError(BEDEF, 0, "missing filename");
+		return false;
+	}
+
+	const wchar_t *dot = wcsrchr(name, L'.');
+	if (!dot)
+	{
+		BeOS->SetError(BEDEF, 0, "invalid filename, missing extension");
+		return false;
+	}
+
+	IRootWriter* w;
+		
+	if( wcscmp( dot, L".black" ) == 0 )
+	{
+		w = CCP_NEW( "BlueResMan::SaveObjectW BlackWriter" ) CBlackWriter;
+	}
+	else
+	{
+		w = CCP_NEW( "BlueResMan::SaveObjectW YamlWriter" ) CYamlWriter;
+	}
+	auto result = w->WriteObjectToFile( obj, name );
+
+	CCP_DELETE w;
+	return Be::IsSuccess( result );
+}
+
+bool BlueResMan::GetSubstituteBlackForRed() const
+{
+	return m_substituteBlackForRed;
+}
+
+void BlueResMan::SetSubstituteBlackForRed( bool val )
+{
+	if( val != m_substituteBlackForRed )
+	{
+		m_substituteBlackForRed = val;
+		m_loadObjectCache.Clear();
+	}
+}
+
+Be::Result<std::string> BlueResMan::GetResourceFromScript( const std::wstring& path, const std::wstring& ex, IRoot** resource )
+{
+	IBlueResourcePtr res;
+	if( GetResourceW( path.c_str(), ex.c_str(), GetIBlueResourceIID(), (void**)&res ) )
+	{
+		*resource = res.Detach();
+		return Be::Result<std::string>();
+	}
+
+	*resource = nullptr;
+	return Be::Result<std::string>("GetResource call failed");
+}
+
+#if CCP_STACKLESS
+
+struct BlueResManWaitArgs
+{
+public:
+	BlueResManWaitArgs( uint32_t flags = 0 ) : m_flags( flags )
+	{
+		m_channel = PyChannel_New( NULL );
+	}
+
+	~BlueResManWaitArgs()
+	{
+		Py_XDECREF( m_channel );
+		m_channel = nullptr;
+	}
+
+	void AddToQueue()
+	{
+		BeResMan->AddToQueue( 
+			BRMQ_BACKGROUND, 
+			BlueResManWaitArgs::ForwardMarkAsDone, 
+			this, 
+			IBlueCallbackMan::BCBF_FENCE | m_flags, 
+			NULL );
+	}
+
+	// Waits on the channel, blocking this tasklet.
+	bool Wait()
+	{
+		// Go to sleep and wake up! *(the sender releases the channel)
+		PyObject *ret = PyChannel_Receive( m_channel );
+
+		if( !ret )
+		{
+			// Tasklet was killed
+			Py_DECREF( m_channel );
+			m_channel = nullptr;
+			return false;
+		}
+
+		Py_DECREF( ret );
+		return true;
+	}
+
+	// This gets called on the background thread
+	static void ForwardMarkAsDone( void* pContext )
+	{
+		CCP_STATS_ZONE( __FUNCTION__ );
+
+		BlueResManWaitArgs* args = static_cast<BlueResManWaitArgs*>( pContext );
+		BeResMan->AddToQueue( BRMQ_MAIN, MarkAsDone, pContext, args->m_flags, NULL );
+	}
+
+	// This gets called on the main thread, in Update
+	static void MarkAsDone( void* pContext )
+	{
+		CCP_STATS_ZONE( __FUNCTION__ );
+
+		BlueResManWaitArgs* args = static_cast<BlueResManWaitArgs*>( pContext );
+
+		// Tasklet may have been killed while we were waiting
+		if( args->m_channel )
+		{
+			PyChannel_Send( args->m_channel, Py_None );
+		}
+		else
+		{
+			// Tasklet was killed, so the args object won't be deleted by Wait.
+			CCP_DELETE args;
+		}
+	}
+
+private:
+	uint32_t m_flags;
+	PyChannelObject* m_channel;
+};
+
+#endif
+
+Be::Result<std::string> BlueResMan::Wait()
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+	unsigned int pendingLoads = GetPendingLoads();
+	unsigned int pendingPrepares = GetPendingPrepares();
+
+	if( pendingLoads + pendingPrepares == 0 )
+	{
+		// Nothing to wait for
+		return Be::Result<std::string>();
+	}
+
+#if CCP_STACKLESS
+	if( !PyOS->CanYield() )
+	{
+		//this is a tasklet that cannot block
+		return Be::Result<std::string>( "This tasklet cannot block" );
+	}
+
+	CCP_LOG( "BlueResMain waiting for loads - %d pending loads, %d pending prepares", pendingLoads, pendingPrepares );
+	Be::Time before = BeOS->GetActualTime();
+
+	// Waiting is done by queuing a request on the background queue. Once processed, it
+	// queues a request on the main thread queue. Once processed there, the flag in
+	// the cbArgs structure is set, allowing us to break out of the loop. The queues are
+	// strictly first-in/first-out so passing a request like through both queues ensures
+	// that any resource that had been scheduled for load has also finished preparing.
+	BlueResManWaitArgs* cbArgs = CCP_NEW( "Wait/cbArgs" ) BlueResManWaitArgs;
+
+	cbArgs->AddToQueue();
+	if( cbArgs->Wait() )
+	{
+		// Only delete the args object if Wait succeeded - if it failed it means
+		// the tasklet was killed. In that case we have to keep the args object
+		// around as it is still referenced by the queue and will get a callback.
+		CCP_DELETE cbArgs;
+	}
+	
+	Be::Time now = BeOS->GetActualTime();
+	Be::Time delta = now - before;
+	float secs = TimeAsFloat( delta );
+	CCP_LOG( "BlueResMain waited for %g seconds", secs );
+
+#else
+
+	while( pendingLoads + pendingPrepares > 0 )
+	{
+		Update();
+
+		pendingLoads = GetPendingLoads();
+		pendingPrepares = GetPendingPrepares();
+	}
+
+#endif
+
+	return Be::Result<std::string>();
+}
+
+Be::Result<std::string> BlueResMan::WaitUrgent()
+{
+#if CCP_STACKLESS
+	if( !PyOS->CanYield() )
+	{
+		//this is a tasklet that cannot block
+		return Be::Result<std::string>( "This tasklet cannot block" );
+	}
+
+	BlueResManWaitArgs* cbArgs = CCP_NEW( "Wait/cbArgs" ) BlueResManWaitArgs( IBlueCallbackMan::BCBF_URGENT );
+
+	cbArgs->AddToQueue();
+	cbArgs->Wait();
+	CCP_DELETE cbArgs;
+
+	return Be::Result<std::string>();
+#else
+
+	return Wait();
+
+#endif
+}
+
+Be::Result<std::string> BlueResMan::LoadObjectFromScript( const std::wstring& path, IRoot** obj )
+{
+	*obj = LoadObjectW( path.c_str(), Be::LDOBJ_INITIALIZE );
+	return Be::Result<std::string>();
+}
+
+Be::Result<std::string> BlueResMan::LoadObjectWithoutInitializeFromScript( const std::wstring& path, IRoot** obj )
+{
+	*obj = LoadObjectW( path.c_str(), Be::LDOBJ_DONT_INITIALIZE );
+	return Be::Result<std::string>();
+}

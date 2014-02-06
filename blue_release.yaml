@@ -1,0 +1,14 @@
+General:
+  # The config type is used for selecting the manifest file - usually the same as the configuration
+  CcpConfigType: Release
+ClCompile:
+  PreprocessorDefinitions:
+  - NDEBUG
+  Optimization: MaxSpeed
+  RuntimeLibrary: MultiThreadedDLL
+  DebugInformationFormat: ProgramDatabase
+Link:
+  AdditionalDependencies:
+  - msvcrt.lib
+  - msvcprt.lib
+  - atls.lib

@@ -1,0 +1,667 @@
+#include "StdAfx.h"
+
+#include "BlueResMan.h"
+#include "include/IBlueResource.h"
+#include "BlueMemStream.h"
+#include "YamlWriter.h"
+
+#if BLUE_WITH_PYTHON
+static PyObject* PySaveObject( PyObject* self, PyObject* args )
+{
+	PyObject* pyObj;
+	PyObject* nameO;
+
+	if( !PyArg_ParseTuple( args, "OO", &pyObj, &nameO ) )
+	{
+		return NULL;
+	}
+	BluePy u(PyUnicode_FromObject(nameO));
+	if( !u )
+	{
+		return 0;
+	}
+	const wchar_t *name = (const wchar_t*)PyUnicode_AS_UNICODE(u.o);
+
+	IRootPtr obj( BlueUnwrapObjectFromPython(pyObj) );
+
+	if( !obj )
+	{
+		PyErr_SetString( PyExc_TypeError, "The first argument is not an object");
+		return NULL;
+	}
+
+	if( BeResMan->SaveObjectW( obj, name ) )
+	{
+		Py_INCREF( Py_True );
+		return Py_True;
+	}
+	else
+	{
+		Py_INCREF( Py_False );
+		return Py_False;
+	}
+}
+
+static PyObject* PySaveObjectToYamlString( PyObject* self, PyObject* args )
+{
+	PyObject* pyObj;
+
+	if( !PyArg_ParseTuple( args, "O", &pyObj ) )
+	{
+		return NULL;
+	}
+
+	IRootPtr obj( BlueUnwrapObjectFromPython(pyObj) );
+
+	if( !obj )
+	{
+		PyErr_SetString( PyExc_TypeError, "The first argument is not an object");
+		return NULL;
+	}
+
+	CMemStream ms;
+	CYamlWriter writer;
+
+	writer.WriteObjectToStream( obj, &ms );
+
+	ssize_t size = ms.GetSize();
+	PyObject* returnValue = PyString_FromStringAndSize( nullptr, size );
+
+	void* data;
+	ms.LockData( &data, size );
+
+	char* dst = PyString_AsString( returnValue );
+	memcpy( dst, data, size );
+
+	ms.UnlockData();
+
+	return returnValue;
+}
+
+static PyObject* PyGetObject( PyObject* self, PyObject* args )
+{
+	BlueResMan* pThis = BluePythonCast<BlueResMan*>( self );
+
+	PyObject *resNameObject = NULL;
+	PyObject *resNameExt = NULL;
+
+	if (!PyArg_ParseTuple(args, "O|O", &resNameObject, &resNameExt ))
+	{
+		return NULL;
+	}
+
+	if( !PyString_Check( resNameObject ) )
+	{
+		return NULL;
+	}
+
+	if( resNameExt && !PyString_Check( resNameExt ) )
+	{
+		return NULL;
+	}
+
+	std::string resName = PyString_AsString( resNameObject );
+	std::string ext = resNameExt ? PyString_AsString( resNameExt ) : "";
+
+	IRootPtr res;
+	res.Attach( pThis->GetObject( resName, ext ) );
+
+	if( res )
+	{
+		return BlueWrapObjectForPython( res );
+	}
+
+	Py_RETURN_NONE;
+}
+
+static PyObject* PyGetObjectW( PyObject* self, PyObject* args )
+{
+	BlueResMan* pThis = BluePythonCast<BlueResMan*>( self );
+
+	PyObject *resNameObject = NULL;
+	PyObject *resNameExt = NULL;
+
+	if (!PyArg_ParseTuple(args, "O|O", &resNameObject, &resNameExt ))
+	{
+		return NULL;
+	}
+
+	if( !PyUnicode_Check( resNameObject ) )
+	{
+		return NULL;
+	}
+
+	if( resNameExt && !PyUnicode_Check( resNameExt ) )
+	{
+		return NULL;
+	}
+
+	std::wstring resName = (const wchar_t*)PyUnicode_AsUnicode( resNameObject );
+	std::wstring resExt = resNameExt ? (const wchar_t*)PyUnicode_AsUnicode( resNameExt ) : L"";
+
+	IRootPtr res;
+	res.Attach( pThis->GetObjectW( resName, resExt ) );
+
+	if( res )
+	{
+		return BlueWrapObjectForPython( res );
+	}
+
+	Py_RETURN_NONE;
+}
+
+static PyObject* PyClearCachedObject( PyObject* self, PyObject* args )
+{
+	BlueResMan* pThis = BluePythonCast<BlueResMan*>( self );
+
+	PyObject *resNameObject = NULL;
+	PyObject *resExtObject = NULL;
+
+	if (!PyArg_ParseTuple(args, "O|O", &resNameObject, &resExtObject ))
+	{
+		return NULL;
+	}
+
+	if( !PyString_Check( resNameObject ) )
+	{
+		return NULL;
+	}
+
+	if( resExtObject && !PyString_Check( resExtObject ) )
+	{
+		return NULL;
+	}
+
+	std::string resName = PyString_AsString( resNameObject );
+	std::string resExt = resExtObject ? PyString_AsString( resExtObject ) : "";
+
+	pThis->ClearCachedObject( resName, resExt );
+
+	Py_RETURN_NONE;
+}
+
+static PyObject* PyClearCachedObjectW( PyObject* self, PyObject* args )
+{
+	BlueResMan* pThis = BluePythonCast<BlueResMan*>( self );
+
+	PyObject *resNameObject = NULL;
+	PyObject *resExtObject = NULL;
+
+	if (!PyArg_ParseTuple(args, "O|O", &resNameObject, &resExtObject ))
+	{
+		return NULL;
+	}
+
+	if( !PyUnicode_Check( resNameObject ) )
+	{
+		return NULL;
+	}
+
+	if( resExtObject && !PyUnicode_Check( resExtObject ) )
+	{
+		return NULL;
+	}
+
+	std::wstring resName = (const wchar_t*)PyUnicode_AsUnicode( resNameObject );
+	std::wstring resExt = resExtObject ? (const wchar_t*)PyUnicode_AsUnicode( resExtObject ) : L"";
+
+	pThis->ClearCachedObjectW( resName, resExt );
+
+	Py_RETURN_NONE;
+}
+
+static PyObject* PyRegisterResourceConstructor( PyObject* self, PyObject* args )
+{
+	BlueResMan* pThis = BluePythonCast<BlueResMan*>( self );
+	CCP_ASSERT( pThis == BeResMan );
+
+	PyObject *nameObject = NULL;
+	PyObject *constructor = NULL;
+	if (!PyArg_ParseTuple(args, "OO", &nameObject, &constructor ))
+	{
+		return NULL;
+	}
+
+	if( !PyString_Check( nameObject ) )
+	{
+		return NULL;
+	}
+
+	std::wstring name = (const wchar_t*)CA2W( PyString_AsString( nameObject ) );
+
+	pThis->RegisterResourceConstructor( name.c_str(), constructor );
+
+	Py_RETURN_NONE;
+}
+
+static PyObject* PyRegisterResourceConstructorW( PyObject* self, PyObject* args )
+{
+	BlueResMan* pThis = BluePythonCast<BlueResMan*>( self );
+	CCP_ASSERT( pThis == BeResMan );
+
+	PyObject *nameObject = NULL;
+	PyObject *constructor = NULL;
+	if (!PyArg_ParseTuple(args, "OO", &nameObject, &constructor ))
+	{
+		return NULL;
+	}
+
+	if( !PyString_Check( nameObject ) )
+	{
+		return NULL;
+	}
+
+	std::wstring name = (const wchar_t*)PyUnicode_AsUnicode( nameObject );
+
+	pThis->RegisterResourceConstructor( name.c_str(), constructor );
+
+	Py_RETURN_NONE;
+}
+
+static PyObject* PyUnregisterResourceConstructor( PyObject* self, PyObject* args )
+{
+	BlueResMan* pThis = BluePythonCast<BlueResMan*>( self );
+	CCP_ASSERT( pThis == BeResMan );
+
+	PyObject *nameObject = NULL;
+	if (!PyArg_ParseTuple(args, "O", &nameObject ))
+	{
+		return NULL;
+	}
+
+	if( !PyString_Check( nameObject ) )
+	{
+		return NULL;
+	}
+
+	std::wstring name = (const wchar_t*)CA2W( PyString_AsString( nameObject ) );
+
+	pThis->UnregisterResourceConstructor( name.c_str() );
+
+	Py_RETURN_NONE;
+}
+
+static PyObject* PyUnregisterResourceConstructorW( PyObject* self, PyObject* args )
+{
+	BlueResMan* pThis = BluePythonCast<BlueResMan*>( self );
+	CCP_ASSERT( pThis == BeResMan );
+
+	PyObject *nameObject = NULL;
+	if (!PyArg_ParseTuple(args, "O", &nameObject ))
+	{
+		return NULL;
+	}
+
+	if( !PyString_Check( nameObject ) )
+	{
+		return NULL;
+	}
+
+	std::wstring name = (const wchar_t*)PyUnicode_AsUnicode( nameObject );
+
+	pThis->UnregisterResourceConstructor( name.c_str() );
+
+	Py_RETURN_NONE;
+}
+#endif
+
+const Be::ClassInfo* BlueResMan::ExposeToBlue()
+{
+	EXPOSURE_BEGIN( BlueResMan, "" )
+		MAP_INTERFACE( IBlueResMan )
+
+		MAP_PROPERTY
+		(
+			"substituteBlackForRed",
+			GetSubstituteBlackForRed, SetSubstituteBlackForRed,
+			"If set, then calls to LoadObject attempt to load from black files when red files are\n"
+			"requested. If no black file exists, the red file is loaded."
+		)
+
+		MAP_ATTRIBUTE
+		(
+			"loadObjectPreloadFiles",
+			m_loadObjectPreloadFiles,
+			"If set, then files are preloaded and tasklet yields while file read takes place.",
+			Be::READWRITE
+		)
+
+		MAP_ATTRIBUTE
+		(
+			"loadObjectCacheEnabled",
+			m_loadObjectCacheEnabled,
+			"If set, objects are looked up in the loadObject cache before reading from disk.",
+			Be::READWRITE
+		)
+
+		MAP_ATTRIBUTE
+		(
+			"loadObjectTimeSlice",
+			m_loadObjectTimeSlice,
+			"Time slice for calls to LoadObject. Once the time slice is used up\n"
+			"the tasklet yields and continues on the next frame.",
+			Be::READWRITE
+		)
+
+		MAP_ATTRIBUTE
+		( 
+			"loadObjectCache", 
+			m_loadObjectCache, 
+			"Cache for objects loaded via LoadObject", 
+			Be::READWRITE
+		)
+
+		MAP_ATTRIBUTE
+		( 
+			"mainThreadTimeSlice", 
+			m_mainThreadTimeSlice, 
+			"Time allowed for callbacks on the main thread queue. Note that individual callbacks\n"
+			"are never interrupted, but if accumulated time in processing callbacks exceeds this\n"
+			"value, further callbacks are delayed until next frame.", 
+			Be::READWRITE
+		)
+
+		MAP_ATTRIBUTE
+		( 
+			"mainThreadMaxTime", 
+			m_mainThreadMaxTime, 
+			"Maximum time taken for processing callbacks on the main thread queue. This can exceed\n"
+			"the allowed time slice as individual callbacks are never interrupted.", 
+			Be::READWRITE
+		)
+
+		MAP_ATTRIBUTE
+		( 
+			"backgroundLoadMemoryBudget", 
+			m_backgroundLoadMemoryBudget, 
+			"Maximum memory budget allowed for asynchronously loaded resources. Once load requests\n"
+			"consume more than this budget, loading is stalled until preparation finishes and memory\n"
+			"used while loading in the background has been released.",
+			Be::READWRITE
+		)
+
+		MAP_ATTRIBUTE
+		( 
+			"backgroundLoadMemoryInUse", 
+			m_backgroundLoadMemoryInUse, 
+			"Memory currently in use for loading resources in the background. Requests to reserve\n"
+			"memory beyond 'backgroundLoadMemoryBudget' stall the loading progress until memory\n"
+			"has been released.",
+			Be::READ
+		)
+		
+		MAP_ATTRIBUTE
+		( 
+			"pendingLoads", 
+			m_pendingLoads, 
+			"Count of items in background load queue", 
+			Be::READ
+		)
+		
+		MAP_ATTRIBUTE
+		( 
+			"pendingPrepares", 
+			m_pendingPrepares, 
+			"Count of items in main thread queue", 
+			Be::READ
+		)
+		
+		MAP_ATTRIBUTE
+		( 
+			"preparesHandledLastTick", 
+			m_preparesHandledLastTick, 
+			"Count of items handled from the main thread queue on the last tick", 
+			Be::READ
+		)
+
+		MAP_ATTRIBUTE
+		( 
+			"preparesHandledPerTickMax", 
+			m_preparesHandledPerTickMax, 
+			"Maximum number of items handled from the main thread queue in one tick", 
+			Be::READWRITE
+		)
+
+		MAP_ATTRIBUTE
+		( 
+			"preparesHandledTotal", 
+			m_preparesHandledTotal, 
+			"Count of items handled from the main thread queue since the program started", 
+			Be::READ
+		)
+
+		MAP_ATTRIBUTE
+		( 
+			"loadQueueTimeAverage", 
+			m_loadQueueTimeAverage, 
+			"Average time for entries waiting in the load queue", 
+			Be::READ
+		)
+
+		MAP_ATTRIBUTE
+		( 
+			"loadQueueTimeMax", 
+			m_loadQueueTimeMax, 
+			"Maximum time for entries waiting in the load queue", 
+			Be::READ
+		)
+
+		MAP_ATTRIBUTE
+		( 
+			"prepareQueueTimeAverage", 
+			m_prepareQueueTimeAverage, 
+			"Average time for entries waiting in the prepare queue", 
+			Be::READ
+		)
+
+		MAP_ATTRIBUTE
+		( 
+			"prepareQueueTimeMax", 
+			m_prepareQueueTimeMax, 
+			"Maximum time for entries waiting in the prepare queue", 
+			Be::READ
+		)
+
+		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS
+		( 
+			"GetResource", 
+			GetResourceFromScript,
+			1,
+			"Get a resource associated with the given path name"
+		)
+		
+		// TODO: Remove this - string parameters are now automatically promoted
+		MAP_METHOD_AND_WRAP
+		( 
+			"GetResourceW", 
+			GetResourceFromScript, 
+			"Get a resource associated with the given path name"
+		)
+
+		MAP_METHOD_AND_WRAP
+		(
+			"LoadObject",
+			LoadObjectFromScript,
+			"Loads object from a file (.blue or .red based on extension)."
+			"\nThis function may yield the calling tasklet while disk io takes place"
+			"\n\nArguments:"
+			"\n - filename - path to the file to load"
+		)
+
+		MAP_METHOD
+		(
+			"SaveObject",
+			PySaveObject,
+			"Saves an object to a file (.red or .blue based on extension)."
+			"\n\nArguments:"
+			"\n - object - object to save"
+			"\n - filename - path to the file to save to"
+		)
+		
+		MAP_METHOD
+		(
+			"SaveObjectToYamlString",
+			PySaveObjectToYamlString,
+			"Saves an object to yaml representation in a string. The string"
+			"\nis equivalent to the contents of a red file saved with"
+			"\nSaveObject."
+			"\n\nArguments:"
+			"\n - object - object to save"
+		)
+		
+		MAP_METHOD_AND_WRAP
+		(
+			"LoadObjectWithoutInitialize",
+			LoadObjectWithoutInitializeFromScript,
+			"Loads object from a file (.blue or .red based on extension)."
+			"\nThe object is not initialized - see LoadObject for regular loading."
+			"\nThis can be useful when all that is needed is to inspect the structure"
+			"\nof the object without using it in any way."
+			"\nThis function may yield the calling tasklet while disk io takes place"
+			"\n\nArguments:"
+			"\n - filename - path to the file to load"
+		)
+
+		MAP_METHOD
+		(
+			"LoadObjectFromYamlString",
+			PyLoadObjectFromYamlString, 
+			"Loads object from a string that has yaml contents"
+		)
+
+		MAP_METHOD
+		( 
+			"GetObject", 
+			PyGetObject, 
+			"Gets an object associated with the given path name. If it has been loaded already, will return a cached version."
+			"\n"
+			"\nArguments:"
+			"\npath - The resource path of the object to get"
+			"\nextension - An extension for the object (default \"\")" 
+		)
+		MAP_METHOD
+		( 
+			"GetObjectW", 
+			PyGetObjectW, 
+			"Gets an object associated with the given path name. If it has been loaded already, will return a cached version."
+			"\n"
+			"\nArguments:"
+			"\npath - The resource path of the object to get"
+			"\nextension - An extension for the object (default \"\")" 
+		)
+		
+		MAP_METHOD_AND_WRAP
+		( 
+			"Wait", 
+			Wait, 
+			"Waits for currently scheduled resource loads to finish"
+		)
+		
+		MAP_METHOD_AND_WRAP
+		( 
+			"WaitUrgent", 
+			WaitUrgent, 
+			"Waits for currently scheduled urgent resource loads to finish"
+		)
+
+#if BLUE_WITH_PYTHON
+		MAP_METHOD_AND_WRAP( "QueueCallbackForResourceLoads", QueueCallbackForResourceLoads, "Schedule a callback that is issued once currently queued resource loads have finished" )
+		MAP_METHOD_AND_WRAP( "QueueCallbackForUrgentResourceLoads", QueueCallbackForUrgentResourceLoads, "Schedule a callback that is issued once currently queued urgent resource loads have finished" )
+#endif
+		MAP_METHOD_AND_WRAP( "SetUrgentResourceLoads", SetUrgentResourceLoads, "Enables (or disables) urgent resource loads" )
+		MAP_METHOD_AND_WRAP( "ResetQueueStats", ResetQueueStats, "Resets stats for load and prep queues" )
+
+		MAP_METHOD
+		( 
+			"ClearCachedObject", 
+			PyClearCachedObject, 
+			"Clears the object associated with the given path."
+			"\nFuture calls to GetObject for the path will return a new object."
+			"\n"
+			"\nArguments:"
+			"\npath - The resource path of the object to get"
+			"\nextension - An extension for the object (default \"\")" 
+		)
+		MAP_METHOD
+		( 
+			"ClearCachedObjectW", 
+			PyClearCachedObjectW, 
+			"Clears the object associated with the given path."
+			"\nFuture calls to GetObject for the path will return a new object."
+			"\n"
+			"\nArguments:"
+			"\npath - The resource path of the object to get"
+			"\nextension - An extension for the object (default \"\")" 
+		)
+		MAP_METHOD_AND_WRAP
+		( 
+			"ClearAllCachedObjects", 
+			ClearAllCachedObjects, 
+			"Clears all cached objects."
+		)
+		MAP_METHOD_AND_WRAP
+		(
+			"SetLoadingThreadPriority",
+			SetLoadingThreadPriority,
+			"Sets the priority of the loading thread(s)."
+			"\n"
+			"\nArguments:"
+			"\nprio - Integer value - positive for higher than normal, negative for lower priority"
+		)
+		MAP_METHOD_AND_WRAP
+		(
+			"SetLoadingThreadCount",
+			SetLoadingThreadCount,
+			"Sets the count of loading threads."
+			"\n"
+			"\nArguments:"
+			"\ncount - Integer value - usually lower or equal to number of cores available,"
+			"\n        not lower than 1."
+		)
+
+		MAP_METHOD( 
+			"RegisterResourceConstructor", 
+			PyRegisterResourceConstructor, 
+			"Registers a new dynamic resource constructor function. This function is called " 
+			"for resources with paths like \"dynamic:/name\". If the constructor with the "
+			"same name is already registered, the new function will override the old one."
+			"\n"
+			"\nArguments:"
+			"\nname - Name to associate with the constructor in resource paths"
+			"\nfunction - A callable object that is used to construct dynamic resources"
+			)
+
+		MAP_METHOD( 
+			"RegisterResourceConstructorW", 
+			PyRegisterResourceConstructorW, 
+			"Registers a new dynamic resource constructor function. This function is called " 
+			"for resources with paths like \"dynamic:/name\". If the constructor with the "
+			"same name is already registered, the new function will override the old one."
+			"\n"
+			"\nArguments:"
+			"\nname - Name to associate with the constructor in resource paths"
+			"\nfunction - A callable object that is used to construct dynamic resources"
+			)
+
+		MAP_METHOD( 
+			"UnregisterResourceConstructor", 
+			PyUnregisterResourceConstructor, 
+			"Unregisters dynamic resource constructor function previously registered with a " 
+			"call to RegisterResourceConstructor."
+			"\n"
+			"\nArguments:"
+			"\nname - Name associated with the constructor function to unregister"
+			)
+
+		MAP_METHOD( 
+			"UnregisterResourceConstructorW", 
+			PyUnregisterResourceConstructorW, 
+			"Unregisters dynamic resource constructor function previously registered with a " 
+			"call to RegisterResourceConstructor."
+			"\n"
+			"\nArguments:"
+			"\nname - Name associated with the constructor function to unregister"
+			)
+
+		EXPOSURE_END()
+}

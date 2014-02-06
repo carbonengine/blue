@@ -1,0 +1,41 @@
+# This file defines settings for all modules that link against Blue with Stackless
+Imports:
+- ../lua/uses_Lua.yaml
+- ../../../../../../sdk/telemetry/2.0g/telemetry_2.0g.yaml
+
+General:
+  OutDir: ../../autobuild/$(ProjectName)/lua/$(Platform)/$(PlatformToolset)/
+
+Link:
+  AdditionalLibraryDirectories:
+  - ../../../carbon/autobuild/blue/lua/$(Platform)/$(PlatformToolset)/
+
+Configurations:
+  Debug|Win32,x64:
+    General:
+      TargetExt: .dll
+    Link:
+      AdditionalDependencies:
+      - blue.lib
+
+  Release|Win32,x64:
+    General:
+      TargetExt: .dll
+    Link:
+      AdditionalDependencies:
+      - blue.lib
+
+  Debug|Tegra-Android:
+    ClCompile:
+      CppExceptions: true
+      RuntimeTypeInfo: true
+    Link:
+      AdditionalDependencies:
+      - blue
+
+  Debug|ORBIS:
+    General:
+      TargetExt: .prx
+    Link:
+      AdditionalDependencies:
+      - ../../../carbon/autobuild/blue/lua/$(Platform)/$(PlatformToolset)/blue_stub_weak.a

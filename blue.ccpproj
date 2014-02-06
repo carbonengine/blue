@@ -1,0 +1,269 @@
+SourceFolders:
+- .
+- ../Logger
+
+ProjectGuid: 8CE8EA0A-B9E5-4D95-A0CD-06DC6BC5C5C5
+
+# These are the SDKs that are used by all configurations
+Imports:
+- ../core_project.yaml
+- ../../../../../../sdk/zlib/1.2.3/zlib_1.2.3.yaml
+- ../BlueExposure/uses_BlueExposure.yaml
+#- ../manifests/manifests.props
+
+# Settings from the General section, for all configurations
+General:
+  ConfigurationType: DynamicLibrary
+  UseOfMfc: false
+  IntDir: ../temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/
+
+# Compiler settings for all configurations
+ClCompile:
+  AdditionalIncludeDirectories:
+  - .
+  - ..
+  EnableEnhancedInstructionSet: StreamingSIMDExtensions2
+  PreprocessorDefinitions: 
+  - BLUEPROJECT
+  # This is to prevent warnings from std::copy
+  - _SCL_SECURE_NO_WARNINGS
+  # windows.h has macros named min and max that wreak havoc with std::min and std::max
+  - NOMINMAX
+  PrecompiledHeader: Use
+  PrecompiledHeaderFile: StdAfx.h
+  PrecompiledHeaderOutputFile: $(IntDir)blue.pch
+  WarningLevel: Level3
+  TreatWarningAsError: true
+  BufferSecurityCheck: false
+
+# Linker settings for all configurations
+Link:
+  GenerateDebugInformation: true
+  ProgramDatabaseFile: $(TargetDir)$(TargetName).pdb
+
+# Resource compiler settings - used for version info for the dll
+ResourceCompile:
+  PreprocessorDefinitions:
+  - TARGET_NAME=$(TargetName)
+  - TARGET_FILENAME=$(TargetFileName)
+  AdditionalIncludeDirectories:
+  - ..
+
+BaseConfigurations:
+  Windows:
+    ClCompile:
+      PreprocessorDefinitions: 
+      - WIN32
+    Imports:
+    - ../../../../../../sdk/libyaml/yaml-0.1.2/yaml_0.1.2.yaml
+    # Don't enable this until after Humberto ships - needs more testing
+    # before we're ready to ship the required dlls
+    # - ../../../../../../sdk/libcurl/7.32.0/libcurl_7.32.0.yaml
+
+    Link:
+      AdditionalDependencies:
+      - ws2_32.lib
+      - version.lib
+      - crypt32.lib
+      - iphlpapi.lib
+      - psapi.lib
+
+      DelayLoadDLLs:
+      - psapi.dll
+
+  Orbis:
+    Imports:
+    - ../../../../../../sdk/libyaml/yaml-0.1.2/yaml_0.1.2.yaml
+    ClCompile:
+      GenerateDebugInformation: true
+      CppExceptions: true
+      RuntimeTypeInfo: true
+      AdditionalOptions:
+      # We get a lot of warnings of unused functions from the exposure code
+      - -Wno-unused-function
+
+  Lua:
+    Imports:
+    - ../../src/lua/uses_Lua.yaml
+    General:
+      OutDir: ../../autobuild/blue/lua/$(Platform)/$(PlatformToolset)/
+
+  Android:
+    General: 
+      TargetExt: .so
+      AndroidTargetAPI: android-14
+    ClCompile:
+      CppExceptions: true
+      RuntimeTypeInfo: true
+    Imports:
+    - ../../../../../../sdk/libyaml/yaml-0.1.2/yaml_0.1.2.yaml
+
+Configurations:
+  Debug|Win32,x64:
+    BaseConfigurations:
+    - Windows
+    Imports:
+    - ../stackless/stackless.yaml
+    General: 
+      OutDir: ../../autobuild/blue/exefile/$(Platform)/$(PlatformToolset)/
+      TargetName: blue_d
+      TargetExt: .dll
+      LinkIncremental: true
+      # The config type is used for selecting the manifest file - usually the same as the configuration
+      CcpConfigType: Debug
+    ClCompile:
+      PreprocessorDefinitions:
+      - _DEBUG
+      - BLUE_LIVELIST_ENABLED=1
+      Optimization: Disabled
+      RuntimeLibrary: MultiThreadedDebugDLL
+      DebugInformationFormat: EditAndContinue
+    Link:
+      AdditionalDependencies:
+      - msvcrtd.lib
+      - msvcprtd.lib
+      - atlsd.lib
+
+  DebugLua|Win32,x64:
+    BaseConfigurations:
+    - Windows
+    - Lua
+    General: 
+      TargetName: blue
+      TargetExt: .dll
+      LinkIncremental: true
+      # The config type is used for selecting the manifest file - usually the same as the configuration
+      CcpConfigType: Debug
+    ClCompile:
+      PreprocessorDefinitions:
+      - _DEBUG
+      - _CRT_SECURE_NO_WARNINGS
+      Optimization: Disabled
+      RuntimeLibrary: MultiThreadedDebugDLL
+      DebugInformationFormat: EditAndContinue
+    Link:
+      AdditionalDependencies:
+      - msvcrtd.lib
+      - msvcprtd.lib
+      - atlsd.lib
+
+  DebugLua|ORBIS:
+    BaseConfigurations:
+    - Orbis
+    - Lua
+    General: 
+      TargetName: blue
+      TargetExt: .prx
+      LinkIncremental: true
+      # The config type is used for selecting the manifest file - usually the same as the configuration
+      CcpConfigType: Debug
+    ClCompile:
+      PreprocessorDefinitions:
+      - _DEBUG
+      Optimization: Disabled
+      RuntimeLibrary: MultiThreadedDebugDLL
+      DebugInformationFormat: EditAndContinue
+
+  DebugLua|Tegra-Android:
+    BaseConfigurations:
+    - Lua
+    - Android
+    General: 
+      TargetName: libblue
+      LinkIncremental: true
+      # The config type is used for selecting the manifest file - usually the same as the configuration
+      CcpConfigType: Debug
+    ClCompile:
+      PreprocessorDefinitions:
+      - _DEBUG
+      Optimization: Disabled
+      RuntimeLibrary: MultiThreadedDebugDLL
+      DebugInformationFormat: EditAndContinue
+
+  Release|Win32,x64:
+    BaseConfigurations:
+    - Windows
+    Imports:
+    - ../stackless/stackless.yaml
+    - blue_release.yaml
+    General:
+      OutDir: ../../autobuild/blue/exefile/$(Platform)/$(PlatformToolset)/
+      TargetName: blue
+      TargetExt: .dll
+
+  Release_26|Win32,x64:
+    BaseConfigurations:
+    - Windows
+    Imports:
+    - ../../../../../../sdk/python/Python_2.6.yaml
+    - blue_release.yaml
+    General:
+      OutDir: ../../autobuild/blue/python_26/$(Platform)/$(PlatformToolset)/
+      TargetName: blue
+      TargetExt: .pyd
+
+  Release_27|Win32,x64:
+    BaseConfigurations:
+    - Windows
+    Imports:
+    - ../../../../../../sdk/python/Python_2.7.yaml
+    - blue_release.yaml
+    General:
+      OutDir: ../../autobuild/blue/python_27/$(Platform)/$(PlatformToolset)/
+      TargetName: blue
+      TargetExt: .pyd
+
+  Release_27|Linux32,Linux64:
+    Imports:
+    - ../../../../../../sdk/python/Python_2.7.yaml
+    General:
+      # The config type is used for selecting the manifest file - usually the same as the configuration
+      CcpConfigType: Release
+      OutDir: ../../autobuild/blue/python_27/$(Platform)/$(PlatformToolset)/
+      TargetName: blue
+      TargetExt: .pyd
+    ClCompile:
+      PreprocessorDefinitions:
+      - NDEBUG
+      - PORTING_TO_LINUX=1
+      Optimization: MaxSpeed
+      RuntimeLibrary: MultiThreadedDLL
+      DebugInformationFormat: ProgramDatabase
+    Link:
+      # These additional settings are needed to prevent undefined symbols coming from Python
+      AdditionalDependencies:
+      - dl
+      - util
+      - yaml
+      AdditionalOptions:
+      - -pthread
+
+  Release_27|Mac64:
+    Imports:
+    - ../../../../../../sdk/python/Python_2.7.yaml
+    - ../../../../../../sdk/libcurl/7.32.0/libcurl_7.32.0.yaml
+    General:
+      # The config type is used for selecting the manifest file - usually the same as the configuration
+      CcpConfigType: Release
+      OutDir: ../../autobuild/blue/python_27/$(Platform)/$(PlatformToolset)/
+      TargetName: blue
+      TargetExt: .pyd
+    ClCompile:
+      PreprocessorDefinitions:
+      - NDEBUG
+      - PORTING_TO_LINUX=1
+      Optimization: MaxSpeed
+      RuntimeLibrary: MultiThreadedDLL
+      DebugInformationFormat: ProgramDatabase
+      AdditionalIncludeDirectories:
+      - /usr/local/include
+    Link:
+      # These additional settings are needed to prevent undefined symbols coming from Python
+      AdditionalLibraryDirectories:
+      - /usr/local/lib
+      AdditionalDependencies:
+      - dl
+      - util
+      - yaml
+      AdditionalOptions:
+      - -pthread

@@ -1,0 +1,137 @@
+////////////////////////////////////////////////////////////////////////////////
+//
+// Creator:		Snorri Sturluson
+// Created:		December 2013
+// Copyright:	CCP 2013
+//
+
+#pragma once
+
+#ifndef BlueStatistics_h
+#define BlueStatistics_h
+
+#include "ICcpStatisticsAccumulator.h"
+
+BLUE_DECLARE( CcpStatisticsEntry );
+
+BLUE_CLASS( CcpStatisticsEntry ) : public IRoot
+{
+public:
+	EXPOSE_TO_BLUE();
+
+	CcpStatisticsEntry( IRoot* lockobj = nullptr );
+
+	virtual ~CcpStatisticsEntry();
+
+	void AttachStat( CcpStaticStatisticsEntry* stat );
+	CcpStaticStatisticsEntry* GetAttachedStat();
+
+	void Inc();
+	void Dec();
+	void Add( double d );
+	void Set( double d );
+	void Capture();
+	void ResetPeak();
+	double GetValue();
+	double GetPeak();
+
+	const std::string& GetDescription() const;
+	void SetDescription( const std::string& val );
+
+	const std::string& GetName() const;
+	void SetName( const std::string& val );
+
+	CcpStatisticsType_t GetType();
+	void SetType( CcpStatisticsType_t type );
+
+	bool GetResetPerFrame() const;
+	void SetResetPerFrame( bool val );
+
+protected:
+	CcpStaticStatisticsEntry* m_statsEntry;
+
+	bool m_resetPerFrame;
+	CcpStatisticsType_t m_type;
+	std::string m_name;
+	std::string m_description;
+};
+
+TYPEDEF_BLUECLASS( CcpStatisticsEntry );
+
+BLUE_DECLARE( BlueStatistics );
+BLUE_CLASS( BlueStatistics ) : public IRoot
+{
+public:
+	EXPOSE_TO_BLUE();
+
+	BlueStatistics(IRoot* lockobj = NULL);
+
+	void Update();
+
+	void StartTelemetry( const char* server, int bufferSize );
+	void StartTelemetryDump();
+
+	void PauseTelemetry();
+	void ResumeTelemetry();
+	void StopTelemetry();
+	void SetTimelineSectionName( const char* name );
+	bool IsTelemetryConnected();
+	bool IsTelemetryPaused();
+	void SetCppCaptureEnabled( bool b );
+	bool IsCppCaptureEnabled();
+
+	void SetAccumulator( const std::string& name, ICcpStatisticsAccumulator* lg );
+	ICcpStatisticsAccumulator* GetAccumulator( const std::string& name );
+
+#if BLUE_WITH_PYTHON
+	static PyObject* PyGetDescriptions( PyObject* self, PyObject* args );
+	static PyObject* PyGetStats( PyObject* self, PyObject* args );
+	static PyObject* PyGetValues( PyObject* self, PyObject* args );
+	static PyObject* PyGetSingleStat( PyObject* self, PyObject* args );
+#endif
+
+protected:
+	struct AccumulatorEntry
+	{
+		ICcpStatisticsAccumulatorPtr accumulator;
+		CcpStaticStatisticsEntry* stat;
+	};
+	TrackableStdHashMap<std::string, AccumulatorEntry> m_accumulators;
+};
+
+TYPEDEF_BLUECLASS( BlueStatistics );
+
+extern BlueStatistics* g_statistics;
+
+#if CCP_TELEMETRY_ENABLED
+
+class BLUEIMPORT tmTaskletZone
+{
+public:
+	tmTaskletZone( HTELEMETRY ctx, const char* name );
+	~tmTaskletZone();
+
+private:
+	HTELEMETRY m_telemetryContext;
+};
+
+void tmTaskletEnter( HTELEMETRY ctx, const char* name );
+void tmTaskletLeave( HTELEMETRY ctx );
+void tmTaskletAppendText( HTELEMETRY ctx, const char* appendText );
+
+#define CCP_STATS_SCOPED_TIME( identifier ) \
+	tmTaskletZone zone_##_COUNTER_( g_telemetryContextCpp, g_ccpStatistics_##identifier.GetName().c_str() );\
+	CcpStatisticsStopwatch ccpStatsStopwatch_##identifier( g_ccpStatistics_##identifier )
+
+#undef CCP_STATS_ZONE
+#define CCP_STATS_ZONE( name ) \
+	tmTaskletZone zone_##_COUNTER_( g_telemetryContextCpp, name )
+#else
+
+#define CCP_STATS_SCOPED_TIME( identifier )
+#undef CCP_STATS_ZONE
+#define CCP_STATS_ZONE( name )
+
+#endif
+
+#endif // BlueStatistics_h

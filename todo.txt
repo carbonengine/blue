@@ -1,0 +1,90 @@
+radad eftir priority
+-------------------------
+
+* stream interface using memory mapped stuff.
+  separate interfaces fyrir read og write !!!
+
+* serializera / persist allt blue dot + trinity
+
+* convert bluetester to jennifer
+
+* treeview i jennifer
+
+* static class type info i classfactory lista
+
+
+* ath. med notion of processes and threads i python eins
+  og gert er i win32, svona sma bookkeeping...
+
+
+
+------ finished
+
+* comment code
+
+* rtf pretttyprint code
+
+* .3 extension -> classids for BlueNickFile, i.e. runtime 
+  registered, not hardcoded.
+
+
+
+-------- 
+
+ath.
+
+Serialization interface should have readers and writers like in 
+VCL, i.e. typed key/values in text format.  Support two modes,
+text and binary.
+
+
+
+
+
+
+
+
+
+
+# python semi-pseudocode
+
+
+DoSomething():
+	
+	rot = blue.os.CreateInstance("blue.Rot")
+
+	# create 2 materials which use the same texture
+	
+	mat1objid = rot.Register("trinity.TriMaterial", "tri:/material/shared/mat_1")
+	mat2objid = rot.Register("trinity.TriMaterial", "material:/shared/mat_2")
+
+	material1 = rot.FetchObject(mat1objid)
+	material2 = rot.FetchObject(mat2objid)
+
+	# create shared texture device
+	texobjid = rot.Register("trinity.TriTextureDev", "d3d:/shared/tex/tex1")
+	texdev = rot.FetchObject(texobjid)
+
+	# assign a texture file to the device object
+	# note, the 'res' property is a rot reference id
+	texdev.res = rot.Register("blue.ResFile", "res:/textures/banana.dds")
+	
+	# make both materials use the same texture
+	# note, the 'pixels' property is a rot reference id
+	material1.pixels = texobjid
+
+
+
+BlueInitialize(): 6.32 ms.
+BluePyOS::Startup(): 149.85 ms.
+BlueInitialize(): 0.16 ms.
+TriDevice::InitD3D: 182.62 ms.
+
+
+
+
+
+BlueInitialize(): 23.35 ms.
+BluePyOS::Startup(): 632.26 ms.
+BlueInitialize(): 0.22 ms.
+TriDevice::InitD3D: 1.434 sec.
