@@ -11,11 +11,19 @@
 // --------------------------------------------------------------------------------
 bool IsTransgaming()
 {
-	HMODULE hMod = GetModuleHandle("ntdll");
-	typedef bool (*IsTransgaming) (void);
-	IsTransgaming pFunc = (IsTransgaming)GetProcAddress (hMod, "IsTransgaming");
+	static bool isKnown = false;
+	static bool isTransgaming = false;
+	if( !isKnown )
+	{
+		HMODULE hMod = GetModuleHandle("ntdll");
+		typedef bool (*IsTransgaming) (void);
+		IsTransgaming pFunc = (IsTransgaming)GetProcAddress (hMod, "IsTransgaming");
 
-	return pFunc && pFunc();
+		isTransgaming = pFunc && pFunc();
+		isKnown = true;
+	}
+
+	return isTransgaming;
 }
 
 // --------------------------------------------------------------------------------
