@@ -743,7 +743,11 @@ ssize_t ResFile::Seek(
 		else if (method == BS_CURRENT)
 			mPosition += distance;
 		else
+		{
+			// Standard python seek from the end takes a negative distance 
+			// (not a positive one) like here
 			mPosition = mSize - distance;
+		}
 
 		//truncate position
 		if (mPosition > mSize)
