@@ -11,6 +11,8 @@
 #define BlueStatistics_h
 
 #include "ICcpStatisticsAccumulator.h"
+#include "IBlueOS.h"
+extern BLUEIMPORT IBlueOS* BeOS;
 
 BLUE_DECLARE( CcpStatisticsEntry );
 
@@ -68,13 +70,16 @@ public:
 
 	void Update();
 
-	void StartTelemetry( const char* server, int bufferSize );
-	void StartTelemetryDump();
+	void StartTelemetry( const char* server, int bufferSize, int samplePeriod=0 );
+	void StartTelemetryDump( int samplePeriod=0 );
 
 	void PauseTelemetry();
 	void ResumeTelemetry();
 	void StopTelemetry();
+	void UpdateTelemetry();
 	void SetTimelineSectionName( const char* name );
+	bool IsTelemetryConnectionRequested();
+	float TelemetrySamplingTimeLeft();
 	bool IsTelemetryConnected();
 	bool IsTelemetryPaused();
 	void SetCppCaptureEnabled( bool b );

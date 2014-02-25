@@ -14,16 +14,17 @@ BLUE_REGISTER_GLOBAL_AS_MODULE_OBJECT( "statistics", g_statistics );
 
 static bool s_isTelemetryConnected = false;
 static bool s_isTelemetryPaused = false;
+static bool s_isTelemetryCppCaptureEnabled = true;
+
 #if CCP_TELEMETRY_ENABLED
 static bool s_isTelemetryShuttingDown = false;
 static bool s_isTelemetryConnectionRequested = false;
 static int s_telemetryConnectionType = 0;
-#endif
-static bool s_isTelemetryCppCaptureEnabled = true;
-
-#if CCP_TELEMETRY_ENABLED
 
 static std::string s_telemetryServer;
+static Be::Time s_telemetryStartTime;
+static Be::Time s_telemetryLastCheckTime;
+static float s_telemetrySamplePeriod; // In seconds
 static int s_telemetryBufferSize = 8 * 1024 * 1024;
 static CcpThreadId_t s_telemetryThread = NULL;
 static uint32_t s_telemetryTaskletTlsIx = NULL;
@@ -35,7 +36,7 @@ typedef TrackableStdMap<intptr_t, ZoneStack_t> TaskletZoneStackMap_t;
 static TaskletZoneStackMap_t s_taskletZoneStackMap( "s_taskletZoneStackMap" );
 
 #if BLUE_WITH_PYTHON
-// Turn a python string into an "immmortal" string.  It is kept alive as long as the
+// Turn a python string into an "immortal" string.  It is kept alive as long as the
 // python interpreter is alive, until all interned strings are deleted.
 // This allows the string to be used as a "static strint" for the purposes of Telemetry.
 // returns NULL on failure.
@@ -176,7 +177,7 @@ BlueStatistics::BlueStatistics(IRoot* lockobj) :
 #endif
 }
 
-void BlueStatistics::StartTelemetry( const char* server, int bufferSize )
+void BlueStatistics::StartTelemetry( const char* server, int bufferSize, int samplePeriod )
 {
 #if CCP_TELEMETRY_ENABLED
 	if( s_isTelemetryConnected )
@@ -188,12 +189,13 @@ void BlueStatistics::StartTelemetry( const char* server, int bufferSize )
 	s_telemetryServer = server;
 	s_telemetryConnectionType = TMCT_TCP;
 	s_telemetryBufferSize = bufferSize;
+	s_telemetrySamplePeriod = (float)samplePeriod;
 	s_isTelemetryConnectionRequested = true;
 #else
 #endif
 }
 
-void BlueStatistics::StartTelemetryDump()
+void BlueStatistics::StartTelemetryDump( int samplePeriod )
 {
 #if CCP_TELEMETRY_ENABLED
 	if( s_isTelemetryConnected )
@@ -202,6 +204,7 @@ void BlueStatistics::StartTelemetryDump()
 		return;
 	}
 	s_telemetryConnectionType = TMCT_FILE;
+	s_telemetrySamplePeriod = (float)samplePeriod;
 	s_isTelemetryConnectionRequested = true;
 #else
 #endif
@@ -247,18 +250,29 @@ bool BlueStatistics::IsTelemetryConnected()
 	return s_isTelemetryConnected;
 }
 
+bool BlueStatistics::IsTelemetryConnectionRequested()
+{
+	return s_isTelemetryConnectionRequested;
+}
+
+float BlueStatistics::TelemetrySamplingTimeLeft()
+{
+	return s_telemetrySamplePeriod;
+}
+
 bool BlueStatistics::IsTelemetryPaused()
 {
 	return s_isTelemetryPaused;
 }
 
-void UpdateTelemetry()
+void BlueStatistics::UpdateTelemetry()
 {
 #if CCP_TELEMETRY_ENABLED
 	if( s_isTelemetryConnectionRequested )
 	{
 		s_isTelemetryConnected = CcpStartTelemetry( s_telemetryServer.c_str(), s_telemetryBufferSize, s_telemetryConnectionType );
 		s_isTelemetryConnectionRequested = false;
+		s_telemetryLastCheckTime = s_telemetryStartTime = BeOS->GetActualTime();
 	}
 
 	if( g_telemetryContext )
@@ -267,22 +281,24 @@ void UpdateTelemetry()
 
 		if( s_isTelemetryShuttingDown )
 		{
-			HTELEMETRY cx = g_telemetryContext;
-			g_telemetryContext = NULL;
-			g_telemetryContextCpp = NULL;
-
-			CCP_LOG( "Closing Telemetry connection" );
-			tmClose( cx );
-
-			tmShutdownContext( cx );
-			tmShutdown();
-
-			//CCP_FREE( g_telemetryArena );
-			//g_telemetryArena = NULL;
+			CcpStopTelemetry();
 
 			s_isTelemetryShuttingDown = false;
 
 			s_taskletZoneStackMap.clear();
+		}
+		else if(s_telemetrySamplePeriod > 0.0f ) // Check if we have passed our timed sample time
+		{
+			Be::Time newTime = BeOS->GetActualTime();
+			Be::Time delta = newTime - s_telemetryLastCheckTime;
+			s_telemetryLastCheckTime = newTime;
+			s_telemetrySamplePeriod -= ((float)delta / Be::Time(1e7));
+
+			if(s_telemetrySamplePeriod < 0.0f)
+			{
+				CCP_LOG( "Finalising timed Telemetry run." );
+				StopTelemetry();
+			}
 		}
 	}
 #endif
@@ -596,7 +612,10 @@ void tmTaskletEnter( HTELEMETRY ctx, const char* name )
 // Leave a zone in Python
 void tmTaskletLeave( HTELEMETRY ctx )
 {
-	if( ctx )
+	// ctx in all cases I have observed is a copy of g_telemetryContext.
+	// However, it kicks around after *g_telemetryContext context has been torn down,
+	// and occasionally after a new one has been created... SRN 13/Feb/2014
+	if( g_telemetryContext && (ctx == g_telemetryContext) )
 	{
 		tmLeave( ctx );
 

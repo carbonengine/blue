@@ -495,16 +495,17 @@ PyObject* PyStartTelemetry( PyObject* self, PyObject* args )
 	BlueStatistics* pThis = BluePythonCast<BlueStatistics*>( self );
 	const char *server = "localhost";
 	int bufferSize= 8;
+	int samplePeriod= 0;
 
-	if( !PyArg_ParseTuple( args, "s|i", &server, &bufferSize ) )
+	if( !PyArg_ParseTuple( args, "s|i|i", &server, &bufferSize, &samplePeriod ) )
 	{
 		return NULL;
 	}
 
 	// we want this in bytes
 	bufferSize = bufferSize*1024*1024;
-	
-	pThis->StartTelemetry( server, bufferSize );
+
+	pThis->StartTelemetry( server, bufferSize, samplePeriod );
 
 	Py_RETURN_NONE;
 }
@@ -512,8 +513,14 @@ PyObject* PyStartTelemetry( PyObject* self, PyObject* args )
 PyObject* PyStartTelemetryDump( PyObject* self, PyObject* args )
 {
 	BlueStatistics* pThis = BluePythonCast<BlueStatistics*>( self );
-	
-	pThis->StartTelemetryDump();
+	int samplePeriod= 0;
+
+	if( !PyArg_ParseTuple( args, "i", &samplePeriod ) )
+	{
+		return NULL;
+	}
+
+	pThis->StartTelemetryDump(samplePeriod);
 
 	Py_RETURN_NONE;
 }
@@ -634,6 +641,7 @@ const Be::ClassInfo* BlueStatistics::ExposeToBlue()
 			"\nserver - a string, the network address of the server to connect to."
 			"\n  Use 'localhost' to connect to a Visualizer on the local machine."
 			"\nbufferSize - Optional. The size of the memory buffer allocated for telemetry data, in megabytes."
+			"\nsamplePreiod - Optional. Time to sample for (in seconds) default of 0 means infinite sampling."
 		)
 
 		MAP_METHOD
@@ -645,6 +653,9 @@ const Be::ClassInfo* BlueStatistics::ExposeToBlue()
 			"\nWill overwrite preexisting files."
 			"\nCannot run alongside a regular TCP based Telemetry session."
 			"\nStopped using StopTelemetry."
+			"\n"
+			"\nArguments:"
+			"\nsamplePreiod - Optional. Time to sample for (in seconds) default of 0 means infinite sampling."
 		)
 
 		MAP_METHOD_AND_WRAP
@@ -670,6 +681,20 @@ const Be::ClassInfo* BlueStatistics::ExposeToBlue()
 			"StopTelemetry",
 			StopTelemetry,
 			"Disconnect from a Telemetry server."
+		)
+
+		MAP_PROPERTY_READONLY
+		(
+			"isTelemetryConnectionRequested",
+			IsTelemetryConnectionRequested,
+			"Is Telemetry connection pending?"
+		)
+
+		MAP_PROPERTY_READONLY
+		(
+			"telemetrySamplingTimeLeft",
+			TelemetrySamplingTimeLeft,
+			"Seconds left to sample with Telemetry."
 		)
 
 		MAP_PROPERTY_READONLY
