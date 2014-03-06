@@ -104,7 +104,7 @@ Be::Result<std::string> BlackWriter::WriteObjectToStream( const IRoot* root, IBl
 	dataStream->UnlockData();
 
 	// Clear all state so we can reuse the same writer for writing other objects
-	//m_outputStream.Unlock();
+	m_outputStream.Unlock();
 	m_strings.clear();
 	m_stringMap.clear();
 	m_wstrings.clear();

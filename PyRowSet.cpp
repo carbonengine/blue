@@ -705,7 +705,7 @@ PyObject *DBRow::_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
 		return 0;
 	*/
 	
-	DBRowDescriptor *rd = (DBRowDescriptor *)descriptorO;
+	DBRowDescriptor *rd = static_cast<DBRowDescriptor*>( descriptorO );
 	void *raw = _Alloc(type, rd->mTotalLen);
 	if (!raw)
 		return 0;
@@ -1369,9 +1369,9 @@ PyObject *DBRow::Get___header__()
 //Setting the header requires it to have the same dataLen
 bool DBRow::Set___header__(PyObject *h)
 {
-	if (!PyObject_IsInstance(h, (PyObject*)DBRowDescriptor::GetType()))
+	if (!PyObject_IsInstance(h, reinterpret_cast<PyObject*>( DBRowDescriptor::GetType() )))
 		return PyErr_SetString(PyExc_TypeError, "require a DBRowDescriptor instance"), false;
-	DBRowDescriptor *rd = (DBRowDescriptor*)h;
+	DBRowDescriptor *rd = static_cast<DBRowDescriptor*>( h );
 	if (rd->mDataLen != mRD->mDataLen || rd->mNObjects != mRD->mNObjects)
 		return PyErr_SetString(PyExc_ValueError, "header.Size() doesn't match"), false;
 

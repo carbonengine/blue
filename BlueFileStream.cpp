@@ -32,28 +32,65 @@ namespace
 	const int INVALID_FILE = -1;
 
 #ifdef _WIN32
-	int OpenFile( BlueFileStream::OpenMode mode, const wchar_t* filename )
+
+	int ConvertShareMode( BlueFileStream::ShareMode shareMode )
 	{
-		int oflag;
-		if( mode == BlueFileStream::OM_READONLY )
+		int shflag = 0;
+
+		switch( shareMode )
 		{
+		case BlueFileStream::SM_NOSHARING:
+			shflag = _SH_DENYRW;
+			break;
+
+		case BlueFileStream::SM_READSHARING:
+			shflag = _SH_DENYWR;
+			break;
+
+		case BlueFileStream::SM_RWSHARING:
+			shflag = _SH_DENYNO;
+			break;
+		}
+
+		return shflag;
+	}
+
+
+	int ConvertOpenMode( BlueFileStream::OpenMode mode )
+	{
+		int oflag = 0;
+
+		switch( mode )
+		{
+		case BlueFileStream::OM_READONLY:
 			oflag = _O_RDONLY;
-		}
-		else
-		{
+			break;
+
+		case BlueFileStream::OM_READWRITE:
 			oflag = _O_CREAT | _O_RDWR;
+			break;
 		}
-		
+
+		return oflag;
+	}
+
+	int OpenFile( const wchar_t* filename, BlueFileStream::OpenMode mode, BlueFileStream::ShareMode shareMode  )
+	{
+		int oflag = ConvertOpenMode( mode );
+		int shflag = ConvertShareMode( shareMode );
+
 		int fd;
-		errno_t error = _wsopen_s( &fd, filename, oflag | _O_BINARY, _SH_DENYNO, _S_IREAD | _S_IWRITE );
+		errno_t error = _wsopen_s( &fd, filename, oflag | _O_BINARY, shflag, _S_IREAD | _S_IWRITE );
 
 		return fd;
 	}
 
-	int CreateFile( const wchar_t* filename )
+	int CreateFile( const wchar_t* filename, BlueFileStream::ShareMode shareMode )
 	{
 		int fd;
-		errno_t error = _wsopen_s( &fd, filename, _O_CREAT| _O_EXCL | O_RDWR | _O_BINARY, _SH_DENYRW, _S_IREAD | _S_IWRITE );
+
+		int shflag = ConvertShareMode( shareMode );
+		errno_t error = _wsopen_s( &fd, filename, _O_CREAT| _O_TRUNC | O_RDWR | _O_BINARY, shflag, _S_IREAD | _S_IWRITE );
 
 		return fd;
 	}
@@ -94,7 +131,7 @@ namespace
 		}
 		else
 		{
-			oflag = SCE_KERNEL_O_RDWR | SCE_KERNEL_O_CREAT;
+			oflag = SCE_KERNEL_O_RDWR | SCE_KERNEL_O_CREAT | SCE_KERNEL_O_TRUNC;
 		}
 
 		std::string filenameA;
@@ -108,7 +145,7 @@ namespace
 	{
 		std::string filenameA;
 		filenameA = CW2A( filename );
-		int fd = sceKernelOpen( filenameA.c_str(), SCE_KERNEL_O_CREAT| SCE_KERNEL_O_EXCL | SCE_KERNEL_O_RDWR, SCE_KERNEL_S_IRWU );
+		int fd = sceKernelOpen( filenameA.c_str(), SCE_KERNEL_O_CREAT| SCE_KERNEL_O_TRUNC | SCE_KERNEL_O_RDWR, SCE_KERNEL_S_IRWU );
 
 		return fd;
 	}
@@ -138,27 +175,70 @@ namespace
 		return sceKernelLseek( fd, 0, SCE_KERNEL_SEEK_CUR );
 	}
 
+	int ConvertShareMode( BlueFileStream::ShareMode shareMode, int shflag );
+
 #else
-	int OpenFile( BlueFileStream::OpenMode mode, const wchar_t* filename )
+	int ConvertShareMode( BlueFileStream::ShareMode shareMode )
 	{
-		int oflag;
-		if( mode == BlueFileStream::OM_READONLY )
+		int shflag = 0;
+
+		switch( shareMode )
 		{
+		case BlueFileStream::SM_NOSHARING:
+			shflag = O_EXLOCK;
+			break;
+
+		case BlueFileStream::SM_READSHARING:
+			shflag = O_SHLOCK;
+			break;
+
+		case BlueFileStream::SM_RWSHARING:
+			shflag = 0;
+			break;
+		}
+
+		return shflag;
+	}
+
+	int ConvertOpenMode( BlueFileStream::OpenMode mode )
+	{
+		int oflag = 0;
+
+		switch( mode )
+		{
+		case BlueFileStream::OM_READONLY:
 			oflag = O_RDONLY;
-		}
-		else
-		{
+			break;
+
+		case BlueFileStream::OM_READWRITE:
 			oflag = O_CREAT | O_RDWR;
+			break;
 		}
-		
-		int fd = open( CW2A( filename ), oflag, S_IRUSR | S_IWUSR );
+
+		return oflag;
+	}
+
+
+	int OpenFile( const wchar_t* filename, BlueFileStream::OpenMode mode, BlueFileStream::ShareMode shareMode )
+	{
+		int oflag = ConvertOpenMode( mode );
+		int shflag = ConvertShareMode( shareMode );
+		int fd = open( CW2A( filename ), oflag | shflag, S_IRUSR | S_IWUSR );
         
 		return fd;
 	}
     
 	int CreateFile( const wchar_t* filename )
 	{
-		int fd = open( CW2A( filename ), O_CREAT| O_EXCL | O_RDWR, S_IRUSR | S_IWUSR );
+		int fd = open( CW2A( filename ), O_CREAT| O_TRUNC | O_RDWR, S_IRUSR | S_IWUSR );
+        
+		return fd;
+	}
+    
+	int CreateFile( const wchar_t* filename, BlueFileStream::ShareMode shareMode )
+	{
+		int shflag = ConvertShareMode( shareMode );
+		int fd = open( CW2A( filename ), O_CREAT| O_TRUNC | O_RDWR | shflag, S_IRUSR | S_IWUSR );
         
 		return fd;
 	}
@@ -185,7 +265,7 @@ namespace
     
 	off_t Tell( int fd )
 	{
-		return lseek( fd, SEEK_CUR, 0 );
+		return lseek( fd, 0, SEEK_CUR );
 	}
 #endif
 }
@@ -207,11 +287,11 @@ BlueFileStream::~BlueFileStream()
 	Close();
 }
 
-bool BlueFileStream::Open( const wchar_t* filename, OpenMode mode )
+bool BlueFileStream::Open( const wchar_t* filename, OpenMode mode, ShareMode shareMode )
 {
 	STACKLESS_ALLOWTHREADS();
 
-	m_fileDescriptor = OpenFile(mode, filename);
+	m_fileDescriptor = OpenFile( filename, mode, shareMode );
 
 	if( m_fileDescriptor == INVALID_FILE )
 	{
@@ -226,7 +306,7 @@ bool BlueFileStream::Create( const wchar_t* filename )
 {
 	STACKLESS_ALLOWTHREADS();
 
-	m_fileDescriptor = CreateFile( filename );
+	m_fileDescriptor = CreateFile( filename, SM_NOSHARING );
 
 	if( m_fileDescriptor == INVALID_FILE )
 	{
@@ -393,3 +473,33 @@ bool BlueFileStream::UnlockData()
 	return true;
 }
 
+Be::Result<std::string> BlueFileStream::ReadEntireFile( const wchar_t* filename, std::string& contents )
+{
+	STACKLESS_ALLOWTHREADS();
+
+	m_fileDescriptor = OpenFile( filename, OM_READONLY, SM_READSHARING );
+
+	if( m_fileDescriptor == INVALID_FILE )
+	{
+		return Be::Result<std::string>( "Open failed" );
+	}
+
+	ssize_t size = GetSize();
+	if( size < 0 )
+	{
+		return Be::Result<std::string>( "GetSize failed" );
+	}
+
+	contents.resize( size );
+
+	ssize_t bytesRead = Read( &contents[0], size );
+
+	Close();
+
+	if( bytesRead < size )
+	{
+		return Be::Result<std::string>( "Read failed" );
+	}
+
+	return Be::Result<std::string>();
+}

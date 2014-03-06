@@ -12,19 +12,18 @@ BlueStatistics* g_statistics = &s_statisticsInstance;
 
 BLUE_REGISTER_GLOBAL_AS_MODULE_OBJECT( "statistics", g_statistics );
 
+static bool s_isTelemetryConnectionRequested = false;
 static bool s_isTelemetryConnected = false;
-static bool s_isTelemetryPaused = false;
 static bool s_isTelemetryCppCaptureEnabled = true;
+static bool s_isTelemetryPaused = false;
+static float s_telemetrySamplePeriod = 0.0f; // In seconds
 
 #if CCP_TELEMETRY_ENABLED
 static bool s_isTelemetryShuttingDown = false;
-static bool s_isTelemetryConnectionRequested = false;
 static int s_telemetryConnectionType = 0;
-
 static std::string s_telemetryServer;
 static Be::Time s_telemetryStartTime;
 static Be::Time s_telemetryLastCheckTime;
-static float s_telemetrySamplePeriod; // In seconds
 static int s_telemetryBufferSize = 8 * 1024 * 1024;
 static CcpThreadId_t s_telemetryThread = NULL;
 static uint32_t s_telemetryTaskletTlsIx = NULL;

@@ -141,14 +141,16 @@ bool PyScheduler::RunTime( double t )
 {
 	long ticks;
 	
-#ifdef USE_OVERSHOOT
-	//overshoot disabled, it causes too much instability in the estimation under load
-	long overshoot = mOvershoot;
-#else
-	long overshoot = 0;
-#endif
 	if (mTPS)
+	{
+#ifdef USE_OVERSHOOT
+		//overshoot disabled, it causes too much instability in the estimation under load
+		long overshoot = mOvershoot;
+#else
+		long overshoot = 0;
+#endif
 		ticks = (long)( t * mTPS - overshoot );
+	}
 	else
 		ticks = 1000;  //try to get some reasonable estimates
 

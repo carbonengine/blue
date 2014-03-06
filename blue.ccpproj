@@ -56,9 +56,7 @@ BaseConfigurations:
       - WIN32
     Imports:
     - ../../../../../../sdk/libyaml/yaml-0.1.2/yaml_0.1.2.yaml
-    # Don't enable this until after Humberto ships - needs more testing
-    # before we're ready to ship the required dlls
-    # - ../../../../../../sdk/libcurl/7.32.0/libcurl_7.32.0.yaml
+    - ../../../../../../sdk/libcurl/7.34.0/libcurl_7.34.0.yaml
 
     Link:
       AdditionalDependencies:
@@ -168,6 +166,8 @@ Configurations:
     BaseConfigurations:
     - Lua
     - Android
+    Imports:
+    - ../../../../../../sdk/libcurl/7.32.0/libcurl_7.32.0.yaml
     General: 
       TargetName: libblue
       LinkIncremental: true

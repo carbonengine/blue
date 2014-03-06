@@ -7,4 +7,4 @@
 
 #pragma once
 
-bool BlueInitializeResourceLoading();
+BLUEIMPORT bool BlueInitializeResourceLoading();

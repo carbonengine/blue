@@ -219,7 +219,6 @@ void MemoryTracker::SetCustomHeapsToLargestHeaps()
 
 	largestIx = FindLargestHeapIx( heaps, sizes, count );
 	m_customHeap3 = (intptr_t)heaps[largestIx];
-	sizes[largestIx] = 0;
 }
 #endif
 
@@ -259,9 +258,6 @@ void MemoryTracker::SummaryReport( const char* filename )
 		size_t crtHeapSize = 0;
 		size_t d3dHeap1Size = 0;
 		size_t d3dHeap2Size = 0;
-		size_t customHeap1Size = 0;
-		size_t customHeap2Size = 0;
-		size_t customHeap3Size = 0;
 		size_t trackingHeapSize = 0;
 
 		HANDLE heaps[256];
@@ -315,22 +311,15 @@ void MemoryTracker::SummaryReport( const char* filename )
 			totalSize += size;
 		}
 
-		size_t unknownSize = totalSize;
-		unknownSize -= processHeapSize;
-		unknownSize -= crtHeapSize;
-		unknownSize -= d3dHeap1Size;
-		unknownSize -= d3dHeap2Size;
-		unknownSize -= trackingHeapSize;
-
 		size_t unaccountedSize = crtHeapSize - CCPMallocUsage();
 
-		fprintf( file, "All heaps, %d\n", totalSize );
-		fprintf( file, "Process heap, %d\n", processHeapSize );
-		fprintf( file, "CRT heap, %d\n", crtHeapSize );
-		fprintf( file, "CRT heap unaccounted, %d\n", unaccountedSize );
-		fprintf( file, "D3D heap 1, %d\n", d3dHeap1Size );
-		fprintf( file, "D3D heap 2, %d\n", d3dHeap2Size );
-		fprintf( file, "Tracking heap, %d\n", trackingHeapSize );
+		fprintf( file, "All heaps, %" CCP_SIZET_FORMAT "\n", totalSize );
+		fprintf( file, "Process heap, %" CCP_SIZET_FORMAT "\n", processHeapSize );
+		fprintf( file, "CRT heap, %" CCP_SIZET_FORMAT "\n", crtHeapSize );
+		fprintf( file, "CRT heap unaccounted, %" CCP_SIZET_FORMAT "\n", unaccountedSize );
+		fprintf( file, "D3D heap 1, %" CCP_SIZET_FORMAT "\n", d3dHeap1Size );
+		fprintf( file, "D3D heap 2, %" CCP_SIZET_FORMAT "\n", d3dHeap2Size );
+		fprintf( file, "Tracking heap, %" CCP_SIZET_FORMAT "\n", trackingHeapSize );
 	}
 #endif
 	fclose( file );

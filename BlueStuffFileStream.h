@@ -35,6 +35,9 @@ public:
 	ssize_t GetPosition();
 	ssize_t GetSize();
 	bool LockData( void** data,	size_t size	);
+
+	void ClearLockedData();
+
 	bool UnlockData();
 
 private:

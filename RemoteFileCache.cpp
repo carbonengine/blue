@@ -14,12 +14,18 @@
 #include "BlueRemoteStream.h"
 #include "Include/IBluePaths.h"
 #include "Include/BlueFileUtil.h"
-#include "md5.h"
+
+#ifdef __ANDROID__
+#include <errno.h>
+#endif
 
 namespace
 {
-	void AtomicRename( const std::wstring& src, const std::wstring& dst )
+	CcpLogChannel_t s_ch = CCP_LOG_DEFINE_CHANNEL( "RemoteFileCache" );
+
+	void RenameFile( const std::wstring& src, const std::wstring& dst )
 	{
+#ifdef _WIN32
 		wchar_t srcBuffer[MAX_PATH];
 		wchar_t dstBuffer[MAX_PATH];
 		GetFullPathNameW( src.c_str(), MAX_PATH, srcBuffer, NULL );
@@ -27,12 +33,18 @@ namespace
 
 		if( !MoveFileW( srcBuffer, dstBuffer ) )
 		{
-			CCP_LOGWARN( "Couldn't rename file (%d)", GetLastError() );
+			CCP_LOGWARN_CH( s_ch, "Couldn't rename file (%d)", GetLastError() );
 		}
+#else
+        if( rename( CW2A( src.c_str() ), CW2A( dst.c_str() ) ) )
+        {
+			CCP_LOGWARN_CH( s_ch, "Couldn't rename file (%d)", errno );
+        }
+#endif
 	}
 }
 
-RemoteFileCache::RemoteFileCache() : 
+RemoteFileCache::RemoteFileCache() :
 	m_server( "http://127.0.0.1:5000" ),
 	m_prefix( "/res/"),
 	m_cacheFolder( L"cache:/ResFiles"),
@@ -44,28 +56,48 @@ RemoteFileCache::RemoteFileCache() :
 {
 }
 
-bool RemoteFileCache::DownloadFileIndex( const char* url )
+bool RemoteFileCache::DownloadFileIndex( const char* index )
 {
-	BlueRemoteStreamPtr remoteStream;
-	remoteStream.CreateInstance();
-	bool isOK = remoteStream->Open( url );
+	std::string url = m_server;
+	url += m_prefix;
+	url += index;
 
-	if(	!isOK )
+	std::wstring cachedName = m_cacheFolder;
+	cachedName += L"/";
+	cachedName += CA2W( index );
+
+	IBlueStreamPtr stream;
+
+	if( BePaths->FileExists( cachedName ) )
+	{
+		CCP_LOG_CH( s_ch, "Index %s exists locally", index );
+		CreateFileStreamForCachedFile( cachedName, &stream );
+	}
+
+	if( !stream )
+	{
+		CCP_LOG_CH( s_ch, "Downloading index from %s", url.c_str() );
+
+		BlueRemoteStreamPtr remoteStream;
+		remoteStream.CreateInstance();
+		bool isOK = remoteStream->Open( url.c_str() );
+
+		if(	!isOK )
+		{
+			return false;
+		}
+
+		CacheContentsOfRemoteStream( remoteStream, cachedName, L"remote file index" );
+
+		stream = remoteStream;
+	}
+
+	if( !stream )
 	{
 		return false;
 	}
 	
-	char* contents = nullptr;
-	ssize_t size = remoteStream->GetSize();
-
-	if( !remoteStream->LockData( (void**)&contents, size ) )
-	{
-		return false;
-	}
-
-	SetFileIndexImpl( contents, size );
-
-	return true;
+	return SetFileIndexFromStream( stream );
 }
 
 void RemoteFileCache::SetCacheFolder( const wchar_t* folderName )
@@ -114,37 +146,12 @@ Be::Result<std::string> RemoteFileCache::GetStreamFromPathW( const wchar_t* resP
 			return Be::Result<std::string>( "Size does not match expected value" );
 		}
 
-		void* data = nullptr;
-		if( remoteStream->LockData( &data, size ) )
+		if( !remoteStream->VerifyContents( info.checksum.c_str() ) )
 		{
-			MD5 checkSum;
-			checkSum.update( reinterpret_cast<unsigned char*>( data ), (unsigned int)size );
-			checkSum.finalize();
-			if( strcmp( info.checksum.c_str(), checkSum.hex_digest() ) != 0 )
-			{
-				return Be::Result<std::string>( "Checksum does not match expected value" );
-			}
-
-			BlueFileStreamPtr fileStream;
-			fileStream.CreateInstance();
-
-			// Write contents to a temp file, then rename. This prevents cases where the file
-			// was found but another process was still writing to it.
-			std::wstring cachedNameOnDisk = BePaths->ResolvePathForWritingW( cachedName );
-			std::wstring tempNameOnDisk = cachedNameOnDisk + L".tmp";
-
-			if( fileStream->Create( tempNameOnDisk.c_str() ) )
-			{
-				fileStream->Write( data, size );
-				fileStream->Close();
-
-				AtomicRename( tempNameOnDisk, cachedNameOnDisk );
-			}
-			remoteStream->UnlockData();
-
-			++m_filesCached;
-			m_bytesCached += size;
+			return Be::Result<std::string>( "Checksum does not match expected value" );
 		}
+
+		CacheContentsOfRemoteStream( remoteStream, cachedName, resPath );
 
 		*stream = remoteStream.Detach();
 		return Be::Result<std::string>();
@@ -153,7 +160,7 @@ Be::Result<std::string> RemoteFileCache::GetStreamFromPathW( const wchar_t* resP
 	return Be::Result<std::string>( "Couldn't download file" );
 }
 
-Be::Result<std::string> RemoteFileCache::CreateFileStreamForCachedFile( std::wstring &cachedName, IBlueStream** &stream )
+Be::Result<std::string> RemoteFileCache::CreateFileStreamForCachedFile( const std::wstring &cachedName, IBlueStream** stream )
 {
 	BlueFileStreamPtr fileStream;
 	fileStream.CreateInstance();
@@ -162,7 +169,7 @@ Be::Result<std::string> RemoteFileCache::CreateFileStreamForCachedFile( std::wst
 	
 	for( int retries = 0; retries < 5; ++retries )
 	{
-		if( fileStream->Open( cachedNameOnDisk.c_str(), BlueFileStream::OM_READONLY ) )
+		if( fileStream->Open( cachedNameOnDisk.c_str(), BlueFileStream::OM_READONLY, BlueFileStream::SM_READSHARING ) )
 		{
 			*stream = fileStream.Detach();
 			++m_filesUsedFromCache;
@@ -315,7 +322,11 @@ Be::Result<std::string> RemoteFileCache::ListDir( const wchar_t* resPath, std::l
 		std::string name = *it;
 		if( name.back() == '/' )
 		{
+#ifdef __ANDROID__
+            name.erase( name.begin() + name.length() - 1, name.end() );
+#else
 			name.pop_back();
+#endif
 		}
 		contents.push_back( name );
 	}
@@ -350,6 +361,53 @@ bool RemoteFileCache::IsDirectory( const wchar_t* resPath )
 
 	auto foundIt = m_folderIndex.find( validatedPath.c_str() );
 	return foundIt != m_folderIndex.end();
+}
+
+void RemoteFileCache::CacheContentsOfRemoteStream( BlueRemoteStream* stream, const std::wstring& cachedName, const wchar_t* resPath )
+{
+	void* data = nullptr;
+	ssize_t size = stream->GetSize();
+
+	if( stream->LockData( &data, size ) )
+	{
+		BlueFileStreamPtr fileStream;
+		fileStream.CreateInstance();
+
+		// Write contents to a temp file, then rename. This prevents cases where the file
+		// was found but another process was still writing to it.
+		std::wstring cachedNameOnDisk = BePaths->ResolvePathForWritingW( cachedName );
+		std::wstring tempNameOnDisk = cachedNameOnDisk + L".tmp";
+
+		if( fileStream->Create( tempNameOnDisk.c_str() ) )
+		{
+			fileStream->Write( data, size );
+			fileStream->Close();
+
+			CCP_LOG_CH( s_ch, "Cached %S as %S", resPath, cachedNameOnDisk.c_str() );
+
+			RenameFile( tempNameOnDisk, cachedNameOnDisk );
+
+			++m_filesCached;
+			m_bytesCached += size;
+		}
+
+		stream->UnlockData();
+	}
+}
+
+bool RemoteFileCache::SetFileIndexFromStream( IBlueStream* stream )
+{
+	char* contents = nullptr;
+	ssize_t size = stream->GetSize();
+
+	if( !stream->LockData( (void**)&contents, size ) )
+	{
+		return false;
+	}
+
+	SetFileIndexImpl( contents, size );
+
+	return true;
 }
 
 #endif

@@ -34,6 +34,14 @@ const Be::ClassInfo* RemoteFileCache::ExposeToBlue()
 
 		MAP_ATTRIBUTE
 		(
+			"cacheFolder",
+			m_cacheFolder,
+			"Folder where downloaded files are cached",
+			Be::READWRITE
+		)
+
+		MAP_ATTRIBUTE
+		(
 			"bytesDownloaded",
 			m_bytesDownloaded,
 			"Number of bytes successfully downloaded from server.",

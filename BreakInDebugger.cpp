@@ -11,14 +11,12 @@
 
 static PyObject* PyBreakInDebugger( PyObject* module, PyObject* args )
 {
-
-	char* context = NULL;
 	if( PyTuple_GET_SIZE(args) == 1 )
 	{
 		PyObject* o = PyTuple_GetItem( args, 0 );
 		if( PyString_Check( o ) )
 		{
-			context = PyString_AsString( o );
+			char* context = PyString_AsString( o );
 			OutputDebugString( "Python Triggered Breakpoint: " );
 			OutputDebugString( context );
 			OutputDebugString( "\n" );

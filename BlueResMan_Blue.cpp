@@ -78,138 +78,6 @@ static PyObject* PySaveObjectToYamlString( PyObject* self, PyObject* args )
 	return returnValue;
 }
 
-static PyObject* PyGetObject( PyObject* self, PyObject* args )
-{
-	BlueResMan* pThis = BluePythonCast<BlueResMan*>( self );
-
-	PyObject *resNameObject = NULL;
-	PyObject *resNameExt = NULL;
-
-	if (!PyArg_ParseTuple(args, "O|O", &resNameObject, &resNameExt ))
-	{
-		return NULL;
-	}
-
-	if( !PyString_Check( resNameObject ) )
-	{
-		return NULL;
-	}
-
-	if( resNameExt && !PyString_Check( resNameExt ) )
-	{
-		return NULL;
-	}
-
-	std::string resName = PyString_AsString( resNameObject );
-	std::string ext = resNameExt ? PyString_AsString( resNameExt ) : "";
-
-	IRootPtr res;
-	res.Attach( pThis->GetObject( resName, ext ) );
-
-	if( res )
-	{
-		return BlueWrapObjectForPython( res );
-	}
-
-	Py_RETURN_NONE;
-}
-
-static PyObject* PyGetObjectW( PyObject* self, PyObject* args )
-{
-	BlueResMan* pThis = BluePythonCast<BlueResMan*>( self );
-
-	PyObject *resNameObject = NULL;
-	PyObject *resNameExt = NULL;
-
-	if (!PyArg_ParseTuple(args, "O|O", &resNameObject, &resNameExt ))
-	{
-		return NULL;
-	}
-
-	if( !PyUnicode_Check( resNameObject ) )
-	{
-		return NULL;
-	}
-
-	if( resNameExt && !PyUnicode_Check( resNameExt ) )
-	{
-		return NULL;
-	}
-
-	std::wstring resName = (const wchar_t*)PyUnicode_AsUnicode( resNameObject );
-	std::wstring resExt = resNameExt ? (const wchar_t*)PyUnicode_AsUnicode( resNameExt ) : L"";
-
-	IRootPtr res;
-	res.Attach( pThis->GetObjectW( resName, resExt ) );
-
-	if( res )
-	{
-		return BlueWrapObjectForPython( res );
-	}
-
-	Py_RETURN_NONE;
-}
-
-static PyObject* PyClearCachedObject( PyObject* self, PyObject* args )
-{
-	BlueResMan* pThis = BluePythonCast<BlueResMan*>( self );
-
-	PyObject *resNameObject = NULL;
-	PyObject *resExtObject = NULL;
-
-	if (!PyArg_ParseTuple(args, "O|O", &resNameObject, &resExtObject ))
-	{
-		return NULL;
-	}
-
-	if( !PyString_Check( resNameObject ) )
-	{
-		return NULL;
-	}
-
-	if( resExtObject && !PyString_Check( resExtObject ) )
-	{
-		return NULL;
-	}
-
-	std::string resName = PyString_AsString( resNameObject );
-	std::string resExt = resExtObject ? PyString_AsString( resExtObject ) : "";
-
-	pThis->ClearCachedObject( resName, resExt );
-
-	Py_RETURN_NONE;
-}
-
-static PyObject* PyClearCachedObjectW( PyObject* self, PyObject* args )
-{
-	BlueResMan* pThis = BluePythonCast<BlueResMan*>( self );
-
-	PyObject *resNameObject = NULL;
-	PyObject *resExtObject = NULL;
-
-	if (!PyArg_ParseTuple(args, "O|O", &resNameObject, &resExtObject ))
-	{
-		return NULL;
-	}
-
-	if( !PyUnicode_Check( resNameObject ) )
-	{
-		return NULL;
-	}
-
-	if( resExtObject && !PyUnicode_Check( resExtObject ) )
-	{
-		return NULL;
-	}
-
-	std::wstring resName = (const wchar_t*)PyUnicode_AsUnicode( resNameObject );
-	std::wstring resExt = resExtObject ? (const wchar_t*)PyUnicode_AsUnicode( resExtObject ) : L"";
-
-	pThis->ClearCachedObjectW( resName, resExt );
-
-	Py_RETURN_NONE;
-}
-
 static PyObject* PyRegisterResourceConstructor( PyObject* self, PyObject* args )
 {
 	BlueResMan* pThis = BluePythonCast<BlueResMan*>( self );
@@ -529,27 +397,6 @@ const Be::ClassInfo* BlueResMan::ExposeToBlue()
 			"Loads object from a string that has yaml contents"
 		)
 
-		MAP_METHOD
-		( 
-			"GetObject", 
-			PyGetObject, 
-			"Gets an object associated with the given path name. If it has been loaded already, will return a cached version."
-			"\n"
-			"\nArguments:"
-			"\npath - The resource path of the object to get"
-			"\nextension - An extension for the object (default \"\")" 
-		)
-		MAP_METHOD
-		( 
-			"GetObjectW", 
-			PyGetObjectW, 
-			"Gets an object associated with the given path name. If it has been loaded already, will return a cached version."
-			"\n"
-			"\nArguments:"
-			"\npath - The resource path of the object to get"
-			"\nextension - An extension for the object (default \"\")" 
-		)
-		
 		MAP_METHOD_AND_WRAP
 		( 
 			"Wait", 
@@ -571,34 +418,6 @@ const Be::ClassInfo* BlueResMan::ExposeToBlue()
 		MAP_METHOD_AND_WRAP( "SetUrgentResourceLoads", SetUrgentResourceLoads, "Enables (or disables) urgent resource loads" )
 		MAP_METHOD_AND_WRAP( "ResetQueueStats", ResetQueueStats, "Resets stats for load and prep queues" )
 
-		MAP_METHOD
-		( 
-			"ClearCachedObject", 
-			PyClearCachedObject, 
-			"Clears the object associated with the given path."
-			"\nFuture calls to GetObject for the path will return a new object."
-			"\n"
-			"\nArguments:"
-			"\npath - The resource path of the object to get"
-			"\nextension - An extension for the object (default \"\")" 
-		)
-		MAP_METHOD
-		( 
-			"ClearCachedObjectW", 
-			PyClearCachedObjectW, 
-			"Clears the object associated with the given path."
-			"\nFuture calls to GetObject for the path will return a new object."
-			"\n"
-			"\nArguments:"
-			"\npath - The resource path of the object to get"
-			"\nextension - An extension for the object (default \"\")" 
-		)
-		MAP_METHOD_AND_WRAP
-		( 
-			"ClearAllCachedObjects", 
-			ClearAllCachedObjects, 
-			"Clears all cached objects."
-		)
 		MAP_METHOD_AND_WRAP
 		(
 			"SetLoadingThreadPriority",

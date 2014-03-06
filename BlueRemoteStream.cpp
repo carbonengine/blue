@@ -11,11 +11,13 @@
 
 #include "BlueRemoteStream.h"
 #include "include/IBlueOS.h"
-#include "include/CcpStatistics.h"
 
 #if CCP_STACKLESS
 #include "CcpUtils/PyCpp.h"
 #endif
+#include "md5.h"
+
+static CcpLogChannel_t s_ch = CCP_LOG_DEFINE_CHANNEL( "RemoteStream" );
 
 BlueRemoteStream::BlueRemoteStream() :
 	m_curl( nullptr ),
@@ -23,6 +25,7 @@ BlueRemoteStream::BlueRemoteStream() :
 	m_readLocation( nullptr ),
 	m_dataSize( 0 )
 {
+	InitializeCurl();
 }
 
 BlueRemoteStream::~BlueRemoteStream()
@@ -38,12 +41,14 @@ bool BlueRemoteStream::Open( const char* resUrl )
 #if CCP_STACKLESS
 	Ccp::PyAllowThreads allowThreads( true );
 #endif
+	CCP_LOG_CH( s_ch, "Opening %s", resUrl );
 
 	m_curl = curl_easy_init();
 	curl_easy_setopt( m_curl, CURLOPT_URL, resUrl );
 	curl_easy_setopt( m_curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback );
 	curl_easy_setopt( m_curl, CURLOPT_WRITEDATA, (void*)this );
 	curl_easy_setopt( m_curl, CURLOPT_FAILONERROR, 1 );
+	curl_easy_setopt( m_curl, CURLOPT_ACCEPT_ENCODING, "gzip" );
 
 	CURLcode res = curl_easy_perform( m_curl );
 
@@ -196,6 +201,30 @@ void BlueRemoteStream::ReceiveData( void* data, size_t size )
 	m_data = reinterpret_cast<uint8_t*>( CCP_REALLOC( "BlueRemoteStream", m_data, newSize ) );
 	memcpy( m_data + m_dataSize, data, size );
 	m_dataSize = newSize;
+}
+
+void BlueRemoteStream::InitializeCurl()
+{
+	static bool isInitialized = false;
+	if( !isInitialized )
+	{
+		curl_global_init( CURL_GLOBAL_DEFAULT );
+		isInitialized = true;
+	}
+}
+
+bool BlueRemoteStream::VerifyContents( const char* expectedChecksum )
+{
+	MD5 checkSum;
+	checkSum.update( reinterpret_cast<unsigned char*>( m_data ), (unsigned int)m_dataSize );
+	checkSum.finalize();
+	const char* checkSumAsHex = checkSum.hex_digest();
+	if( strcmp( expectedChecksum, checkSumAsHex ) != 0 )
+	{
+		return false;
+	}
+
+	return true;
 }
 
 #endif

@@ -70,7 +70,7 @@ PyObject *BluePyOS::PyXUtil_Filter(PyObject *args)
 		
         int idx = PyInt_AS_LONG(idxO);
         Py_ssize_t nullOffset; //throwaway
-		myvec[numConds].dataIdx = ((DBRow*)first)->GetDataOffset(idx, myvec[numConds].type, nullOffset);
+		myvec[numConds].dataIdx = static_cast<DBRow*>( first )->GetDataOffset(idx, myvec[numConds].type, nullOffset);
 		if (myvec[numConds].dataIdx<0)
 			return PyErr_SetString(PyExc_ValueError, "invalid column"), 0;
 		myvec[numConds].cond = PyLong_AsLongLong(cndO);
@@ -93,7 +93,7 @@ PyObject *BluePyOS::PyXUtil_Filter(PyObject *args)
         for (long j = 0; j < numConds; j++)
         {  
             __int64 value;
-			if ( ! ((DBRow*)row)->GetValue(myvec[j].type, myvec[j].dataIdx, value) )
+			if ( ! static_cast<DBRow*>( row )->GetValue(myvec[j].type, myvec[j].dataIdx, value) )
                 return PyErr_SetString(PyExc_RuntimeError, "XUtil_Filter: Unsupported data type or index out of range for DBRow"),0;
             if (myvec[j].cond != value)
             {
@@ -186,7 +186,7 @@ PyObject *BluePyOS::PyXUtil_Index(PyObject *args)
 		if (!PyObject_IsInstance(row, (PyObject*)DBRow::GetType()))
 			continue; // Should we report this?
 
-		PyObject* keyObject = ((DBRow*)row)->SequenceGet((DBRow*)row, keyColumn);
+		PyObject* keyObject = static_cast<DBRow*>( row )->SequenceGet(static_cast<DBRow*>( row ), keyColumn);
 		if (!keyObject)
 			return 0;
 		int fail = PyDict_SetItem(dict, keyObject, row);

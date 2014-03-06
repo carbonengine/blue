@@ -8,7 +8,7 @@
 
 // Should ResFile come from BlueResFile2?
 // Also implies use of BlueRemoteStream and BlueRemoteFileCache
-#define USE_RESFILE_2 0
+#define USE_RESFILE_2 1
 
 #ifdef _WIN32
 #define STRICT

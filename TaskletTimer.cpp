@@ -93,7 +93,8 @@ TaskletTimer::TaskletTimer() :
 	mMaxWarn(1),
 	mStackMap( "TaskletTimer/mStackMap" ),
 	mSimpleCtxt(Py_None, true),
-	mCanonicalizationDict(PyDict_New())
+	mCanonicalizationDict(PyDict_New()),
+	m_BlueOSPumpCountAtStart( 0 )
 {
 	mCurrentStack = 0;
 	mActive = false;

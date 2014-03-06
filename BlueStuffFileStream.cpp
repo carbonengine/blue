@@ -23,6 +23,10 @@ BlueStuffFileStream::BlueStuffFileStream() :
 
 BlueStuffFileStream::~BlueStuffFileStream()
 {
+	if( ( m_fileHandle != INVALID_HANDLE_VALUE ) )
+	{
+		CloseHandle( m_fileHandle );
+	}
 }
 
 void BlueStuffFileStream::SetHandle( HANDLE handle, size_t offset, size_t size )
@@ -47,6 +51,17 @@ ssize_t BlueStuffFileStream::Read( void* dest, ssize_t count )
 
 	Ccp::PyAllowThreads allowThreads( true );
 
+	ssize_t curPos = GetPosition();
+	if( curPos == -1 )
+	{
+		return 0;
+	}
+
+	if( curPos + count > (ssize_t)m_dataSize )
+	{
+		count = m_dataSize - curPos;
+	}
+
 	DWORD read;
 	BOOL ok = ReadFile( m_fileHandle, dest, (DWORD)count, &read, NULL );
 
@@ -68,13 +83,19 @@ ssize_t BlueStuffFileStream::Seek( ssize_t distance, BLUESEEK method )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	DWORD oldPos = (DWORD)GetPosition();
+	DWORD oldPos = SetFilePointer( m_fileHandle, 0, NULL, FILE_CURRENT );
+
+	if( oldPos == INVALID_SET_FILE_POINTER )
+	{
+		return INVALID_SET_FILE_POINTER;
+	}
+
 	DWORD newPos;
 
 	switch( method )
 	{
 		case BS_BEGIN:
-			newPos = (DWORD)distance + (DWORD)m_offset;
+			newPos = (DWORD)m_offset + (DWORD)distance;
 			break;
 		
 		case BS_CURRENT:
@@ -85,19 +106,20 @@ ssize_t BlueStuffFileStream::Seek( ssize_t distance, BLUESEEK method )
 			newPos = (DWORD)m_offset + (DWORD)m_dataSize - (DWORD)distance;
 			break;
 	}
+
 	DWORD ret = SetFilePointer( m_fileHandle, newPos, NULL, FILE_BEGIN );
 
 	if( ret == INVALID_SET_FILE_POINTER )
 	{
-		return false;
+		return INVALID_SET_FILE_POINTER;
 	}
 
 	ret -= (DWORD)m_offset;
-	if( (ret < 0) || (ret >= m_dataSize ) )
+	if( ret >= m_dataSize )
 	{
 		// Invalid position - before the start or past the end of the file
 		SetFilePointer( m_fileHandle, oldPos, NULL, FILE_BEGIN );
-		return -1;
+		return INVALID_SET_FILE_POINTER;
 	}
 
 	return ret;
@@ -126,7 +148,7 @@ ssize_t BlueStuffFileStream::GetPosition()
 
 	ret -= (DWORD)m_offset;
 
-	if( (ret < 0) || (ret >= m_dataSize) )
+	if( ret >= m_dataSize )
 	{
 		ret = -1;
 	}
@@ -166,15 +188,13 @@ bool BlueStuffFileStream::LockData( void** data, size_t size )
 
 	if( Seek( 0, BS_BEGIN ) < 0 )
 	{
+		ClearLockedData();
 		return false;
 	}
 
 	if( Read( m_data, m_dataSize ) != m_dataSize )
 	{
-		// Read failed - return memory and bail
-		m_dataSize = 0;
-		CCP_FREE( m_data );
-		m_data = NULL;
+		ClearLockedData();
 		return false;
 	}
 
@@ -192,11 +212,15 @@ bool BlueStuffFileStream::UnlockData()
 		return false;
 	}
 
+	ClearLockedData();
+	return true;
+}
+
+void BlueStuffFileStream::ClearLockedData()
+{
 	m_dataSize = 0;
 	CCP_FREE( m_data );
 	m_data = NULL;
-
-	return true;
 }
 
 #endif

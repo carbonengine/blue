@@ -59,12 +59,15 @@ private:
 	uint32_t m_filesUsedFromCache;
 
 private:
+	bool SetFileIndexFromStream( IBlueStream* stream );
 	void SetFileIndexImpl( const char* contents, ssize_t size );
 
-	Be::Result<std::string> CreateFileStreamForCachedFile( std::wstring &cachedName, IBlueStream** &stream );
+	Be::Result<std::string> CreateFileStreamForCachedFile( const std::wstring &cachedName, IBlueStream** stream );
 	bool GetFileInfo(  const wchar_t* resPath, FileInfo& fileInfo );
 	void AddResPathToFolderIndex( const std::string& resPath );
 	bool ValidateResPath( const wchar_t* resPath, std::string& validatedPath );
+	Be::Result<std::string> VerifyChecksum( void* data, ssize_t size, const FileInfo &info );
+	void CacheContentsOfRemoteStream( class BlueRemoteStream* stream, const std::wstring& cachedName, const wchar_t* resPath );
 };
 
 TYPEDEF_BLUECLASS( RemoteFileCache );

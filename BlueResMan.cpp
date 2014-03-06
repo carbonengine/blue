@@ -10,6 +10,7 @@
 #include "BlackWriter.h"
 #include "BlackReader.h"
 #include "IRootReader.h"
+#include "BlueResFile.h"
 #include "include/BlueAsyncRes.h"
 #include "include/IBlueResource.h"
 #include "include/IBluePersist.h"
@@ -21,6 +22,7 @@
 
 #include <cctype>
 #include <cwctype>
+#include "BlueResManBackgroundCall.h"
 
 BLUE_DEFINE( BlueResMan );
 
@@ -68,9 +70,6 @@ BlueResMan::BlueResMan( IRoot* lockobj ) :
 	m_loadObjectPreloadFiles( true ),
 	m_loadObjectCacheEnabled( true ),
 	m_loadObjectTimeSlice( 0.005f ),
-	m_instances( "BlueResMan/m_instances" ),
-	m_objectInstances( "BlueResMan/m_objectInstances" ),
-	m_objectInstancesReverse( "BlueResMan/m_objectInstancesReverse" ),
 	m_urgentResourceLoads( false ),
 	m_mainThread( 0 ),
 	m_backgroundLoadMemoryBudget( 256*1024*1024 ),
@@ -354,175 +353,6 @@ void BlueResMan::UnregisterResourceConstructor( const wchar_t* name )
 	}
 }
 #endif
-
-void BlueResMan::WeakRefNotify( IWeakObject* obj )
-{
-	ReverseObjectMap::iterator it = m_objectInstancesReverse.find( obj );
-	if( it != m_objectInstancesReverse.end() )
-	{
-		const PathExtensionPairType& key = it->second;
-		m_objectInstances.erase( key );
-		m_objectInstancesReverse.erase( it );
-	}
-}
-
-IRoot* BlueResMan::GetObject( const std::string& path, const std::string& ext )
-{
-	CA2W p(path.c_str());
-	std::wstring pathW( p );
-
-	CA2W wExt(ext.c_str());
-	std::wstring extWStr( wExt );
-
-	return GetObjectW( pathW, extWStr );
-}
-
-IRoot* BlueResMan::GetObjectW( const std::wstring& path, const std::wstring& ext )
-{
-    IRoot* result = NULL;
-
-	std::wstring key;
-	NormalizeResPath( path.c_str(), key );
-
-	const PathExtensionPairType pathAndExt = std::make_pair( key, ext );
-
-	// We break out of this loop once something successfully finishes
-	// This is done to prevent a crash that could occur in a weird edge
-	// case where two tasklets requested the same object. The
-	// first one, that performs the load, then releases the object
-	// before the second gets a hold of it. This in turn removes
-	// the object from the m_objectInstances list.
-	// We end up having to reload the object, but this shouldn't
-	// happen frequently and the main concern is to prevent a crash.
-	while( true )
-	{
-		bool found = false;
-		{
-			// Take care not to hold any iterator across a yield.
-			// It could be invalidated and even if we don't use it
-			// after they yield, the validation done in debug will
-			// complain when it goes out of scope.
-			ObjectMap::iterator it = m_objectInstances.find( pathAndExt );
-			found = it != m_objectInstances.end();
-		}
-		if( !found )
-		{
-			// LoadObject may yield, so we add a dummy in here to mark that
-			// it's being loaded.
-			m_objectInstances[pathAndExt] = NULL;
-
-			// Not found - load new instance
-			result = LoadObjectW( key.c_str() );
-
-			if( !result )
-			{
-				return NULL;
-			}
-
-			IWeakObjectPtr weakObj( BlueCastPtr( result ) );
-
-			if( weakObj )
-			{
-				weakObj->WeakRefRegister( this );
-
-				m_objectInstances[pathAndExt] = weakObj;
-				m_objectInstancesReverse[weakObj] = pathAndExt;
-			}
-			break;
-		}
-		else
-		{
-			{
-				ObjectMap::iterator it = m_objectInstances.find( pathAndExt );
-
-				// Object already exists - return a new reference to it.
-				result = it->second;
-			}
-
-#if CCP_STACKLESS
-			// We may have yielded while loading - wait here until
-			// the object has been put in place
-			while( !result )
-			{
-				if( !PyOS->Yield() )
-				{
-					// Tasklet has been interrupted
-					return NULL;
-				}
-				
-				// Can't trust the iterator staying valid across the yield
-				ObjectMap::iterator it = m_objectInstances.find( pathAndExt );
-				if( it == m_objectInstances.end() )
-				{
-					// Break out of the inner loop - this takes us to the
-					// outer loop to retry the load. 
-					break;
-				}
-				result = it->second;
-			}
-#endif
-
-			if( result )
-			{
-				result->Lock();
-				break;
-			}
-		}
-	}
-
-	return result;
-}
-
-void BlueResMan::ClearCachedObject( const std::string& path, const std::string& ext )
-{
-	CA2W p(path.c_str());
-	std::wstring pathW( p );
-
-	CA2W wExt(ext.c_str());
-	std::wstring extWStr( wExt );
-
-	ClearCachedObjectW( pathW, extWStr );
-}
-
-void BlueResMan::ClearCachedObjectW( const std::wstring& path, const std::wstring& ext )
-{
-	// Note that we only keep a weak reference to the object
-	// so we only need to remove it from our records here.
-
-	std::wstring key;
-	NormalizeResPath( path.c_str(), key );
-
-	const PathExtensionPairType pathAndExt = std::make_pair( key, ext );
-
-	ObjectMap::iterator it = m_objectInstances.find( pathAndExt );
-    if( it != m_objectInstances.end() )
-    {
-        m_objectInstancesReverse.erase( it->second );
-        m_objectInstances.erase( pathAndExt );
-    }
-
-	// Ensure that any .red file cached is also reset
-	BeMotherLode->Delete( key.c_str() );
-}
-
-void BlueResMan::ClearAllCachedObjects()
-{
-	// Note that we only keep a weak reference to the object
-	// so we only need to remove it from our records here.
-
-	while( !m_objectInstances.empty() )
-    {
-        ObjectMap::iterator it = m_objectInstances.begin();
-
-		// Ensure that any .red file cached is also reset
-		BeMotherLode->Delete( it->first.first.c_str() );
-
-		m_objectInstances.erase( it );
-    }
-
-    m_objectInstancesReverse.clear();
-}
-
 
 bool BlueResMan::IsOnMainThread()
 {
@@ -1055,41 +885,47 @@ IRoot* BlueResMan::LoadObjectW( const wchar_t* unnormalizedName, Be::LOADOBJECT_
 		{
 			// Builder was not found in cache - create it. First we create the file object
 			// and read the file.
-			IResFilePtr tmp;
+			IBlueStreamPtr sourceStream;
 
-			static Be::Clsid resFileClsid( "blue", "ResFile" );
-			if( !tmp.CreateInstance( resFileClsid ) )
+#if CCP_STACKLESS
+			BlueResManReadStreamArgs* cbArgs = CCP_NEW( "Wait/cbArgs" ) BlueResManReadStreamArgs;
+
+			MemStreamPtr memStream;
+			if( !memStream.CreateInstance() )
 			{
 				return nullptr;
 			}
 
-			if (!tmp->OpenW( filename.c_str(), true ) )
+			cbArgs->ReadStream( filename, memStream );
+			if( cbArgs->Wait() )
+			{
+				// Only delete the args object if Wait succeeded - if it failed it means
+				// the tasklet was killed. In that case we have to keep the args object
+				// around as it is still referenced by the queue and will get a callback.
+				CCP_DELETE cbArgs;
+			}
+			else
+			{
+				return nullptr;
+			}
+
+			sourceStream = BlueCastPtr( memStream );
+#else
+			ResFilePtr resFile;
+			if( !resFile.CreateInstance() )
+			{
+				return nullptr;
+			}
+
+			if (!resFile->OpenW( filename.c_str(), true ) )
 			{
 				CCP_LOGERR_CH( s_ch, "'%S': no matching file in resource directory.", filename.c_str() );
 
 				return nullptr;
 			}
 
-#if CCP_STACKLESS
-			if( m_loadObjectPreloadFiles && BeResMan->IsOnMainThread() )
-			{
-				if( PyOS->CanYield() )
-				{
-					bool started = false;
-					tmp->Preload( started );
-					while( tmp->PreloadInProgress() )
-					{
-						if( !PyOS->Yield() )
-						{
-							// If we couldn't yield it's likely due the tasklet having been killed.
-							return nullptr;
-						}
-					}
-				}
-			}
+			sourceStream = BlueCastPtr( resFile );
 #endif
-
-			IBlueStreamPtr fileStream = BlueCastPtr( tmp );
 
 			IRootReaderPtr reader;
 
@@ -1109,7 +945,7 @@ IRoot* BlueResMan::LoadObjectW( const wchar_t* unnormalizedName, Be::LOADOBJECT_
 
 			CCP_LOG_CH( s_ch, "Reading %S", filename.c_str() );
 			reader->SetFileName( filename.c_str() );
-			if( !reader->ReadForCachingFromStream( fileStream ) )
+			if( !reader->ReadForCachingFromStream( sourceStream ) )
 			{
 				std::string msg;
 				reader->GetErrorMessage( msg );
@@ -1253,85 +1089,6 @@ Be::Result<std::string> BlueResMan::GetResourceFromScript( const std::wstring& p
 	return Be::Result<std::string>("GetResource call failed");
 }
 
-#if CCP_STACKLESS
-
-struct BlueResManWaitArgs
-{
-public:
-	BlueResManWaitArgs( uint32_t flags = 0 ) : m_flags( flags )
-	{
-		m_channel = PyChannel_New( NULL );
-	}
-
-	~BlueResManWaitArgs()
-	{
-		Py_XDECREF( m_channel );
-		m_channel = nullptr;
-	}
-
-	void AddToQueue()
-	{
-		BeResMan->AddToQueue( 
-			BRMQ_BACKGROUND, 
-			BlueResManWaitArgs::ForwardMarkAsDone, 
-			this, 
-			IBlueCallbackMan::BCBF_FENCE | m_flags, 
-			NULL );
-	}
-
-	// Waits on the channel, blocking this tasklet.
-	bool Wait()
-	{
-		// Go to sleep and wake up! *(the sender releases the channel)
-		PyObject *ret = PyChannel_Receive( m_channel );
-
-		if( !ret )
-		{
-			// Tasklet was killed
-			Py_DECREF( m_channel );
-			m_channel = nullptr;
-			return false;
-		}
-
-		Py_DECREF( ret );
-		return true;
-	}
-
-	// This gets called on the background thread
-	static void ForwardMarkAsDone( void* pContext )
-	{
-		CCP_STATS_ZONE( __FUNCTION__ );
-
-		BlueResManWaitArgs* args = static_cast<BlueResManWaitArgs*>( pContext );
-		BeResMan->AddToQueue( BRMQ_MAIN, MarkAsDone, pContext, args->m_flags, NULL );
-	}
-
-	// This gets called on the main thread, in Update
-	static void MarkAsDone( void* pContext )
-	{
-		CCP_STATS_ZONE( __FUNCTION__ );
-
-		BlueResManWaitArgs* args = static_cast<BlueResManWaitArgs*>( pContext );
-
-		// Tasklet may have been killed while we were waiting
-		if( args->m_channel )
-		{
-			PyChannel_Send( args->m_channel, Py_None );
-		}
-		else
-		{
-			// Tasklet was killed, so the args object won't be deleted by Wait.
-			CCP_DELETE args;
-		}
-	}
-
-private:
-	uint32_t m_flags;
-	PyChannelObject* m_channel;
-};
-
-#endif
-
 Be::Result<std::string> BlueResMan::Wait()
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
@@ -1360,7 +1117,7 @@ Be::Result<std::string> BlueResMan::Wait()
 	// the cbArgs structure is set, allowing us to break out of the loop. The queues are
 	// strictly first-in/first-out so passing a request like through both queues ensures
 	// that any resource that had been scheduled for load has also finished preparing.
-	BlueResManWaitArgs* cbArgs = CCP_NEW( "Wait/cbArgs" ) BlueResManWaitArgs;
+	BlueResManBackgroundCall* cbArgs = CCP_NEW( "Wait/cbArgs" ) BlueResManBackgroundCall;
 
 	cbArgs->AddToQueue();
 	if( cbArgs->Wait() )
@@ -1400,7 +1157,7 @@ Be::Result<std::string> BlueResMan::WaitUrgent()
 		return Be::Result<std::string>( "This tasklet cannot block" );
 	}
 
-	BlueResManWaitArgs* cbArgs = CCP_NEW( "Wait/cbArgs" ) BlueResManWaitArgs( IBlueCallbackMan::BCBF_URGENT );
+	BlueResManBackgroundCall* cbArgs = CCP_NEW( "Wait/cbArgs" ) BlueResManBackgroundCall( IBlueCallbackMan::BCBF_URGENT );
 
 	cbArgs->AddToQueue();
 	cbArgs->Wait();

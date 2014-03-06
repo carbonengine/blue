@@ -33,6 +33,7 @@ public:
 	};
 
 	bool Open( const char* filename );
+	bool VerifyContents( const char* expectedChecksum );
 
 	/////////////////////////////////////////
 	// IBlueStream interface
@@ -49,6 +50,7 @@ public:
 private:
 	static size_t WriteMemoryCallback( void* contents, size_t size, size_t nmemb, void* context );
 	void ReceiveData( void* data, size_t size );
+	void InitializeCurl();
 
 private:
 	CURL* m_curl;

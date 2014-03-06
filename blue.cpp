@@ -218,7 +218,6 @@ BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID)
 #if CCP_STACKLESS
 		BeClasses->RegisterClasses( BlueRegistration::GetClassRegs() );
 		BlueInitializePaths();
-		BlueInitializeResourceLoading();
 #endif
 	}
 	else if (reason == DLL_PROCESS_DETACH)

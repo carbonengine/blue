@@ -15,7 +15,7 @@
 ScopedBlockTrap::ScopedBlockTrap()
 {
 #if CCP_STACKLESS
-	m_tasklet = (PyTaskletObject*)PyStackless_GetCurrent();
+	m_tasklet = reinterpret_cast<PyTaskletObject*>( PyStackless_GetCurrent() );
 	if( m_tasklet ) 
 	{
 		m_originalBlocktrapState = PyTasklet_GetBlockTrap( m_tasklet );

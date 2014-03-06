@@ -67,6 +67,9 @@
     <ClInclude Include="BlueResMan.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="BlueResManBackgroundCall.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
     <ClInclude Include="BlueStuffFileStream.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -407,6 +410,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="BlueResMan.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BlueResManBackgroundCall.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="BlueResMan_Blue.cpp">

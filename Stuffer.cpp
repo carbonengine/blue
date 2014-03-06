@@ -40,6 +40,8 @@ Stuffer::HashTarget::HashTarget( const char *n ) :
 
 void Stuffer::Startup()
 {
+	CCP_LOG( "Stuffer::Startup" );
+
 	if (!BeStuffer)
 	{
 		BeStuffer = CCP_NEW( "ResFile/sStuffer" ) Stuffer();
@@ -116,8 +118,6 @@ Stuffer::Stuffer() :
 {
 	mNumHashes= 0;
 	mHashes = NULL;
-	AddFilesFromFolder( BePaths->ResolvePathW( L"app:/" ) );
-	AddFilesFromFolder( BePaths->ResolvePathW( L"res:/" ) );
 }
 
 void Stuffer::AddFilesFromFolder( const std::wstring& root )

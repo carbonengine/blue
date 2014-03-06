@@ -157,12 +157,15 @@ struct LogChannel :
 		if (flags != -1 && channel)
 		{
 			extern TLOGBUFFHEADER	*theSharedMemory;
-			TLOGCHANNELINFO *ch = theSharedMemory->logchannels.channels + channel-1;
-			if (theSharedMemory && ch)
+			if( theSharedMemory )
 			{
-				if( ch->flagsuppress & TLOGFLAG(flags) )
+				TLOGCHANNELINFO *ch = theSharedMemory->logchannels.channels + channel-1;
+				if( ch )
 				{
-					return PyInt_FromLong(0);
+					if( ch->flagsuppress & TLOGFLAG(flags) )
+					{
+						return PyInt_FromLong(0);
+					}
 				}
 			}
 		}

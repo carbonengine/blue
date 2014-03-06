@@ -13,6 +13,7 @@
 #include "BlueObjectRecycler.h"
 #include "Stuffer.h"
 #include "RemoteFileCache.h"
+#include "BluePaths.h"
 
 
 #if USE_RESFILE_2
@@ -33,7 +34,7 @@ IBlueObjectRecycler* BeRecycler = nullptr;
 BLUE_REGISTER_GLOBAL_AS_MODULE_OBJECT( "resMan", BeResMan );
 BLUE_REGISTER_GLOBAL_AS_MODULE_OBJECT( "recycler", BeRecycler );
 
-bool BlueInitializeResourceLoading()
+BLUEIMPORT bool BlueInitializeResourceLoading()
 {
 #ifdef _WIN32
 	// Set up a callback managers with threads for each extra hw thread available to us.
@@ -78,13 +79,29 @@ bool BlueInitializeResourceLoading()
 	BeResMan = &s_resourceManagerInstance;
 
 #if STUFFER_ENABLED
+	std::vector<std::wstring> argv = BeOS->GetStartupArgs();
+
+	bool noStuffFiles = false;
+	for( size_t i = 1; i < argv.size(); ++i )
+	{
+		const std::wstring &arg = argv[i];
+		CCP_LOG("%S", arg.c_str());
+		if( arg == L"/noStuff" )
+		{
+			noStuffFiles = true;
+			break;
+		}
+	}
+
 	Stuffer::Startup();
+	if( !noStuffFiles )
+	{
+		BeStuffer->AddFilesFromFolder( BePaths->ResolvePathW( L"app:/" ) );
+	}
 #endif
 
 #if USE_RESFILE_2
 	BeRemoteFileCache = &s_remoteFileCache;
-
-	curl_global_init( CURL_GLOBAL_DEFAULT );
 #endif
 
 	return true;

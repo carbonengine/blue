@@ -89,10 +89,6 @@ bool RESFILE_2_CLASSNAME::OpenW( const wchar_t* filename, bool readOnly )
 		{
 			return true;
 		}
-		else
-		{
-			CCP_LOGERR( result.value.c_str() );
-		}
 	}
 #endif
 
@@ -102,7 +98,8 @@ bool RESFILE_2_CLASSNAME::OpenW( const wchar_t* filename, bool readOnly )
 	fileStream.CreateInstance();
 	m_stream = fileStream;
 
-	return fileStream->Open( filenameOnDisk.c_str(), readOnly ? BlueFileStream::OM_READONLY : BlueFileStream::OM_READWRITE );
+	BlueFileStream::OpenMode openMode = readOnly ? BlueFileStream::OM_READONLY : BlueFileStream::OM_READWRITE;
+	return fileStream->Open( filenameOnDisk.c_str(), openMode, BlueFileStream::SM_RWSHARING );
 }
 
 bool RESFILE_2_CLASSNAME::CreateW( const wchar_t* filename )

@@ -145,11 +145,10 @@ namespace
 
 		return absName;
 #else
+        auto nameA = CW2A( name.c_str() );
         char buffer[PATH_MAX];
-        if( !realpath( CW2A( name.c_str() ), buffer ) )
-        {
-            return name;
-        }
+        strcpy_s( buffer, nameA );
+        realpath( CW2A( name.c_str() ), buffer );
         return std::wstring( CA2W( buffer ) );
 #endif
 	}
@@ -158,6 +157,11 @@ namespace
 	{
 		size_t endPos = 0;
 		size_t startPos = path.find_first_of( '/', endPos );
+        if( startPos == std::string::npos )
+        {
+            components.push_back( path );
+            return;
+        }
 		while( startPos != std::string::npos )
 		{
 			++startPos;

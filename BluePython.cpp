@@ -1351,7 +1351,8 @@ PyObject *BluePyOS::CallPyObjectWithTrap(
 
 #else
 
-	return nullptr;
+	BluePy ret = BluePy(PyObject_CallObject(callable, args));
+	return ret.Detach();
 
 #endif
 }

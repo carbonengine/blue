@@ -164,7 +164,7 @@ SuperTime::SuperTime()
     #ifdef _SUPERDEBUG
         DWORD myPid = GetCurrentProcessId();
         char fname[256];
-        sprintf_s(fname, "supertime-PID%d.csv", myPid);
+        sprintf_s(fname, "supertime-PID%lu.csv", myPid);
 	    fopen_s(&out, fname, "w");
     #endif
 }

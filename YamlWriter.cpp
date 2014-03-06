@@ -208,7 +208,13 @@ void YamlWriter::WriteInt32( int32_t value )
 void YamlWriter::WriteInt64( int64_t value )
 {
 	char buffer[ 32 ];
+#ifdef _MSC_VER
 	sprintf_s( buffer, "%I64d", value );
+#elif defined(__ANDROID__)
+	sprintf_s( buffer, "%lld", value );
+#else
+	sprintf_s( buffer, "%" PRId64, value );
+#endif
 	AddScalarEvent( buffer );
 }
 
@@ -276,7 +282,6 @@ void YamlWriter::AddScalarEvent( const char* value, yaml_scalar_style_t style )
 	}
 	int res = yaml_scalar_event_initialize( AddEvent(), NULL, NULL, (yaml_char_t*)value, -1, 1, quoted_implicit, style );
 	CCP_ASSERT( res );
-    res = 0;
 }
 
 yaml_event_t* YamlWriter::AddMappingStartEvent()

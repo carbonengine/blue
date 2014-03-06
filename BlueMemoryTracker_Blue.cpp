@@ -107,7 +107,7 @@ static PyObject* PyDumpModulesAsText( PyObject* self, PyObject* args )
 			fprintf( file, "%s, %d, %s\n", baseName, moduleInfo.SizeOfImage, fullName );
 		}
 
-		fprintf( file, "\n\n%d modules\n%d bytes", numModules, totalSize );
+		fprintf( file, "\n\n%d modules\n%ld bytes", numModules, totalSize );
 		fclose( file );
 	}
 	

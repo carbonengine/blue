@@ -95,15 +95,6 @@ BLUE_INTERFACE( IBlueResMan ) : public IRoot
 	virtual bool SaveObject( IRoot* obj, const char* name ) = 0;
     virtual bool SaveObjectW( IRoot* obj, const wchar_t* name ) = 0;
 
-	// Gets a reference to a shared object
-	virtual IRoot* GetObject( const std::string& path, const std::string& ex = "" ) = 0;
-	virtual IRoot* GetObjectW( const std::wstring& path, const std::wstring& ex = L""  ) = 0;
-	
-	virtual void ClearCachedObject( const std::string& path, const std::string& ex = "" ) = 0;
-	virtual void ClearCachedObjectW( const std::wstring& path, const std::wstring& ex = L""  ) = 0;
-	
-	virtual void ClearAllCachedObjects() = 0;
-
 	virtual void SetUrgentResourceLoads( bool b ) = 0;
 	virtual bool IsUrgentResourceLoads() = 0;
 

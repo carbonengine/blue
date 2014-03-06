@@ -109,7 +109,7 @@ void Synchro::Shutdown()
 		Py_DECREF(yielders);
 	}
 
-	for(SleeperIt it = wallSleepers.begin(); it!= wallSleepers.end(); it++) {
+	for(SleeperIt it = wallSleepers.begin(); it!= wallSleepers.end(); ++it) {
 		if (PyChannel_GetBalance(it->channel)) {
 			if (!value)
 				value = PyString_FromString("Synchro is shutting down");
@@ -120,7 +120,7 @@ void Synchro::Shutdown()
 		Py_DECREF(it->channel);
 	}
 
-	for(SleeperIt it = mSimSleepers.begin(); it!= mSimSleepers.end(); it++) {
+	for(SleeperIt it = mSimSleepers.begin(); it!= mSimSleepers.end(); ++it) {
 		if (PyChannel_GetBalance(it->channel)) {
 			if (!value)
 				value = PyString_FromString("Synchro is shutting down");
@@ -291,7 +291,7 @@ PyObject* Synchro::ResetClock(PyObject* newTime)
 	PyObject* oldTime = PyLong_FromLongLong(BeOS->GetInfo()->mRealTime);
 
 	// Adjust the wallclock sleepers since we're jerking the wallclock about
-	for (SleeperIt si = mWallclockSleepers.begin(); si != mWallclockSleepers.end(); si++)
+	for (SleeperIt si = mWallclockSleepers.begin(); si != mWallclockSleepers.end(); ++si)
 		(*si).due += diff;
 
 	extern void SetBlueTime(Be::Time time);
@@ -321,7 +321,7 @@ void Synchro::RebaseSimClock(Be::Time oldTime, Be::Time newTime)
 	Be::Time diff = newTime - oldTime;
 
 	CCP_LOG_CH( s_ch, "Shifting sim sleepers by %I64d", diff);
-	for (SleeperIt si = mSimSleepers.begin(); si != mSimSleepers.end(); si++)
+	for (SleeperIt si = mSimSleepers.begin(); si != mSimSleepers.end(); ++si)
 		(*si).due += diff;
 }
 
@@ -663,7 +663,7 @@ PyObject* Synchro::Get_sleepers()
 		return NULL;
 
 	Py_ssize_t ix = 0;
-	for (SleeperIt i = mWallclockSleepers.begin(); i != mWallclockSleepers.end(); i++, ix++)
+	for (SleeperIt i = mWallclockSleepers.begin(); i != mWallclockSleepers.end(); ++i, ++ix)
 	{
 		Sleeper sl = *i;
 		PyObject* sleeper = Py_BuildValue("OL", sl.channel, sl.due);

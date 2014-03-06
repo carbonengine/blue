@@ -48,5 +48,6 @@ BLUE_INTERFACE( IBluePaths ) : public IRoot
 
 extern BLUEIMPORT IBluePaths* BePaths;
 BLUEIMPORT bool BlueInitializePaths();
+BLUEIMPORT bool BlueInitializeResourceLoading();
 
 #endif

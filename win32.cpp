@@ -2676,7 +2676,6 @@ PyObject *Py_CrtSetAllocHook(PyObject *self, PyObject *args)
 {
 	PyObject *callable = Py_None;
 	PyObject *allowDenyO = Py_False;
-	int size = 0;
 	if (!PyArg_ParseTuple(args, "|OiO:_CrtSetAllocHook", &callable, &sizeLimit, &allowDenyO))
 		return 0;
 	

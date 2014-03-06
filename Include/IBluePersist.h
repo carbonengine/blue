@@ -77,6 +77,14 @@ BLUE_INTERFACE(IBlueStream) : public IRoot
 
 
 
+BLUE_INTERFACE( IBlueMemStream ) : public IBlueStream
+{
+	//Set the buffer which the stream uses
+	//if buf is zero, it will allocate a buffer and own it
+	//if it is non-zero, it merely references an existing buffer.
+	virtual bool SetBuffer(void *buf, size_t size) = 0;
+};
+
 //////////////////////////////////////////////////////////////////////
 //
 // Blue ResFile interface
@@ -108,7 +116,6 @@ BLUE_INTERFACE(IResFile) : public IBlueStream
 
 	virtual bool Preload(bool &started) = 0;
 	virtual bool PreloadInProgress() = 0;
-
 };
 
 

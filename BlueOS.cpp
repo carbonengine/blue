@@ -1189,10 +1189,6 @@ bool BlueOS::Startup( short interfaceVersion, int pyOptimizeFlag )
 	}
 #endif
 
-#if STUFFER_ENABLED
-	Stuffer::Startup();
-#endif
-
 	return true;
 
 #if BLUE_WITH_PYTHON

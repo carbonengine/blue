@@ -30,14 +30,6 @@
 
 BLUE_DECLARE( MemStream );
 
-BLUE_INTERFACE( IBlueMemStream ) : public IBlueStream
-{
-	//Set the buffer which the stream uses
-	//if buf is zero, it will allocate a buffer and own it
-	//if it is non-zero, it merely references an existing buffer.
-	virtual bool SetBuffer(void *buf, size_t size) = 0;
-};
-
 BLUE_CLASS( MemStream ): 
 	public IBlueMemStream,
 	public ICacheable

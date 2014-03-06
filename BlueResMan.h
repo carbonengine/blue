@@ -17,7 +17,6 @@ BLUE_DECLARE( BlueResMan );
 // object.
 class BlueResMan : 
 	public IBlueResMan,
-	public IWeakRef,
 	public IBlueEvents
 {
 public:
@@ -47,11 +46,6 @@ public:
 	//////////////////////////////////////////////////////////////////////////
 	// IBlueEvents
 	void OnTick( Be::Time realTime, Be::Time simTime, void* cookie );
-
-	//////////////////////////////////////////////////////////////////////////
-	// IWeakRef
-	//
-	void WeakRefNotify( IWeakObject* p );
 
 	//////////////////////////////////////////////////////////////////////////
 	// IBlueResMan
@@ -87,12 +81,6 @@ public:
 	
 	bool SaveObject( IRoot* obj, const char* name );
 	bool SaveObjectW( IRoot* obj, const wchar_t* name );
-
-	IRoot* GetObject( const std::string& path, const std::string& ex = "" );
-	IRoot* GetObjectW( const std::wstring& path, const std::wstring& ex = L"" );
-    void ClearCachedObject( const std::string& path, const std::string& ex = "" );
-	void ClearCachedObjectW( const std::wstring& path, const std::wstring& ex = L"" );
-    void ClearAllCachedObjects();
 
 	void SetUrgentResourceLoads( bool b );
 	bool IsUrgentResourceLoads();
@@ -143,18 +131,6 @@ private:
 
 	// Should files be preloaded?
 	bool m_loadObjectPreloadFiles;
-
-	// This exists to allow us to load the same resource, but create different instances of it
-	// allowing us to have different interior / exterior instances
-	typedef std::pair<std::wstring, std::wstring> PathExtensionPairType;
-	typedef TrackableStdMap<PathExtensionPairType, IWeakObject*> ObjectMap;
-	ObjectMap m_objectInstances;
-
-	typedef TrackableStdMap<IWeakObject*, PathExtensionPairType> ReverseObjectMap;
-	ReverseObjectMap m_objectInstancesReverse;
-
-	typedef	TrackableStdHashMap<std::wstring, IBlueResource*> ResourceMap;
-	ResourceMap m_instances;
 
 	bool m_urgentResourceLoads;
 

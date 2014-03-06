@@ -29,9 +29,18 @@ public:
 		OM_READONLY
 	};
 
-	bool Open( const wchar_t* filename, OpenMode mode );
+	enum ShareMode
+	{
+		SM_NOSHARING,
+		SM_READSHARING,
+		SM_RWSHARING
+	};
+
+	bool Open( const wchar_t* filename, OpenMode mode, ShareMode shareMode );
 	bool Create( const wchar_t* filename );
 	void Close();
+
+	Be::Result<std::string> ReadEntireFile( const wchar_t* filename, std::string& contents );
 
 	/////////////////////////////////////////
 	// IBlueStream interface
