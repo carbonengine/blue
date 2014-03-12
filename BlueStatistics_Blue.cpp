@@ -488,45 +488,6 @@ PyObject* PyFind( PyObject* self, PyObject* args )
 	Py_RETURN_NONE;
 }
 
-#if CCP_TELEMETRY_ENABLED
-
-PyObject* PyStartTelemetry( PyObject* self, PyObject* args )
-{
-	BlueStatistics* pThis = BluePythonCast<BlueStatistics*>( self );
-	const char *server = "localhost";
-	int bufferSize= 8;
-	int samplePeriod= 0;
-
-	if( !PyArg_ParseTuple( args, "s|i|i", &server, &bufferSize, &samplePeriod ) )
-	{
-		return NULL;
-	}
-
-	// we want this in bytes
-	bufferSize = bufferSize*1024*1024;
-
-	pThis->StartTelemetry( server, bufferSize, samplePeriod );
-
-	Py_RETURN_NONE;
-}
-
-PyObject* PyStartTelemetryDump( PyObject* self, PyObject* args )
-{
-	BlueStatistics* pThis = BluePythonCast<BlueStatistics*>( self );
-	int samplePeriod= 0;
-
-	if( !PyArg_ParseTuple( args, "i", &samplePeriod ) )
-	{
-		return NULL;
-	}
-
-	pThis->StartTelemetryDump(samplePeriod);
-
-	Py_RETURN_NONE;
-}
-
-#endif
-
 } // anonymous namespace
 
 #endif
@@ -631,23 +592,42 @@ const Be::ClassInfo* BlueStatistics::ExposeToBlue()
 
 #if CCP_TELEMETRY_ENABLED
 
-		MAP_METHOD
+		MAP_METHOD_AND_WRAP
+		(
+			"SetTelemetryBufferSize", 
+			SetTelemetryBufferSize, 
+			"Sets Telemetry Arena workspace size."
+			"\n"
+			"\nArguments:"
+			"\nbufferSize - The size of the memory buffer allocated for telemetry data, in megabytes."
+		)
+
+		MAP_METHOD_AND_WRAP
 		(
 			"StartTelemetry", 
-			PyStartTelemetry, 
+			StartTelemetry, 
+			"Connects to a Telemetry server and starts gathering data."
+			"\n"
+			"\nArguments:"
+			"\nserver - a string, the network address of the server to connect to."
+		)
+
+		MAP_METHOD_AND_WRAP
+		(
+			"StartTimedTelemetry", 
+			StartTimedTelemetry, 
 			"Connects to a Telemetry server and starts gathering data."
 			"\n"
 			"\nArguments:"
 			"\nserver - a string, the network address of the server to connect to."
 			"\n  Use 'localhost' to connect to a Visualizer on the local machine."
-			"\nbufferSize - Optional. The size of the memory buffer allocated for telemetry data, in megabytes."
-			"\nsamplePreiod - Optional. Time to sample for (in seconds) default of 0 means infinite sampling."
+			"\nsamplePeriod -  Time to sample for (in seconds) default of 0 means infinite sampling."
 		)
 
-		MAP_METHOD
+		MAP_METHOD_AND_WRAP
 		(
 			"StartTelemetryDump", 
-			PyStartTelemetryDump, 
+			StartTelemetryDump, 
 			"Works just like StartTelemetry, except that instead of talking to the server it dumps data to disk"
 			"\n in the current users Documents directory."
 			"\nWill overwrite preexisting files."
@@ -655,7 +635,8 @@ const Be::ClassInfo* BlueStatistics::ExposeToBlue()
 			"\nStopped using StopTelemetry."
 			"\n"
 			"\nArguments:"
-			"\nsamplePreiod - Optional. Time to sample for (in seconds) default of 0 means infinite sampling."
+			"\ndumpFolder - a string, the path to dump intermediate data to."
+			"\nsamplePeriod - Time to sample for (in seconds). 0 means infinite sampling."
 		)
 
 		MAP_METHOD_AND_WRAP

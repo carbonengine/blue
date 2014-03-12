@@ -21,7 +21,7 @@ static float s_telemetrySamplePeriod = 0.0f; // In seconds
 #if CCP_TELEMETRY_ENABLED
 static bool s_isTelemetryShuttingDown = false;
 static int s_telemetryConnectionType = 0;
-static std::string s_telemetryServer;
+static std::string s_telemetryServerOrFileSystemDumpPath;
 static Be::Time s_telemetryStartTime;
 static Be::Time s_telemetryLastCheckTime;
 static int s_telemetryBufferSize = 8 * 1024 * 1024;
@@ -176,7 +176,7 @@ BlueStatistics::BlueStatistics(IRoot* lockobj) :
 #endif
 }
 
-void BlueStatistics::StartTelemetry( const char* server, int bufferSize, int samplePeriod )
+void BlueStatistics::SetTelemetryBufferSize( int bufferSize )
 {
 #if CCP_TELEMETRY_ENABLED
 	if( s_isTelemetryConnected )
@@ -185,16 +185,39 @@ void BlueStatistics::StartTelemetry( const char* server, int bufferSize, int sam
 		return;
 	}
 
-	s_telemetryServer = server;
+	s_telemetryBufferSize = bufferSize*1024*1024;;
+
+#else
+#endif
+}
+
+// Buffer size and sampling period hard coded in here as this
+// is typically called from the client UI for client profiling.
+// Use StartTimedTelemetry or StartTelemetryDump otherwise.
+void BlueStatistics::StartTelemetry( const char* server )
+{
+	SetTelemetryBufferSize( 8 );
+	StartTimedTelemetry( server, 0 );
+}
+
+void BlueStatistics::StartTimedTelemetry( const char* server, int samplePeriod )
+{
+#if CCP_TELEMETRY_ENABLED
+	if( s_isTelemetryConnected )
+	{
+		CCP_LOGERR( "Telemetry is already running!" );
+		return;
+	}
+
+	s_telemetryServerOrFileSystemDumpPath = server;
 	s_telemetryConnectionType = TMCT_TCP;
-	s_telemetryBufferSize = bufferSize;
 	s_telemetrySamplePeriod = (float)samplePeriod;
 	s_isTelemetryConnectionRequested = true;
 #else
 #endif
 }
 
-void BlueStatistics::StartTelemetryDump( int samplePeriod )
+void BlueStatistics::StartTelemetryDump( const char* dumpFolder, int samplePeriod )
 {
 #if CCP_TELEMETRY_ENABLED
 	if( s_isTelemetryConnected )
@@ -203,6 +226,7 @@ void BlueStatistics::StartTelemetryDump( int samplePeriod )
 		return;
 	}
 	s_telemetryConnectionType = TMCT_FILE;
+	s_telemetryServerOrFileSystemDumpPath = dumpFolder;
 	s_telemetrySamplePeriod = (float)samplePeriod;
 	s_isTelemetryConnectionRequested = true;
 #else
@@ -269,7 +293,7 @@ void BlueStatistics::UpdateTelemetry()
 #if CCP_TELEMETRY_ENABLED
 	if( s_isTelemetryConnectionRequested )
 	{
-		s_isTelemetryConnected = CcpStartTelemetry( s_telemetryServer.c_str(), s_telemetryBufferSize, s_telemetryConnectionType );
+		s_isTelemetryConnected = CcpStartTelemetry( s_telemetryServerOrFileSystemDumpPath.c_str(), s_telemetryBufferSize, s_telemetryConnectionType );
 		s_isTelemetryConnectionRequested = false;
 		s_telemetryLastCheckTime = s_telemetryStartTime = BeOS->GetActualTime();
 	}

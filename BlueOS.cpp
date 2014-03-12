@@ -1288,7 +1288,8 @@ PyObject* BlueOS::PyStacklessMain( PyObject* args )
 			std::wstring server = argv[i].substr(17);
 			CW2A aServer( server.c_str() );
 			const int ARENA_SIZE = 8*1024*1024;
-			g_statistics->StartTelemetry( aServer, ARENA_SIZE );
+			g_statistics->SetTelemetryBufferSize( ARENA_SIZE );
+			g_statistics->StartTelemetry( aServer );
 		}
 	}
 

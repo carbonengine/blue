@@ -70,8 +70,15 @@ public:
 
 	void Update();
 
-	void StartTelemetry( const char* server, int bufferSize, int samplePeriod=0 );
-	void StartTelemetryDump( int samplePeriod=0 );
+	// Telemetry buffer defaults to 8MB. But can be changed between samples using this.
+	void SetTelemetryBufferSize( int bufferSize );
+
+	// Typically used from the client.
+	void StartTelemetry( const char* server );
+
+	// Following functions are typically used from ESP for server profiling.
+	void StartTimedTelemetry( const char* server, int samplePeriod );
+	void StartTelemetryDump( const char* dumpFolder, int samplePeriod );
 
 	void PauseTelemetry();
 	void ResumeTelemetry();
