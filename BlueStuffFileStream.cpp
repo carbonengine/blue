@@ -23,6 +23,11 @@ BlueStuffFileStream::BlueStuffFileStream() :
 
 BlueStuffFileStream::~BlueStuffFileStream()
 {
+	if( m_data )
+	{
+		ClearLockedData();
+	}
+
 	if( ( m_fileHandle != INVALID_HANDLE_VALUE ) )
 	{
 		CloseHandle( m_fileHandle );
