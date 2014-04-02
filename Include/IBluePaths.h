@@ -44,6 +44,9 @@ BLUE_INTERFACE( IBluePaths ) : public IRoot
 
 	// Get a stream from a resource path
 	virtual bool GetStreamFromPathW( const wchar_t* path, IBlueStream** stream ) = 0;
+
+	virtual Be::Result<std::string> GetFileContentsWithYield( const std::wstring& path, IBlueStream** contents ) = 0;
+
 };
 
 extern BLUEIMPORT IBluePaths* BePaths;

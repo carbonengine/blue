@@ -138,7 +138,7 @@ bool RESFILE_2_CLASSNAME::PreloadInProgress()
 	return false;
 }
 
-ssize_t RESFILE_2_CLASSNAME::Read( void* dest, ssize_t count )
+ptrdiff_t RESFILE_2_CLASSNAME::Read( void* dest, ptrdiff_t count )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -150,7 +150,7 @@ ssize_t RESFILE_2_CLASSNAME::Read( void* dest, ssize_t count )
 	return -1;
 }
 
-ssize_t RESFILE_2_CLASSNAME::Write( const void* source, size_t count )
+ptrdiff_t RESFILE_2_CLASSNAME::Write( const void* source, size_t count )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -162,7 +162,7 @@ ssize_t RESFILE_2_CLASSNAME::Write( const void* source, size_t count )
 	return -1;
 }
 
-ssize_t RESFILE_2_CLASSNAME::Seek( ssize_t distance, BLUESEEK method )
+ptrdiff_t RESFILE_2_CLASSNAME::Seek( ptrdiff_t distance, SeekOrigin method )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -174,7 +174,7 @@ ssize_t RESFILE_2_CLASSNAME::Seek( ssize_t distance, BLUESEEK method )
 	return -1;
 }
 
-ssize_t RESFILE_2_CLASSNAME::GetPosition()
+ptrdiff_t RESFILE_2_CLASSNAME::GetPosition()
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -186,7 +186,7 @@ ssize_t RESFILE_2_CLASSNAME::GetPosition()
 	return -1;
 }
 
-ssize_t RESFILE_2_CLASSNAME::GetSize()
+ptrdiff_t RESFILE_2_CLASSNAME::GetSize()
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 

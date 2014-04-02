@@ -56,7 +56,7 @@ RemoteFileCache::RemoteFileCache() :
 {
 }
 
-bool RemoteFileCache::DownloadFileIndex( const char* index )
+bool RemoteFileCache::DownloadFileIndex( const std::string& index )
 {
 	std::string url = m_server;
 	url += m_prefix;
@@ -64,13 +64,13 @@ bool RemoteFileCache::DownloadFileIndex( const char* index )
 
 	std::wstring cachedName = m_cacheFolder;
 	cachedName += L"/";
-	cachedName += CA2W( index );
+	cachedName += CA2W( index.c_str() );
 
 	IBlueStreamPtr stream;
 
 	if( BePaths->FileExists( cachedName ) )
 	{
-		CCP_LOG_CH( s_ch, "Index %s exists locally", index );
+		CCP_LOG_CH( s_ch, "Index %s exists locally", index.c_str() );
 		CreateFileStreamForCachedFile( cachedName, &stream );
 	}
 

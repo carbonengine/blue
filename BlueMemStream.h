@@ -62,19 +62,19 @@ private:
 public:
 	/////////////////////////////////////////
 	// IBlueStream interface
-	ssize_t Read(
+	ptrdiff_t Read(
 		void* dest,
-		ssize_t count
+		ptrdiff_t count
 		);
 	
-	ssize_t Write(
+	ptrdiff_t Write(
 		const void* source,
 		size_t count
 		);
 
-	ssize_t Seek(
-		ssize_t distance,
-		BLUESEEK method
+	ptrdiff_t Seek(
+		ptrdiff_t distance,
+		SeekOrigin method
 		);
 
 	bool SetSize(
@@ -86,10 +86,10 @@ public:
 		size_t count
 		);
 
-	ssize_t GetPosition(
+	ptrdiff_t GetPosition(
 		);
 
-	ssize_t GetSize(
+	ptrdiff_t GetSize(
 		);
 
 	bool LockData(

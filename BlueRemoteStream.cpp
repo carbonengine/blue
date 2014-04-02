@@ -75,7 +75,7 @@ bool BlueRemoteStream::Open( const char* resUrl )
 	return res == CURLE_OK;
 }
 
-ssize_t BlueRemoteStream::Read( void* dest, ssize_t count )
+ptrdiff_t BlueRemoteStream::Read( void* dest, ptrdiff_t count )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -113,20 +113,20 @@ ssize_t BlueRemoteStream::Read( void* dest, ssize_t count )
 	return count;
 }
 
-ssize_t BlueRemoteStream::Write( const void* source, size_t count )
+ptrdiff_t BlueRemoteStream::Write( const void* source, size_t count )
 {
 	return -1;
 }
 
-ssize_t BlueRemoteStream::Seek( ssize_t distance, BLUESEEK method )
+ptrdiff_t BlueRemoteStream::Seek( ptrdiff_t distance, SeekOrigin method )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	if( method == BS_BEGIN )
+	if( method == SO_BEGIN )
 	{
 		m_readLocation = m_data + distance;
 	}
-	else if( method == BS_CURRENT )
+	else if( method == SO_CURRENT )
 	{
 		m_readLocation += distance;
 	}
@@ -155,12 +155,12 @@ ssize_t BlueRemoteStream::CopyFrom( IBlueStream* source, size_t count )
 	return -1;
 }
 
-ssize_t BlueRemoteStream::GetPosition()
+ptrdiff_t BlueRemoteStream::GetPosition()
 {
 	return m_readLocation - m_data;
 }
 
-ssize_t BlueRemoteStream::GetSize()
+ptrdiff_t BlueRemoteStream::GetSize()
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 

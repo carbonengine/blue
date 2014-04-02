@@ -55,6 +55,8 @@ public:
 
 	// Get a stream from a resource path
 	virtual bool GetStreamFromPathW( const wchar_t* path, IBlueStream** stream );
+
+	Be::Result<std::string> GetFileContentsWithYield( const std::wstring& path, IBlueStream** contents );
 	//
 	//////////////////////////////////////////////////////////////////////////
 

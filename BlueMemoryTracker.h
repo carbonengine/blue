@@ -30,6 +30,8 @@ public:
 private:
 	void UpdateDetailedTracking();
 	bool IsAboveLoggingThreshold( int64_t pythonMemory, int64_t m_lastLoggedPython );
+	void PrintFieldToFile( FILE* file, const char* name, size_t totalSize );
+
 private:
 #ifdef _WIN32
 	intptr_t m_d3dHeap1;

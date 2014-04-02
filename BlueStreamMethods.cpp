@@ -137,7 +137,7 @@ PyObject* IBlueStream_Thunk::PySeek(PyObject* args)
 	//if (!IsOpen())
 	//	return NULL;
 
-	if (Seek(pos, BS_BEGIN) == -1)
+	if (Seek(pos, SO_BEGIN) == -1)
 		return NULL;
 
 	Py_INCREF(Py_None);

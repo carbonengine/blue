@@ -1,52 +1,65 @@
 #include "StdAfx.h"
 
-#if CCP_STACKLESS
-
 #include "BlueResManBackgroundCall.h"
-#include "stackless_api.h"
 #include "BlueResFile.h"
 #include "Include/IBlueResMan.h"
 #include "Include/IBluePython.h"
 #include "Include/BlueStatistics.h"
 
+#if CCP_STACKLESS
+#include "stackless_api.h"
+#endif
 
 static CcpLogChannel_t s_ch = CCP_LOG_DEFINE_CHANNEL( "ResMan" );
 
 
 
-BlueResManBackgroundCall::BlueResManBackgroundCall( uint32_t flags /*= 0 */ ) : m_flags( flags )
+BlueResManBackgroundCall::BlueResManBackgroundCall( IBlueResManBackgroundCall* theCall, uint32_t flags /*= 0 */ ) :
+	m_flags( flags ),
+	m_backgroundCall( theCall )
 {
+#if CCP_STACKLESS
 	m_channel = PyChannel_New( NULL );
+#endif
 }
 
 BlueResManBackgroundCall::~BlueResManBackgroundCall()
 {
+#if CCP_STACKLESS
 	Py_XDECREF( m_channel );
 	m_channel = nullptr;
+#endif
 }
 
 void BlueResManBackgroundCall::AddToQueue()
 {
 	BeResMan->AddToQueue( 
 		BRMQ_BACKGROUND, 
-		BlueResManBackgroundCall::ForwardMarkAsDone, 
+		BlueResManBackgroundCall::DoTheCall, 
 		this, 
-		IBlueCallbackMan::BCBF_FENCE | m_flags, 
-		NULL );
+		m_flags, 
+		&m_id );
 }
 
 bool BlueResManBackgroundCall::Wait()
 {
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+#if CCP_STACKLESS
 	if( !PyOS->CanYield() )
 	{
+		CCP_LOGERR_CH( s_ch, "Tasklet can't yield!" );
 		return true;
 	}
 
 	// Go to sleep and wake up! *(the sender releases the channel)
+	BeOS->NextScheduledEvent(0);
 	PyObject *ret = PyChannel_Receive( m_channel );
 
 	if( !ret )
 	{
+		BeResMan->CancelFromQueue( BRMQ_BACKGROUND, m_id );
+
 		// Tasklet was killed
 		Py_DECREF( m_channel );
 		m_channel = nullptr;
@@ -54,14 +67,26 @@ bool BlueResManBackgroundCall::Wait()
 	}
 
 	Py_DECREF( ret );
+
 	return true;
+#else
+	CCP_ASSERT_M( false, "Wait shouldn't be called without Stackless" );
+	return false;
+#endif
+
 }
 
-void BlueResManBackgroundCall::ForwardMarkAsDone( void* pContext )
+void BlueResManBackgroundCall::DoTheCall( void* pContext )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
 	BlueResManBackgroundCall* args = static_cast<BlueResManBackgroundCall*>( pContext );
+
+	if( args->m_backgroundCall )
+	{
+		args->m_backgroundCall->Perform();
+	}
+
 	BeResMan->AddToQueue( BRMQ_MAIN, MarkAsDone, pContext, args->m_flags, NULL );
 }
 
@@ -69,80 +94,34 @@ void BlueResManBackgroundCall::MarkAsDone( void* pContext )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
+#if CCP_STACKLESS
 	BlueResManBackgroundCall* args = static_cast<BlueResManBackgroundCall*>( pContext );
 
-	// Tasklet may have been killed while we were waiting
-	if( args->m_channel )
-	{
-		BeOS->NextScheduledEvent(0);
-		PyChannel_Send( args->m_channel, Py_None );
-	}
-	else
-	{
-		// Tasklet was killed, so the args object won't be deleted by Wait.
-		CCP_DELETE args;
-	}
-}
-
-void BlueResManReadStreamArgs::ReadStream( const std::wstring& filename, IBlueStream* stream )
-{
-	CCP_STATS_ZONE( __FUNCTION__ );
-
-	m_filename = filename;
-	m_destination = stream;
-
-	if( BeResMan->IsOnMainThread() && PyOS->CanYield() )
-	{
-		AddToQueue();
-	}
-	else
-	{
-		CopyStreamImpl();
-	}
-}
-
-void BlueResManReadStreamArgs::AddToQueue()
-{
-	BeResMan->AddToQueue( 
-		BRMQ_BACKGROUND, 
-		ForwardCopyStream, 
-		this, 
-		0, 
-		NULL );
-}
-
-void BlueResManReadStreamArgs::ForwardCopyStream( void* context )
-{
-	BlueResManReadStreamArgs* pThis = reinterpret_cast<BlueResManReadStreamArgs*>( context );
-	pThis->CopyStreamImpl();
-	BeResMan->AddToQueue( BRMQ_MAIN, MarkAsDone, context, 0, NULL );
-}
-
-void BlueResManReadStreamArgs::CopyStreamImpl()
-{
-	CCP_STATS_ZONE( __FUNCTION__ );
-
-	ResFilePtr resFile;
-	if( !resFile.CreateInstance() )
-	{
-		return;
-	}
-
-	if (!resFile->OpenW( m_filename.c_str(), true ) )
-	{
-		CCP_LOGERR_CH( s_ch, "'%S': no matching file in resource directory.", m_filename.c_str() );
-		return;
-	}
-
-	void* data;
-	size_t dataSize = resFile->GetSize();
-	if( !resFile->LockData( &data, dataSize ) )
-	{
-		return;
-	}
-
-	m_destination->Write( data, dataSize );
-	m_destination->Seek( 0, BS_BEGIN );
-}
-
+	BeOS->NextScheduledEvent(0);
+	PyChannel_Send( args->m_channel, Py_None );
 #endif
+}
+
+bool BlueResManBackgroundCall::Issue( IBlueResManBackgroundCall* theCall, uint32_t flags /*= 0 */ )
+{
+#if CCP_STACKLESS
+	if( !PyOS->CanYield() )
+	{
+		theCall->Perform();
+		return true;
+	}
+
+	BlueResManBackgroundCall* cbArgs = CCP_NEW( "GetFileContents/cbArgs" )
+		BlueResManBackgroundCall( theCall, flags );
+
+	cbArgs->AddToQueue();
+	bool result = cbArgs->Wait();
+
+	CCP_DELETE cbArgs;
+	return result;
+#else
+	theCall->Perform();
+	return true;
+#endif
+}
+

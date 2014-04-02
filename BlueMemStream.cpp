@@ -105,9 +105,9 @@ bool MemStream::Grow(size_t reqsize)
 //--------------------------------------------------------------------
 // IBlueStream::Read
 //--------------------------------------------------------------------
-ssize_t MemStream::Read(
+ptrdiff_t MemStream::Read(
 	void* dest,
-	ssize_t count
+	ptrdiff_t count
 	)
 {
 	if (count < 0 || mPosition + count > mSize)
@@ -123,7 +123,7 @@ ssize_t MemStream::Read(
 //--------------------------------------------------------------------
 // IBlueStream::Write
 //--------------------------------------------------------------------
-ssize_t MemStream::Write(
+ptrdiff_t MemStream::Write(
 	const void* source,
 	size_t count
 	)
@@ -143,16 +143,16 @@ ssize_t MemStream::Write(
 //--------------------------------------------------------------------
 // IBlueStream::Seek
 //--------------------------------------------------------------------
-ssize_t MemStream::Seek(
-	ssize_t distance,
-	BLUESEEK method
+ptrdiff_t MemStream::Seek(
+	ptrdiff_t distance,
+	SeekOrigin method
 	)
 {
 	size_t pos;
 
-	if (method == BS_BEGIN)
+	if (method == SO_BEGIN)
 		pos = distance;
-	else if (method == BS_CURRENT)
+	else if (method == SO_CURRENT)
 		pos = mPosition + distance;
 	else
 		pos = mSize - distance;
@@ -215,7 +215,7 @@ ssize_t MemStream::CopyFrom(
 //--------------------------------------------------------------------
 // IBlueStream::GetPosition
 //--------------------------------------------------------------------
-ssize_t MemStream::GetPosition(
+ptrdiff_t MemStream::GetPosition(
 	)
 {
 	return mPosition;
@@ -225,7 +225,7 @@ ssize_t MemStream::GetPosition(
 //--------------------------------------------------------------------
 // IBlueStream::GetSize
 //--------------------------------------------------------------------
-ssize_t MemStream::GetSize(
+ptrdiff_t MemStream::GetSize(
 	)
 {
 	return mSize;

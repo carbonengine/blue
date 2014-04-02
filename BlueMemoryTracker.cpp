@@ -240,16 +240,16 @@ void MemoryTracker::SummaryReport( const char* filename )
 	fprintf( file, "Memory statistics\n" );
 	fprintf( file, "-----------------------------------------------------------------------------\n" );
 #if CCP_STACKLESS
-	fprintf( file, "Python reported memory, %d\n", PySys_GetPyMalloced() );
+	PrintFieldToFile( file, "Python reported memory", PySys_GetPyMalloced() );
 #endif
-	fprintf( file, "CCP Malloc usage, %" CCP_SIZET_FORMAT "\n", CCPMallocUsage() );
+	PrintFieldToFile( file, "CCP Malloc usage", CCPMallocUsage() );
 
 #ifdef _WIN32
 	PROCESS_MEMORY_COUNTERS mc;
 	if( GetProcessMemoryInfo( GetCurrentProcess(), &mc, sizeof(mc)) )
 	{
-		fprintf( file, "Working set size, %d\n", mc.WorkingSetSize );
-		fprintf( file, "Page file usage, %d\n", mc.PagefileUsage );
+		PrintFieldToFile( file, "Working set size", mc.WorkingSetSize );
+		PrintFieldToFile( file, "Page file usage", mc.PagefileUsage );
 	}
 
 	if( g_isMemoryTrackingEnabled )
@@ -313,13 +313,13 @@ void MemoryTracker::SummaryReport( const char* filename )
 
 		size_t unaccountedSize = crtHeapSize - CCPMallocUsage();
 
-		fprintf( file, "All heaps, %" CCP_SIZET_FORMAT "\n", totalSize );
-		fprintf( file, "Process heap, %" CCP_SIZET_FORMAT "\n", processHeapSize );
-		fprintf( file, "CRT heap, %" CCP_SIZET_FORMAT "\n", crtHeapSize );
-		fprintf( file, "CRT heap unaccounted, %" CCP_SIZET_FORMAT "\n", unaccountedSize );
-		fprintf( file, "D3D heap 1, %" CCP_SIZET_FORMAT "\n", d3dHeap1Size );
-		fprintf( file, "D3D heap 2, %" CCP_SIZET_FORMAT "\n", d3dHeap2Size );
-		fprintf( file, "Tracking heap, %" CCP_SIZET_FORMAT "\n", trackingHeapSize );
+		PrintFieldToFile( file, "All heaps", totalSize );
+		PrintFieldToFile( file, "Process heap", processHeapSize );
+		PrintFieldToFile( file, "CRT heap", crtHeapSize );
+		PrintFieldToFile( file, "CRT heap unaccounted", unaccountedSize );
+		PrintFieldToFile( file, "D3D heap 1", d3dHeap1Size );
+		PrintFieldToFile( file, "D3D heap 2", d3dHeap2Size );
+		PrintFieldToFile( file, "Tracking heap", trackingHeapSize );
 	}
 #endif
 	fclose( file );
@@ -458,4 +458,9 @@ bool MemoryTracker::IsAboveLoggingThreshold( int64_t current, int64_t last )
 	{
 		return false;
 	}
+}
+
+void MemoryTracker::PrintFieldToFile( FILE* file, const char* name, size_t totalSize )
+{
+	fprintf( file, "%50s %12" CCP_SIZET_FORMAT "\n", name, totalSize );
 }

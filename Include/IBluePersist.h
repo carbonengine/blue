@@ -32,40 +32,9 @@
 // Blue stream interface
 //
 //////////////////////////////////////////////////////////////////////
-enum BLUESEEK
+
+BLUE_INTERFACE(IBlueStream) : public IRoot, public ICcpStream
 {
-	BS_BEGIN		= 0,
-	BS_CURRENT		= 1,
-	BS_END			= 2,
-};
-
-BLUE_INTERFACE(IBlueStream) : public IRoot
-{
-	// Reads from the stream into a buffer.
-	// Returns the number of bytes read.
-	virtual ssize_t Read(
-		void* dest,
-		ssize_t count
-		) = 0;
-	
-	// Writes from a buffer into the stream.
-	// Returns the number of bytes written.
-	virtual ssize_t Write(
-		const void* source,
-		size_t count
-		) = 0;
-
-	virtual ssize_t Seek(
-		ssize_t distance,
-		BLUESEEK method
-		) = 0;
-
-	virtual ssize_t GetPosition(
-		) = 0;
-
-	virtual ssize_t GetSize(
-		) = 0;
-
 	virtual bool LockData(
 		void** data,
 		size_t size

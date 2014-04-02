@@ -11,6 +11,8 @@
 #include "BlueResFile.h"
 #include "Stuffer.h"
 #include "RemoteFileCache.h"
+#include "BlueResManBackgroundCall.h"
+#include "BlueMemStream.h"
 #include "include/IBlueResMan.h"
 #include "include/BlueFileUtil.h"
 #include "Include/IBlueOS.h"
@@ -20,6 +22,8 @@
 
 IBluePaths* BePaths = nullptr;
 BLUE_REGISTER_GLOBAL_AS_MODULE_OBJECT( "paths", BePaths );
+
+static CcpLogChannel_t s_ch = CCP_LOG_DEFINE_CHANNEL( "BePaths" );
 
 #if defined(_WIN32)
 #elif defined(__ORBIS__)
@@ -377,6 +381,72 @@ namespace
 		}
 	}
 #endif
+
+	class BackgroundReader : public IBlueResManBackgroundCall
+	{
+	public:
+		BackgroundReader( const std::wstring& filename ) : 
+		m_filename( filename )
+		{
+		}
+
+
+		~BackgroundReader()
+		{
+			CCP_ASSERT( !m_contents );
+		}
+
+		// This is called on a background thread
+		virtual void Perform()
+		{
+			if( !m_contents.CreateInstance() )
+			{
+				m_result = Be::Result<std::string>( "Couldn't create MemStream object" );
+				return;
+			}
+
+			ResFilePtr resFile;
+			if( !resFile.CreateInstance() )
+			{
+				m_result = Be::Result<std::string>( "Couldn't create ResFile object" );
+				return;
+			}
+
+			if (!resFile->OpenW( m_filename.c_str(), true ) )
+			{
+				m_result = Be::Result<std::string>( "Couldn't open file" );
+				return;
+			}
+
+			void* data;
+			size_t dataSize = resFile->GetSize();
+			if( !resFile->LockData( &data, dataSize ) )
+			{
+				m_result = Be::Result<std::string>( "Couldn't read data" );
+				return;
+			}
+
+			m_contents->Write( data, dataSize );
+			m_contents->Seek( 0, ICcpStream::SO_BEGIN );
+
+			resFile->UnlockData();
+		}
+
+		Be::Result<std::string> GetResult()
+		{
+			return m_result;
+		}
+
+		void TakeContents( IBlueStream** contents )
+		{
+			*contents = m_contents.Detach();
+		}
+
+	private:
+		std::wstring m_filename;
+		MemStreamPtr m_contents;
+		Be::Result<std::string> m_result;
+	};
 }
 
 BluePaths::BluePaths( IRoot* lockobj /*= NULL */ ) :
@@ -1193,4 +1263,26 @@ Be::Result<std::string> BluePaths::Open( const std::wstring& filename, const std
 	}
 
 	return Be::Result<std::string>("Couldn't open file");
+}
+
+Be::Result<std::string> BluePaths::GetFileContentsWithYield( const std::wstring& path, IBlueStream** contents )
+{
+	Be::Result<std::string> result;
+	BackgroundReader* backgroundReader = CCP_NEW( "GetFileContents/reader" ) BackgroundReader( path );
+	if( BlueResManBackgroundCall::Issue( backgroundReader ) )
+	{
+		if( Be::IsSuccess( backgroundReader->GetResult() ) )
+		{
+			backgroundReader->TakeContents( contents );
+		}
+		else
+		{
+			*contents = nullptr;
+			result = backgroundReader->GetResult();
+		}
+	}
+
+	CCP_DELETE backgroundReader;
+
+	return result;
 }

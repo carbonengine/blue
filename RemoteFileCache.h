@@ -21,7 +21,7 @@ public:
 
 	RemoteFileCache();
 
-	bool DownloadFileIndex( const char* url );
+	bool DownloadFileIndex( const std::string& url );
 	void SetFileIndex( const std::string& fileIndex );
 
 	void SetCacheFolder( const wchar_t* folderName );

@@ -147,5 +147,11 @@ const Be::ClassInfo* BluePaths::ExposeToBlue()
 			"Opens the given file. Raises a RuntimeError if it fails to open."
 		)
 
+		MAP_METHOD_AND_WRAP
+		(
+			"GetFileContentsWithYield",
+			GetFileContentsWithYield,
+			""
+		)
 	EXPOSURE_END()
 }

@@ -10,12 +10,21 @@
 #ifndef BlueResManBackgroundCall_h
 #define BlueResManBackgroundCall_h
 
-#if CCP_STACKLESS
+class IBlueResManBackgroundCall
+{
+public:
+	virtual void Perform() = 0;
+};
 
 struct BlueResManBackgroundCall
 {
 public:
-	BlueResManBackgroundCall( uint32_t flags = 0 );
+	// Issue a call on a background thread. Returns true if the call was issued,
+	// false if not (can happen if the calling tasklet is killed).
+	static bool Issue( IBlueResManBackgroundCall* theCall, uint32_t flags = 0 );
+
+private:
+	BlueResManBackgroundCall( IBlueResManBackgroundCall* theCall, uint32_t flags = 0 );
 
 	~BlueResManBackgroundCall();
 
@@ -25,32 +34,21 @@ public:
 	bool Wait();
 
 	// This gets called on the background thread
-	static void ForwardMarkAsDone( void* pContext );
+	static void DoTheCall( void* pContext );
 
 	// This gets called on the main thread, in Update
 	static void MarkAsDone( void* pContext );
 
 private:
+	CcpAtomic<uint32_t> m_id;
 	uint32_t m_flags;
+
+#if CCP_STACKLESS
 	PyChannelObject* m_channel;
-};
-
-class BlueResManReadStreamArgs : public BlueResManBackgroundCall
-{
-public:
-	void ReadStream( const std::wstring& filename, IBlueStream* stream );
-
-private:
-	std::wstring m_filename;
-	IBlueStreamPtr m_destination;
-
-	void AddToQueue();
-
-	static void ForwardCopyStream( void* context );
-
-	void CopyStreamImpl( );
-};
 #endif
+
+	IBlueResManBackgroundCall* m_backgroundCall;
+};
 
 
 #endif // BlueResManBackgroundCall_h

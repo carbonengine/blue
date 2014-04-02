@@ -74,7 +74,7 @@ BlueResMan::BlueResMan( IRoot* lockobj ) :
 	m_mainThread( 0 ),
 	m_backgroundLoadMemoryBudget( 256*1024*1024 ),
 	m_backgroundLoadMemoryInUse( 0 ),
-	m_mainThreadTimeSlice( 0.001f ),
+	m_mainThreadTimeSlice( 0.005f ),
 	m_mainThreadMaxTime( 0.0f ),
 	m_pendingLoads( 0 ),
 	m_pendingPrepares( 0 ),
@@ -887,45 +887,12 @@ IRoot* BlueResMan::LoadObjectW( const wchar_t* unnormalizedName, Be::LOADOBJECT_
 			// and read the file.
 			IBlueStreamPtr sourceStream;
 
-#if CCP_STACKLESS
-			BlueResManReadStreamArgs* cbArgs = CCP_NEW( "Wait/cbArgs" ) BlueResManReadStreamArgs;
-
-			MemStreamPtr memStream;
-			if( !memStream.CreateInstance() )
+			auto result = BePaths->GetFileContentsWithYield( filename, &sourceStream );
+			if( !Be::IsSuccess( result ) )
 			{
+				CCP_LOGERR_CH( s_ch, "%s", result.value.c_str() );
 				return nullptr;
 			}
-
-			cbArgs->ReadStream( filename, memStream );
-			if( cbArgs->Wait() )
-			{
-				// Only delete the args object if Wait succeeded - if it failed it means
-				// the tasklet was killed. In that case we have to keep the args object
-				// around as it is still referenced by the queue and will get a callback.
-				CCP_DELETE cbArgs;
-			}
-			else
-			{
-				return nullptr;
-			}
-
-			sourceStream = BlueCastPtr( memStream );
-#else
-			ResFilePtr resFile;
-			if( !resFile.CreateInstance() )
-			{
-				return nullptr;
-			}
-
-			if (!resFile->OpenW( filename.c_str(), true ) )
-			{
-				CCP_LOGERR_CH( s_ch, "'%S': no matching file in resource directory.", filename.c_str() );
-
-				return nullptr;
-			}
-
-			sourceStream = BlueCastPtr( resFile );
-#endif
 
 			IRootReaderPtr reader;
 
@@ -945,6 +912,8 @@ IRoot* BlueResMan::LoadObjectW( const wchar_t* unnormalizedName, Be::LOADOBJECT_
 
 			CCP_LOG_CH( s_ch, "Reading %S", filename.c_str() );
 			reader->SetFileName( filename.c_str() );
+
+			CCP_ASSERT( sourceStream );
 			if( !reader->ReadForCachingFromStream( sourceStream ) )
 			{
 				std::string msg;
@@ -1010,7 +979,7 @@ PyObject* BlueResMan::PyLoadObjectFromYamlString( PyObject* self, PyObject* args
 
 		MemStream *memStream = static_cast<MemStream*>( static_cast<IBlueStream*>( newStream ) );
 		memStream->Write(charString, len);
-		memStream->Seek(0, BS_BEGIN);
+		memStream->Seek(0, ICcpStream::SO_BEGIN);
 
 		CYamlReader w;
 		IRoot* obj = w.ReadFromStream( memStream );
@@ -1113,20 +1082,10 @@ Be::Result<std::string> BlueResMan::Wait()
 	Be::Time before = BeOS->GetActualTime();
 
 	// Waiting is done by queuing a request on the background queue. Once processed, it
-	// queues a request on the main thread queue. Once processed there, the flag in
-	// the cbArgs structure is set, allowing us to break out of the loop. The queues are
-	// strictly first-in/first-out so passing a request like through both queues ensures
-	// that any resource that had been scheduled for load has also finished preparing.
-	BlueResManBackgroundCall* cbArgs = CCP_NEW( "Wait/cbArgs" ) BlueResManBackgroundCall;
+	// queues a request on the main thread queue. For waiting, we don't need an actual
+	// callback, just a marker that flows through the queues (with a fence).
+	BlueResManBackgroundCall::Issue( nullptr, IBlueCallbackMan::BCBF_FENCE );
 
-	cbArgs->AddToQueue();
-	if( cbArgs->Wait() )
-	{
-		// Only delete the args object if Wait succeeded - if it failed it means
-		// the tasklet was killed. In that case we have to keep the args object
-		// around as it is still referenced by the queue and will get a callback.
-		CCP_DELETE cbArgs;
-	}
 	
 	Be::Time now = BeOS->GetActualTime();
 	Be::Time delta = now - before;
@@ -1157,11 +1116,7 @@ Be::Result<std::string> BlueResMan::WaitUrgent()
 		return Be::Result<std::string>( "This tasklet cannot block" );
 	}
 
-	BlueResManBackgroundCall* cbArgs = CCP_NEW( "Wait/cbArgs" ) BlueResManBackgroundCall( IBlueCallbackMan::BCBF_URGENT );
-
-	cbArgs->AddToQueue();
-	cbArgs->Wait();
-	CCP_DELETE cbArgs;
+	BlueResManBackgroundCall::Issue( nullptr, IBlueCallbackMan::BCBF_FENCE | IBlueCallbackMan::BCBF_URGENT );
 
 	return Be::Result<std::string>();
 #else

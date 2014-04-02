@@ -175,7 +175,7 @@ static PyObject* PySeek( PyObject* self, PyObject* args )
 		return NULL;
 	}
 
-	pThis->Seek( offset, (BLUESEEK)whence );
+	pThis->Seek( offset, (ICcpStream::SeekOrigin)whence );
 
 	Py_RETURN_NONE;
 }

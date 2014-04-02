@@ -623,7 +623,7 @@ static bool safememcpy(void *dest, const void *src, size_t size)
 #endif
 
 	
-ssize_t ResFile::Read( void* dest, ssize_t count )
+ptrdiff_t ResFile::Read( void* dest, ptrdiff_t count )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 	
@@ -681,7 +681,7 @@ ssize_t ResFile::Read( void* dest, ssize_t count )
 //--------------------------------------------------------------------
 // IBlueStream::Write
 //--------------------------------------------------------------------
-ssize_t ResFile::Write(
+ptrdiff_t ResFile::Write(
 	const void* source,
 	size_t count
 	)
@@ -723,9 +723,9 @@ ssize_t ResFile::Write(
 //--------------------------------------------------------------------
 // IBlueStream::Seek
 //--------------------------------------------------------------------
-ssize_t ResFile::Seek(
-	ssize_t distance,
-	BLUESEEK method
+ptrdiff_t ResFile::Seek(
+	ptrdiff_t distance,
+	SeekOrigin method
 	)
 {
 
@@ -738,9 +738,9 @@ ssize_t ResFile::Seek(
 	if (mData)
 	{
         // TODO: check if resulting position would be less than 0
-		if (method == BS_BEGIN)
+		if (method == SO_BEGIN)
 			mPosition = distance;
-		else if (method == BS_CURRENT)
+		else if (method == SO_CURRENT)
 			mPosition += distance;
 		else
 		{
@@ -775,15 +775,15 @@ ssize_t ResFile::Seek(
 	int origin = SEEK_SET;
 	switch( method )
 	{
-		case BS_BEGIN:
+		case SO_BEGIN:
 			origin = SEEK_SET;
 			break;
 
-		case BS_CURRENT:
+		case SO_CURRENT:
 			origin = SEEK_CUR;
 			break;
 
-		case BS_END:
+		case SO_END:
 			origin = SEEK_END;
 			break;
 
@@ -809,7 +809,7 @@ ssize_t ResFile::Seek(
 //--------------------------------------------------------------------
 // IBlueStream::GetPosition
 //--------------------------------------------------------------------
-ssize_t ResFile::GetPosition(
+ptrdiff_t ResFile::GetPosition(
 	)
 {
 	return mPosition;
@@ -819,7 +819,7 @@ ssize_t ResFile::GetPosition(
 //--------------------------------------------------------------------
 // IBlueStream::GetSize
 //--------------------------------------------------------------------
-ssize_t ResFile::GetSize(
+ptrdiff_t ResFile::GetSize(
 	)
 {
 	return mSize;

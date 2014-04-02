@@ -8,6 +8,8 @@
 #include "StdAfx.h"
 
 #include "BlueFileStream.h"
+#include "BlueMemStream.h"
+#include "BlueResManBackgroundCall.h"
 #include "include/IBlueOS.h"
 
 #ifdef _WIN32
@@ -30,6 +32,39 @@
 namespace
 {
 	const int INVALID_FILE = -1;
+
+#if CCP_STACKLESS
+	class BackgroundReader : public IBlueResManBackgroundCall
+	{
+	public:
+		BackgroundReader( BlueFileStream* stream, const wchar_t* filename ) : 
+		  m_stream( stream ),
+			  m_filename( filename )
+		  {
+		  }
+
+		  virtual void Perform()
+		  {
+			  m_result = m_stream->ReadEntireFile( m_filename.c_str(), m_contents );
+		  }
+
+		  Be::Result<std::string> GetResult()
+		  {
+			  return m_result;
+		  }
+
+		  const std::string& GetContents()
+		  {
+			  return m_contents;
+		  }
+
+	private:
+		std::wstring m_filename;
+		BlueFileStreamPtr m_stream;
+		std::string m_contents;
+		Be::Result<std::string> m_result;
+	};
+#endif
 
 #ifdef _WIN32
 
@@ -181,7 +216,7 @@ namespace
 	int ConvertShareMode( BlueFileStream::ShareMode shareMode )
 	{
 		int shflag = 0;
-
+#ifndef __ANDROID__
 		switch( shareMode )
 		{
 		case BlueFileStream::SM_NOSHARING:
@@ -196,7 +231,7 @@ namespace
 			shflag = 0;
 			break;
 		}
-
+#endif
 		return shflag;
 	}
 
@@ -328,7 +363,7 @@ void BlueFileStream::Close()
 	m_fileDescriptor = INVALID_FILE;
 }
 
-ssize_t BlueFileStream::Read( void* dest, ssize_t count )
+ptrdiff_t BlueFileStream::Read( void* dest, ptrdiff_t count )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -352,7 +387,7 @@ ssize_t BlueFileStream::Read( void* dest, ssize_t count )
 	return bytesRead;
 }
 
-ssize_t BlueFileStream::Write( const void* source, size_t count )
+ptrdiff_t BlueFileStream::Write( const void* source, size_t count )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -376,7 +411,7 @@ ssize_t BlueFileStream::Write( const void* source, size_t count )
 	return wrote;
 }
 
-ssize_t BlueFileStream::Seek( ssize_t distance, BLUESEEK method )
+ptrdiff_t BlueFileStream::Seek( ptrdiff_t distance, SeekOrigin method )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -388,13 +423,13 @@ ssize_t BlueFileStream::Seek( ssize_t distance, BLUESEEK method )
 	return true;
 }
 
-ssize_t BlueFileStream::GetPosition()
+ptrdiff_t BlueFileStream::GetPosition()
 {
 	long pos = Tell( m_fileDescriptor );
 	return pos;
 }
 
-ssize_t BlueFileStream::GetSize()
+ptrdiff_t BlueFileStream::GetSize()
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -439,7 +474,7 @@ bool BlueFileStream::LockData( void** data, size_t size )
 		return false;
 	}
 
-	if( !Seek( 0, BS_BEGIN ) )
+	if( !Seek( 0, SO_BEGIN ) )
 	{
 		return false;
 	}
@@ -475,6 +510,8 @@ bool BlueFileStream::UnlockData()
 
 Be::Result<std::string> BlueFileStream::ReadEntireFile( const wchar_t* filename, std::string& contents )
 {
+	CCP_STATS_ZONE( __FUNCTION__ );
+
 	STACKLESS_ALLOWTHREADS();
 
 	m_fileDescriptor = OpenFile( filename, OM_READONLY, SM_READSHARING );
@@ -502,4 +539,39 @@ Be::Result<std::string> BlueFileStream::ReadEntireFile( const wchar_t* filename,
 	}
 
 	return Be::Result<std::string>();
+}
+
+
+Be::Result<std::string> BlueFileStream::ReadEntireFileWithYield( const wchar_t* filename, std::string& contents )
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+#if CCP_STACKLESS
+	BackgroundReader* reader = CCP_NEW( "ReadEntireFileWithYield/reader" ) 
+		BackgroundReader( this, filename );
+	Be::Result<std::string> result;
+
+
+	if( BlueResManBackgroundCall::Issue( reader ) )
+	{
+		result = reader->GetResult();
+
+		if( Be::IsSuccess( result ) )
+		{
+			contents = reader->GetContents();
+		}
+	}
+	else
+	{
+		result = Be::Result<std::string>( "Tasklet killed" );
+	}
+
+	CCP_DELETE reader;
+	return result;
+
+#else
+
+	return ReadEntireFile( filename, contents );
+
+#endif
 }

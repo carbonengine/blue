@@ -234,7 +234,7 @@ PyObject *ResFile::PySeekStandard(PyObject *args)
 		return NULL;
 	}
 
-	Seek( offset, (BLUESEEK)whence );
+	Seek( offset, (ICcpStream::SeekOrigin)whence );
 
 	Py_RETURN_NONE;
 }

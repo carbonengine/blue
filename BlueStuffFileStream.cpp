@@ -45,7 +45,7 @@ void BlueStuffFileStream::SetHandle( HANDLE handle, size_t offset, size_t size )
 	SetFilePointer( m_fileHandle, (DWORD)m_offset, NULL, FILE_BEGIN );
 }
 
-ssize_t BlueStuffFileStream::Read( void* dest, ssize_t count )
+ptrdiff_t BlueStuffFileStream::Read( void* dest, ptrdiff_t count )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -79,12 +79,12 @@ ssize_t BlueStuffFileStream::Read( void* dest, ssize_t count )
 	return read;
 }
 
-ssize_t BlueStuffFileStream::Write( const void* source, size_t count )
+ptrdiff_t BlueStuffFileStream::Write( const void* source, size_t count )
 {
 	return -1;
 }
 
-ssize_t BlueStuffFileStream::Seek( ssize_t distance, BLUESEEK method )
+ptrdiff_t BlueStuffFileStream::Seek( ptrdiff_t distance, SeekOrigin method )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -99,15 +99,15 @@ ssize_t BlueStuffFileStream::Seek( ssize_t distance, BLUESEEK method )
 
 	switch( method )
 	{
-		case BS_BEGIN:
+		case SO_BEGIN:
 			newPos = (DWORD)m_offset + (DWORD)distance;
 			break;
 		
-		case BS_CURRENT:
+		case SO_CURRENT:
 			newPos = oldPos + (DWORD)distance;
 			break;
 
-		case BS_END:
+		case SO_END:
 			newPos = (DWORD)m_offset + (DWORD)m_dataSize - (DWORD)distance;
 			break;
 	}
@@ -140,7 +140,7 @@ ssize_t BlueStuffFileStream::CopyFrom( IBlueStream* source, size_t count )
 	return -1;
 }
 
-ssize_t BlueStuffFileStream::GetPosition()
+ptrdiff_t BlueStuffFileStream::GetPosition()
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -161,7 +161,7 @@ ssize_t BlueStuffFileStream::GetPosition()
 	return ret;
 }
 
-ssize_t BlueStuffFileStream::GetSize()
+ptrdiff_t BlueStuffFileStream::GetSize()
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -191,7 +191,7 @@ bool BlueStuffFileStream::LockData( void** data, size_t size )
 		return false;
 	}
 
-	if( Seek( 0, BS_BEGIN ) < 0 )
+	if( Seek( 0, SO_BEGIN ) < 0 )
 	{
 		ClearLockedData();
 		return false;
