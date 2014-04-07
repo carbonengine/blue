@@ -2,7 +2,7 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Label="PropertySheets">
     <Import Project="..\boost.props" />
-    <Import Project="..\..\..\..\..\..\sdk\telemetry\2.0j\telemetry_2_0_j.props" />
+    <Import Project="..\..\..\..\..\..\sdk\telemetry\2.0k\telemetry_2_0_k.props" />
     <Import Project="..\stackless_project.props" />
   </ImportGroup>
   <PropertyGroup>
