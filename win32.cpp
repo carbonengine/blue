@@ -348,6 +348,7 @@ PROTO(GetSystemInfo)
 PROTO(GetNativeSystemInfo)
 PROTO(IsWow64Process)
 PROTO(IsTransgaming)
+PROTO(TGGetVersion)
 PROTO(TGGetOS)
 PROTO(TGGetSystemInfo)
 PROTO(GetProcessBits)
@@ -443,6 +444,7 @@ DEF(GetNativeSystemInfo)
 DEF(IsWow64Process)
 DEF(IsTransgaming)
 DEF(TGGetOS)
+DEF(TGGetVersion)
 DEF(TGGetSystemInfo)
 DEF(GetProcessBits)
 DEF(GetSystemBits)
@@ -2287,6 +2289,34 @@ PyObject *PyIsTransgaming(PyObject *self, PyObject *args)
 	}
 	Py_INCREF(result);
 	return result;
+}
+
+
+PyObject *PyTGGetVersion(PyObject *self, PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, ":TGGetVersion"))
+		return 0;
+
+	std::string versionStr = "Invalid";
+
+	// only on the mac
+	if( IsTransgaming() )
+	{
+		// get function out of "emulated" ntdll
+		HMODULE hMod = GetModuleHandle( "ntdll" );
+		typedef BOOL (*TGGetVersion) ( LPSTR pBuf, SIZE_T BufLen );
+		TGGetVersion pFunc = (TGGetVersion)GetProcAddress ( hMod, "TGGetVersion" );
+		if( pFunc )
+		{
+			char buffer[64];
+			if( pFunc( buffer, 64 ) )
+			{
+				versionStr = buffer;
+			}
+		}
+	}
+
+	return PyString_FromString( versionStr.c_str() );
 }
 
 
