@@ -2304,7 +2304,7 @@ PyObject *PyTGGetVersion(PyObject *self, PyObject *args)
 	{
 		// get function out of "emulated" ntdll
 		HMODULE hMod = GetModuleHandle( "ntdll" );
-		typedef BOOL (*TGGetVersion) ( LPSTR pBuf, SIZE_T BufLen );
+		typedef BOOL (WINAPI *TGGetVersion) ( LPSTR, SIZE_T );
 		TGGetVersion pFunc = (TGGetVersion)GetProcAddress( hMod, "TGGetVersion" );
 		if( pFunc )
 		{
