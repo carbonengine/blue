@@ -604,6 +604,14 @@ const Be::ClassInfo* BlueStatistics::ExposeToBlue()
 
 		MAP_METHOD_AND_WRAP
 		(
+			"PrimeTelemetry",
+			PrimeTelemetry,
+			"Prepares Telemetry for use, loading in DLLs so there is less chance of a stall\n"
+			"when starting a telemetry session."
+		)
+		
+		MAP_METHOD_AND_WRAP
+		(
 			"StartTelemetry", 
 			StartTelemetry, 
 			"Connects to a Telemetry server and starts gathering data."

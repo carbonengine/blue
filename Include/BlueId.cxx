@@ -30,3 +30,5 @@ BLUE_DEFINE_INTERFACE( IBlueMemStream );
 
 BLUE_DEFINE_INTERFACE( IBlueObjectRecycler );
 BLUE_DEFINE_INTERFACE( ICcpStatisticsAccumulator );
+
+BLUE_DEFINE_INTERFACE( IUnloadable )

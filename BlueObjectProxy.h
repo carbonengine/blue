@@ -42,6 +42,8 @@ protected:
 	// called anytime the old value of object is about to change
 	void OnObjectInvalidated();
 	bool m_temporary;
+
+	bool m_isUnloaded;
 };
 
 TYPEDEF_BLUECLASS( BlueObjectProxy );

@@ -1527,6 +1527,9 @@ Be::Result<std::string> YamlReader::CreateObjectFromFile( const std::wstring& fi
 	return CreateObjectFromStream( stream, obj );
 }
 
+// TODO: remove ifdef once libyaml on mac is recompiled without alloc functions
+#ifndef __clang__
+
 extern "C"
 {
 /*
@@ -1570,3 +1573,5 @@ yaml_char_t* yaml_strdup(const yaml_char_t *str)
 
 
 };
+
+#endif

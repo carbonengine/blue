@@ -271,6 +271,9 @@
     <ClInclude Include="Include\ITaskletTimer.h">
       <Filter>Source Files\Include</Filter>
     </ClInclude>
+    <ClInclude Include="Include\IUnloadable.h">
+      <Filter>Source Files\Include</Filter>
+    </ClInclude>
     <ClInclude Include="Include\ScopedBlockTrap.h">
       <Filter>Source Files\Include</Filter>
     </ClInclude>

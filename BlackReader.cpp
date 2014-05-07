@@ -515,6 +515,8 @@ void BlackReader::ReadDict( IBlueDict* dict )
 
 void BlackReader::PatchStringsInStructureList( IBlueStructureList* structureList )
 {
+	CCP_STATS_ZONE( __FUNCTION__ );
+
 	// Changes string table indexes stored in structure list data to actual
 	// BlueSharedString instances
 	if( structureList->GetSize() == 0 )
@@ -522,6 +524,7 @@ void BlackReader::PatchStringsInStructureList( IBlueStructureList* structureList
 		return;
 	}
 	void* listData = structureList->GetAt( 0 );
+	size_t structureSize = structureList->GetStructureSize();
 	BlueStructureDefinition* memberDef = structureList->GetStructureDefinition();
 	while( memberDef->m_name )
 	{
@@ -534,7 +537,7 @@ void BlackReader::PatchStringsInStructureList( IBlueStructureList* structureList
 				for( int j = 0; j < size; ++j )
 				{
 					uint8_t* stringAddress = reinterpret_cast<uint8_t*>( listData ) + 
-						structureList->GetStructureSize() * i + memberDef->m_offset + sizeof( BlueSharedString ) * j;
+						structureSize * i + memberDef->m_offset + sizeof( BlueSharedString ) * j;
 					uint16_t stringIndex = *reinterpret_cast<uint16_t*>( stringAddress );
 					if( stringIndex >= m_strings.size() )
 					{

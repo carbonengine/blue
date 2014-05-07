@@ -230,29 +230,39 @@ void BlueAsyncRes::CancelPendingLoad()
 	DoCloseStream();
 }
 
+inline size_t GetListCapacity( size_t count )
+{
+	return count < 32 ? count : ( ( count + 63 ) / 64 ) * 64;
+}
+
 void BlueAsyncRes::AddNotifyTarget( IBlueAsyncResNotifyTarget *p )
 {
 	CCP_ASSERT( p );
-
+#if CCP_ASSERT_ENABLED
 	for( size_t i = 0; i < m_reloadNotifyTargetsCount; ++i )
 	{
 		if( m_reloadNotifyTargets[i] == p )
 		{
-			CCP_LOGERR( "%s - target already registered", __FUNCTION__ );
+			CCP_ASSERT_M( false, "AddNotifyTarget - target already registered" );
 			return;
 		}
 	}
-
+#endif
 	if( m_isPrepared )
 	{
 		p->RebuildCachedData( this );
 	}
 
-	IBlueAsyncResNotifyTarget** newBlock = (IBlueAsyncResNotifyTarget**)CCP_MALLOC( "BlueAsyncRes/m_reloadNotifyTargets", (1 + m_reloadNotifyTargetsCount) * sizeof(IBlueAsyncResNotifyTarget **) );
-	memcpy( newBlock, m_reloadNotifyTargets, m_reloadNotifyTargetsCount * sizeof(IBlueAsyncResNotifyTarget **) );
-	newBlock[m_reloadNotifyTargetsCount] = p;
-	CCP_FREE( m_reloadNotifyTargets );
-	m_reloadNotifyTargets = newBlock;
+	size_t capacity = GetListCapacity( m_reloadNotifyTargetsCount );
+	size_t newCapacity = GetListCapacity( m_reloadNotifyTargetsCount + 1 );
+	if( newCapacity != capacity )
+	{
+		IBlueAsyncResNotifyTarget** newBlock = (IBlueAsyncResNotifyTarget**)CCP_MALLOC( "BlueAsyncRes/m_reloadNotifyTargets", newCapacity * sizeof(IBlueAsyncResNotifyTarget*) );
+		memcpy( newBlock, m_reloadNotifyTargets, m_reloadNotifyTargetsCount * sizeof(IBlueAsyncResNotifyTarget*) );
+		CCP_FREE( m_reloadNotifyTargets );
+		m_reloadNotifyTargets = newBlock;
+	}
+	m_reloadNotifyTargets[m_reloadNotifyTargetsCount] = p;
 	++m_reloadNotifyTargetsCount;
 }
 
@@ -262,21 +272,28 @@ void BlueAsyncRes::RemoveNotifyTarget( IBlueAsyncResNotifyTarget *p )
 	CCP_ASSERT( m_reloadNotifyTargetsCount > 0 );
 
 	bool found = false;
-	IBlueAsyncResNotifyTarget** newBlock = NULL;
-	if( m_reloadNotifyTargetsCount > 0 )
+	for( size_t i = 0; i < m_reloadNotifyTargetsCount; ++i )
 	{
-		for( size_t i = 0; i < m_reloadNotifyTargetsCount; ++i )
+		if( m_reloadNotifyTargets[i] == p )
 		{
-			if( m_reloadNotifyTargets[i] == p )
-			{
-				found = true;
-				break;
-			}
+			found = true;
+			break;
 		}
+	}
+	if( !found )
+	{
+		CCP_LOGERR( "%s - target not registered", __FUNCTION__ );
+		return;
+	}
 
-		if( found && m_reloadNotifyTargetsCount > 1)
+	size_t capacity = GetListCapacity( m_reloadNotifyTargetsCount );
+	size_t newCapacity = GetListCapacity( m_reloadNotifyTargetsCount - 1 );
+	if( capacity != newCapacity )
+	{
+		IBlueAsyncResNotifyTarget** newBlock = nullptr;
+		if( newCapacity )
 		{
-			newBlock = (IBlueAsyncResNotifyTarget**)CCP_MALLOC( "BlueAsyncRes/m_reloadNotifyTargets", (m_reloadNotifyTargetsCount - 1) * sizeof(IBlueAsyncResNotifyTarget **) );
+			newBlock = (IBlueAsyncResNotifyTarget**)CCP_MALLOC( "BlueAsyncRes/m_reloadNotifyTargets", newCapacity * sizeof(IBlueAsyncResNotifyTarget*) );
 			size_t copied = 0;
 			for( size_t i = 0; i < m_reloadNotifyTargetsCount; ++i )
 			{
@@ -287,18 +304,23 @@ void BlueAsyncRes::RemoveNotifyTarget( IBlueAsyncResNotifyTarget *p )
 				}
 			}
 		}
-	}
-
-	if( found )
-	{
 		CCP_FREE( m_reloadNotifyTargets );
 		m_reloadNotifyTargets = newBlock;
-		--m_reloadNotifyTargetsCount;
 	}
 	else
 	{
-		CCP_LOGERR( "%s - target not registered", __FUNCTION__ );
+		size_t copied = 0;
+		for( size_t i = 0; i < m_reloadNotifyTargetsCount; ++i )
+		{
+			if( m_reloadNotifyTargets[i] != p )
+			{
+				m_reloadNotifyTargets[copied] = m_reloadNotifyTargets[i];
+				++copied;
+			}
+		}
 	}
+	
+	--m_reloadNotifyTargetsCount;
 }
 
 void BlueAsyncRes::ForceSynchronousLoad()

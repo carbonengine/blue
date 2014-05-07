@@ -423,6 +423,11 @@ bool BlueStatistics::IsCppCaptureEnabled()
 	return s_isTelemetryCppCaptureEnabled;
 }
 
+void BlueStatistics::PrimeTelemetry()
+{
+	CcpPrimeTelemetry();
+}
+
 CcpStatisticsEntry::CcpStatisticsEntry( IRoot* lockobj ) :
 	m_statsEntry( nullptr ),
 	m_resetPerFrame( false ),

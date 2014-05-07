@@ -2,11 +2,13 @@
 
 #include "BlueObjectProxy.h"
 #include "include/IBlueOS.h"
+#include "Include/IUnloadable.h"
 
 BlueObjectProxy::BlueObjectProxy() : 
 	m_objectMarker( 0 ),
 	m_lastTimeUsed( 0 ),
-	m_temporary   ( false )
+	m_temporary( false ),
+	m_isUnloaded( false )
 {
 }
 
@@ -34,8 +36,19 @@ void BlueObjectProxy::SetBuilder( IBlueObjectBuilder* builder, unsigned int obje
 
 IRoot* BlueObjectProxy::GetObject( )
 {
+	if( m_isUnloaded && m_object )
+	{
+		CCP_STATS_ZONE( __FUNCTION__ "ReloadWhenReferenced" );
+		IUnloadablePtr objectAsUnloadable = BlueCastPtr( m_object );
+		// Shouldn't need a nullptr check here - m_isUnloaded only becomes true if this
+		// interface is supported.
+		objectAsUnloadable->ReloadWhenReferenced();
+		m_isUnloaded = false;
+	}
+
 	if( !m_object && m_builder )
 	{
+		CCP_STATS_ZONE( __FUNCTION__ "CreateObject" );
 		m_object.Attach( m_builder->CreateObject( m_objectMarker, this ) );
 	}
 
@@ -52,6 +65,11 @@ void BlueObjectProxy::ClearObject()
 
 bool BlueObjectProxy::Update( Be::Time time, Be::Time timeout )
 {
+	if( m_isUnloaded )
+	{
+		return false;
+	}
+
 	// If there is a time out set and we have a builder to reconstruct
 	// the object we null out the object if it hasn't been used for
 	// the given time out period.
@@ -62,7 +80,20 @@ bool BlueObjectProxy::Update( Be::Time time, Be::Time timeout )
 		if( delta > timeout )
 		{
 			OnObjectInvalidated();
-			m_object = NULL;
+
+
+			IUnloadablePtr objectAsUnloadable = BlueCastPtr( m_object );
+			if( objectAsUnloadable )
+			{
+				CCP_STATS_ZONE( __FUNCTION__ "UnloadWhenUnreferenced" );
+				objectAsUnloadable->UnloadWhenUnreferenced();
+				m_isUnloaded = true;
+			}
+			else
+			{
+				m_object = NULL;
+			}
+
 			return true;
 		}
 	}

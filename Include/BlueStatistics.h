@@ -82,6 +82,7 @@ public:
 
 	void PauseTelemetry();
 	void ResumeTelemetry();
+	void PrimeTelemetry();
 	void StopTelemetry();
 	void UpdateTelemetry();
 	void SetTimelineSectionName( const char* name );

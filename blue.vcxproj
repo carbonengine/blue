@@ -569,6 +569,7 @@
     <ClInclude Include="Include\ICcpStatisticsAccumulator.h"/>
     <ClInclude Include="Include\IMotherLode.h"/>
     <ClInclude Include="Include\ITaskletTimer.h"/>
+    <ClInclude Include="Include\IUnloadable.h"/>
     <ClInclude Include="Include\ScopedBlockTrap.h"/>
     <ClInclude Include="Include\StructPacker.h"/>
     <ClInclude Include="Include\TransGaming.h"/>
