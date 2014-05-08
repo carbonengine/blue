@@ -1281,6 +1281,10 @@ Be::Result<std::string> BluePaths::GetFileContentsWithYield( const std::wstring&
 			result = backgroundReader->GetResult();
 		}
 	}
+	else
+	{
+		result = std::string( "Tasklet killed" );
+	}
 
 	CCP_DELETE backgroundReader;
 
