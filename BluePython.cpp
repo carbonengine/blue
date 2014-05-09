@@ -239,6 +239,7 @@ bool BluePyOS::InitBasicModuleSupport()
 #endif
 
 
+#if CCP_STACKLESS
 	// Redirect python stdout and stderr and
 	// add log support
 	PyObject* sysmodule = PyImport_ImportModule("sys");
@@ -252,6 +253,7 @@ bool BluePyOS::InitBasicModuleSupport()
 	}
 
 	Py_DECREF(sysmodule);
+#endif
 
 	//init the submodules into the blue module
 	PyObject *m = PyImport_ImportModule("blue.win32");
@@ -644,6 +646,11 @@ bool BluePyOS::Startup(
 	{
 		// Don't worry if 'inifile' isn't found - no reason to treat that as an error
 		Py_DECREF(module);
+	}
+	else
+	{
+		CCP_LOGWARN( "Couldn't import inifile" );
+		PyFlushError(0);
 	}
 
 	mIsResFromStuffOnly = true;
