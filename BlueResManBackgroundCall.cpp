@@ -58,7 +58,13 @@ bool BlueResManBackgroundCall::Wait()
 
 	if( !ret )
 	{
+		m_isCanceling = 1;
+
 		BeResMan->CancelFromQueue( BRMQ_BACKGROUND, m_id );
+		if( m_mainQueueId )
+		{
+			BeResMan->CancelFromQueue( BRMQ_MAIN, m_mainQueueId );
+		}
 
 		// Tasklet was killed
 		Py_DECREF( m_channel );
@@ -87,7 +93,10 @@ void BlueResManBackgroundCall::DoTheCall( void* pContext )
 		args->m_backgroundCall->Perform();
 	}
 
-	BeResMan->AddToQueue( BRMQ_MAIN, MarkAsDone, pContext, args->m_flags, NULL );
+	if( !args->m_isCanceling )
+	{
+		BeResMan->AddToQueue( BRMQ_MAIN, MarkAsDone, pContext, args->m_flags, &args->m_mainQueueId );
+	}
 }
 
 void BlueResManBackgroundCall::MarkAsDone( void* pContext )

@@ -41,7 +41,9 @@ private:
 
 private:
 	CcpAtomic<uint32_t> m_id;
+	CcpAtomic<uint32_t> m_mainQueueId;
 	uint32_t m_flags;
+	CcpAtomic<uint32_t> m_isCanceling;
 
 #if CCP_STACKLESS
 	PyChannelObject* m_channel;
