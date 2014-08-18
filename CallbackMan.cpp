@@ -3,14 +3,16 @@
 #include "CallbackMan.h"
 #include "CcpCore/include/CcpTime.h"
 
+static CcpLogChannel_t s_ch = CCP_LOG_DEFINE_CHANNEL( "CallbackMan" );
+
 #define CALLBACKMAN_DEBUGGING 0
 
 #if CALLBACKMAN_DEBUGGING
-	#define REPORT( x ) OutputDebugString( x )
+	#define REPORT( msg, ... ) CCP_LOG_CH( s_ch, msg, ##__VA_ARGS__ )
 	#define REPORT_TIME( msg, t ) { double d = t.GetSeconds(); char buffer[256]; sprintf_s( buffer, 256, msg, d ); OutputDebugString( buffer ); }
 	#define REPORT_TIME1( msg, t, a1 ) { double d = t.GetSeconds(); char buffer[256]; sprintf_s( buffer, 256, msg, d, a1 ); OutputDebugString( buffer ); }
 #else
-	#define REPORT( x )
+	#define REPORT( x, ... )
 	#define REPORT_TIME( msg, t )
 	#define REPORT_TIME1( msg, t, a1 )
 #endif
@@ -35,9 +37,9 @@ BlueCallbackMan::BlueCallbackMan( IRoot* lockobj )
 	: m_size( 0 )
 	, m_queue( "BlueCallbackMan/m_queue" )
 	, m_urgentQueue( "BlueCallbackMan/m_urgentQueue" )
+	, m_fenceQueue( "BlueCallbackMan/m_fenceQueue" )
 	, m_nextId( 1 )
 	, m_queueMutex( "BlueCallbackMan", "m_queueMutex" )
-	, m_fenceMutex( "BlueCallbackMan", "m_fenceMutex" )
 	, m_threadCount( 1 )
 	, m_isRunningOwnThreads( false )
 	, m_threads( "BlueCallbackMan/m_threads" )
@@ -77,6 +79,11 @@ BlueCallbackMan::~BlueCallbackMan()
 
 void BlueCallbackMan::SetThreadCount( unsigned int threadCount )
 {
+	if( threadCount > 32 )
+	{
+		CCP_LOGWARN_CH( s_ch, "Maximum thread count is 32" );
+		threadCount = 32;
+	}
 	m_threadCount = threadCount;
 }
 
@@ -97,7 +104,18 @@ bool BlueCallbackMan::Add( CallbackFunc pCb, void* pContext, uint32_t flags, Ccp
 	entry.id = m_nextId;
 	entry.pCb = pCb;
 	entry.pContext = pContext;
-	entry.isFenced = (flags & BCBF_FENCE) != 0;
+	entry.fenceMask = 0;
+
+	if( m_isRunningOwnThreads && (flags & BCBF_FENCE) )
+	{
+		REPORT( "Adding fenced entry" );
+
+		for( unsigned int i = 0; i < m_threadCount; ++i )
+		{
+			entry.fenceMask |= 1 << i;
+		}
+	}
+
 	entry.timeStamp = CcpGetTimestamp();
 	if( flags & BCBF_URGENT )
 	{
@@ -151,30 +169,17 @@ void BlueCallbackMan::Cancel( uint32_t id )
 	}
 	if( !found )
 	{
-		for( CallbackEntryList::iterator it = m_urgentQueue.begin(); it != m_urgentQueue.end(); ++it )
+		bool found = RemoveFromQueue( m_urgentQueue, id );
+		if( !found )
 		{
-			if( it->id == id )
-			{
-				m_urgentQueue.erase( it );
-				--m_size;
-				found = true;
-				break;
-			}
+			found = RemoveFromQueue( m_queue, id );
 		}
 		if( !found )
 		{
-			for( CallbackEntryList::iterator it = m_queue.begin(); it != m_queue.end(); ++it )
-			{
-				if( it->id == id )
-				{
-					m_queue.erase( it );
-					--m_size;
-					break;
-				}
-			}
+			found = RemoveFromQueue( m_fenceQueue, id );
 		}
-		m_queueMutex.Release();
 	}
+	m_queueMutex.Release();
 }
 
 void BlueCallbackMan::Run()
@@ -191,6 +196,7 @@ void BlueCallbackMan::Run()
 		td->m_owner = this;
 
 		td->m_threadHandle = CcpCreateThread( StaticThreadProc, td, (CcpThreadPriority_t)m_threadPriority );
+		td->m_threadIndex = i;
 	}
 
 	SetName( m_name.c_str() );
@@ -308,69 +314,84 @@ bool BlueCallbackMan::UpdateThread( struct ThreadData* td )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	bool wasEmpty = true;
-	CallbackEntry entry;
-
 	BeTimer timeToGetQueue;
 
-	// Acquire fence mutex. It ensures that other threads can't pull of the queue until we've
-	// determined whether the entry we're about to pull is fenced. The fence mutex is only
-	// used by the worker threads so it won't stall the main thread.
-	m_fenceMutex.Acquire();
-
-	// Ensure exclusive access to queue. We already hold the fence mutex but that is not enough
-	// as the main thread may want to add entries to the queue while we're here. We hold the queue
-	// mutex only for queue maintenance itself so we don't stall the main thread.
 	m_queueMutex.Acquire();
 	if( timeToGetQueue.GetSeconds() > 0.001 )
 	{
 		REPORT_TIME( "- Acquired queue in %g seconds\n", timeToGetQueue );
 	}
 
-	// Note that size of queue is not decreased until after processing callback.
-	if( !m_urgentQueue.empty() )
+	CallbackEntry entry;
+	bool haveEntry = false;
+
+	if( !m_fenceQueue.empty() )
 	{
-		entry = m_urgentQueue.front();
-		m_urgentQueue.pop_front();
-		wasEmpty = false;
-		td->m_currentId = entry.id;
+		CallbackEntry& fencedEntry = m_fenceQueue.front();
+		
+		uint32_t maskBefore = fencedEntry.fenceMask;
+		fencedEntry.fenceMask &= ~(1 << td->m_threadIndex);
+
+		if( fencedEntry.fenceMask && m_urgentQueue.empty() && m_queue.empty() )
+		{
+			for( unsigned int i = 0; i < m_threadCount; ++i )
+			{
+				ThreadData* otherThreadData = m_threads[i];
+				if( otherThreadData != td )
+				{
+					if( otherThreadData->m_currentId == 0 )
+					{
+						fencedEntry.fenceMask &= ~(1 << i);
+					}
+				}
+			}
+		}
+
+		REPORT( "Front of fenced queue - %x - %x", maskBefore, fencedEntry.fenceMask );
+
+		if( fencedEntry.fenceMask == 0 )
+		{
+			entry = fencedEntry;
+			m_fenceQueue.pop_front();
+			haveEntry = true;
+			REPORT( "Processing fenced entry" );
+		}
+		else
+		{
+			m_alarm.Signal();
+		}
 	}
-	else if( !m_queue.empty() )
+
+	// Note that size of queue is not decreased until after processing callback.
+	if( !haveEntry )
 	{
-		entry = m_queue.front();
-		m_queue.pop_front();
-		wasEmpty = false;
+		haveEntry = ExtractFromQueue( m_urgentQueue, entry, td->m_threadIndex );
+		if( haveEntry )
+		{
+			REPORT( "Processing urgent entry" );
+		}
+	}
+	if( !haveEntry )
+	{
+		haveEntry = ExtractFromQueue( m_queue, entry, td->m_threadIndex );
+		if( haveEntry )
+		{
+			REPORT( "Processing regular entry" );
+		}
+	}
+
+	if( haveEntry )
+	{
 		td->m_currentId = entry.id;
 	}
 
 	m_queueMutex.Release();
 	
-	if( !wasEmpty )
+	if( haveEntry )
 	{
 		BeTimer t;
 
 		td->m_cbInProgressMutex.Acquire();
-
-		if( entry.isFenced )
-		{
-			// This callback requires all callbacks that were ahead of it in the
-			// queue to be finished before it finishes. This is ensured by waiting
-			// for other callbacks in progress to have finished before we let this
-			// further here.
-			// No other thread could have pulled anything from the queue yet as we
-			// hold the fence mutex still, and we grab the in-progress mutex for all
-			// the other threads so even after we release the fence mutex the thread
-			// won't be able to issue the callback.
-			for( ThreadDataVector::iterator it = m_threads.begin(); it != m_threads.end(); ++it )
-			{
-				if( *it != td )
-				{
-					(*it)->m_cbInProgressMutex.Acquire();
-				}
-			}
-		}
-
-		m_fenceMutex.Release();
 
 		// It is possible the callback was canceled. Cancel has to release
 		// the queue mutex before acquiring the callback-in-progress mutex
@@ -393,23 +414,11 @@ bool BlueCallbackMan::UpdateThread( struct ThreadData* td )
 			entry.pCb( entry.pContext );
 		}
 
-		td->m_currentId = 0;
 		td->m_cbInProgressMutex.Release();
-
-		if( entry.isFenced )
-		{
-			// Let the other threads loose again
-			for( ThreadDataVector::iterator it = m_threads.begin(); it != m_threads.end(); ++it )
-			{
-				if( *it != td )
-				{
-					(*it)->m_cbInProgressMutex.Release();
-				}
-			}
-		}
 
 		m_queueMutex.Acquire();
 
+		td->m_currentId = 0;
 		--m_size;
 
 		m_queueMutex.Release();
@@ -417,14 +426,8 @@ bool BlueCallbackMan::UpdateThread( struct ThreadData* td )
 
 		REPORT_TIME( "<<Processing callback done - %g seconds\n", t );
 	}
-	else
-	{
-		// Queue was empty, no callback to issue, simply release the fence
-		// mutex again.
-		m_fenceMutex.Release();
-	}
 
-	return !wasEmpty;
+	return haveEntry;
 }
 
 float BlueCallbackMan::GetTimeInQueueMax() const
@@ -485,7 +488,6 @@ void BlueCallbackMan::SetName( const char* name )
 	m_queueMutex.SetOwner( name );
 
 	CCP_ASSERT( m_threads.size() <= 8 );
-	static const char* suffixes[] = {"_1", "_2", "_3", "_4", "_5", "_6", "_7", "_8"};
 
 	for( unsigned int i = 0; i < m_threads.size(); ++i )
 	{
@@ -494,7 +496,9 @@ void BlueCallbackMan::SetName( const char* name )
 		td->m_name = name;
 		if( m_threads.size() > 1 )
 		{
-			td->m_name += suffixes[i];
+			char buffer[4];
+			sprintf_s( buffer, "_%d", i );
+			td->m_name += buffer;
 		}
 		td->m_cbInProgressMutex.SetOwner( td->m_name.c_str() );
 
@@ -510,4 +514,56 @@ unsigned int BlueCallbackMan::GetSize() const
 uint32_t BlueCallbackMan::GetNextId() const
 {
 	return m_nextId;
+}
+
+bool BlueCallbackMan::RemoveFromQueue( CallbackEntryList &queue, uint32_t id )
+{
+	bool found = false;
+
+	for( CallbackEntryList::iterator it = queue.begin(); it != queue.end(); ++it )
+	{
+		if( it->id == id )
+		{
+			queue.erase( it );
+			--m_size;
+			found = true;
+			break;
+		}
+	}
+	return found;
+}
+
+// Queue mutex is assumed to be held by the calling thread
+bool BlueCallbackMan::ExtractFromQueue( CallbackEntryList &queue, CallbackEntry &entry, int threadIndex )
+{
+	bool haveEntry = false;
+
+	// Check for fenced entries
+	while( !queue.empty() )
+	{
+		entry = queue.front();
+		if( entry.fenceMask )
+		{
+			// Entry is fenced - add it to the fence queue.
+			entry.fenceMask &= ~(1 << threadIndex);
+			queue.pop_front();
+			m_fenceQueue.push_back( entry );
+			m_alarm.Signal();
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	if( !queue.empty() )
+	{
+		// If queue is not empty it means we broke out of the loop above with an
+		// entry that does not have a fence mask. 'entry' has been set, we just
+		// need to remove it from the queue.
+		queue.pop_front();
+		haveEntry = true;
+	}
+	
+	return haveEntry;
 }

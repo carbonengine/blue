@@ -10,19 +10,13 @@
 #ifndef BlueResFile2_h
 #define BlueResFile2_h
 
-#if USE_RESFILE_2
-#define RESFILE_2_CLASSNAME ResFile
-#else
-#define RESFILE_2_CLASSNAME BlueResFile2
-#endif
-
 #include "include/Blue.h"
 #include "include/IBluePersist.h"
 #include "include/ICacheable.h"
 
-BLUE_DECLARE( RESFILE_2_CLASSNAME );
+BLUE_DECLARE( ResFile );
 
-BLUE_CLASS( RESFILE_2_CLASSNAME ) :
+BLUE_CLASS( ResFile ) :
 	public IResFile
 {
 public:
@@ -55,10 +49,6 @@ private:
 	IBlueStreamPtr m_stream;
 };
 
-#if USE_RESFILE_2
 TYPEDEF_BLUECLASS( ResFile );
-#else
-TYPEDEF_BLUECLASS( BlueResFile2 );
-#endif
 
 #endif

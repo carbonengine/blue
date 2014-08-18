@@ -208,6 +208,7 @@ private:
 
 	// Command line arguments
 	std::vector<std::wstring> m_startupArgs;
+	std::map<std::wstring, std::wstring> m_startupArgsMap;
 
 	// Sim Clock management state
 	class PendingDilationEvent
@@ -393,6 +394,13 @@ public:
 	// Get the list of arguments passed on the command line, after any
 	// expansion of arguments coming from a file with the @ convention.
 	virtual const std::vector<std::wstring>& GetStartupArgs() const;
+
+	// Returns true if <arg> is in the list of command line arguments.
+	virtual bool HasStartupArg( const std::wstring& arg ) const;
+
+	// Returns the value associated with the command line argument.
+	// If /arg=value is on the command line, this method returns value.
+	virtual std::wstring GetStartupArgValue( const std::wstring& arg ) const;
 
 	virtual bool IsUsingTheSimpleCatchupLoop()
 	{

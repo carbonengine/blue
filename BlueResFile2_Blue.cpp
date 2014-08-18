@@ -10,13 +10,7 @@
 #include "BlueResFile2.h"
 #include "include/IBlueOS.h"
 
-#if USE_RESFILE_2
 BLUE_DEFINE( ResFile );
-#else
-BLUE_DEFINE( BlueResFile2 );
-#endif
-
-#if USE_RESFILE_2
 
 #if BLUE_WITH_PYTHON
 static PyObject* PyOpen( PyObject* self, PyObject* args )
@@ -181,19 +175,13 @@ static PyObject* PySeek( PyObject* self, PyObject* args )
 }
 
 #endif
-#endif
 
-const Be::ClassInfo* RESFILE_2_CLASSNAME::ExposeToBlue()
+const Be::ClassInfo* ResFile::ExposeToBlue()
 {
-#if USE_RESFILE_2
 	EXPOSURE_BEGIN( ResFile, "" );
-#else
-	EXPOSURE_BEGIN( BlueResFile2, "" );
-#endif
 		MAP_INTERFACE( IResFile )
 		MAP_INTERFACE( IBlueStream )
 
-#if USE_RESFILE_2
 #if BLUE_WITH_PYTHON
 		MAP_METHOD
 		(
@@ -283,7 +271,6 @@ const Be::ClassInfo* RESFILE_2_CLASSNAME::ExposeToBlue()
 			GetSize,
 			"The size of the file"
 		)
-#endif
 #endif
 	EXPOSURE_END()
 }

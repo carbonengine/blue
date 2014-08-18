@@ -99,7 +99,7 @@ private:
 		CallbackFunc pCb;
 		void* pContext;
 		uint64_t timeStamp;
-		bool isFenced;
+		uint32_t fenceMask;
 	};
 	
 	// Number of entries in the queue
@@ -108,6 +108,7 @@ private:
 	typedef TrackableStdList<CallbackEntry> CallbackEntryList;
 	CallbackEntryList m_queue;
 	CallbackEntryList m_urgentQueue;
+	CallbackEntryList m_fenceQueue;
 	
 	// Callback IDs are a simple incrementing counter.
 	uint32_t m_nextId;
@@ -115,17 +116,15 @@ private:
 	// Mutex to guard access to the queue - adding and removing happen on different threads.
 	mutable CcpMutex m_queueMutex;
 
-	// Fenced callbacks need a separate mutex to prevent holding on to the queue mutex
-	// for too long, stalling the main thread if if wants to add while we're setting
-	// up the fence.
-	mutable CcpMutex m_fenceMutex;
-
 	unsigned int m_threadCount;
 	bool m_isRunningOwnThreads;
 
 	struct ThreadData
 	{
 		ThreadData();
+
+		// Thread index, used for fence bitmask
+		uint32_t m_threadIndex;
 
 		// ThreadData is used as the context for the thread proc
 		BlueCallbackMan* m_owner;
@@ -176,6 +175,14 @@ private:
 
 	uint32_t AddHelper( CallbackFunc pCb, void *pContext, bool isUrgent, bool isFenced );
 	bool UpdateThread( struct BlueCallbackMan::ThreadData* td );
+
+	// Extract an entry from the given queue. Any fenced entries encountered are added
+	// to the fence queue.
+	bool ExtractFromQueue( CallbackEntryList &queue, CallbackEntry &entry, int threadIndex );
+
+	// Remove the given id from the given queue, returning true if the entry was found
+	bool RemoveFromQueue( CallbackEntryList &queue, uint32_t id );
+
 };
 
 TYPEDEF_BLUECLASS( BlueCallbackMan );

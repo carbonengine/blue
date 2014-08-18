@@ -27,7 +27,6 @@ const Be::ClassInfo* BluePyOS::ExposeToBlue()
 		MAP_ATTRIBUTE( "timesliceWarning", mSliceWarning, "Max. acceptable timeslice in ms. for tasklet (0=disable).", Be::READWRITE )
 		MAP_ATTRIBUTE( "beNiceSlice", mBeNiceSlice, "Timeslice in ms. (for BeNice yielding.).", Be::READWRITE )
 		MAP_ATTRIBUTE( "packaged", mPackaged, "Is this a packaged client?", Be::READ )
-		MAP_ATTRIBUTE( "resFromStuffOnly", mIsResFromStuffOnly, "Is reading of res paths limited to stuff files?", Be::READ)
 
 #if CCP_STACKLESS
 		MAP_ATTRIBUTE( "taskletTimer", mTTimer, "the timer for tasklet objects", Be::READ )

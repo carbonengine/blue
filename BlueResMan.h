@@ -148,6 +148,7 @@ private:
 	unsigned int m_preparesHandledLastTick;
 	unsigned int m_preparesHandledPerTickMax;
 	unsigned int m_preparesHandledTotal;
+	unsigned int m_maxAllowedInPrepareQueue;
 
 	float m_loadQueueTimeAverage;
 	float m_loadQueueTimeMax;

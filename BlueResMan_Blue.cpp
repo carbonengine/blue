@@ -300,6 +300,16 @@ const Be::ClassInfo* BlueResMan::ExposeToBlue()
 
 		MAP_ATTRIBUTE
 		( 
+			"maxAllowedInPrepareQueue", 
+			m_maxAllowedInPrepareQueue, 
+			"Maximum allowed in prepare queue - if too many items accumulate in the queue\n"
+			"the mainThreadTimeSlice value is ignored to prevent pathological buildup of\n"
+			"prepare items.",
+			Be::READWRITE
+		)
+
+		MAP_ATTRIBUTE
+		( 
 			"loadQueueTimeAverage", 
 			m_loadQueueTimeAverage, 
 			"Average time for entries waiting in the load queue", 

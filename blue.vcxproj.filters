@@ -400,16 +400,10 @@
     <ClCompile Include="BlueRemoteStream_Blue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="BlueResFile.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="BlueResFile2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="BlueResFile2_Blue.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BlueResFile_Blue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="BlueResMan.cpp">

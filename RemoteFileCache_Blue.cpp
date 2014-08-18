@@ -7,8 +7,6 @@
 
 #include "StdAfx.h"
 
-#if USE_RESFILE_2
-
 #include "RemoteFileCache.h"
 
 BLUE_DEFINE( RemoteFileCache );
@@ -130,5 +128,3 @@ const Be::ClassInfo* RemoteFileCache::ExposeToBlue()
 		)
 	EXPOSURE_END()
 }
-
-#endif

@@ -53,6 +53,10 @@ public:
 	// Same as FileExists, but does not attempt black for red substitution.
 	virtual bool FileExistsWithoutSubstitution( const wchar_t* filename );
 
+	virtual bool FileExistsLocally( const wchar_t* filename );
+
+	virtual bool FileNeedsDownload( const wchar_t* filename );
+
 	// Get a stream from a resource path
 	virtual bool GetStreamFromPathW( const wchar_t* path, IBlueStream** stream );
 

@@ -135,6 +135,7 @@ static ZoneStack_t& GetStackForTasklet( intptr_t taskletId )
 
 					Py_XDECREF( ctx );
 				}
+				Py_DECREF( tasklet );
 			}
 		}
 
@@ -194,13 +195,13 @@ void BlueStatistics::SetTelemetryBufferSize( int bufferSize )
 // Buffer size and sampling period hard coded in here as this
 // is typically called from the client UI for client profiling.
 // Use StartTimedTelemetry or StartTelemetryDump otherwise.
-void BlueStatistics::StartTelemetry( const char* server )
+void BlueStatistics::StartTelemetry( const std::string& server )
 {
 	SetTelemetryBufferSize( 8 );
 	StartTimedTelemetry( server, 0 );
 }
 
-void BlueStatistics::StartTimedTelemetry( const char* server, int samplePeriod )
+void BlueStatistics::StartTimedTelemetry( const std::string& server, int samplePeriod )
 {
 #if CCP_TELEMETRY_ENABLED
 	if( s_isTelemetryConnected )
@@ -217,7 +218,7 @@ void BlueStatistics::StartTimedTelemetry( const char* server, int samplePeriod )
 #endif
 }
 
-void BlueStatistics::StartTelemetryDump( const char* dumpFolder, int samplePeriod )
+void BlueStatistics::StartTelemetryDump( const std::string& dumpFolder, int samplePeriod )
 {
 #if CCP_TELEMETRY_ENABLED
 	if( s_isTelemetryConnected )
@@ -291,7 +292,7 @@ bool BlueStatistics::IsTelemetryPaused()
 void BlueStatistics::UpdateTelemetry()
 {
 #if CCP_TELEMETRY_ENABLED
-	if( s_isTelemetryConnectionRequested )
+	if( s_isTelemetryConnectionRequested && !s_isTelemetryShuttingDown )
 	{
 		s_isTelemetryConnected = CcpStartTelemetry( s_telemetryServerOrFileSystemDumpPath.c_str(), s_telemetryBufferSize, s_telemetryConnectionType );
 		s_isTelemetryConnectionRequested = false;

@@ -6,10 +6,6 @@
 
 #define BLUEBUILD /* dll linkage of blue functions */
 
-// Should ResFile come from BlueResFile2?
-// Also implies use of BlueRemoteStream and BlueRemoteFileCache
-#define USE_RESFILE_2 1
-
 #ifdef _WIN32
 #define STRICT
 #define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers

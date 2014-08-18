@@ -7,8 +7,6 @@
 
 #include "StdAfx.h"
 
-#if USE_RESFILE_2
-
 #include "BlueRemoteStream.h"
 
 #include "include/IBlueOS.h"
@@ -22,5 +20,3 @@ const Be::ClassInfo* BlueRemoteStream::ExposeToBlue()
 		MAP_INTERFACE( IBlueStream )
 	EXPOSURE_END()
 }
-
-#endif

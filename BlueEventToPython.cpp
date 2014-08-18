@@ -3,6 +3,7 @@
 #if BLUE_WITH_PYTHON
 
 #include "BlueEventToPython.h"
+#include "Include/IBluePython.h"
 
 BlueEventToPython::BlueEventToPython( IRoot* lockobj ) :
 	m_handler( NULL )
@@ -30,7 +31,10 @@ void BlueEventToPython::HandleEvent( const wchar_t* evtName )
 		}
 		else
 		{
-			; // TODO: Handle error
+			std::string name = static_cast<const char*>( CW2A( evtName ) );
+			std::string message = "BlueEventToPython: ";
+			message += name;
+			PyOS->PyFlushError( message.c_str() );
 		}
 	}
 	else

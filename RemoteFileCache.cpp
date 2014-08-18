@@ -7,8 +7,6 @@
 
 #include "StdAfx.h"
 
-#if USE_RESFILE_2
-
 #include "RemoteFileCache.h"
 #include "BlueFileStream.h"
 #include "BlueRemoteStream.h"
@@ -19,12 +17,16 @@
 #include <errno.h>
 #endif
 
+CCP_STATS_DECLARE( remoteFileCacheGetStream, "Blue/RemoteFileCache/GetStreamFromPathW", false, CST_TIME, "Total time spent in RemoteFileCache::GetStreamFromPathW" );
+
 namespace
 {
 	CcpLogChannel_t s_ch = CCP_LOG_DEFINE_CHANNEL( "RemoteFileCache" );
 
 	void RenameFile( const std::wstring& src, const std::wstring& dst )
 	{
+		CCP_STATS_ZONE( __FUNCTION__ );
+
 #ifdef _WIN32
 		wchar_t srcBuffer[MAX_PATH];
 		wchar_t dstBuffer[MAX_PATH];
@@ -80,7 +82,7 @@ bool RemoteFileCache::DownloadFileIndex( const std::string& index )
 
 		BlueRemoteStreamPtr remoteStream;
 		remoteStream.CreateInstance();
-		bool isOK = remoteStream->Open( url.c_str() );
+		bool isOK = remoteStream->Open( url.c_str(), 0 );
 
 		if(	!isOK )
 		{
@@ -107,6 +109,8 @@ void RemoteFileCache::SetCacheFolder( const wchar_t* folderName )
 
 Be::Result<std::string> RemoteFileCache::GetStreamFromPathW( const wchar_t* resPath, IBlueStream** stream )
 {
+	CCP_STATS_SCOPED_TIME( remoteFileCacheGetStream );
+
 	*stream = nullptr;
 
 	FileInfo info;
@@ -121,7 +125,7 @@ Be::Result<std::string> RemoteFileCache::GetStreamFromPathW( const wchar_t* resP
 	cachedName += L"/";
 	cachedName += resId;
 
-	if( BePaths->FileExists( cachedName ) )
+	if( BePaths->FileExistsLocally( cachedName.c_str() ) )
 	{
 		return CreateFileStreamForCachedFile(cachedName, stream);
 	}
@@ -133,7 +137,7 @@ Be::Result<std::string> RemoteFileCache::GetStreamFromPathW( const wchar_t* resP
 
 	BlueRemoteStreamPtr remoteStream;
 	remoteStream.CreateInstance();
-	bool isOK = remoteStream->Open( resUrl.c_str() );
+	bool isOK = remoteStream->Open( resUrl.c_str(), static_cast<size_t>( info.size ) );
 
 	if( isOK )
 	{
@@ -144,11 +148,6 @@ Be::Result<std::string> RemoteFileCache::GetStreamFromPathW( const wchar_t* resP
 		if( size != info.size )
 		{
 			return Be::Result<std::string>( "Size does not match expected value" );
-		}
-
-		if( !remoteStream->VerifyContents( info.checksum.c_str() ) )
-		{
-			return Be::Result<std::string>( "Checksum does not match expected value" );
 		}
 
 		CacheContentsOfRemoteStream( remoteStream, cachedName, resPath );
@@ -188,6 +187,23 @@ bool RemoteFileCache::FileExists( const wchar_t* resPath )
 {
 	FileInfo info;
 	return GetFileInfo( resPath, info );
+}
+
+bool RemoteFileCache::IsCachedLocally( const wchar_t* resPath )
+{
+	FileInfo info;
+	if( !GetFileInfo( resPath, info ) )
+	{
+		return false;
+	}
+
+	// Does file exist in the cache folder? If so, open it as a file stream and return it
+	std::wstring resId = static_cast<const wchar_t*>( CA2W( info.cachedName.c_str() ) );
+	std::wstring cachedName = m_cacheFolder;
+	cachedName += L"/";
+	cachedName += resId;
+
+	return BePaths->FileExistsLocally( cachedName.c_str() );
 }
 
 bool RemoteFileCache::GetFileInfo( const wchar_t* resPath, struct FileInfo& fileInfo )
@@ -365,6 +381,8 @@ bool RemoteFileCache::IsDirectory( const wchar_t* resPath )
 
 void RemoteFileCache::CacheContentsOfRemoteStream( BlueRemoteStream* stream, const std::wstring& cachedName, const wchar_t* resPath )
 {
+	CCP_STATS_ZONE( __FUNCTION__ );
+
 	void* data = nullptr;
 	ssize_t size = stream->GetSize();
 
@@ -409,5 +427,3 @@ bool RemoteFileCache::SetFileIndexFromStream( IBlueStream* stream )
 
 	return true;
 }
-
-#endif

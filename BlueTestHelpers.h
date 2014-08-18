@@ -130,7 +130,6 @@ public:
 
 protected:
 	bool DoOpenStream();
-	void DoCloseStream();
 	LoadingResult DoLoad();
 	bool DoPrepare();
 

@@ -10,8 +10,6 @@
 #ifndef BlueRemoteStream_h
 #define BlueRemoteStream_h
 
-#if USE_RESFILE_2
-
 #include "include/IBluePersist.h"
 #include "curl/curl.h"
 
@@ -32,7 +30,7 @@ public:
 		OM_READONLY
 	};
 
-	bool Open( const char* filename );
+	bool Open( const char* filename, size_t expectedSize );
 	bool VerifyContents( const char* expectedChecksum );
 
 	/////////////////////////////////////////
@@ -53,18 +51,19 @@ private:
 	void InitializeCurl();
 
 private:
-	CURL* m_curl;
-
 	// Pointer to data block in memory
 	uint8_t* m_data;
 	uint8_t* m_readLocation;
 
 	// Size of the data in m_data
 	size_t m_dataSize;
+
+	// Allocation size of m_data
+	size_t m_bufferSize;
+
 };
 
 
 TYPEDEF_BLUECLASS( BlueRemoteStream );
 
-#endif
 #endif

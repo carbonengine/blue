@@ -2,6 +2,7 @@
 
 #include "include/BlueAsyncRes.h"
 #include "include/IBlueResMan.h"
+#include "Include/IBluePaths.h"
 
 #define ASYNCLOADEDRESOURCE_DEBUGGING 0
 #if ASYNCLOADEDRESOURCE_DEBUGGING
@@ -32,8 +33,9 @@ BlueAsyncRes::BlueAsyncRes() :
 	m_prepareCbId( 0 ),
 	m_isUrgent( false ),
 	m_isForcedSynchronous( false ),
-	m_reloadNotifyTargets( NULL ),
-	m_reloadNotifyTargetsCount( 0 )
+	m_reloadNotifyTargets( nullptr ),
+	m_reloadNotifyTargetsCount( 0 ),
+	m_reservedMemory( 0 )
 {
 }
 
@@ -74,10 +76,15 @@ void BlueAsyncRes::LoadAsync()
 
 	BeTimer t;
 
-	bool open = DoOpenStream();
 	LoadingResult load = LR_FAILED;
-	if( open )
+	if( DoOpenStream() )
 	{
+		// Throttle back loads based on the assumption that most descendants
+		// load the entire file into memory on the background thread, then
+		// do something with it on the main thread.
+		m_reservedMemory = m_dataStream->GetSize();
+		BeResMan->ReserveBackgroundLoadMemory( m_reservedMemory );
+
 		load = DoLoad();
 	}
 	bool loadSucceeded = load != LR_FAILED;
@@ -133,7 +140,8 @@ void BlueAsyncRes::PrepareAsync()
 
 	REPORT_TIME1( "PREP: %5.5f sec '%S'\n", t, GetPath() );
 
-	DoCloseStream();
+	CloseStream();
+
 	m_prepareCbId = 0;
 	m_isPrepared = TRUE;
 
@@ -163,7 +171,7 @@ void BlueAsyncRes::StaticFailedLoadNotify( void* pContext )
 	pThis->m_isPrepared = TRUE;
 	pThis->m_loadSucceeded = FALSE;
 	pThis->m_isLoading = FALSE;
-    pThis->DoCloseStream();
+	pThis->CloseStream();
 	
 	pThis->NotifyRebuildCachedData();
 }
@@ -227,7 +235,7 @@ void BlueAsyncRes::CancelPendingLoad()
 		m_isLoading = FALSE;
 	}
 
-	DoCloseStream();
+	CloseStream();
 }
 
 inline size_t GetListCapacity( size_t count )
@@ -349,4 +357,25 @@ void BlueAsyncRes::Reload()
 	CancelPendingLoad();
 	NotifyReleaseCachedData();
 	Initialize( m_path.c_str(), m_ext.c_str() );
+}
+
+bool BlueAsyncRes::DoOpenStream()
+{
+	bool open = BePaths->GetStreamFromPathW( m_path.c_str(), &m_dataStream );
+	return open;
+}
+
+void BlueAsyncRes::CloseStream()
+{
+	if( m_reservedMemory )
+	{
+		BeResMan->ReleaseBackgroundLoadMemory( m_reservedMemory );
+		m_reservedMemory = 0;
+	}
+
+	if( m_dataStream )
+	{
+		m_dataStream.Unlock();
+		OnCloseStream();
+	}
 }

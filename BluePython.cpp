@@ -158,7 +158,6 @@ BluePyOS::BluePyOS(IRoot*) :
 	mInit = 0;
 	mSoftspace = 0;
 	mPackaged = false;
-	mIsResFromStuffOnly = true;
 
 	//default value for optimize
 	mOptimizeFlag = -1;
@@ -189,6 +188,7 @@ bool BluePyOS::InitBasicModuleSupport()
 									   BlueRegistration::GetThunkerRegs());
 
 	BlueRegisterObjectsToModule( mBlueModule, BlueRegistration::GetObjectRegs() );
+	BlueRegisterExceptionsToModule( mBlueModule, BlueRegistration::GetExceptionRegs() );
 	
 		// Initialize error exception
 	PyDict_SetItemString(dict, "error", PyExc_BlueError);
@@ -524,21 +524,12 @@ bool BluePyOS::Startup(
 	sPyEventHandler = static_cast<IPythonEvents*>( this );  //We are the event handler initially.
 
 #if CCP_STACKLESS
-	std::vector<std::wstring> argv = BeOS->GetStartupArgs();
-
-	bool useVirtualAllocForBlockAllocator = false;
-	for( size_t i = 1; i < argv.size(); ++i )
+	if( BeOS->HasStartupArg( L"telemetryMarkup" ) )
 	{
-		const std::wstring &arg = argv[i];
-		if( arg.find( L"/telemetryMarkup" ) == 0 )
-		{
-			mMarkupZonesInPython = true;
-		}
-		else if( arg.find( L"/pythonUseVirtualAlloc" ) == 0 )
-		{
-			useVirtualAllocForBlockAllocator = true;
-		}
+		mMarkupZonesInPython = true;
 	}
+
+	bool useVirtualAllocForBlockAllocator = BeOS->HasStartupArg( L"pythonUseVirtualAlloc" );
 
 	// initialize python engine	
 	Py_DebugFlag = 0; //debugs python , outputs heaps of gunk
@@ -651,24 +642,6 @@ bool BluePyOS::Startup(
 	{
 		CCP_LOGWARN( "Couldn't import inifile" );
 		PyFlushError(0);
-	}
-
-	mIsResFromStuffOnly = true;
-	{
-		BluePy builtin( PyImport_ImportModule( "__builtin__" ) );
-		if( builtin )
-		{
-			BluePy boot( PyObject_GetAttrString( builtin, "boot"));
-			if( boot )
-			{
-				BluePy resFromStuffOnly( PyObject_GetAttrString( boot, "resFromStuffOnly" ) );
-				if( resFromStuffOnly )
-				{
-					mIsResFromStuffOnly = !!PyObject_IsTrue( resFromStuffOnly );
-				}
-			}
-		}
-		PyErr_Clear();
 	}
 
 	mInit = true;	

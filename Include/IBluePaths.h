@@ -42,6 +42,11 @@ BLUE_INTERFACE( IBluePaths ) : public IRoot
 	// Same as FileExists, but does not attempt black for red substitution.
 	virtual bool FileExistsWithoutSubstitution( const wchar_t* filename ) = 0;
 
+	// Returns true if the file exists on the local disk (not in stuff files or in the remote file cache).
+	virtual bool FileExistsLocally( const wchar_t* filename ) = 0;
+
+	virtual bool FileNeedsDownload( const wchar_t* filename ) = 0;
+
 	// Get a stream from a resource path
 	virtual bool GetStreamFromPathW( const wchar_t* path, IBlueStream** stream ) = 0;
 

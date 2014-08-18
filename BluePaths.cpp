@@ -754,7 +754,6 @@ void BluePaths::GetDirectoryContents( const wchar_t* dir, std::set<std::wstring>
 	Stuffer::GetStufferDirectoryContents( CW2A(dir), tmpResults );
 #endif
 
-#if USE_RESFILE_2
 	std::list<std::string> remoteFileCacheContents;
 	auto remoteFileCacheResult = BeRemoteFileCache->ListDir( dir, remoteFileCacheContents );
 	if( Be::IsSuccess( remoteFileCacheResult ) )
@@ -765,7 +764,6 @@ void BluePaths::GetDirectoryContents( const wchar_t* dir, std::set<std::wstring>
 			tmpResults.insert( ws );
 		}
 	}
-#endif
 
 	// Look at the prefix - anything in front of ':' is a search
 	// path that will be substituted.
@@ -845,12 +843,10 @@ bool BluePaths::IsDirectory( const std::wstring& dir )
 	}
 #endif
 
-#if USE_RESFILE_2
 	if( BeRemoteFileCache->IsDirectory( dir.c_str() ) )
 	{
 		return true;
 	}
-#endif
 
 	// Look at the prefix - anything in front of ':' is a search
 	// path that will be substituted.
@@ -1068,12 +1064,10 @@ bool BluePaths::FileExistsWithoutSubstitution( const wchar_t* filename )
 	}
 #endif
 
-#if USE_RESFILE_2
 	if( BeRemoteFileCache->FileExists( filename ) )
 	{
 		return true;
 	}
-#endif
 
 	std::wstring filenameOnDisk = ResolvePathW( filename );
 
@@ -1099,6 +1093,27 @@ bool BluePaths::FileExists( const std::wstring& filename )
 	}
 
 	return FileExistsWithoutSubstitution( filename.c_str() );
+}
+
+bool BluePaths::FileExistsLocally( const wchar_t* filename )
+{
+	std::wstring filenameOnDisk = ResolvePathW( filename );
+
+	return IsPathExistingFile( filenameOnDisk, filenameOnDisk );
+}
+
+bool BluePaths::FileNeedsDownload( const wchar_t* filename )
+{
+	if( BeRemoteFileCache->FileExists( filename ) )
+	{
+		if( !BeRemoteFileCache->IsCachedLocally( filename ) )
+		{
+			return true;
+		}
+	}
+
+	// File is either not available for download, or it is already cached
+	return false;
 }
 
 void BluePaths::LogPaths()

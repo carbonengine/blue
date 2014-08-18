@@ -101,8 +101,6 @@ BLUE_INTERFACE(IBluePyOS) : public IRoot
 		PyObject* exception = NULL
 		) = 0;
 
-	virtual bool IsResFromStuffOnly() = 0;
-		
 	// Do a stack trace to the logger
 	virtual void DoStackTrace(
 		PyObject *frame = 0

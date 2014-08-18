@@ -233,6 +233,13 @@ BLUE_INTERFACE(IBlueOS) : public IRoot
 	// expansion of arguments coming from a file with the @ convention.
 	virtual const std::vector<std::wstring>& GetStartupArgs() const = 0;
 
+	// Returns true if <arg> is in the list of command line arguments.
+	virtual bool HasStartupArg( const std::wstring& arg ) const = 0;
+
+	// Returns the value associated with the command line argument.
+	// If /arg=value is on the command line, this method returns value.
+	virtual std::wstring GetStartupArgValue( const std::wstring& arg ) const = 0;
+
 	virtual bool IsUsingTheSimpleCatchupLoop() = 0;
 	
 };

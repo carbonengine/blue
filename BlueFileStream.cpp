@@ -29,6 +29,9 @@
 #define STACKLESS_ALLOWTHREADS()
 #endif
 
+CCP_STATS_DECLARE( fileStreamBytesRead, "Blue/BlueFileStream/BytesRead", false, CST_COUNTER_HIGH, "Number of bytes read from local files using BlueFileStream" );
+CCP_STATS_DECLARE( fileStreamBytesWritten, "Blue/BlueFileStream/BytesWritten", false, CST_COUNTER_HIGH, "Number of bytes written from local files using BlueFileStream" );
+
 namespace
 {
 	const int INVALID_FILE = -1;
@@ -384,6 +387,8 @@ ptrdiff_t BlueFileStream::Read( void* dest, ptrdiff_t count )
 		return -1;
 	}
 
+	CCP_STATS_ADD( fileStreamBytesRead, bytesRead );
+
 	return bytesRead;
 }
 
@@ -407,6 +412,7 @@ ptrdiff_t BlueFileStream::Write( const void* source, size_t count )
 		BeOS->SetError(BE32, Clsid(), "Couldn't Write");
 		return -1;
 	}
+	CCP_STATS_ADD( fileStreamBytesWritten, wrote );
 
 	return wrote;
 }

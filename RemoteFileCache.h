@@ -9,8 +9,6 @@
 #ifndef RemoteFileCache_h
 #define RemoteFileCache_h
 
-#if USE_RESFILE_2
-
 #include "include/IBluePersist.h"
 
 BLUE_CLASS( RemoteFileCache ) :
@@ -31,6 +29,7 @@ public:
 	Be::Result<std::string> GetStreamFromPathW( const wchar_t* resPath, IBlueStream** stream );
 
 	bool FileExists( const wchar_t* resPath );
+	bool IsCachedLocally( const wchar_t* resPath );
 	bool IsDirectory( const wchar_t* resPath );
 	Be::Result<std::string> ListDir( const wchar_t* resPath, std::list<std::string>& contents );
 
@@ -74,5 +73,4 @@ TYPEDEF_BLUECLASS( RemoteFileCache );
 
 extern RemoteFileCache* BeRemoteFileCache;
 
-#endif
 #endif // RemoteFileCache_h

@@ -16,14 +16,11 @@
 #include "BluePaths.h"
 
 
-#if USE_RESFILE_2
 #include "curl/curl.h"
 
 static CRemoteFileCache s_remoteFileCache;
 RemoteFileCache* BeRemoteFileCache = nullptr;
 BLUE_REGISTER_GLOBAL_AS_MODULE_OBJECT( "remoteFileCache", BeRemoteFileCache );
-
-#endif
 
 static CBlueResMan s_resourceManagerInstance;
 
@@ -34,7 +31,17 @@ IBlueObjectRecycler* BeRecycler = nullptr;
 BLUE_REGISTER_GLOBAL_AS_MODULE_OBJECT( "resMan", BeResMan );
 BLUE_REGISTER_GLOBAL_AS_MODULE_OBJECT( "recycler", BeRecycler );
 
-BLUEIMPORT bool BlueInitializeResourceLoading()
+namespace
+{
+
+int GetStartupArgAsInt( const wchar_t* key )
+{
+	std::wstring value = BeOS->GetStartupArgValue( key );
+	int intValue = atoi( CW2A( value.c_str() ) );
+	return intValue;
+}
+
+unsigned int GetDefaultThreadCount()
 {
 #ifdef _WIN32
 	// Set up a callback managers with threads for each extra hw thread available to us.
@@ -42,25 +49,49 @@ BLUEIMPORT bool BlueInitializeResourceLoading()
 	// background tasks.
 	SYSTEM_INFO systemInfo;
 	GetSystemInfo( &systemInfo );
-	unsigned int threadCount = systemInfo.dwNumberOfProcessors - 1;
-	if( threadCount < 1 )
+	unsigned int threadCount = (systemInfo.dwNumberOfProcessors - 1) * 8;
+	if( threadCount < 4 )
 	{
-		threadCount = 1;
+		threadCount = 4;
 	}
 
-	if( threadCount > 3 )
+	if( threadCount > 24 )
 	{
-		threadCount = 3;
+		threadCount = 24;
 	}
 #else
-	unsigned int threadCount = 2;
+	unsigned int threadCount = 8;
 #endif
+
+	return threadCount;
+}
+
+}
+
+
+BLUEIMPORT bool BlueInitializeResourceLoading()
+{
+	unsigned int threadCount = GetStartupArgAsInt( L"resManThreadCount" );
+
+	if( threadCount == 0 )
+	{
+		threadCount = GetDefaultThreadCount();
+	}
+
+	int priority = 0;
+	if( BeOS->HasStartupArg( L"resManThreadPriority" ) )
+	{
+		priority = GetStartupArgAsInt( L"resManThreadPriority" );
+	}
 
 	if( !BeClasses->CreateInstance( GetBlueCallbackManClsid(), GetIBlueCallbackManIID(), (void**)&BeCallbackMan ) )
 	{
 		return false;
 	}
-	BeCallbackMan->SetPriority( 2 );
+
+	CCP_LOG( "Starting callback manager with %d threads at priority %d", threadCount, priority );
+
+	BeCallbackMan->SetPriority( priority );
 	BeCallbackMan->SetThreadCount( threadCount );
 	BeCallbackMan->SetName( "BeCallbackMan" );
 	BeCallbackMan->Run();
@@ -79,30 +110,14 @@ BLUEIMPORT bool BlueInitializeResourceLoading()
 	BeResMan = &s_resourceManagerInstance;
 
 #if STUFFER_ENABLED
-	std::vector<std::wstring> argv = BeOS->GetStartupArgs();
-
-	bool noStuffFiles = false;
-	for( size_t i = 1; i < argv.size(); ++i )
-	{
-		const std::wstring &arg = argv[i];
-		CCP_LOG("%S", arg.c_str());
-		if( arg == L"/noStuff" )
-		{
-			noStuffFiles = true;
-			break;
-		}
-	}
-
 	Stuffer::Startup();
-	if( !noStuffFiles )
+	if( !BeOS->HasStartupArg( L"noStuff" ) )
 	{
 		BeStuffer->AddFilesFromFolder( BePaths->ResolvePathW( L"app:/" ) );
 	}
 #endif
 
-#if USE_RESFILE_2
 	BeRemoteFileCache = &s_remoteFileCache;
-#endif
 
 	return true;
 }

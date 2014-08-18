@@ -81,6 +81,7 @@ BlueResMan::BlueResMan( IRoot* lockobj ) :
 	m_preparesHandledLastTick( 0 ),
 	m_preparesHandledPerTickMax( 0 ),
 	m_preparesHandledTotal( 0 ),
+	m_maxAllowedInPrepareQueue( 256 ),
 	m_loadQueueTimeAverage( 0.0f ),
 	m_loadQueueTimeMax( 0.0f ),
 	m_prepareQueueTimeAverage( 0.0f ),
@@ -476,6 +477,7 @@ void BlueResMan::Update()
 	BeTimer t;
 	float timeInUpdate = 0.0f;
 	m_preparesHandledLastTick = 0;
+	unsigned int prepareQueueSize = 0;
 	do
 	{
 		m_threadQueues[BRMQ_BACKGROUND]->Unthrottle();
@@ -487,8 +489,9 @@ void BlueResMan::Update()
 			break;
 		}
 		++m_preparesHandledLastTick;
+		prepareQueueSize = m_threadQueues[BRMQ_MAIN]->GetSize();
 	}
-	while( timeInUpdate < m_mainThreadTimeSlice );
+	while( (timeInUpdate < m_mainThreadTimeSlice) || (prepareQueueSize > m_maxAllowedInPrepareQueue) );
 
 	m_preparesHandledTotal += m_preparesHandledLastTick;
 	if( m_preparesHandledLastTick > m_preparesHandledPerTickMax )

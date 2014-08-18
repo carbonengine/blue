@@ -105,15 +105,22 @@ protected:
 	};
 
 	// Subclasses must provide an implementation for these
-	virtual bool DoOpenStream() { return false; };
 	virtual LoadingResult DoLoad() { return LR_FAILED; };
 	virtual bool DoPrepare() { return false; };
-	virtual void DoCloseStream() {};
+
+	// Subclasses can optionally provide implementations for the following
+	// function - this is in particular useful for mocking the file operations
+	// for testing purposes.
+	virtual bool DoOpenStream();
 
 	// Subclasses can optionally provide an implementation for this
 	// function - gets called right before final destruction but where
 	// it is still safe to call virtual functions.
 	virtual void OnShutdown() {}
+
+	// Subclasses can optionally provide an implementation for this function
+	// that gets called after DoPrepare, once the data stream has been closed.
+	virtual void OnCloseStream() {}
 
 
 protected:
@@ -121,6 +128,8 @@ protected:
 	void LoadAsync();
 	static void StaticPrepareAsync( void* pContext );
 	void PrepareAsync();
+
+	void CloseStream();
 
 	void NotifyRebuildCachedData();
 	void NotifyReleaseCachedData();
@@ -135,6 +144,10 @@ protected:
 protected:
 	std::wstring m_path;
 	std::wstring m_ext;
+
+	IBlueStreamPtr m_dataStream;
+
+	size_t m_reservedMemory;
 
 	// If TRUE, then the resource is being loaded/prepared
 	CcpAtomic<uint32_t> m_isLoading;

@@ -65,6 +65,7 @@ BaseConfigurations:
       - crypt32.lib
       - iphlpapi.lib
       - psapi.lib
+      - winhttp.lib
 
       DelayLoadDLLs:
       - psapi.dll

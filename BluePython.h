@@ -178,7 +178,6 @@ private:
 	bool mInit;	
 	int mSoftspace;			//for python's print statement
 	bool mPackaged;
-	bool mIsResFromStuffOnly;
 #if CCP_STACKLESS
 	PyScheduler mScheduler; //to run the watchdog
 
@@ -294,7 +293,6 @@ public:
 	void FormatException(char **result);
 
 	bool IsPackaged() {return mPackaged;}
-	bool IsResFromStuffOnly() {return mIsResFromStuffOnly;}
 
 	bool CanYield();
 	bool Yield();

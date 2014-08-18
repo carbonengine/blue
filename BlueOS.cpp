@@ -1225,20 +1225,14 @@ bool BlueOS::RunStackless()
 	if( !PyOS->IsPackaged() )
 	{
 		// See if /py is on the command line
-		std::vector<std::wstring> argv = GetStartupArgs();
-
-		// Should we run the standard interpreter loop
-		for( size_t i = 1; i < argv.size(); ++i )
+		if( HasStartupArg( L"py" ) )
 		{
-			const std::wstring &arg = argv[i];
-			if( arg == L"/py" )
+			std::vector<std::wstring> argv = GetStartupArgs();
+			if( runPyMain( argv ) )
 			{
-				if( runPyMain( argv ) )
-				{
-					return false;
-				}
-				return true;
+				return false;
 			}
+			return true;
 		}
 	}
 
@@ -1277,20 +1271,13 @@ PyObject* BlueOS::PyStacklessMain( PyObject* args )
 {
 #if CCP_STACKLESS
 
-	// See if /telemetryServer is on the command line
-	std::vector<std::wstring> argv = GetStartupArgs();
-
-	for( size_t i = 1; i < argv.size(); ++i )
+	if( HasStartupArg( L"telemetryServer" ) )
 	{
-		const std::wstring &arg = argv[i];
-		if( arg.find( L"/telemetryServer=" ) == 0 )
-		{
-			std::wstring server = argv[i].substr(17);
-			CW2A aServer( server.c_str() );
-			const int ARENA_SIZE = 8*1024*1024;
-			g_statistics->SetTelemetryBufferSize( ARENA_SIZE );
-			g_statistics->StartTelemetry( aServer );
-		}
+		std::wstring server = GetStartupArgValue( L"telemetryServer" );
+		std::string aServer = CW2A( server.c_str() );
+		const int ARENA_SIZE = 8*1024*1024;
+		g_statistics->SetTelemetryBufferSize( ARENA_SIZE );
+		g_statistics->StartTelemetry( aServer );
 	}
 
 	// StartTelemetry triggers a start on the next Update, so do
@@ -1635,7 +1622,8 @@ void BlueOS::SetError( long error,	const Be::Clsid* reporter, const char* format
 		strcpy_s(msg, wrote+1, buff);
 		err.mDescription = msg;
 
-		CCP_LOGERR( buff );
+		// Message may contain format specifiers, hence the formatting below
+		CCP_LOGERR( "%s", buff );
 	}
 
 	mErrorLog.push_back(err);
@@ -2854,11 +2842,52 @@ PyObject* BlueOS::PyTerminate( PyObject* args )
 void BlueOS::SetStartupArgs( const std::vector<std::wstring>& args )
 {
 	m_startupArgs = args;
+
+	for( size_t i = 1; i < m_startupArgs.size(); ++i )
+	{
+		std::wstring argName = m_startupArgs[i];
+		std::wstring argValue;
+
+		if( argName[0] == L'/' )
+		{
+			argName.erase( 0, 1 );
+		}
+
+		size_t assignPos = argName.find_first_of( L'=' );
+		if( assignPos != std::string::npos )
+		{
+			argValue = argName.substr( assignPos + 1 );
+			argName.erase( assignPos );
+		}
+
+		m_startupArgsMap[argName] = argValue;
+	}
 }
 
 const std::vector<std::wstring>& BlueOS::GetStartupArgs() const
 {
 	return m_startupArgs;
+}
+
+bool BlueOS::HasStartupArg( const std::wstring& arg ) const
+{
+	if( m_startupArgsMap.find( arg ) != m_startupArgsMap.end() )
+	{
+		return true;
+	}
+
+	return false;
+}
+
+std::wstring BlueOS::GetStartupArgValue( const std::wstring& arg ) const
+{
+	auto it = m_startupArgsMap.find( arg );
+	if( it != m_startupArgsMap.end() )
+	{
+		return it->second;
+	}
+
+	return L"";
 }
 
 const wchar_t* BlueOS::GetLanguageId()

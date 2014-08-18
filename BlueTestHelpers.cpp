@@ -168,11 +168,8 @@ bool BlueTestAsyncRes::DoOpenStream()
 		return false;
 	}
 
+	m_dataStream.CreateInstance( Be::Clsid( "blue", "MemStream" ) );
 	return true;
-}
-
-void BlueTestAsyncRes::DoCloseStream()
-{
 }
 
 BlueAsyncRes::LoadingResult BlueTestAsyncRes::DoLoad()

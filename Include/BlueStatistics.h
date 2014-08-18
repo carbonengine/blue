@@ -74,11 +74,11 @@ public:
 	void SetTelemetryBufferSize( int bufferSize );
 
 	// Typically used from the client.
-	void StartTelemetry( const char* server );
+	void StartTelemetry( const std::string& server );
 
 	// Following functions are typically used from ESP for server profiling.
-	void StartTimedTelemetry( const char* server, int samplePeriod );
-	void StartTelemetryDump( const char* dumpFolder, int samplePeriod );
+	void StartTimedTelemetry( const std::string& server, int samplePeriod );
+	void StartTelemetryDump( const std::string& dumpFolder, int samplePeriod );
 
 	void PauseTelemetry();
 	void ResumeTelemetry();

@@ -24,18 +24,18 @@
 
 extern Stuffer* BeStuffer;
 
-bool RESFILE_2_CLASSNAME::FileExists( const wchar_t* filename )
+bool ResFile::FileExists( const wchar_t* filename )
 {
 	return BePaths->FileExists( filename );
 }
 
-bool RESFILE_2_CLASSNAME::Open( const char* filename, bool readOnly )
+bool ResFile::Open( const char* filename, bool readOnly )
 {
 	return OpenW(CA2W(filename), readOnly);
 }
 
 
-bool RESFILE_2_CLASSNAME::Close()
+bool ResFile::Close()
 {
 	if( !m_stream )
 	{
@@ -47,7 +47,7 @@ bool RESFILE_2_CLASSNAME::Close()
 	return true;
 }
 
-bool RESFILE_2_CLASSNAME::OpenW( const wchar_t* filename, bool readOnly )
+bool ResFile::OpenW( const wchar_t* filename, bool readOnly )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -81,7 +81,6 @@ bool RESFILE_2_CLASSNAME::OpenW( const wchar_t* filename, bool readOnly )
 	}
 #endif
 
-#if USE_RESFILE_2
 	if( readOnly )
 	{
 		auto result = BeRemoteFileCache->GetStreamFromPathW( filename, &m_stream );
@@ -90,7 +89,6 @@ bool RESFILE_2_CLASSNAME::OpenW( const wchar_t* filename, bool readOnly )
 			return true;
 		}
 	}
-#endif
 
 	std::wstring filenameOnDisk = BePaths->ResolvePathW( filenameToOpen );
 
@@ -102,7 +100,7 @@ bool RESFILE_2_CLASSNAME::OpenW( const wchar_t* filename, bool readOnly )
 	return fileStream->Open( filenameOnDisk.c_str(), openMode, BlueFileStream::SM_RWSHARING );
 }
 
-bool RESFILE_2_CLASSNAME::CreateW( const wchar_t* filename )
+bool ResFile::CreateW( const wchar_t* filename )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -121,24 +119,24 @@ bool RESFILE_2_CLASSNAME::CreateW( const wchar_t* filename )
 	return fileStream->Create( filenameOnDisk.c_str() );
 }
 
-bool RESFILE_2_CLASSNAME::FileExistsW( const wchar_t* filename )
+bool ResFile::FileExistsW( const wchar_t* filename )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
 	return BePaths->FileExists( filename );
 }
 
-bool RESFILE_2_CLASSNAME::Preload( bool & )
+bool ResFile::Preload( bool & )
 {
 	return false;
 }
 
-bool RESFILE_2_CLASSNAME::PreloadInProgress()
+bool ResFile::PreloadInProgress()
 {
 	return false;
 }
 
-ptrdiff_t RESFILE_2_CLASSNAME::Read( void* dest, ptrdiff_t count )
+ptrdiff_t ResFile::Read( void* dest, ptrdiff_t count )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -150,7 +148,7 @@ ptrdiff_t RESFILE_2_CLASSNAME::Read( void* dest, ptrdiff_t count )
 	return -1;
 }
 
-ptrdiff_t RESFILE_2_CLASSNAME::Write( const void* source, size_t count )
+ptrdiff_t ResFile::Write( const void* source, size_t count )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -162,7 +160,7 @@ ptrdiff_t RESFILE_2_CLASSNAME::Write( const void* source, size_t count )
 	return -1;
 }
 
-ptrdiff_t RESFILE_2_CLASSNAME::Seek( ptrdiff_t distance, SeekOrigin method )
+ptrdiff_t ResFile::Seek( ptrdiff_t distance, SeekOrigin method )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -174,7 +172,7 @@ ptrdiff_t RESFILE_2_CLASSNAME::Seek( ptrdiff_t distance, SeekOrigin method )
 	return -1;
 }
 
-ptrdiff_t RESFILE_2_CLASSNAME::GetPosition()
+ptrdiff_t ResFile::GetPosition()
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -186,7 +184,7 @@ ptrdiff_t RESFILE_2_CLASSNAME::GetPosition()
 	return -1;
 }
 
-ptrdiff_t RESFILE_2_CLASSNAME::GetSize()
+ptrdiff_t ResFile::GetSize()
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -198,7 +196,7 @@ ptrdiff_t RESFILE_2_CLASSNAME::GetSize()
 	return -1;
 }
 
-bool RESFILE_2_CLASSNAME::LockData( void** data, size_t size )
+bool ResFile::LockData( void** data, size_t size )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -210,7 +208,7 @@ bool RESFILE_2_CLASSNAME::LockData( void** data, size_t size )
 	return false;
 }
 
-bool RESFILE_2_CLASSNAME::UnlockData()
+bool ResFile::UnlockData()
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
