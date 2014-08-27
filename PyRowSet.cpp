@@ -1027,7 +1027,7 @@ bool DBRow::SetNotNull(const ColumnDescriptor &c, PyObject *o)
 		double d = PyFloat_AsDouble(o);
 		if (d == -1.0 && PyErr_Occurred())
 			return false;
-		*(__int64*)data = (__int64)(d * 10000.0);
+		*(__int64*)data = (__int64)(floor(d * 100.0 + 0.5) * 100.0);
 		return true; }
 
 	case DBTYPE_STR:
