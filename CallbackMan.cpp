@@ -9,8 +9,8 @@ static CcpLogChannel_t s_ch = CCP_LOG_DEFINE_CHANNEL( "CallbackMan" );
 
 #if CALLBACKMAN_DEBUGGING
 	#define REPORT( msg, ... ) CCP_LOG_CH( s_ch, msg, ##__VA_ARGS__ )
-	#define REPORT_TIME( msg, t ) { double d = t.GetSeconds(); char buffer[256]; sprintf_s( buffer, 256, msg, d ); OutputDebugString( buffer ); }
-	#define REPORT_TIME1( msg, t, a1 ) { double d = t.GetSeconds(); char buffer[256]; sprintf_s( buffer, 256, msg, d, a1 ); OutputDebugString( buffer ); }
+	#define REPORT_TIME( msg, t ) { double d = t.GetSeconds(); char buffer[256]; sprintf_s( buffer, 256, msg, d ); CCP_LOG_CH( s_ch, buffer ); }
+	#define REPORT_TIME1( msg, t, a1 ) { double d = t.GetSeconds(); char buffer[256]; sprintf_s( buffer, 256, msg, d, a1 ); CCP_LOG_CH( s_ch, buffer ); }
 #else
 	#define REPORT( x, ... )
 	#define REPORT_TIME( msg, t )
@@ -354,7 +354,7 @@ bool BlueCallbackMan::UpdateThread( struct ThreadData* td )
 			entry = fencedEntry;
 			m_fenceQueue.pop_front();
 			haveEntry = true;
-			REPORT( "Processing fenced entry" );
+			REPORT( "Processing fenced entry %d on thread %d", fencedEntry.id, td->m_threadIndex );
 		}
 		else
 		{
@@ -368,7 +368,7 @@ bool BlueCallbackMan::UpdateThread( struct ThreadData* td )
 		haveEntry = ExtractFromQueue( m_urgentQueue, entry, td->m_threadIndex );
 		if( haveEntry )
 		{
-			REPORT( "Processing urgent entry" );
+			REPORT( "Processing urgent entry %d on thread %d", entry.id, td->m_threadIndex );
 		}
 	}
 	if( !haveEntry )
@@ -376,7 +376,7 @@ bool BlueCallbackMan::UpdateThread( struct ThreadData* td )
 		haveEntry = ExtractFromQueue( m_queue, entry, td->m_threadIndex );
 		if( haveEntry )
 		{
-			REPORT( "Processing regular entry" );
+			REPORT( "Processing regular entry %d on thread %d", entry.id, td->m_threadIndex );
 		}
 	}
 
