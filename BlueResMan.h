@@ -78,7 +78,7 @@ public:
 
 	IRoot* LoadObject( const char* name, Be::LOADOBJECT_INIT_FLAG init = Be::LDOBJ_INITIALIZE );
 	IRoot* LoadObjectW( const wchar_t* name, Be::LOADOBJECT_INIT_FLAG init = Be::LDOBJ_INITIALIZE );
-	
+
 	bool SaveObject( IRoot* obj, const char* name );
 	bool SaveObjectW( IRoot* obj, const wchar_t* name );
 
@@ -113,6 +113,9 @@ private:
 #if BLUE_WITH_PYTHON
 	static PyObject* PyLoadObjectFromYamlString( PyObject* self, PyObject* args );
 #endif
+
+	Be::Result<std::string> GetFileContentsWithYield( std::wstring filename, IBlueStreamPtr& sourceStream );
+	std::set<std::wstring> m_filesInProgress;
 
 	IBlueResource* GetResourceHelper( const std::wstring& path, const std::wstring& ex, IBlueResManNotifications* notifications = nullptr );
 

@@ -890,7 +890,7 @@ IRoot* BlueResMan::LoadObjectW( const wchar_t* unnormalizedName, Be::LOADOBJECT_
 			// and read the file.
 			IBlueStreamPtr sourceStream;
 
-			auto result = BePaths->GetFileContentsWithYield( filename, &sourceStream );
+			auto result = GetFileContentsWithYield(filename, sourceStream);
 			if( !Be::IsSuccess( result ) )
 			{
 				CCP_LOGERR_CH( s_ch, "%s", result.value.c_str() );
@@ -1139,4 +1139,35 @@ Be::Result<std::string> BlueResMan::LoadObjectWithoutInitializeFromScript( const
 {
 	*obj = LoadObjectW( path.c_str(), Be::LDOBJ_DONT_INITIALIZE );
 	return Be::Result<std::string>();
+}
+
+Be::Result<std::string> BlueResMan::GetFileContentsWithYield( std::wstring filename, IBlueStreamPtr& sourceStream )
+{
+	if( BePaths->FileExistsLocally( filename.c_str() ) )
+	{
+		return BePaths->GetFileContentsWithYield( filename, &sourceStream );
+	}
+
+#if CCP_STACKLESS
+	if( PyOS->CanYield() )
+	{
+		// This is to prevent multiple tasklets from triggering download
+		// of the same file. This mainly happens in the Probe, but could
+		// happen in the client as well, for example the first time
+		// a missile type is seen.
+		auto foundIt = m_filesInProgress.find( filename );
+		while( foundIt != m_filesInProgress.end() )
+		{
+
+			PyOS->Yield();
+			foundIt = m_filesInProgress.find( filename );
+		}
+	}
+#endif
+    
+	m_filesInProgress.insert( filename );
+	auto result = BePaths->GetFileContentsWithYield( filename, &sourceStream );
+	m_filesInProgress.erase( filename );
+
+	return result;
 }

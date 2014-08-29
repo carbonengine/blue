@@ -153,5 +153,12 @@ const Be::ClassInfo* BluePaths::ExposeToBlue()
 			GetFileContentsWithYield,
 			""
 		)
+
+		MAP_METHOD_AND_WRAP
+		(
+			"FileExistsLocally",
+			FileExistsLocally,
+			"Returns True if the given path exists as a file, cached locally in the case of remote files."
+		)
 	EXPOSURE_END()
 }

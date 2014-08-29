@@ -9,6 +9,7 @@
 
 #include "BlueRemoteStream.h"
 #include "include/IBlueOS.h"
+#include "Include/IBluePaths.h"
 
 #if CCP_STACKLESS
 #include "CcpUtils/PyCpp.h"
@@ -294,6 +295,10 @@ bool BlueRemoteStream::Open( const char* resUrl, size_t expectedSize )
 	curl_easy_setopt( connection, CURLOPT_URL, resUrl );
 	curl_easy_setopt( connection, CURLOPT_WRITEFUNCTION, WriteMemoryCallback );
 	curl_easy_setopt( connection, CURLOPT_WRITEDATA, (void*)this );
+
+	std::wstring cert_str = BePaths->ResolvePathW(L"bin://cacert.pem");
+	CW2A cert_path( cert_str.c_str() );
+	curl_easy_setopt( connection, CURLOPT_CAINFO, static_cast<const char*>( cert_path ) );
 
 #ifdef _WIN32
 	GetProxySettings( resUrl, connection );
