@@ -145,7 +145,6 @@ void BlueCallbackMan::Cancel( uint32_t id )
 
 	m_queueMutex.Acquire();
 
-	bool found = false;
 	for( unsigned int i = 0; i < m_threads.size(); ++i )
 	{
 		ThreadData* td = m_threads[i];
@@ -164,21 +163,20 @@ void BlueCallbackMan::Cancel( uint32_t id )
 			td->m_cbInProgressMutex.Acquire();
 			td->m_cbInProgressMutex.Release();
 
-			found = true;
+			return;
 		}
+	}
+
+	bool found = RemoveFromQueue( m_urgentQueue, id );
+	if( !found )
+	{
+		found = RemoveFromQueue( m_queue, id );
 	}
 	if( !found )
 	{
-		bool found = RemoveFromQueue( m_urgentQueue, id );
-		if( !found )
-		{
-			found = RemoveFromQueue( m_queue, id );
-		}
-		if( !found )
-		{
-			found = RemoveFromQueue( m_fenceQueue, id );
-		}
+		found = RemoveFromQueue( m_fenceQueue, id );
 	}
+
 	m_queueMutex.Release();
 }
 
@@ -324,6 +322,7 @@ bool BlueCallbackMan::UpdateThread( struct ThreadData* td )
 
 	CallbackEntry entry;
 	bool haveEntry = false;
+	bool processedFenceEntry = false;
 
 	if( !m_fenceQueue.empty() )
 	{
@@ -354,11 +353,8 @@ bool BlueCallbackMan::UpdateThread( struct ThreadData* td )
 			entry = fencedEntry;
 			m_fenceQueue.pop_front();
 			haveEntry = true;
+			processedFenceEntry = true;
 			REPORT( "Processing fenced entry %d on thread %d", fencedEntry.id, td->m_threadIndex );
-		}
-		else
-		{
-			m_alarm.Signal();
 		}
 	}
 
@@ -425,6 +421,11 @@ bool BlueCallbackMan::UpdateThread( struct ThreadData* td )
 
 
 		REPORT_TIME( "<<Processing callback done - %g seconds\n", t );
+	}
+
+	if( processedFenceEntry )
+	{
+		m_alarm.Signal();
 	}
 
 	return haveEntry;
