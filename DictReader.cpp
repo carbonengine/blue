@@ -515,6 +515,12 @@ void DictReader::ReadStructureList( IBlueStructureList* structureList )
 		ThrowError( "Expected a dict" );
 	}
 
+	if( PyDict_Size( m_currentSource ) == 0 )
+	{
+		// Dict is empty, nothing to do
+		return;
+	}
+
 	PyObject* items = PyDict_GetItemString( m_currentSource, "items" );
 	if( !items )
 	{
