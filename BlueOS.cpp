@@ -1359,7 +1359,7 @@ void BlueOS::Terminate( int retCode )
 #if CCP_STACKLESS
 	fprintf(stderr, "Terminating process by request - returning %d", retCode );
 #endif
-	CCP_LOGERR_CH( s_chOS, "Terminating process by request - returning %d", retCode );
+	CCP_LOG_CH( s_chOS, "Terminating process by request - returning %d", retCode );
 
 	for( unsigned int ix = 0; ix < mIndispensableTerminationSteps.size(); ++ix)
 	{
