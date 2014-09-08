@@ -165,6 +165,13 @@ struct BlueTestBoolStructure
 
 BLUE_DECLARE_STRUCTURE_LIST( BlueTestBoolStructure );
 
+struct BlueTestEnumStructure
+{
+	uint32_t enumValue;
+};
+
+BLUE_DECLARE_STRUCTURE_LIST( BlueTestEnumStructure );
+
 BLUE_CLASS( BlueTestStructureLists ) :
 	public IRoot
 {
@@ -186,6 +193,7 @@ private:
 	PBlueTestMixedStructureStructureList m_mixed;
 	PMatrixStructureList m_matrix;
 	PBlueTestBoolStructureStructureList m_bool;
+	PBlueTestEnumStructureStructureList m_enum;
 };
 
 TYPEDEF_BLUECLASS( BlueTestStructureLists );

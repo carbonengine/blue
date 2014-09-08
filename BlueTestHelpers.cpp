@@ -296,6 +296,27 @@ BlueStructureDefinition BoolDef[] =
 	{0} 
 };
 
+Be::VarChooser BlueTestEnumChooser[] =
+{
+	{
+		"ValueOne",
+		BeCast( 1 ),
+		""
+	},
+	{
+		"ValueTwo",
+		BeCast( 2 ),
+		""
+	},
+	{ 0 }
+};
+
+BlueStructureDefinition EnumDef[] =
+{ 
+	{ "enumValue", Be::UINT32_1, offsetof( BlueTestEnumStructure, enumValue ), BlueTestEnumChooser }, 
+	{0} 
+};
+
 }
 
 BlueTestStructureLists::BlueTestStructureLists( IRoot* lockobj )
@@ -310,7 +331,8 @@ BlueTestStructureLists::BlueTestStructureLists( IRoot* lockobj )
 	PARENTLOCK( m_string ),
 	PARENTLOCK( m_mixed ),
 	PARENTLOCK( m_matrix ),
-	PARENTLOCK( m_bool )
+	PARENTLOCK( m_bool ),
+	PARENTLOCK( m_enum )
 {
 	m_uint8.SetStructureDefinition( Uint8Def );
 	m_int8.SetStructureDefinition( Int8Def );
@@ -324,6 +346,7 @@ BlueTestStructureLists::BlueTestStructureLists( IRoot* lockobj )
 	m_mixed.SetStructureDefinition( MixedDef );
 	m_matrix.SetStructureDefinition( MatrixDef );
 	m_bool.SetStructureDefinition( BoolDef );
+	m_enum.SetStructureDefinition( EnumDef );
 }
 
 #endif

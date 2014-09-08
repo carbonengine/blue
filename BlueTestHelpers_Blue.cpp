@@ -215,6 +215,7 @@ const Be::ClassInfo* BlueTestStructureLists::ExposeToBlue()
 		MAP_ATTRIBUTE( "mixed", m_mixed, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "matrix", m_matrix, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "bool", m_bool, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "enum", m_enum, "", Be::READWRITE | Be::PERSIST )
 
 	EXPOSURE_END()
 }

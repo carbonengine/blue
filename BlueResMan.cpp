@@ -806,14 +806,14 @@ IRoot* BlueResMan::LoadObjectW( const wchar_t* unnormalizedName, Be::LOADOBJECT_
 
 	if( !name )
 	{
-		BeOS->SetError(BEDEF, 0, "missing filename");
+		BeOS->SetError( BEDEF, 0, "%s: missing filename", __FUNCTION__ );
 		return NULL;
 	}
 
 	const wchar_t *dot = wcsrchr(name, L'.');
 	if( !dot )
 	{
-		BeOS->SetError(BEDEF, 0, "invalid filename, missing extension");
+		BeOS->SetError( BEDEF, 0, "%s: invalid filename, missing extension (\"%ls\")", __FUNCTION__, name );
 		return NULL;
 	}
 
@@ -1007,14 +1007,14 @@ bool BlueResMan::SaveObjectW( IRoot* obj, const wchar_t* name )
 {
 	if( !name )
 	{
-		BeOS->SetError(BEDEF, 0, "missing filename");
+		BeOS->SetError( BEDEF, 0, "%s: missing filename", __FUNCTION__ );
 		return false;
 	}
 
 	const wchar_t *dot = wcsrchr(name, L'.');
 	if (!dot)
 	{
-		BeOS->SetError(BEDEF, 0, "invalid filename, missing extension");
+		BeOS->SetError( BEDEF, 0, "%s: invalid filename, missing extension (\"%ls\")", __FUNCTION__, name );
 		return false;
 	}
 
