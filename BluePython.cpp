@@ -630,12 +630,14 @@ bool BluePyOS::Startup(
 	mTTimer.Reset();
 	PyStackless_SetScheduleFastcallback(::OnTaskletSwitch);
 #endif
-
+	
 	// Initialize .ini file handler.  This executes this python script.
 	PyObject *module = PyImport_ImportModule("inifile");
 	if( module )
 	{
-		// Don't worry if 'inifile' isn't found - no reason to treat that as an error
+		// Don't worry if 'inifile' isn't found - no reason to treat that as an error		
+		PyObject_CallMethod( module, const_cast<char*>( "Init" ),  0);
+		CCP_LOGNOTICE( "Initialized inifile" );
 		Py_DECREF(module);
 	}
 	else
