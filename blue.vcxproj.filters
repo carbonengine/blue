@@ -3,8 +3,8 @@
   <ItemGroup>
     <Filter Include="Resource Files"/>
     <Filter Include="Source Files"/>
-    <Filter Include="Source Files\Include"/>
     <Filter Include="Source Files\Logger"/>
+    <Filter Include="Source Files\include"/>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="autoversion.h">
@@ -184,104 +184,104 @@
     <ClInclude Include="YamlWriter.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Include\Base64.h">
-      <Filter>Source Files\Include</Filter>
+    <ClInclude Include="include\Base64.h">
+      <Filter>Source Files\include</Filter>
     </ClInclude>
-    <ClInclude Include="Include\BitPacker.h">
-      <Filter>Source Files\Include</Filter>
+    <ClInclude Include="include\BitPacker.h">
+      <Filter>Source Files\include</Filter>
     </ClInclude>
-    <ClInclude Include="Include\Blue.h">
-      <Filter>Source Files\Include</Filter>
+    <ClInclude Include="include\Blue.h">
+      <Filter>Source Files\include</Filter>
     </ClInclude>
-    <ClInclude Include="Include\BlueAsyncRes.h">
-      <Filter>Source Files\Include</Filter>
+    <ClInclude Include="include\BlueAsyncRes.h">
+      <Filter>Source Files\include</Filter>
     </ClInclude>
-    <ClInclude Include="Include\BlueChoosers.h">
-      <Filter>Source Files\Include</Filter>
+    <ClInclude Include="include\BlueChoosers.h">
+      <Filter>Source Files\include</Filter>
     </ClInclude>
-    <ClInclude Include="Include\BlueFileUtil.h">
-      <Filter>Source Files\Include</Filter>
+    <ClInclude Include="include\BlueFileUtil.h">
+      <Filter>Source Files\include</Filter>
     </ClInclude>
-    <ClInclude Include="Include\BlueId.h">
-      <Filter>Source Files\Include</Filter>
+    <ClInclude Include="include\BlueId.h">
+      <Filter>Source Files\include</Filter>
     </ClInclude>
-    <ClInclude Include="Include\BlueMain.h">
-      <Filter>Source Files\Include</Filter>
+    <ClInclude Include="include\BlueMain.h">
+      <Filter>Source Files\include</Filter>
     </ClInclude>
-    <ClInclude Include="Include\BlueNet.h">
-      <Filter>Source Files\Include</Filter>
+    <ClInclude Include="include\BlueNet.h">
+      <Filter>Source Files\include</Filter>
     </ClInclude>
-    <ClInclude Include="Include\BlueNetTypes.h">
-      <Filter>Source Files\Include</Filter>
+    <ClInclude Include="include\BlueNetTypes.h">
+      <Filter>Source Files\include</Filter>
     </ClInclude>
-    <ClInclude Include="Include\BluePySwrap.h">
-      <Filter>Source Files\Include</Filter>
+    <ClInclude Include="include\BluePySwrap.h">
+      <Filter>Source Files\include</Filter>
     </ClInclude>
-    <ClInclude Include="Include\BlueStatistics.h">
-      <Filter>Source Files\Include</Filter>
+    <ClInclude Include="include\BlueStatistics.h">
+      <Filter>Source Files\include</Filter>
     </ClInclude>
-    <ClInclude Include="Include\DataStructs.h">
-      <Filter>Source Files\Include</Filter>
+    <ClInclude Include="include\DataStructs.h">
+      <Filter>Source Files\include</Filter>
     </ClInclude>
-    <ClInclude Include="Include\IBlueCallbackMan.h">
-      <Filter>Source Files\Include</Filter>
+    <ClInclude Include="include\IBlueCallbackMan.h">
+      <Filter>Source Files\include</Filter>
     </ClInclude>
-    <ClInclude Include="Include\IBlueEventListener.h">
-      <Filter>Source Files\Include</Filter>
+    <ClInclude Include="include\IBlueEventListener.h">
+      <Filter>Source Files\include</Filter>
     </ClInclude>
-    <ClInclude Include="Include\IBlueObjectBuilder.h">
-      <Filter>Source Files\Include</Filter>
+    <ClInclude Include="include\IBlueObjectBuilder.h">
+      <Filter>Source Files\include</Filter>
     </ClInclude>
-    <ClInclude Include="Include\IBlueObjectProxy.h">
-      <Filter>Source Files\Include</Filter>
+    <ClInclude Include="include\IBlueObjectProxy.h">
+      <Filter>Source Files\include</Filter>
     </ClInclude>
-    <ClInclude Include="Include\IBlueObjectRecycler.h">
-      <Filter>Source Files\Include</Filter>
+    <ClInclude Include="include\IBlueObjectRecycler.h">
+      <Filter>Source Files\include</Filter>
     </ClInclude>
-    <ClInclude Include="Include\IBlueOS.h">
-      <Filter>Source Files\Include</Filter>
+    <ClInclude Include="include\IBlueOS.h">
+      <Filter>Source Files\include</Filter>
     </ClInclude>
-    <ClInclude Include="Include\IBluePaths.h">
-      <Filter>Source Files\Include</Filter>
+    <ClInclude Include="include\IBluePaths.h">
+      <Filter>Source Files\include</Filter>
     </ClInclude>
-    <ClInclude Include="Include\IBluePersist.h">
-      <Filter>Source Files\Include</Filter>
+    <ClInclude Include="include\IBluePersist.h">
+      <Filter>Source Files\include</Filter>
     </ClInclude>
-    <ClInclude Include="Include\IBluePlacementObserver.h">
-      <Filter>Source Files\Include</Filter>
+    <ClInclude Include="include\IBluePlacementObserver.h">
+      <Filter>Source Files\include</Filter>
     </ClInclude>
-    <ClInclude Include="Include\IBluePython.h">
-      <Filter>Source Files\Include</Filter>
+    <ClInclude Include="include\IBluePython.h">
+      <Filter>Source Files\include</Filter>
     </ClInclude>
-    <ClInclude Include="Include\IBlueResMan.h">
-      <Filter>Source Files\Include</Filter>
+    <ClInclude Include="include\IBlueResMan.h">
+      <Filter>Source Files\include</Filter>
     </ClInclude>
-    <ClInclude Include="Include\IBlueResource.h">
-      <Filter>Source Files\Include</Filter>
+    <ClInclude Include="include\IBlueResource.h">
+      <Filter>Source Files\include</Filter>
     </ClInclude>
-    <ClInclude Include="Include\ICacheable.h">
-      <Filter>Source Files\Include</Filter>
+    <ClInclude Include="include\ICacheable.h">
+      <Filter>Source Files\include</Filter>
     </ClInclude>
-    <ClInclude Include="Include\ICcpStatisticsAccumulator.h">
-      <Filter>Source Files\Include</Filter>
+    <ClInclude Include="include\ICcpStatisticsAccumulator.h">
+      <Filter>Source Files\include</Filter>
     </ClInclude>
-    <ClInclude Include="Include\IMotherLode.h">
-      <Filter>Source Files\Include</Filter>
+    <ClInclude Include="include\IMotherLode.h">
+      <Filter>Source Files\include</Filter>
     </ClInclude>
-    <ClInclude Include="Include\ITaskletTimer.h">
-      <Filter>Source Files\Include</Filter>
+    <ClInclude Include="include\ITaskletTimer.h">
+      <Filter>Source Files\include</Filter>
     </ClInclude>
-    <ClInclude Include="Include\IUnloadable.h">
-      <Filter>Source Files\Include</Filter>
+    <ClInclude Include="include\IUnloadable.h">
+      <Filter>Source Files\include</Filter>
     </ClInclude>
-    <ClInclude Include="Include\ScopedBlockTrap.h">
-      <Filter>Source Files\Include</Filter>
+    <ClInclude Include="include\ScopedBlockTrap.h">
+      <Filter>Source Files\include</Filter>
     </ClInclude>
-    <ClInclude Include="Include\StructPacker.h">
-      <Filter>Source Files\Include</Filter>
+    <ClInclude Include="include\StructPacker.h">
+      <Filter>Source Files\include</Filter>
     </ClInclude>
-    <ClInclude Include="Include\TransGaming.h">
-      <Filter>Source Files\Include</Filter>
+    <ClInclude Include="include\TransGaming.h">
+      <Filter>Source Files\include</Filter>
     </ClInclude>
     <ClInclude Include="..\Logger\Logger.h">
       <Filter>Source Files\Logger</Filter>
