@@ -997,6 +997,14 @@ IRoot* YamlReader::ReadIRootClass()
 				{
 					instance->Lock();
 				}
+				else
+				{
+					// Did not find the aliased anchor in our map!
+					std::string message = "Reference to anchor '";
+					message += (const char*)anchor;
+					message += "' that hasn't been previously set - referencing inside a proxy?";
+					ReportWarning( message.c_str() );
+				}
 			}
 			else
 			{

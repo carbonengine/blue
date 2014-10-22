@@ -309,7 +309,10 @@ IRoot* BlackReader::ReadIRootClass()
 	{
 		// We've seen this object before
 		IRoot* existingInstance = foundIt->second;
-		existingInstance->Lock();
+		if( existingInstance )
+		{
+			existingInstance->Lock();
+		}
 		return existingInstance;
 	}
 
