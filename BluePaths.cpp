@@ -547,6 +547,11 @@ static void ToLower( std::string &s )
 
 std::wstring BluePaths::ResolvePathW( const std::wstring& path )
 {
+	if( BeRemoteFileCache->FileExists( path.c_str() ) )
+	{
+		return GetAbsolutePath( BeRemoteFileCache->GetLocallyCachedName( path.c_str() ) );
+	}
+
 	// Look at the prefix - anything in front of ':' is a search
 	// path that will be substituted.
 	std::wstring value( path );
@@ -1282,6 +1287,13 @@ Be::Result<std::string> BluePaths::Open( const std::wstring& filename, const std
 
 Be::Result<std::string> BluePaths::GetFileContentsWithYield( const std::wstring& path, IBlueStream** contents )
 {
+#if CCP_STACKLESS
+	if( !PyOS->CanYield() )
+	{
+		CCP_LOGWARN_CH( s_ch, "GetFileContentsWithYield( %S ) will not yield", path.c_str() );
+	}
+#endif
+
 	Be::Result<std::string> result;
 	BackgroundReader* backgroundReader = CCP_NEW( "GetFileContents/reader" ) BackgroundReader( path );
 	if( BlueResManBackgroundCall::Issue( backgroundReader ) )

@@ -30,7 +30,7 @@ public:
 		OM_READONLY
 	};
 
-	bool Open( const char* filename, size_t expectedSize );
+	bool Open( const char* filename, size_t expectedSize, const wchar_t* niceName = nullptr );
 	bool VerifyContents( const char* expectedChecksum );
 
 	/////////////////////////////////////////
@@ -45,10 +45,14 @@ public:
 	bool LockData( void** data,	size_t size	);
 	bool UnlockData();
 
+	void SetFullHeaderLogging( bool fullHeaders );
+
 private:
 	static size_t WriteMemoryCallback( void* contents, size_t size, size_t nmemb, void* context );
+	static size_t WriteHeaderCallback( void* contents, size_t size, size_t nmemb, void* context );
 	void ReceiveData( void* data, size_t size );
 	void InitializeCurl();
+	void TrimHeaders();
 
 private:
 	// Pointer to data block in memory
@@ -60,6 +64,12 @@ private:
 
 	// Allocation size of m_data
 	size_t m_bufferSize;
+
+	// Headers received
+	std::string m_headers;
+
+	// Log full headers on error/warning
+	bool m_fullHeaderLogging;
 
 };
 

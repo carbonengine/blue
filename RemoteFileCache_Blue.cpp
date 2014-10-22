@@ -82,6 +82,14 @@ const Be::ClassInfo* RemoteFileCache::ExposeToBlue()
 			Be::READ
 		)
 		
+		MAP_ATTRIBUTE
+		(
+			"fullHeaderLogging",
+			m_fullHeaderLogging,
+			"Log all headers received from the server on network problems.",
+			Be::READWRITE
+		)
+		
 		MAP_METHOD_AND_WRAP
 		(
 			"DownloadFileIndex",

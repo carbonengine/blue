@@ -30,6 +30,7 @@ public:
 
 	bool FileExists( const wchar_t* resPath );
 	bool IsCachedLocally( const wchar_t* resPath );
+	std::wstring GetLocallyCachedName( const wchar_t* resPath );
 	bool IsDirectory( const wchar_t* resPath );
 	Be::Result<std::string> ListDir( const wchar_t* resPath, std::list<std::string>& contents );
 
@@ -57,6 +58,8 @@ private:
 	uint32_t m_filesCached;
 	uint32_t m_filesUsedFromCache;
 
+	bool m_fullHeaderLogging;
+
 private:
 	bool SetFileIndexFromStream( IBlueStream* stream );
 	void SetFileIndexImpl( const char* contents, ssize_t size );
@@ -67,7 +70,7 @@ private:
 	bool ValidateResPath( const wchar_t* resPath, std::string& validatedPath );
 	Be::Result<std::string> VerifyChecksum( void* data, ssize_t size, const FileInfo &info );
 	void CacheContentsOfRemoteStream( class BlueRemoteStream* stream, const std::wstring& cachedName, const wchar_t* resPath );
-};
+	};
 
 TYPEDEF_BLUECLASS( RemoteFileCache );
 

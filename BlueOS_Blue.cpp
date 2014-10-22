@@ -575,6 +575,21 @@ const Be::ClassInfo* BlueOS::ExposeToBlue()
 			"Sets the startup arguments"
 		)
 
+		MAP_METHOD_AND_WRAP
+		(
+			"HasStartupArg",
+			HasStartupArg,
+			"Returns true if the given argument is present on the command line"
+		)
+
+		MAP_METHOD_AND_WRAP
+		(
+			"GetStartupArgValue",
+			GetStartupArgValue,
+			"Gets the value associated with the given argument, if present on the command line."
+			"If the argument is not present, the return value is an empty string."
+		)
+
 
 	EXPOSURE_END()
 

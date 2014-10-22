@@ -34,7 +34,10 @@ namespace
 		IRootPtr obj;
 		if( !pThis->RecycleOrLoad( path.c_str(), &obj ) )
 		{
-			PyErr_SetString( PyExc_RuntimeError, "Couldn't get object" );
+			if( !PyErr_Occurred() )
+			{
+				PyErr_SetString( PyExc_RuntimeError, "Couldn't get object" );
+			}
 			return nullptr;
 		}
 

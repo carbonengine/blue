@@ -18,6 +18,7 @@
 #ifdef _WIN32
 #include <winhttp.h>
 #endif
+#include "include/IBlueResMan.h"
 
 static CcpLogChannel_t s_ch = CCP_LOG_DEFINE_CHANNEL( "RemoteStream" );
 
@@ -262,13 +263,38 @@ void GetProxySettings( const char* url, CURL* connection )
 }
 #endif
 
+
+bool FindHeader( const char* headers, const char* name, std::string& value )
+{
+	std::string decorated = "\n";
+	decorated += name;
+	decorated += ": ";
+	if( auto found = strstr( headers, decorated.c_str() ) )
+	{
+		found += decorated.length();
+		auto end = strchr( found, '\n' );
+		if( end )
+		{
+			value = std::string( found, end );
+			value.append( char( 0 ), size_t( 0 ) );
+		}
+		else
+		{
+			value = found;
+		}
+		return true;
+	}
+	return false;
+}
+
 }
 
 BlueRemoteStream::BlueRemoteStream() :
 	m_data( nullptr ),
 	m_readLocation( nullptr ),
 	m_dataSize( 0 ),
-	m_bufferSize( 0 )
+	m_bufferSize( 0 ),
+	m_fullHeaderLogging( false )
 {
 	InitializeCurl();
 }
@@ -281,20 +307,33 @@ BlueRemoteStream::~BlueRemoteStream()
 	}
 }
 
-bool BlueRemoteStream::Open( const char* resUrl, size_t expectedSize )
+bool BlueRemoteStream::Open( const char* resUrl, size_t expectedSize, const wchar_t* niceName )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
 #if CCP_STACKLESS
 	Ccp::PyAllowThreads allowThreads( true );
 #endif
-	CCP_LOG_CH( s_ch, "Opening %s, expected size %d bytes", resUrl, expectedSize );
+
+	if( niceName == nullptr )
+	{
+		niceName = CA2W( resUrl );
+	}
+
+	if( BeResMan->IsOnMainThread() )
+	{
+		CCP_LOGWARN_CH( s_ch, "BlueRemoteStream::Open( %S ) on main thread", niceName );
+	}
+
+	CCP_LOG_CH( s_ch, "Opening %S (%s), expected size %d bytes", niceName, resUrl, expectedSize );
 
 	CURL* connection = s_connectionManager.GetConnection();
 
 	curl_easy_setopt( connection, CURLOPT_URL, resUrl );
 	curl_easy_setopt( connection, CURLOPT_WRITEFUNCTION, WriteMemoryCallback );
 	curl_easy_setopt( connection, CURLOPT_WRITEDATA, (void*)this );
+	curl_easy_setopt( connection, CURLOPT_HEADERFUNCTION, WriteHeaderCallback );
+	curl_easy_setopt( connection, CURLOPT_HEADERDATA, (void*)this );
 
 	std::wstring cert_str = BePaths->ResolvePathW(L"bin://cacert.pem");
 	CW2A cert_path( cert_str.c_str() );
@@ -309,6 +348,7 @@ bool BlueRemoteStream::Open( const char* resUrl, size_t expectedSize )
 		m_data = reinterpret_cast<uint8_t*>( CCP_MALLOC( "BlueRemoteStream/m_data", expectedSize ) );
 		m_bufferSize = expectedSize;
 	}
+	m_headers.clear();
 
 	CURLcode res;
 	
@@ -319,7 +359,24 @@ bool BlueRemoteStream::Open( const char* resUrl, size_t expectedSize )
 
 	if( res != CURLE_OK )
 	{
-		CCP_LOGERR_CH( s_ch, "curl_easy_perform() failed: %s\n", curl_easy_strerror( res ) );
+		TrimHeaders();
+	}
+
+	if( res == CURLE_PARTIAL_FILE )
+	{
+		if( expectedSize && m_dataSize == expectedSize )
+		{
+			res = CURLE_OK;
+			double contentLength = -1.0;
+			curl_easy_getinfo( connection, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &contentLength );
+			CCP_LOGWARN_CH( s_ch, "curl_easy_perform() reported partial file download while downloaded size is equal to expected size (%zu), "
+				"Content-Length header for the file reported size %f; %s", m_dataSize, contentLength, m_headers.c_str() );
+		}
+	}
+
+	if( res != CURLE_OK )
+	{
+		CCP_LOGERR_CH( s_ch, "curl_easy_perform() failed: %s; %s\n", curl_easy_strerror( res ), m_headers.c_str() );
 	}
 	else
 	{
@@ -339,7 +396,18 @@ bool BlueRemoteStream::Open( const char* resUrl, size_t expectedSize )
 
 		double speed = 0;
 		curl_easy_getinfo( connection, CURLINFO_SPEED_DOWNLOAD, &speed );
-		CCP_LOG_CH( s_ch, "%s: %g bytes, %g bytes/sec, %g sec pretransfer, %g sec total", resUrl, size, speed, pretransferTime, totalTime );
+
+		if( totalTime > 3.0 )
+		{
+			TrimHeaders();
+			CCP_LOGWARN_CH( s_ch, "%S (%s): %g bytes, %g bytes/sec, %g sec pretransfer, %g sec total; %s", 
+				niceName, resUrl, size, speed, pretransferTime, totalTime, m_headers.c_str() );
+		}
+		else
+		{
+			CCP_LOG_CH( s_ch, "%S (%s): %g bytes, %g bytes/sec, %g sec pretransfer, %g sec total", 
+				niceName, resUrl, size, speed, pretransferTime, totalTime );
+		}
 	}
 
 	s_connectionManager.ReleaseConnection( connection );
@@ -478,6 +546,16 @@ size_t BlueRemoteStream::WriteMemoryCallback( void* contents, size_t size, size_
 	return realsize;
 }
 
+size_t BlueRemoteStream::WriteHeaderCallback( void* contents, size_t size, size_t nmemb, void* context )
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+	size_t realsize = size * nmemb;
+	BlueRemoteStream* pThis = reinterpret_cast<BlueRemoteStream*>( context );
+	pThis->m_headers.append( static_cast<char*>( contents ), realsize );
+	return realsize;
+}
+
 void BlueRemoteStream::ReceiveData( void* data, size_t size )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
@@ -516,4 +594,29 @@ bool BlueRemoteStream::VerifyContents( const char* expectedChecksum )
 	}
 
 	return true;
+}
+
+void BlueRemoteStream::SetFullHeaderLogging( bool fullHeaders )
+{
+	m_fullHeaderLogging = fullHeaders;
+}
+
+void BlueRemoteStream::TrimHeaders()
+{
+	if( m_fullHeaderLogging )
+	{
+		m_headers = "full headers: " + m_headers;
+		return;
+	}
+
+	// we are only interested in X-Cache header
+	std::string xCache;
+	if( FindHeader( m_headers.c_str(), "X-Cache", xCache ) )
+	{
+		m_headers = "X-Cache: " + xCache;
+	}
+	else
+	{
+		m_headers = "no X-Cache header found";
+	}
 }

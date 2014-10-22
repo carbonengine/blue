@@ -54,6 +54,15 @@ bool BlueObjectRecycler::RecycleOrLoad( const wchar_t* resPath, IRoot** obj )
 			return false;
 		}
 
+		foundIt = m_objectInfoByName.find( normalizedPath );
+		if( foundIt != m_objectInfoByName.end() )
+		{
+			// Another tasklet added this name while we were loading. We take the
+			// easy way out and don't try to recycle this particular instance.
+			*obj = result;
+			return true;
+		}
+
 		// We need a notification when the instance we just created is about to
 		// die. We may decide to keep it alive for recycling.
 		IWeakObjectPtr weakResult( BlueCastPtr( result ) );

@@ -12,6 +12,8 @@
 WatchdogThread::WatchdogThread( const char* name ) :
 	m_timeoutHandler( nullptr ),
 	m_name( name ),
+	m_counter( 0 ),
+	m_isRunning( 0 ),
 	m_thread( 0 )
 {
 }

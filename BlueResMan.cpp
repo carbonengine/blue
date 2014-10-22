@@ -136,6 +136,8 @@ void BlueResMan::Shutdown()
 
 bool BlueResMan::GetResource( const std::string& path, const std::string& ex, const Be::IID& iid, void** resource, IBlueResManNotifications* notifications )
 {
+	CCP_STATS_ZONE( __FUNCTION__ );
+
 	CA2W p(path.c_str());
 	CA2W e(ex.c_str());
 
@@ -148,6 +150,7 @@ bool BlueResMan::GetResource( const std::string& path, const std::string& ex, co
 bool BlueResMan::GetResourceW( const std::wstring& path, const std::wstring& ex, const Be::IID& iid, void** resource, IBlueResManNotifications* notifications )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
+
 	CCP_ASSERT( resource );
 	
 	*resource = nullptr;
@@ -169,6 +172,8 @@ bool BlueResMan::GetResourceW( const std::wstring& path, const std::wstring& ex,
 
 IBlueResource* BlueResMan::GetResourceHelper( const std::wstring& path, const std::wstring& ex, IBlueResManNotifications* notifications )
 {
+	CCP_STATS_ZONE( __FUNCTION__ );
+
 	if( path.empty() )
 	{ 
 		return NULL;

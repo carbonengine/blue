@@ -54,7 +54,8 @@ RemoteFileCache::RemoteFileCache() :
 	m_bytesCached( 0 ),
 	m_filesDownloaded( 0 ),
 	m_filesCached( 0 ),
-	m_filesUsedFromCache( 0 )
+	m_filesUsedFromCache( 0 ),
+	m_fullHeaderLogging( false )
 {
 }
 
@@ -82,6 +83,7 @@ bool RemoteFileCache::DownloadFileIndex( const std::string& index )
 
 		BlueRemoteStreamPtr remoteStream;
 		remoteStream.CreateInstance();
+		remoteStream->SetFullHeaderLogging( m_fullHeaderLogging );
 		bool isOK = remoteStream->Open( url.c_str(), 0 );
 
 		if(	!isOK )
@@ -137,7 +139,7 @@ Be::Result<std::string> RemoteFileCache::GetStreamFromPathW( const wchar_t* resP
 
 	BlueRemoteStreamPtr remoteStream;
 	remoteStream.CreateInstance();
-	bool isOK = remoteStream->Open( resUrl.c_str(), static_cast<size_t>( info.size ) );
+	bool isOK = remoteStream->Open( resUrl.c_str(), static_cast<size_t>( info.size ), resPath );
 
 	if( isOK )
 	{
@@ -191,19 +193,23 @@ bool RemoteFileCache::FileExists( const wchar_t* resPath )
 
 bool RemoteFileCache::IsCachedLocally( const wchar_t* resPath )
 {
+	return BePaths->FileExistsLocally( GetLocallyCachedName( resPath ).c_str() );
+}
+
+std::wstring RemoteFileCache::GetLocallyCachedName( const wchar_t* resPath )
+{
 	FileInfo info;
 	if( !GetFileInfo( resPath, info ) )
 	{
-		return false;
+		return resPath;
 	}
 
-	// Does file exist in the cache folder? If so, open it as a file stream and return it
 	std::wstring resId = static_cast<const wchar_t*>( CA2W( info.cachedName.c_str() ) );
 	std::wstring cachedName = m_cacheFolder;
 	cachedName += L"/";
 	cachedName += resId;
 
-	return BePaths->FileExistsLocally( cachedName.c_str() );
+	return cachedName;
 }
 
 bool RemoteFileCache::GetFileInfo( const wchar_t* resPath, struct FileInfo& fileInfo )

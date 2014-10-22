@@ -15,7 +15,10 @@ static CcpLogChannel_t s_ch = CCP_LOG_DEFINE_CHANNEL( "ResMan" );
 
 
 BlueResManBackgroundCall::BlueResManBackgroundCall( IBlueResManBackgroundCall* theCall, uint32_t flags /*= 0 */ ) :
+	m_id( 0 ),
+	m_mainQueueId( 0 ),
 	m_flags( flags ),
+	m_isCanceling( 0 ),
 	m_backgroundCall( theCall )
 {
 #if CCP_STACKLESS

@@ -64,6 +64,8 @@ bool MotherLode::Insert(
 	ResourceCaching	allowCaching		//allow caching of this resource
 	)
 {
+	CCP_STATS_ZONE( __FUNCTION__ );
+
 	CCP_ASSERT(key);
 	CCP_ASSERT(object);
 	
@@ -115,6 +117,8 @@ IMotherLode::LookupResult MotherLode::Lookup(
 	BLUEQIOPT options
 	)
 {
+	CCP_STATS_ZONE( __FUNCTION__ );
+
 	*ppv = 0;
 	map_t::iterator it = mMap.find(key);
 	if( it == mMap.end() )

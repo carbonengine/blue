@@ -133,6 +133,8 @@ bool BlueCallbackMan::Add( CallbackFunc pCb, void* pContext, uint32_t flags, Ccp
 
 	if( m_isRunningOwnThreads )
 	{
+		CCP_STATS_ZONE( __FUNCTION__ " signal");
+
 		m_alarm.Signal();
 	}
 
