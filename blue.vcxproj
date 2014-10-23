@@ -550,6 +550,7 @@
     <ClInclude Include="win32.h"/>
     <ClInclude Include="YamlReader.h"/>
     <ClInclude Include="YamlWriter.h"/>
+    <ClInclude Include="Accumulator\PercentileAccumulator.h"/>
     <ClInclude Include="Include\Base64.h"/>
     <ClInclude Include="Include\BitPacker.h"/>
     <ClInclude Include="Include\Blue.h"/>
@@ -688,6 +689,8 @@
     <ClCompile Include="YamlReader_Blue.cpp"/>
     <ClCompile Include="YamlWriter.cpp"/>
     <ClCompile Include="YamlWriter_Blue.cpp"/>
+    <ClCompile Include="Accumulator\PercentileAccumulator.cpp"/>
+    <ClCompile Include="Accumulator\PercentileAccumulator_Blue.cpp"/>
     <ClCompile Include="..\Logger\Logger.cpp"/>
     <ClCompile Include="..\Logger\LogServer.cpp"/>
   </ItemGroup>

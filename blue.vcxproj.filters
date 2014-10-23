@@ -3,6 +3,7 @@
   <ItemGroup>
     <Filter Include="Resource Files"/>
     <Filter Include="Source Files"/>
+    <Filter Include="Source Files\Accumulator"/>
     <Filter Include="Source Files\Include"/>
     <Filter Include="Source Files\Logger"/>
   </ItemGroup>
@@ -183,6 +184,9 @@
     </ClInclude>
     <ClInclude Include="YamlWriter.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Accumulator\PercentileAccumulator.h">
+      <Filter>Source Files\Accumulator</Filter>
     </ClInclude>
     <ClInclude Include="Include\Base64.h">
       <Filter>Source Files\Include</Filter>
@@ -585,6 +589,12 @@
     </ClCompile>
     <ClCompile Include="YamlWriter_Blue.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Accumulator\PercentileAccumulator.cpp">
+      <Filter>Source Files\Accumulator</Filter>
+    </ClCompile>
+    <ClCompile Include="Accumulator\PercentileAccumulator_Blue.cpp">
+      <Filter>Source Files\Accumulator</Filter>
     </ClCompile>
     <ClCompile Include="..\Logger\Logger.cpp">
       <Filter>Source Files\Logger</Filter>
