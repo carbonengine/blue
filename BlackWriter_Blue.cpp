@@ -39,5 +39,19 @@ const Be::ClassInfo* BlackWriter::ExposeToBlue()
 			"The version number of black files written."
 		)
 		
+		MAP_METHOD_AND_WRAP
+		(
+			"GetStrings",
+			GetStrings,
+			"Get the list of all strings stored."
+		)
+
+		MAP_METHOD_AND_WRAP
+		(
+			"GetWStrings",
+			GetWStrings,
+			"Get the list of all wide strings stored."
+		)
+
 		EXPOSURE_END()
 }

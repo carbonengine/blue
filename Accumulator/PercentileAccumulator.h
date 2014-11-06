@@ -12,6 +12,7 @@ public:
 	void Add( double val );
 	void Clear();
 	Be::Result<std::string> GetPercentiles(double start, double step, std::list<double>& percentiles);
+	Be::Result<std::string> GetValuesForPercentiles(double cutoff_point, double step_size, std::list<double>& percentiles);
 private:
 	std::vector<double> m_data;
 };

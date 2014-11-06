@@ -26,6 +26,9 @@ public:
 
 	virtual Be::Result<std::string> WriteObjectToStream( const IRoot* obj, IBlueStream* stream );
 
+	const std::vector<std::string> GetStrings() { return m_strings; }
+	const std::vector<std::wstring> GetWStrings() { return m_wstrings; }
+
 protected:
 	//
 	// Implementations of functions required by IRootWriter

@@ -58,3 +58,35 @@ Be::Result<std::string> PercentileAccumulator::GetPercentiles(double start, doub
 
 	return Be::Result<std::string>();
 }
+
+Be::Result<std::string> PercentileAccumulator::GetValuesForPercentiles(double cutoff_point, double step_size, std::list<double>& percentiles )
+{
+	int no_values = (int) m_data.size();
+
+	if( no_values == 0 )
+	{
+		return Be::Result<std::string>();
+	}
+
+	if( cutoff_point > 1.0 || cutoff_point < 0.0 )
+	{
+		return Be::Result<std::string>("Error, cutoff point should be in the range 0 to 1.");
+	}
+
+	if( step_size > 1.0 || step_size < 0.0 )
+	{
+		return Be::Result<std::string>("Error, step size should be in the range 0 to 1.");
+	}
+
+	std::sort(m_data.begin(), m_data.end());
+	
+	int no_steps = (int) ceil((1.0 - cutoff_point) / step_size ) + 1;  // Add one because there is a step at both beginning and at end.
+	
+	for(int i = 0; i < no_steps; ++i)
+	{
+		int index = (int)(no_values - (i * step_size * no_values) - 0.5);
+		percentiles.push_front(m_data[index]);
+	}
+
+	return Be::Result<std::string>();
+}

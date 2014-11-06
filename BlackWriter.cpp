@@ -22,6 +22,11 @@ BlackWriter::~BlackWriter()
 
 Be::Result<std::string> BlackWriter::WriteObjectToStream( const IRoot* root, IBlueStream* stream )
 {
+	// Strings are not cleared at the end so they can retrieved from the writer in Python after
+	// writing an object. Clear them here to make sure we only get strings from this object.
+	m_strings.clear();
+	m_wstrings.clear();
+
 	MemStreamPtr dataStream;
 	dataStream.CreateInstance();
 
@@ -105,9 +110,7 @@ Be::Result<std::string> BlackWriter::WriteObjectToStream( const IRoot* root, IBl
 
 	// Clear all state so we can reuse the same writer for writing other objects
 	m_outputStream.Unlock();
-	m_strings.clear();
 	m_stringMap.clear();
-	m_wstrings.clear();
 	m_wstringMap.clear();
 	m_referenceMap.clear();
 
