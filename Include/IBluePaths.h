@@ -11,6 +11,8 @@
 
 #include "Blue.h"
 
+#define CCP_MAX_PATH 4096
+
 struct IBlueStream;
 
 BLUE_INTERFACE( IBluePaths ) : public IRoot

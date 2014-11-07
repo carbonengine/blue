@@ -65,8 +65,8 @@ namespace
 	std::wstring GetAbsolutePath( const std::wstring& name )
 	{
 		std::wstring absName;
-		wchar_t buffer[MAX_PATH];
-		DWORD len = GetFullPathNameW( name.c_str(), MAX_PATH, buffer, NULL );
+		wchar_t buffer[CCP_MAX_PATH];
+		DWORD len = GetFullPathNameW( name.c_str(), CCP_MAX_PATH, buffer, NULL );
 		if( len > 0 )
 		{
 			absName = buffer;
@@ -79,8 +79,8 @@ namespace
 	// adjustedName is the absolute path to the file
 	bool IsPathExistingFile( const std::wstring& name, std::wstring& absName )
 	{
-		wchar_t buffer[MAX_PATH];
-		DWORD len = GetFullPathNameW( name.c_str(), MAX_PATH, buffer, NULL );
+		wchar_t buffer[CCP_MAX_PATH];
+		DWORD len = GetFullPathNameW( name.c_str(), CCP_MAX_PATH, buffer, NULL );
 		if( len > 0 )
 		{
 			absName = buffer;
@@ -477,8 +477,8 @@ char *getcwd(char *buf, size_t size)
 bool BluePaths::InitializeHelper()
 {
 #ifdef _WIN32
-	wchar_t cwdBuffer[MAX_PATH];
-	int cdRes = GetCurrentDirectoryW( MAX_PATH, cwdBuffer );
+	wchar_t cwdBuffer[CCP_MAX_PATH];
+	int cdRes = GetCurrentDirectoryW( CCP_MAX_PATH, cwdBuffer );
 	if( cdRes > 0 )
 	{
 		m_initialWorkingDirectory = cwdBuffer;
@@ -1172,7 +1172,7 @@ void BluePaths::InitializeStdAppPaths()
 {
 #if CCP_STACKLESS
 	//get module name
-	std::vector<wchar_t> tmp(MAX_PATH);
+	std::vector<wchar_t> tmp(CCP_MAX_PATH);
 	while( GetModuleFileNameW(NULL, &tmp[0], (DWORD)tmp.size()) == tmp.size() )
 	{
 		tmp.resize(tmp.size()*2);

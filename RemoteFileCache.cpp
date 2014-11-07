@@ -28,10 +28,10 @@ namespace
 		CCP_STATS_ZONE( __FUNCTION__ );
 
 #ifdef _WIN32
-		wchar_t srcBuffer[MAX_PATH];
-		wchar_t dstBuffer[MAX_PATH];
-		GetFullPathNameW( src.c_str(), MAX_PATH, srcBuffer, NULL );
-		GetFullPathNameW( dst.c_str(), MAX_PATH, dstBuffer, NULL );
+		wchar_t srcBuffer[CCP_MAX_PATH];
+		wchar_t dstBuffer[CCP_MAX_PATH];
+		GetFullPathNameW( src.c_str(), CCP_MAX_PATH, srcBuffer, NULL );
+		GetFullPathNameW( dst.c_str(), CCP_MAX_PATH, dstBuffer, NULL );
 
 		if( !MoveFileW( srcBuffer, dstBuffer ) )
 		{
