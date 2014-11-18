@@ -394,7 +394,6 @@ BlueOS::BlueOS() :
 	mNextScheduledEvent = 0;
 	mInsidePump = false;
 
-	mResolveRotRefs = true;
 	mMiniDump = false;
 
 #if CCP_STACKLESS

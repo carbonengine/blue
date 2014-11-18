@@ -62,7 +62,7 @@ struct BeInfo
 	Be::Time mRealTime;			// Blue UTC time
 	Be::Time mSimTime;			// It's like mRealTime but sometimes slowed down in order to manage load
 	double mSimDilation;		// This is the current factor between Real and Sim time advancement
-	double mDilationSyncFactor;	// The dilation factor we are currently basing syncronization on.  May be different than mSimDilation depending on the needs of syncronization.
+	double mDilationSyncFactor;	// The dilation factor we are currently basing synchronization on.  May be different than mSimDilation depending on the needs of synchronization.
 	
 	// framerate
 	double mFps;				// number of frames per second
@@ -86,7 +86,6 @@ struct BeInfo
 
 	Be::Time mTimeAdjusted;		// if not 0, SetTime has been called with this diff.
 
-	bool mResolveRotRefs;		// Should the Reader resolve ROT refs or not
 	bool mMiniDump;				// Should our ExeFile handle its own minidumps
 	// Build number
 	long mBuildno;

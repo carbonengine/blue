@@ -317,7 +317,6 @@ const Be::ClassInfo* BlueOS::ExposeToBlue()
 		MAP_ATTRIBUTE( "debuglevel",		mDebugLevel, "Level of debug checks", Be::READWRITE )
 
 		// BeInfo
-		MAP_ATTRIBUTE( "resolveRotRefs", mResolveRotRefs, "Resolve ROT refs", Be::READWRITE )
 		MAP_ATTRIBUTE( "miniDump", mMiniDump, "Have ExeFile generate minidumps", Be::READWRITE )
 		MAP_ATTRIBUTE( "pid", mPID, "Process ID", Be::READ )
 
