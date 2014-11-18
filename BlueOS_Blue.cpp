@@ -7,24 +7,6 @@
 #endif
 
 #if BLUE_WITH_PYTHON
-extern bool g_useNewSleepMode;
-static PyObject *PyUseNewSleepMode( PyObject* self, PyObject* args)
-{
-	PyObject *arg;
-	if ( !PyArg_ParseTuple( args, "O", &arg ) )
-	{
-		return NULL;
-	}
-	int v = PyObject_IsTrue( arg );
-	if (v == -1)
-	{
-		return NULL;
-	}
-	PyObject *res = g_useNewSleepMode ? Py_True : Py_False;
-	g_useNewSleepMode = v != 0;
-	Py_INCREF( res );
-	return res;
-}
 
 extern bool g_carbonIoFastWakeup;
 static PyObject *PyCarbonIoFastWakeup( PyObject* self, PyObject* args)
@@ -314,13 +296,6 @@ const Be::ClassInfo* BlueOS::ExposeToBlue()
 		MAP_ATTRIBUTE( "timeScaler", mTimeScaler,
 			"A purely diagnostic scaling value (usually 1.0f)",
 			Be::READWRITE )
-
-		MAP_METHOD
-		(
-			"UseNewSleepMode",
-			PyUseNewSleepMode,
-			"When True, enable the new IO Sleep mode for fast IO scheduling."
-		)
 
 		MAP_METHOD
 		(

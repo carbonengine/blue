@@ -28,7 +28,6 @@
 #include "include/BitPacker.h"
 #include "include/BlueNet.h"
 #include "include/BlueNetTypes.h"
-#include "IOLoop.h"
 #include <stacklessio_api.h>
 #include "CcpUtils/PyCpp.h"
 #endif
@@ -47,9 +46,6 @@ CCP_STATS_DECLARE( logInfo,			"Blue/logInfo",			false,	CST_COUNTER_LOW, "Count o
 CCP_STATS_DECLARE( logNotice,		"Blue/logNotice",		false,	CST_COUNTER_LOW, "Count of notice logs" );
 CCP_STATS_DECLARE( logWarn,			"Blue/logWarn",			false,	CST_COUNTER_LOW, "Count of warning logs" );
 CCP_STATS_DECLARE( logErr,			"Blue/logErr",			false,	CST_COUNTER_LOW, "Count of error logs" );
-
-// the new sleep mode
-bool g_useNewSleepMode = false;
 
 // CarbonIO wake up mode
 bool g_carbonIoFastWakeup = false;
@@ -567,89 +563,72 @@ void BlueOS::DoSleep()
 		return;
 	}
 
-	if ( g_useNewSleepMode )
-	{
-		SafeAutoTasklet _at2(PyOS->GetTaskletTimer(),TASKLETS[IDLETASKLET].mContext, true); 
-		SleepWithIo sleeper;
-		bool retry = false;
-		do {
-			//orgsleeptime may change between calls.  Nifty.
-			sleeper.Sleep(mNextScheduledEvent, retry);
-			if ( retry )
-			{
-				m_ioRunsTotal++;
-			}
-		} while ( retry );
-	}
-	else
-	{
-		// Mark this as an idle timer
-		SafeAutoTasklet _at2(PyOS->GetTaskletTimer(),TASKLETS[IDLETASKLET].mContext, true, IDLE); 
+	// Mark this as an idle timer
+	SafeAutoTasklet _at2(PyOS->GetTaskletTimer(),TASKLETS[IDLETASKLET].mContext, true, IDLE); 
 
-		HANDLE handles[3];
-		handles[0] = PyStacklessIoGetWakeupEventHandle();
-		handles[1] = gBreakSleep;
-		handles[2] = gBreakCarbonIo;
-		__int64 startTime, frequency=0;
+	HANDLE handles[3];
+	handles[0] = PyStacklessIoGetWakeupEventHandle();
+	handles[1] = gBreakSleep;
+	handles[2] = gBreakCarbonIo;
+	__int64 startTime, frequency=0;
 
-		int orgsleeptime = mNextScheduledEvent;
-		int sleeptime = orgsleeptime;
-		QueryPerformanceCounter((LARGE_INTEGER*)&startTime);
-		while( sleeptime > 0 )
+	int orgsleeptime = mNextScheduledEvent;
+	int sleeptime = orgsleeptime;
+	QueryPerformanceCounter((LARGE_INTEGER*)&startTime);
+	while( sleeptime > 0 )
+	{
+		DWORD result;
 		{
-			DWORD result;
-			{
-				Ccp::PyAllowThreads _allow; //allow python threads during the sleep
-				result = MsgWaitForMultipleObjectsEx(
-					_countof(handles), handles,
-					sleeptime, QS_ALLEVENTS, MWMO_ALERTABLE);
-			}
+			Ccp::PyAllowThreads _allow; //allow python threads during the sleep
+			result = MsgWaitForMultipleObjectsEx(
+				_countof(handles), handles,
+				sleeptime, QS_ALLEVENTS, MWMO_ALERTABLE);
+		}
 
-			// We appear to have been woken by stacklessIO.  But this may be an old state, and StackelssIO
-			// may have been serviced in the mean time.  therefore, we must check if servicing it is still
-			// necessary.
-			if( result == WAIT_OBJECT_0 )
+		// We appear to have been woken by stacklessIO.  But this may be an old state, and StackelssIO
+		// may have been serviced in the mean time.  therefore, we must check if servicing it is still
+		// necessary.
+		if( result == WAIT_OBJECT_0 )
+		{
+			PyStacklessIoStatus_t s;
+			s.struct_size = sizeof(s);
+			PyStacklessIoGetStatus(&s);
+			if( s.nNonRunnable || s.nRunnable )
 			{
-				PyStacklessIoStatus_t s;
-				s.struct_size = sizeof(s);
-				PyStacklessIoGetStatus(&s);
-				if( s.nNonRunnable || s.nRunnable )
-				{
-					break; //There is stuff to be done
-				}
-				else
-				{
-					//[yawn,] no need to panic.
-					__int64 nowTime;
-					QueryPerformanceCounter((LARGE_INTEGER*)&nowTime);
-					if( !frequency )
-					{
-						QueryPerformanceFrequency((LARGE_INTEGER*)&frequency);
-					}
-					double time_spent = (double)(nowTime-startTime)/(double)frequency;
-					sleeptime = orgsleeptime - (int)(time_spent*1000.0); //milliseconds
-				}
-			}
-			else if (result == WAIT_OBJECT_0 + 2)
-			{
-				//CarbonIo signal
-				// Depending on this flag, now have carbonIO wake up its tasklets.  Perhaps it
-				// didn't already do so (because it merely scheduled a pending call) so this forces
-				// the issue.
-				// This is the right thing to do, but it is switchable for testing purposes.
-				if( g_carbonIoManualWakeup )
-				{
-					CioWakeupTasklets();
-				}
-				if( PyStackless_GetRunCount() > 1 )
-				{
-					break; //stuff to be done
-				}
+				break; //There is stuff to be done
 			}
 			else
 			{
-				break; //interrupted or timed out
+				//[yawn,] no need to panic.
+				__int64 nowTime;
+				QueryPerformanceCounter((LARGE_INTEGER*)&nowTime);
+				if( !frequency )
+				{
+					QueryPerformanceFrequency((LARGE_INTEGER*)&frequency);
+				}
+				double time_spent = (double)(nowTime-startTime)/(double)frequency;
+				sleeptime = orgsleeptime - (int)(time_spent*1000.0); //milliseconds
 			}
+		}
+		else if (result == WAIT_OBJECT_0 + 2)
+		{
+			//CarbonIo signal
+			// Depending on this flag, now have carbonIO wake up its tasklets.  Perhaps it
+			// didn't already do so (because it merely scheduled a pending call) so this forces
+			// the issue.
+			// This is the right thing to do, but it is switchable for testing purposes.
+			if( g_carbonIoManualWakeup )
+			{
+				CioWakeupTasklets();
+			}
+			if( PyStackless_GetRunCount() > 1 )
+			{
+				break; //stuff to be done
+			}
+		}
+		else
+		{
+			break; //interrupted or timed out
 		}
 	}
 	ResetEvent( gBreakSleep );
