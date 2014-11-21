@@ -178,6 +178,11 @@ private:
 	bool mInit;	
 	int mSoftspace;			//for python's print statement
 	bool mPackaged;
+
+	BlueScriptCallback m_scatterEvent;
+	BlueScriptCallback m_sendEvent;
+	BlueScriptCallback m_chainEvent;
+
 #if CCP_STACKLESS
 	PyScheduler mScheduler; //to run the watchdog
 

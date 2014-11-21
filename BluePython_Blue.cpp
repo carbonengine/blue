@@ -28,6 +28,28 @@ const Be::ClassInfo* BluePyOS::ExposeToBlue()
 		MAP_ATTRIBUTE( "beNiceSlice", mBeNiceSlice, "Timeslice in ms. (for BeNice yielding.).", Be::READWRITE )
 		MAP_ATTRIBUTE( "packaged", mPackaged, "Is this a packaged client?", Be::READ )
 
+		MAP_ATTRIBUTE
+		(
+			"scatterEvent",
+			m_scatterEvent,
+			"Python callback for scattering events from C++",
+			Be::READWRITE
+		)
+		MAP_ATTRIBUTE
+		(
+			"sendEvent",
+			m_sendEvent,
+			"Python callback for sending events from C++",
+			Be::READWRITE
+		)
+		MAP_ATTRIBUTE
+		(
+			"chainEvent",
+			m_chainEvent,
+			"Python callback for chaining events from C++",
+			Be::READWRITE
+		)
+
 #if CCP_STACKLESS
 		MAP_ATTRIBUTE( "taskletTimer", mTTimer, "the timer for tasklet objects", Be::READ )
 		////////////////////////////////////////////////////////////////////////////

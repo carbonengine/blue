@@ -35,6 +35,7 @@
 #if CCP_STACKLESS
 #include "include/BlueNet.h"
 #include <stacklessio_api.h>
+#include "Include/ScopedBlockTrap.h"
 #endif
 
 IBluePyOS* PyOS = nullptr;
@@ -2140,25 +2141,42 @@ PyObject * BluePyOS::CallMethodWithTrap(PyObject *target, const char *method, co
 //scatter, chain, or send an event to the python service manager as appropriate
 bool BluePyOS::PythonEvent(const char *event, PyObject * arg)
 {
-	BluePy m(PyImport_ImportModule("__builtin__"));
-	if (!m) {
-		PyError();
-		return false;
+	ScopedBlockTrap blockTrap;
+
+	if( strncmp("Do", event, 2) == 0 )
+	{
+		if( m_sendEvent )
+		{
+			return m_sendEvent.CallVoid();
+		}
+		else
+		{
+			CCP_LOGWARN_CH( s_chPy, "PyOS.sendEvent has not been set" );
+		}
 	}
-	BluePy sm(PyObject_GetAttrString(m, "sm"));
-	if (!sm)
-		return true;
-	const char *method = "ScatterEvent";
-	if (!strncmp("Do", event, 2))
-		method = "SendEvent";
-	else if (!strncmp("Process", event, 6))
-		method = "ChainEvent";
-	//call __builtin__.sm.method(event, self)
-	BluePy r(CallMethodWithTrap(sm, method, event /*ctxt*/, "sO", event, arg));
-	if (!r) {
-		PyError();
-		return false;
+	else if ( strncmp("Process", event, 7) == 0 )
+	{
+		if( m_chainEvent )
+		{
+			return m_chainEvent.CallVoid();
+		}
+		else
+		{
+			CCP_LOGWARN_CH( s_chPy, "PyOS.chainEvent has not been set" );
+		}
 	}
+	else
+	{
+		if( m_scatterEvent )
+		{
+			return m_scatterEvent.CallVoid();
+		}
+		else
+		{
+			CCP_LOGWARN_CH( s_chPy, "PyOS.scatterEvent has not been set" );
+		}
+	}
+
 	return true;
 }
 
