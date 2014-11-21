@@ -35,8 +35,9 @@
 #if CCP_STACKLESS
 #include "include/BlueNet.h"
 #include <stacklessio_api.h>
-#include "Include/ScopedBlockTrap.h"
 #endif
+
+#include "Include/ScopedBlockTrap.h"
 
 IBluePyOS* PyOS = nullptr;
 
