@@ -1287,13 +1287,6 @@ Be::Result<std::string> BluePaths::Open( const std::wstring& filename, const std
 
 Be::Result<std::string> BluePaths::GetFileContentsWithYield( const std::wstring& path, IBlueStream** contents )
 {
-#if CCP_STACKLESS
-	if( !PyOS->CanYield() )
-	{
-		CCP_LOGWARN_CH( s_ch, "GetFileContentsWithYield( %S ) will not yield", path.c_str() );
-	}
-#endif
-
 	Be::Result<std::string> result;
 	BackgroundReader* backgroundReader = CCP_NEW( "GetFileContents/reader" ) BackgroundReader( path );
 	if( BlueResManBackgroundCall::Issue( backgroundReader ) )
