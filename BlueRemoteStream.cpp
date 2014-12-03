@@ -43,6 +43,11 @@ public:
 			connection = curl_easy_init();
 			curl_easy_setopt( connection, CURLOPT_FAILONERROR, 1 );
 			curl_easy_setopt( connection, CURLOPT_ACCEPT_ENCODING, "gzip" );
+
+			std::wstring cert_str = BePaths->ResolvePathW(L"bin://cacert.pem");
+			CW2A cert_path( cert_str.c_str() );
+			curl_easy_setopt( connection, CURLOPT_CAINFO, static_cast<const char*>( cert_path ) );
+
 		}
 		else
 		{
@@ -327,21 +332,7 @@ bool BlueRemoteStream::Open( const char* resUrl, size_t expectedSize, const wcha
 
 	CCP_LOG_CH( s_ch, "Opening %S (%s), expected size %d bytes", niceName, resUrl, expectedSize );
 
-	CURL* connection = s_connectionManager.GetConnection();
-
-	curl_easy_setopt( connection, CURLOPT_URL, resUrl );
-	curl_easy_setopt( connection, CURLOPT_WRITEFUNCTION, WriteMemoryCallback );
-	curl_easy_setopt( connection, CURLOPT_WRITEDATA, (void*)this );
-	curl_easy_setopt( connection, CURLOPT_HEADERFUNCTION, WriteHeaderCallback );
-	curl_easy_setopt( connection, CURLOPT_HEADERDATA, (void*)this );
-
-	std::wstring cert_str = BePaths->ResolvePathW(L"bin://cacert.pem");
-	CW2A cert_path( cert_str.c_str() );
-	curl_easy_setopt( connection, CURLOPT_CAINFO, static_cast<const char*>( cert_path ) );
-
-#ifdef _WIN32
-	GetProxySettings( resUrl, connection );
-#endif
+	CURL* connection = PrepareConnection( resUrl );
 
 	if( expectedSize )
 	{
@@ -376,38 +367,25 @@ bool BlueRemoteStream::Open( const char* resUrl, size_t expectedSize, const wcha
 
 	if( res != CURLE_OK )
 	{
-		CCP_LOGERR_CH( s_ch, "curl_easy_perform() failed: %s; %s\n", curl_easy_strerror( res ), m_headers.c_str() );
+		long responseCode = 0;
+		curl_easy_getinfo( connection, CURLINFO_RESPONSE_CODE, &responseCode );
+
+		CCP_LOGERR_CH( s_ch, "curl_easy_perform() failed: %s\nHTTP response code: %d\n%s", 
+			curl_easy_strerror( res ), 
+			responseCode,
+			m_headers.c_str() );
+
+		CCP_FREE( m_data );
+		m_data = nullptr;
+		m_dataSize = 0;
+		m_bufferSize = 0;
+		m_readLocation = nullptr;
 	}
 	else
 	{
 		m_readLocation = m_data;
 
-		double size = 0;
-		curl_easy_getinfo( connection, CURLINFO_SIZE_DOWNLOAD, &size );
-		CCP_STATS_ADD( remoteStreamBytesDownloaded, size );
-
-		double pretransferTime = 0;
-		curl_easy_getinfo( connection, CURLINFO_PRETRANSFER_TIME, &pretransferTime );
-		CCP_STATS_ADD( remoteStreamPretransferTime, pretransferTime * 1000.0 );
-
-		double totalTime = 0;
-		curl_easy_getinfo( connection, CURLINFO_TOTAL_TIME, &totalTime );
-		CCP_STATS_ADD( remoteStreamDownloadTime, totalTime * 1000.0 );
-
-		double speed = 0;
-		curl_easy_getinfo( connection, CURLINFO_SPEED_DOWNLOAD, &speed );
-
-		if( totalTime > 3.0 )
-		{
-			TrimHeaders();
-			CCP_LOGWARN_CH( s_ch, "%S (%s): %g bytes, %g bytes/sec, %g sec pretransfer, %g sec total; %s", 
-				niceName, resUrl, size, speed, pretransferTime, totalTime, m_headers.c_str() );
-		}
-		else
-		{
-			CCP_LOG_CH( s_ch, "%S (%s): %g bytes, %g bytes/sec, %g sec pretransfer, %g sec total", 
-				niceName, resUrl, size, speed, pretransferTime, totalTime );
-		}
+		GatherStats( connection, niceName, resUrl );
 	}
 
 	s_connectionManager.ReleaseConnection( connection );
@@ -618,5 +596,52 @@ void BlueRemoteStream::TrimHeaders()
 	else
 	{
 		m_headers = "no X-Cache header found";
+	}
+}
+
+CURL* BlueRemoteStream::PrepareConnection( const char* resUrl )
+{
+	CURL* connection = s_connectionManager.GetConnection();
+
+	curl_easy_setopt( connection, CURLOPT_URL, resUrl );
+	curl_easy_setopt( connection, CURLOPT_WRITEFUNCTION, WriteMemoryCallback );
+	curl_easy_setopt( connection, CURLOPT_WRITEDATA, (void*)this );
+	curl_easy_setopt( connection, CURLOPT_HEADERFUNCTION, WriteHeaderCallback );
+	curl_easy_setopt( connection, CURLOPT_HEADERDATA, (void*)this );
+
+#ifdef _WIN32
+	GetProxySettings( resUrl, connection );
+#endif
+
+	return connection;
+}
+
+void BlueRemoteStream::GatherStats( CURL* connection, const wchar_t* niceName, const char* resUrl )
+{
+	double size = 0;
+	curl_easy_getinfo( connection, CURLINFO_SIZE_DOWNLOAD, &size );
+	CCP_STATS_ADD( remoteStreamBytesDownloaded, size );
+
+	double pretransferTime = 0;
+	curl_easy_getinfo( connection, CURLINFO_PRETRANSFER_TIME, &pretransferTime );
+	CCP_STATS_ADD( remoteStreamPretransferTime, pretransferTime * 1000.0 );
+
+	double totalTime = 0;
+	curl_easy_getinfo( connection, CURLINFO_TOTAL_TIME, &totalTime );
+	CCP_STATS_ADD( remoteStreamDownloadTime, totalTime * 1000.0 );
+
+	double speed = 0;
+	curl_easy_getinfo( connection, CURLINFO_SPEED_DOWNLOAD, &speed );
+
+	if( totalTime > 3.0 )
+	{
+		TrimHeaders();
+		CCP_LOGWARN_CH( s_ch, "%S (%s): %g bytes, %g bytes/sec, %g sec pretransfer, %g sec total; %s", 
+			niceName, resUrl, size, speed, pretransferTime, totalTime, m_headers.c_str() );
+	}
+	else
+	{
+		CCP_LOG_CH( s_ch, "%S (%s): %g bytes, %g bytes/sec, %g sec pretransfer, %g sec total", 
+			niceName, resUrl, size, speed, pretransferTime, totalTime );
 	}
 }

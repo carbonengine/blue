@@ -24,6 +24,15 @@ const Be::ClassInfo* RemoteFileCache::ExposeToBlue()
 
 		MAP_ATTRIBUTE
 		(
+			"backupServer",
+			m_backupServer,
+			"Backup server (and optionally port) to get files from if the download\n"
+			"fails from the primary server.",
+			Be::READWRITE
+		)
+
+		MAP_ATTRIBUTE
+		(
 			"prefix",
 			m_prefix,
 			"Prefix added to filenames to request from server - defaults to /res/",

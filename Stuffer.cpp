@@ -464,7 +464,7 @@ void StufferNode::AddChildrenToSet( std::set<std::wstring>& dst )
 	for( it = m_children.begin(); it != m_children.end(); ++it )
 	{
 		std::wstring ws( CA2W( it->second.m_name.c_str() ) );
-		dst.insert( ws );
+		dst.insert( SubstituteRedForBlackInFilename( ws ) );
 	}
 }
 #endif

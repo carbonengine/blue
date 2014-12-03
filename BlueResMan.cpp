@@ -1,7 +1,5 @@
 #include "StdAfx.h"
 
-#include "BlueExposure/include/StringConversions.h"
-
 #include "BlueResMan.h"
 #include "CallbackMan.h"
 #include "YamlWriter.h"
@@ -822,16 +820,6 @@ IRoot* BlueResMan::LoadObjectW( const wchar_t* unnormalizedName, Be::LOADOBJECT_
 		return NULL;
 	}
 
-	if( wcscmp( dot, L".blue" ) == 0 )
-	{
-		// We have a '.blue' extension - try to load it as such. The stream itself is
-		// cached so we look for it in the object cache. If it's not there, we open the
-		// stream and insert it to the object cache.
-
-		CCP_LOGERR_CH( s_ch, "%s: .blue files are no longer supported", __FUNCTION__ );
-		return nullptr;
-	}
-	else
 	{
 		// We have a '.red' extension or something else - try to load it as a YAML file.
 		// The YamlReader is cached so we look for one in the object cache. If it's not there,
@@ -839,29 +827,6 @@ IRoot* BlueResMan::LoadObjectW( const wchar_t* unnormalizedName, Be::LOADOBJECT_
 		// object with the reader.
 		bool loadFromBlackFile = false;
 		std::wstring filename = name;
-
-		if( m_substituteBlackForRed )
-		{
-			if( wcscmp( dot, L".red" ) == 0 )
-			{
-				filename.resize( filename.size() - 3 ); // strip off red
-				filename.append( L"black" );
-
-				if( BePaths->FileExistsWithoutSubstitution( filename.c_str() ) )
-				{
-					loadFromBlackFile = true;
-				}
-				else
-				{
-					filename = name;
-				}
-			}
-		}
-
-		if( wcscmp( dot, L".black" ) == 0 )
-		{
-			loadFromBlackFile = true;
-		}
 
 		IBlueObjectBuilderPtr builder;
 		if( m_loadObjectCacheEnabled )
@@ -904,30 +869,36 @@ IRoot* BlueResMan::LoadObjectW( const wchar_t* unnormalizedName, Be::LOADOBJECT_
 
 			IRootReaderPtr reader;
 
-			if( loadFromBlackFile )
+			BlackReaderPtr blackReader;
+			blackReader.CreateInstance();
+
+			CCP_LOG_CH( s_ch, "Reading %S", filename.c_str() );
+			blackReader->SetFileName( filename.c_str() );
+
+			CCP_ASSERT( sourceStream );
+			if( blackReader->ReadForCachingFromStream( sourceStream ) )
 			{
-				BeClasses->CreateInstance( GetBlackReaderClsid(), GetIRootReaderIID(), (void**)&reader );
+				reader = blackReader;
 			}
 			else
 			{
-				BeClasses->CreateInstance( GetYamlReaderClsid(), GetIRootReaderIID(), (void**)&reader );
-			}
+				sourceStream->Seek( 0, ICcpStream::SO_BEGIN );
 
-			if( !reader )
-			{
-				return nullptr;
-			}
+				YamlReaderPtr yamlReader;
+				yamlReader.CreateInstance();
+				yamlReader->SetFileName( filename.c_str() );
 
-			CCP_LOG_CH( s_ch, "Reading %S", filename.c_str() );
-			reader->SetFileName( filename.c_str() );
-
-			CCP_ASSERT( sourceStream );
-			if( !reader->ReadForCachingFromStream( sourceStream ) )
-			{
-				std::string msg;
-				reader->GetErrorMessage( msg );
-				CCP_LOGERR_CH( s_ch, "Error reading %S: %s", filename.c_str(), msg.c_str() );
-				return nullptr;
+				if( yamlReader->ReadForCachingFromStream( sourceStream ) )
+				{
+					reader = yamlReader;
+				}
+				else
+				{
+					std::string msg;
+					yamlReader->GetErrorMessage( msg );
+					CCP_LOGERR_CH( s_ch, "Error reading %S: %s", filename.c_str(), msg.c_str() );
+					return nullptr;
+				}
 			}
 
 			builder = BlueCastPtr( reader );

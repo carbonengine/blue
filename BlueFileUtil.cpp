@@ -11,6 +11,7 @@
 #include <cctype>
 #include <cwctype>
 #include "Include/IBlueOS.h"
+#include "Include/IBluePaths.h"
 
 // --------------------------------------------------------------------------------------
 // Description:
@@ -372,4 +373,37 @@ bool AdjustFilenameForLanguageCode( std::wstring &filenameToOpen, std::wstring &
 
 	return tryLang;
 }
+
+
+std::wstring SubstituteBlackForRedInFilename( const std::wstring& filename )
+{
+	const wchar_t *dot = wcsrchr(filename.c_str(), L'.');
+	if( dot && wcscmp( dot, L".red" ) == 0 )
+	{
+		std::wstring blackFilename = filename;
+		blackFilename.resize( blackFilename.size() - 3 ); // strip off red
+		blackFilename.append( L"black" );
+
+		return blackFilename;
+	}
+
+	return filename;
+}
+
+
+std::wstring SubstituteRedForBlackInFilename( const std::wstring& filename )
+{
+	const wchar_t *dot = wcsrchr(filename.c_str(), L'.');
+	if( dot && wcscmp( dot, L".black" ) == 0 )
+	{
+		std::wstring blackFilename = filename;
+		blackFilename.resize( blackFilename.size() - 5 ); // strip off black
+		blackFilename.append( L"red" );
+
+		return blackFilename;
+	}
+
+	return filename;
+}
+
 

@@ -40,8 +40,6 @@
 #include <frameobject.h>
 #endif
 
-#include "BlueExposure/include/StringConversions.h"
-
 //disable warning about evil use of placement new in class constructors
 #pragma warning( disable : 4291 )
 

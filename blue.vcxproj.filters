@@ -11,6 +11,9 @@
     <ClInclude Include="autoversion.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="BackgroundReader.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
     <ClInclude Include="BlackReader.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -63,6 +66,15 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="BlueResFile2.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BlueResFileSystemLocal.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BlueResFileSystemRemote.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BlueResFileSystemStuff.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="BlueResMan.h">
@@ -257,6 +269,9 @@
     <ClInclude Include="Include\IBluePython.h">
       <Filter>Source Files\Include</Filter>
     </ClInclude>
+    <ClInclude Include="Include\IBlueResFileSystem.h">
+      <Filter>Source Files\Include</Filter>
+    </ClInclude>
     <ClInclude Include="Include\IBlueResMan.h">
       <Filter>Source Files\Include</Filter>
     </ClInclude>
@@ -296,6 +311,9 @@
     <ClInclude Include="..\Logger\LogServer.h">
       <Filter>Source Files\Logger</Filter>
     </ClInclude>
+    <ClCompile Include="BackgroundReader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="Base64.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -408,6 +426,24 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="BlueResFile2_Blue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BlueResFileSystemLocal.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BlueResFileSystemLocal_Blue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BlueResFileSystemRemote.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BlueResFileSystemRemote_Blue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BlueResFileSystemStuff.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BlueResFileSystemStuff_Blue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="BlueResMan.cpp">

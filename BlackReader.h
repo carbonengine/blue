@@ -16,9 +16,7 @@
 #include "include/IMotherLode.h"
 #include "include/ICacheable.h"
 
-BLUE_DECLARE( BlackReader );
-
-class BlackReader :
+BLUE_CLASS( BlackReader ) :
 	public IBlueObjectBuilder,
 	public ICacheable,
 	public IRootReader,

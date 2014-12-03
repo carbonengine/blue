@@ -492,6 +492,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="autoversion.h"/>
+    <ClInclude Include="BackgroundReader.h"/>
     <ClInclude Include="BlackReader.h"/>
     <ClInclude Include="BlackWriter.h"/>
     <ClInclude Include="BlueEventToPython.h"/>
@@ -510,6 +511,9 @@
     <ClInclude Include="BlueRemoteStream.h"/>
     <ClInclude Include="BlueResFile.h"/>
     <ClInclude Include="BlueResFile2.h"/>
+    <ClInclude Include="BlueResFileSystemLocal.h"/>
+    <ClInclude Include="BlueResFileSystemRemote.h"/>
+    <ClInclude Include="BlueResFileSystemStuff.h"/>
     <ClInclude Include="BlueResMan.h"/>
     <ClInclude Include="BlueResManBackgroundCall.h"/>
     <ClInclude Include="BlueStuffFileStream.h"/>
@@ -574,6 +578,7 @@
     <ClInclude Include="Include\IBluePersist.h"/>
     <ClInclude Include="Include\IBluePlacementObserver.h"/>
     <ClInclude Include="Include\IBluePython.h"/>
+    <ClInclude Include="Include\IBlueResFileSystem.h"/>
     <ClInclude Include="Include\IBlueResMan.h"/>
     <ClInclude Include="Include\IBlueResource.h"/>
     <ClInclude Include="Include\ICacheable.h"/>
@@ -589,6 +594,7 @@
     <ClInclude Include="..\Logger\LogServer.h"/>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BackgroundReader.cpp"/>
     <ClCompile Include="Base64.cpp"/>
     <ClCompile Include="BlackReader.cpp"/>
     <ClCompile Include="BlackReader_Blue.cpp"/>
@@ -627,6 +633,12 @@
     <ClCompile Include="BlueRemoteStream_Blue.cpp"/>
     <ClCompile Include="BlueResFile2.cpp"/>
     <ClCompile Include="BlueResFile2_Blue.cpp"/>
+    <ClCompile Include="BlueResFileSystemLocal.cpp"/>
+    <ClCompile Include="BlueResFileSystemLocal_Blue.cpp"/>
+    <ClCompile Include="BlueResFileSystemRemote.cpp"/>
+    <ClCompile Include="BlueResFileSystemRemote_Blue.cpp"/>
+    <ClCompile Include="BlueResFileSystemStuff.cpp"/>
+    <ClCompile Include="BlueResFileSystemStuff_Blue.cpp"/>
     <ClCompile Include="BlueResMan.cpp"/>
     <ClCompile Include="BlueResManBackgroundCall.cpp"/>
     <ClCompile Include="BlueResMan_Blue.cpp"/>

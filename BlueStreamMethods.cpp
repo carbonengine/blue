@@ -34,12 +34,14 @@ public:
 	{
 		THUNKER_BEGIN()
 			MAPPYTHON( Read,	"Read" )
+			MAPPYTHON( read,	"read" )
 			MAPPYTHON( Write,	"Write" )
 			MAPPYTHON( Seek,	"Seek" )
 		THUNKER_END()
 	}
 
 	DECLARE_PYMETHODTHUNK( Read );
+	DECLARE_PYMETHODTHUNK( read );
 	DECLARE_PYMETHODTHUNK( Write );
 	DECLARE_PYMETHODTHUNK( Seek );
 };
@@ -49,6 +51,11 @@ BLUE_REGISTER_THUNKER(IBlueStream_Thunk::Defs(), IBlueStream_Thunk::IID());
 //--------------------------------------------------------------------
 // IBlueStream::Read
 //--------------------------------------------------------------------
+PyObject* IBlueStream_Thunk::Pyread(PyObject* args)
+{
+	return PyRead( args );
+}
+
 PyObject* IBlueStream_Thunk::PyRead(PyObject* args)
 {
 	Py_ssize_t size = -1;

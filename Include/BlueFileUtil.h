@@ -28,5 +28,7 @@ BLUEIMPORT std::wstring ConvertRelativeToAbsolutePath( const wchar_t* path );
 
 bool AdjustFilenameForLanguageCode( std::wstring &filenameToOpen, std::wstring &tmpfilename );
 
+std::wstring SubstituteBlackForRedInFilename( const std::wstring& filename );
+std::wstring SubstituteRedForBlackInFilename( const std::wstring& filename );
 #endif // BlueFileUtil_H
 

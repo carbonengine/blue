@@ -10,6 +10,9 @@
 #define BluePaths_h
 
 #include "include/IBluePaths.h"
+#include "BlueResFileSystemLocal.h"
+#include "BlueResFileSystemRemote.h"
+#include "BlueResFileSystemStuff.h"
 
 BLUE_DECLARE( BluePaths );
 
@@ -23,6 +26,16 @@ public:
 	static bool Initialize();
 
 	void ClearSearchPaths();
+
+	enum BeforeOrAfter
+	{
+		BEFORE,
+		AFTER
+	};
+
+	Be::Result<std::string> RegisterFileSystem( std::string fs, BeforeOrAfter beforeOrAfter );
+	Be::Result<std::string> RegisterFileSystemBeforeLocal( std::string fs );
+	Be::Result<std::string> RegisterFileSystemAfterLocal( std::string fs );
 
 	//////////////////////////////////////////////////////////////////////////
 	// IBluePaths
@@ -50,9 +63,6 @@ public:
 	// Dump current search paths to log
 	virtual void LogPaths();
 
-	// Same as FileExists, but does not attempt black for red substitution.
-	virtual bool FileExistsWithoutSubstitution( const wchar_t* filename );
-
 	virtual bool FileExistsLocally( const wchar_t* filename );
 
 	virtual bool FileNeedsDownload( const wchar_t* filename );
@@ -71,27 +81,17 @@ protected:
 private:
 	bool InitializeHelper();
 
-	// Initial working directory. This is used to resolve relative search paths.
-	std::wstring m_initialWorkingDirectory;
-
-	// Search paths as added to the system
-	typedef TrackableStdHashMap<std::string, std::wstring> SearchPathMap_t;
-	SearchPathMap_t m_searchPaths;
-
-	// Search paths expanded, for quicker resolving of paths
-	typedef TrackableStdHashMap<std::string, std::vector<std::wstring>> ExpandedSearchPathMap_t;
-	ExpandedSearchPathMap_t m_expandedSearchPaths;
-
-	// Helper function to expand search paths - called after any entry is changed
-	void ExpandSearchPaths();
-
-#if BLUE_WITH_PYTHON
-	PyObject* GetAllSearchPathsAsDict();
-	PyObject* GetExpandedSearchPathsAsDict();
-#endif
+	std::map<std::string, std::wstring> GetAllSearchPathsAsDict();
+	std::map<std::string, std::vector<std::wstring>> GetExpandedSearchPathsAsDict();
 
 	std::vector<std::wstring> ListDirFromScript( const std::wstring& dir );
 	Be::Result<std::string> Open( const std::wstring& filename, const std::string& mode, IBlueStream** stream );
+
+	std::wstring GetInitialWorkingDirectory() { return m_localFileSystem->GetInitialWorkingDirectory(); }
+
+	BlueResFileSystemLocalPtr m_localFileSystem;
+
+	std::vector<IBlueResFileSystemPtr> m_resFileSystems;
 };
 
 TYPEDEF_BLUECLASS( BluePaths );

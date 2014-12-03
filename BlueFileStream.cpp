@@ -15,6 +15,7 @@
 #ifdef _WIN32
 #include <io.h>
 #include <fcntl.h>
+#include <sys/stat.h>
 #include <share.h>
 #elif !defined( __ORBIS__ )
 #include <fcntl.h>

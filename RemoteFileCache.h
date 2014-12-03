@@ -36,6 +36,7 @@ public:
 
 private:
 	std::string m_server;
+	std::string m_backupServer;
 	std::string m_prefix;
 	std::wstring m_cacheFolder;
 
@@ -59,6 +60,7 @@ private:
 	uint32_t m_filesUsedFromCache;
 
 	bool m_fullHeaderLogging;
+	bool m_verifyContents;
 
 private:
 	bool SetFileIndexFromStream( IBlueStream* stream );
@@ -70,7 +72,9 @@ private:
 	bool ValidateResPath( const wchar_t* resPath, std::string& validatedPath );
 	Be::Result<std::string> VerifyChecksum( void* data, ssize_t size, const FileInfo &info );
 	void CacheContentsOfRemoteStream( class BlueRemoteStream* stream, const std::wstring& cachedName, const wchar_t* resPath );
-	};
+
+	bool TryDownload( std::string server, std::string filename, BlueRemoteStream* remoteStream, size_t expectedSize, const wchar_t* resPath );
+};
 
 TYPEDEF_BLUECLASS( RemoteFileCache );
 

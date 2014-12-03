@@ -70,21 +70,9 @@ bool ResFile::OpenW( const wchar_t* filename, bool readOnly )
 		}
 	}
 
-#if STUFFER_ENABLED
-	bool tryStuffer = isRes && readOnly; //stuffers are only for readonly
-	if( tryStuffer )
+	if( isRes && readOnly )
 	{
-		if( BeStuffer->GetStream( filenameToOpen.c_str(), &m_stream ) )
-		{
-			return true;
-		}
-	}
-#endif
-
-	if( readOnly )
-	{
-		auto result = BeRemoteFileCache->GetStreamFromPathW( filename, &m_stream );
-		if( Be::IsSuccess( result ) )
+		if( BePaths->GetStreamFromPathW( filenameToOpen.c_str(), &m_stream ) )
 		{
 			return true;
 		}

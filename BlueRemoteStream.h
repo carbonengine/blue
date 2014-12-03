@@ -31,6 +31,7 @@ public:
 	};
 
 	bool Open( const char* filename, size_t expectedSize, const wchar_t* niceName = nullptr );
+
 	bool VerifyContents( const char* expectedChecksum );
 
 	/////////////////////////////////////////
@@ -50,6 +51,10 @@ public:
 private:
 	static size_t WriteMemoryCallback( void* contents, size_t size, size_t nmemb, void* context );
 	static size_t WriteHeaderCallback( void* contents, size_t size, size_t nmemb, void* context );
+
+	CURL* PrepareConnection( const char* resUrl );
+	void GatherStats( CURL* connection, const wchar_t* niceName, const char* resUrl );
+
 	void ReceiveData( void* data, size_t size );
 	void InitializeCurl();
 	void TrimHeaders();

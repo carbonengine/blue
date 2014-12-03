@@ -11,8 +11,6 @@
 
 #include "Blue.h"
 
-#define CCP_MAX_PATH 4096
-
 struct IBlueStream;
 
 BLUE_INTERFACE( IBluePaths ) : public IRoot
@@ -40,9 +38,6 @@ BLUE_INTERFACE( IBluePaths ) : public IRoot
 
 	// Dump current search paths to log
 	virtual void LogPaths() = 0;
-
-	// Same as FileExists, but does not attempt black for red substitution.
-	virtual bool FileExistsWithoutSubstitution( const wchar_t* filename ) = 0;
 
 	// Returns true if the file exists on the local disk (not in stuff files or in the remote file cache).
 	virtual bool FileExistsLocally( const wchar_t* filename ) = 0;

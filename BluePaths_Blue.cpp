@@ -23,12 +23,11 @@ const Be::ClassInfo* BluePaths::ExposeToBlue()
 	EXPOSURE_BEGIN( BluePaths, "BluePaths handles search paths" )
 		MAP_INTERFACE( IBluePaths )
 
-		MAP_ATTRIBUTE
+		MAP_PROPERTY_READONLY
 		(
 			"initialWorkingDirectory",
-			m_initialWorkingDirectory,
-			"The initial working directory, as it was when the module was initialized.",
-			Be::READ
+			GetInitialWorkingDirectory,
+			"The initial working directory, as it was when the module was initialized."
 		)
 		
 		MAP_METHOD_AND_WRAP
@@ -103,7 +102,6 @@ const Be::ClassInfo* BluePaths::ExposeToBlue()
 			"\n   A Blue path based on the given root if a match was found. Otherwise an empty string."
 		)
 
-#if BLUE_WITH_PYTHON
 		MAP_METHOD_AND_WRAP
 		(
 			"GetAllSearchPaths",
@@ -117,7 +115,6 @@ const Be::ClassInfo* BluePaths::ExposeToBlue()
 			GetExpandedSearchPathsAsDict,
 			"Returns all search paths, fully expanded, as a dictionary."
 		)
-#endif
 
 		MAP_METHOD_AND_WRAP
 		(
@@ -159,6 +156,22 @@ const Be::ClassInfo* BluePaths::ExposeToBlue()
 			"FileExistsLocally",
 			FileExistsLocally,
 			"Returns True if the given path exists as a file, cached locally in the case of remote files."
+		)
+
+		MAP_METHOD_AND_WRAP
+		(
+			"RegisterFileSystemBeforeLocal",
+			RegisterFileSystemBeforeLocal,
+			"Registers a file system that is searched before the local file system. Currently available values\n"
+			"are 'Stuff' and 'Remote' (case sensitive)"
+		)
+
+		MAP_METHOD_AND_WRAP
+		(
+			"RegisterFileSystemAfterLocal",
+			RegisterFileSystemAfterLocal,
+			"Registers a file system that is searched after the local file system. Currently available values\n"
+			"are 'Stuff' and 'Remote' (case sensitive)"
 		)
 	EXPOSURE_END()
 }

@@ -18,6 +18,8 @@
 #endif
 
 CCP_STATS_DECLARE( remoteFileCacheGetStream, "Blue/RemoteFileCache/GetStreamFromPathW", false, CST_TIME, "Total time spent in RemoteFileCache::GetStreamFromPathW" );
+CCP_STATS_DECLARE( remoteFileCacheFailedPrimary, "Blue/RemoteFileCache/FailedPrimary", false, CST_COUNTER_LOW, "Count of failed downloads from primary server" );
+CCP_STATS_DECLARE( remoteFileCacheFailedBackup, "Blue/RemoteFileCache/FailedBackup", false, CST_COUNTER_LOW, "Count of failed downloads from backup server" );
 
 namespace
 {
@@ -55,7 +57,8 @@ RemoteFileCache::RemoteFileCache() :
 	m_filesDownloaded( 0 ),
 	m_filesCached( 0 ),
 	m_filesUsedFromCache( 0 ),
-	m_fullHeaderLogging( false )
+	m_fullHeaderLogging( false ),
+	m_verifyContents( false )
 {
 }
 
@@ -129,17 +132,32 @@ Be::Result<std::string> RemoteFileCache::GetStreamFromPathW( const wchar_t* resP
 
 	if( BePaths->FileExistsLocally( cachedName.c_str() ) )
 	{
-		return CreateFileStreamForCachedFile(cachedName, stream);
+		return CreateFileStreamForCachedFile( cachedName, stream );
 	}
 
 	// File does not exist in the cache folder - download and add to cache
-	std::string resUrl = m_server;
-	resUrl += m_prefix;
-	resUrl += CW2A( resId.c_str() );
 
 	BlueRemoteStreamPtr remoteStream;
 	remoteStream.CreateInstance();
-	bool isOK = remoteStream->Open( resUrl.c_str(), static_cast<size_t>( info.size ), resPath );
+
+	size_t expectedSize = static_cast<size_t>( info.size );
+	std::string filename( CW2A( resId.c_str() ) );
+	
+	bool isOK = TryDownload( m_server, filename, remoteStream, expectedSize, resPath);
+	if( !isOK )
+	{
+		CCP_STATS_INC( remoteFileCacheFailedPrimary );
+
+		if( !m_backupServer.empty() )
+		{
+			CCP_LOGERR_CH( s_ch, "Download failed for %S from %s - retrying from backup server", resPath, m_server.c_str() );
+			isOK = TryDownload( m_backupServer, filename, remoteStream, expectedSize, resPath );
+			if( !isOK )
+			{
+				CCP_STATS_INC( remoteFileCacheFailedBackup );
+			}
+		}
+	}
 
 	if( isOK )
 	{
@@ -150,6 +168,14 @@ Be::Result<std::string> RemoteFileCache::GetStreamFromPathW( const wchar_t* resP
 		if( size != info.size )
 		{
 			return Be::Result<std::string>( "Size does not match expected value" );
+		}
+
+		if( m_verifyContents )
+		{
+			if( !remoteStream->VerifyContents( info.checksum.c_str() ) )
+			{
+				return Be::Result<std::string>( "Checksum does not match expected value" );
+			}
 		}
 
 		CacheContentsOfRemoteStream( remoteStream, cachedName, resPath );
@@ -432,4 +458,13 @@ bool RemoteFileCache::SetFileIndexFromStream( IBlueStream* stream )
 	SetFileIndexImpl( contents, size );
 
 	return true;
+}
+
+bool RemoteFileCache::TryDownload( std::string server, std::string filename, BlueRemoteStream* remoteStream, size_t expectedSize, const wchar_t* resPath )
+{
+	std::string resUrl = server;
+	resUrl += m_prefix;
+	resUrl += filename;
+
+	return remoteStream->Open( resUrl.c_str(), expectedSize, resPath );
 }
