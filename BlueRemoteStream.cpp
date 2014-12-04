@@ -26,6 +26,8 @@ CCP_STATS_DECLARE( remoteStreamBytesDownloaded, "Blue/BlueRemoteStream/BytesDown
 CCP_STATS_DECLARE( remoteStreamPretransferTime, "Blue/BlueRemoteStream/PretransferTime", false, CST_COUNTER_HIGH, "Time spent on pre-transfer activities in milliseconds" );
 CCP_STATS_DECLARE( remoteStreamDownloadTime, "Blue/BlueRemoteStream/DownloadTime", false, CST_COUNTER_HIGH, "Total download time in milliseconds" );
 
+double g_thresholdForWarningLongDownloadTime = 3.0;
+
 class ConnectionManager
 {
 public:
@@ -633,7 +635,7 @@ void BlueRemoteStream::GatherStats( CURL* connection, const wchar_t* niceName, c
 	double speed = 0;
 	curl_easy_getinfo( connection, CURLINFO_SPEED_DOWNLOAD, &speed );
 
-	if( totalTime > 3.0 )
+	if( (g_thresholdForWarningLongDownloadTime > 0.0) && (totalTime > g_thresholdForWarningLongDownloadTime) )
 	{
 		TrimHeaders();
 		CCP_LOGWARN_CH( s_ch, "%S (%s): %g bytes, %g bytes/sec, %g sec pretransfer, %g sec total; %s", 

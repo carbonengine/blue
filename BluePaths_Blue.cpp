@@ -173,5 +173,13 @@ const Be::ClassInfo* BluePaths::ExposeToBlue()
 			"Registers a file system that is searched after the local file system. Currently available values\n"
 			"are 'Stuff' and 'Remote' (case sensitive)"
 		)
+
+		MAP_PROPERTY
+		(
+			"thresholdForWarningLongDownloads",
+			GetThresholdForWarningLongDownloadTime, SetThresholdForWarningLongDownloadTime,
+			"Threshold (in seconds) for issuing warnings on long downloads. Set to zero to disable warnings altogether."
+		)
+
 	EXPOSURE_END()
 }
