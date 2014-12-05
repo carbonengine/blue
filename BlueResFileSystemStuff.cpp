@@ -59,7 +59,7 @@ void BlueResFileSystemStuff::GetDirectoryContents( const wchar_t* dir, std::set<
 bool BlueResFileSystemStuff::GetStreamFromPathW( const wchar_t* resPath, IBlueStream** stream )
 {
 #if STUFFER_ENABLED
-	if( BeStuffer->GetStream( resPath, stream ) )
+	if( BeStuffer->GetStream( SubstituteBlackForRedInFilename( resPath ).c_str(), stream ) )
 	{
 		return true;
 	}
