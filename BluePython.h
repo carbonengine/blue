@@ -395,6 +395,44 @@ static PyObject* PyCrashHorribly( PyObject* module, PyObject* args )
 }
 MAP_FUNCTION( "CrashHorribly", PyCrashHorribly, "CrashHorribly( bool reallyCrash )\nCrashes Blue. Pass in True if you really want to crash.\n Intended for testing crashdumps etc." );
 
+namespace
+{
+
+class PureVirtualCallHelperBase
+{
+public:
+    PureVirtualCallHelperBase()
+	{
+		helper();
+	}
+protected:
+    virtual void virtualFunc() = 0;
+    void helper()
+	{
+		this->virtualFunc();
+	}
+};
+
+class PureVirtualCallHelper: public PureVirtualCallHelperBase
+{
+protected:
+	virtual void virtualFunc()
+	{
+	}
+};
+
+}
+
+// For testing crashdumps
+static PyObject* PyPureVirtualCall( PyObject* module, PyObject* args )
+{
+	CCP_LOGERR( "About to make a pure virtual call." );
+
+	PureVirtualCallHelper pureVirtualCallHelper;
+	Py_RETURN_NONE;
+}
+MAP_FUNCTION( "PureVirtualCall", PyPureVirtualCall, "PureVirtualCall()\nInduces a C++ pure virtual call that is supposed to crash the process." );
+
 
 // Callbacks for python to call when it starts and stops GC
 extern "C" {
