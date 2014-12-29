@@ -1375,7 +1375,8 @@ void YamlReader::ReadStructureList( IBlueStructureList* structureList )
 	}
 
 
-	CcpMallocBuffer item( "item", structureList->GetStructureSize() );
+	auto structureSize = structureList->GetStructureSize();
+	CcpMallocBuffer item( "item", structureSize );
 
 	if( ReadVectorBegin() )
 	{
@@ -1383,6 +1384,9 @@ void YamlReader::ReadStructureList( IBlueStructureList* structureList )
 		{
 			ReadVectorBegin();
 			ReadVectorNext();
+
+			// Make sure any padding in the structure doesn't retain random contents.
+			memset( item.get(), 0, structureSize );
 
 			BlueStructureDefinition* memberDef = sdFromList;
 			while( memberDef->m_name )
