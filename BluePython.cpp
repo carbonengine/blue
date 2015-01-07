@@ -2148,7 +2148,7 @@ bool BluePyOS::PythonEvent(const char *event, PyObject * arg)
 	{
 		if( m_sendEvent )
 		{
-			return m_sendEvent.CallVoid();
+			return m_sendEvent.CallVoid( event, arg );
 		}
 		else
 		{
@@ -2159,7 +2159,7 @@ bool BluePyOS::PythonEvent(const char *event, PyObject * arg)
 	{
 		if( m_chainEvent )
 		{
-			return m_chainEvent.CallVoid();
+			return m_chainEvent.CallVoid( event, arg );
 		}
 		else
 		{
@@ -2170,7 +2170,7 @@ bool BluePyOS::PythonEvent(const char *event, PyObject * arg)
 	{
 		if( m_scatterEvent )
 		{
-			return m_scatterEvent.CallVoid();
+			return m_scatterEvent.CallVoid( event, arg );
 		}
 		else
 		{
