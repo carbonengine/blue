@@ -297,11 +297,12 @@ void BlueStatistics::UpdateTelemetry()
 		s_isTelemetryConnected = CcpStartTelemetry( s_telemetryServerOrFileSystemDumpPath.c_str(), s_telemetryBufferSize, s_telemetryConnectionType );
 		s_isTelemetryConnectionRequested = false;
 		s_telemetryLastCheckTime = s_telemetryStartTime = BeOS->GetActualTime();
+		return;
 	}
 
 	if( g_telemetryContext )
 	{
-		tmTick( g_telemetryContext );
+		CcpTelemetryTick();
 
 		if( s_isTelemetryShuttingDown )
 		{
