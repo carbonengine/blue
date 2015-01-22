@@ -197,9 +197,28 @@ bool BluePaths::GetStreamFromPathW( const wchar_t* path, IBlueStream** stream )
 
 	Be::Result<std::string> result;
 
+	bool isRes = !wcsncmp(path, L"res:", 4);
+
+	std::wstring filenameToOpen = path;
+	std::wstring languageSpecificFilename = path;
+
+	bool tryLang = false; //no separate language try
+	if( isRes )
+	{
+		tryLang = AdjustFilenameForLanguageCode( filenameToOpen, languageSpecificFilename );
+	}
+
+	if( tryLang )
+	{
+		if( BePaths->FileExists( languageSpecificFilename ) )
+		{
+			filenameToOpen = languageSpecificFilename;
+		}
+	}
+
 	for( auto it = m_resFileSystems.begin(); it != m_resFileSystems.end(); ++it )
 	{
-		if( (*it)->GetStreamFromPathW( path, stream ) )
+		if( (*it)->GetStreamFromPathW( filenameToOpen.c_str(), stream ) )
 		{
 			return true;
 		}

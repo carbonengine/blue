@@ -51,34 +51,15 @@ bool ResFile::OpenW( const wchar_t* filename, bool readOnly )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	bool isRes = !wcsncmp(filename, L"res:", 4);
-
-	std::wstring filenameToOpen = filename;
-	std::wstring languageSpecificFilename = filename;
-
-	bool tryLang = false; //no separate language try
-	if( isRes )
+	if( readOnly )
 	{
-		tryLang = AdjustFilenameForLanguageCode( filenameToOpen, languageSpecificFilename );
-	}
-
-	if( tryLang )
-	{
-		if( BePaths->FileExists( languageSpecificFilename ) )
-		{
-			filenameToOpen = languageSpecificFilename;
-		}
-	}
-
-	if( isRes && readOnly )
-	{
-		if( BePaths->GetStreamFromPathW( filenameToOpen.c_str(), &m_stream ) )
+		if( BePaths->GetStreamFromPathW( filename, &m_stream ) )
 		{
 			return true;
 		}
 	}
 
-	std::wstring filenameOnDisk = BePaths->ResolvePathW( filenameToOpen );
+	std::wstring filenameOnDisk = BePaths->ResolvePathW( filename );
 
 	BlueFileStreamPtr fileStream;
 	fileStream.CreateInstance();

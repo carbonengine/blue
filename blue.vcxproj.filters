@@ -89,6 +89,9 @@
     <ClInclude Include="BlueTestHelpers.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="BlueTextResource.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
     <ClInclude Include="BlueTime.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -474,6 +477,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="BlueTestHelpers_Blue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BlueTextResource.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BlueTextResource_Blue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="BlueTime.cpp">
