@@ -19,12 +19,13 @@
 #include <winhttp.h>
 #endif
 #include "include/IBlueResMan.h"
+#include "Include/IBlueThreadMonitor.h"
 
 static CcpLogChannel_t s_ch = CCP_LOG_DEFINE_CHANNEL( "RemoteStream" );
 
 CCP_STATS_DECLARE( remoteStreamBytesDownloaded, "Blue/BlueRemoteStream/BytesDownloaded", false, CST_COUNTER_HIGH, "Number of bytes downloaded from remote server" );
-CCP_STATS_DECLARE( remoteStreamPretransferTime, "Blue/BlueRemoteStream/PretransferTime", false, CST_COUNTER_HIGH, "Time spent on pre-transfer activities in milliseconds" );
-CCP_STATS_DECLARE( remoteStreamDownloadTime, "Blue/BlueRemoteStream/DownloadTime", false, CST_COUNTER_HIGH, "Total download time in milliseconds" );
+CCP_STATS_DECLARE( remoteStreamPretransferTime, "Blue/BlueRemoteStream/PretransferTime", false, CST_TIME, "Time spent on pre-transfer activities in milliseconds" );
+CCP_STATS_DECLARE( remoteStreamDownloadTime, "Blue/BlueRemoteStream/DownloadTime", false, CST_TIME, "Total download time in milliseconds" );
 
 double g_thresholdForWarningLongDownloadTime = 3.0;
 
@@ -321,6 +322,8 @@ bool BlueRemoteStream::Open( const char* resUrl, size_t expectedSize, const wcha
 #if CCP_STACKLESS
 	Ccp::PyAllowThreads allowThreads( true );
 #endif
+
+	ScopedThreadStatus threadStatus( IBlueThreadMonitor::BTS_DOWNLOADING );
 
 	if( niceName == nullptr )
 	{
@@ -626,11 +629,11 @@ void BlueRemoteStream::GatherStats( CURL* connection, const wchar_t* niceName, c
 
 	double pretransferTime = 0;
 	curl_easy_getinfo( connection, CURLINFO_PRETRANSFER_TIME, &pretransferTime );
-	CCP_STATS_ADD( remoteStreamPretransferTime, pretransferTime * 1000.0 );
+	CCP_STATS_ADD( remoteStreamPretransferTime, pretransferTime * 1000000.0 );
 
 	double totalTime = 0;
 	curl_easy_getinfo( connection, CURLINFO_TOTAL_TIME, &totalTime );
-	CCP_STATS_ADD( remoteStreamDownloadTime, totalTime * 1000.0 );
+	CCP_STATS_ADD( remoteStreamDownloadTime, totalTime * 1000000.0 );
 
 	double speed = 0;
 	curl_easy_getinfo( connection, CURLINFO_SPEED_DOWNLOAD, &speed );

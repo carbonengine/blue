@@ -92,6 +92,9 @@
     <ClInclude Include="BlueTextResource.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="BlueThreadMonitor.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
     <ClInclude Include="BlueTime.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -279,6 +282,9 @@
       <Filter>Source Files\Include</Filter>
     </ClInclude>
     <ClInclude Include="Include\IBlueResource.h">
+      <Filter>Source Files\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\IBlueThreadMonitor.h">
       <Filter>Source Files\Include</Filter>
     </ClInclude>
     <ClInclude Include="Include\ICacheable.h">
@@ -483,6 +489,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="BlueTextResource_Blue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BlueThreadMonitor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BlueThreadMonitor_Blue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="BlueTime.cpp">

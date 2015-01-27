@@ -2,6 +2,7 @@
 
 #include "CallbackMan.h"
 #include "CcpCore/include/CcpTime.h"
+#include "Include/IBlueThreadMonitor.h"
 
 static CcpLogChannel_t s_ch = CCP_LOG_DEFINE_CHANNEL( "CallbackMan" );
 
@@ -313,6 +314,8 @@ bool BlueCallbackMan::Update()
 bool BlueCallbackMan::UpdateThread( struct ThreadData* td )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
+
+	ScopedThreadStatus threadStatus( IBlueThreadMonitor::BTS_WORKING );
 
 	BeTimer timeToGetQueue;
 

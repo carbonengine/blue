@@ -29,6 +29,7 @@
 #else
 #define STACKLESS_ALLOWTHREADS()
 #endif
+#include "Include/IBlueThreadMonitor.h"
 
 CCP_STATS_DECLARE( fileStreamBytesRead, "Blue/BlueFileStream/BytesRead", false, CST_COUNTER_HIGH, "Number of bytes read from local files using BlueFileStream" );
 CCP_STATS_DECLARE( fileStreamBytesWritten, "Blue/BlueFileStream/BytesWritten", false, CST_COUNTER_HIGH, "Number of bytes written from local files using BlueFileStream" );
@@ -330,6 +331,8 @@ bool BlueFileStream::Open( const wchar_t* filename, OpenMode mode, ShareMode sha
 {
 	STACKLESS_ALLOWTHREADS();
 
+	ScopedThreadStatus threadStatus( IBlueThreadMonitor::BTS_LOADING );
+
 	m_fileDescriptor = OpenFile( filename, mode, shareMode );
 
 	if( m_fileDescriptor == INVALID_FILE )
@@ -372,6 +375,8 @@ ptrdiff_t BlueFileStream::Read( void* dest, ptrdiff_t count )
 	CCP_STATS_ZONE( __FUNCTION__ );
 
 	STACKLESS_ALLOWTHREADS();
+
+	ScopedThreadStatus threadStatus( IBlueThreadMonitor::BTS_LOADING );
 
 	if( count == -1 )
 	{

@@ -17,7 +17,8 @@
 #include <errno.h>
 #endif
 
-CCP_STATS_DECLARE( remoteFileCacheGetStream, "Blue/RemoteFileCache/GetStreamFromPathW", false, CST_TIME, "Total time spent in RemoteFileCache::GetStreamFromPathW" );
+CCP_STATS_DECLARE( remoteFileCacheGetStream, "Blue/RemoteFileCache/GetStreamFromPath", false, CST_TIME, "Total time spent in RemoteFileCache::GetStreamFromPathW" );
+CCP_STATS_DECLARE( remoteFileCacheGetStreamCount, "Blue/RemoteFileCache/GetStreamFromPathCount", false, CST_COUNTER_LOW, "Number of calls to RemoteFileCache::GetStreamFromPathW" );
 CCP_STATS_DECLARE( remoteFileCacheFailedPrimary, "Blue/RemoteFileCache/FailedPrimary", false, CST_COUNTER_LOW, "Count of failed downloads from primary server" );
 CCP_STATS_DECLARE( remoteFileCacheFailedBackup, "Blue/RemoteFileCache/FailedBackup", false, CST_COUNTER_LOW, "Count of failed downloads from backup server" );
 
@@ -115,6 +116,7 @@ void RemoteFileCache::SetCacheFolder( const wchar_t* folderName )
 Be::Result<std::string> RemoteFileCache::GetStreamFromPathW( const wchar_t* resPath, IBlueStream** stream )
 {
 	CCP_STATS_SCOPED_TIME( remoteFileCacheGetStream );
+	CCP_STATS_INC( remoteFileCacheGetStreamCount );
 
 	*stream = nullptr;
 

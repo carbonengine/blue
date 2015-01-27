@@ -3,6 +3,7 @@
 #include "include/BlueAsyncRes.h"
 #include "include/IBlueResMan.h"
 #include "Include/IBluePaths.h"
+#include "Include/IBlueThreadMonitor.h"
 
 #define ASYNCLOADEDRESOURCE_DEBUGGING 0
 #if ASYNCLOADEDRESOURCE_DEBUGGING
@@ -73,6 +74,8 @@ void BlueAsyncRes::StaticLoadAsync(void *pContext)
 void BlueAsyncRes::LoadAsync()
 {
 	CCP_STATS_ZONE( "BlueAsyncRes/LoadAsync" );
+
+	ScopedThreadStatus threadStatus( IBlueThreadMonitor::BTS_WORKING );
 
 	BeTimer t;
 

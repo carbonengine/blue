@@ -14,7 +14,7 @@
 #include "Stuffer.h"
 #include "RemoteFileCache.h"
 #include "BluePaths.h"
-
+#include "BlueThreadMonitor.h"
 
 #include "curl/curl.h"
 
@@ -23,13 +23,16 @@ RemoteFileCache* BeRemoteFileCache = nullptr;
 BLUE_REGISTER_GLOBAL_AS_MODULE_OBJECT( "remoteFileCache", BeRemoteFileCache );
 
 static CBlueResMan s_resourceManagerInstance;
+static CBlueThreadMonitor s_threadMonitorInstance;
 
 IBlueCallbackMan* BeCallbackMan = nullptr;
 IBlueResMan* BeResMan = nullptr;
 IBlueObjectRecycler* BeRecycler = nullptr;
+IBlueThreadMonitor* BeThreadMonitor = nullptr;
 
 BLUE_REGISTER_GLOBAL_AS_MODULE_OBJECT( "resMan", BeResMan );
 BLUE_REGISTER_GLOBAL_AS_MODULE_OBJECT( "recycler", BeRecycler );
+BLUE_REGISTER_GLOBAL_AS_MODULE_OBJECT( "threadMonitor", BeThreadMonitor );
 
 namespace
 {
@@ -71,6 +74,8 @@ unsigned int GetDefaultThreadCount()
 
 BLUEIMPORT bool BlueInitializeResourceLoading()
 {
+	BeThreadMonitor = &s_threadMonitorInstance;
+
 	unsigned int threadCount = GetStartupArgAsInt( L"resManThreadCount" );
 
 	if( threadCount == 0 )

@@ -519,6 +519,7 @@
     <ClInclude Include="BlueStuffFileStream.h"/>
     <ClInclude Include="BlueTestHelpers.h"/>
     <ClInclude Include="BlueTextResource.h"/>
+    <ClInclude Include="BlueThreadMonitor.h"/>
     <ClInclude Include="BlueTime.h"/>
     <ClInclude Include="BlueTimeoutHandler.h"/>
     <ClInclude Include="CallbackMan.h"/>
@@ -582,6 +583,7 @@
     <ClInclude Include="Include\IBlueResFileSystem.h"/>
     <ClInclude Include="Include\IBlueResMan.h"/>
     <ClInclude Include="Include\IBlueResource.h"/>
+    <ClInclude Include="Include\IBlueThreadMonitor.h"/>
     <ClInclude Include="Include\ICacheable.h"/>
     <ClInclude Include="Include\ICcpStatisticsAccumulator.h"/>
     <ClInclude Include="Include\IMotherLode.h"/>
@@ -652,6 +654,8 @@
     <ClCompile Include="BlueTestHelpers_Blue.cpp"/>
     <ClCompile Include="BlueTextResource.cpp"/>
     <ClCompile Include="BlueTextResource_Blue.cpp"/>
+    <ClCompile Include="BlueThreadMonitor.cpp"/>
+    <ClCompile Include="BlueThreadMonitor_Blue.cpp"/>
     <ClCompile Include="BlueTime.cpp"/>
     <ClCompile Include="BlueTimeoutHandler.cpp"/>
     <ClCompile Include="BreakInDebugger.cpp"/>
