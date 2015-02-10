@@ -77,8 +77,8 @@ public:
 	void StartTelemetry( const std::string& server );
 
 	// Following functions are typically used from ESP for server profiling.
-	void StartTimedTelemetry( const std::string& server, int samplePeriod );
-	void StartTelemetryDump( const std::string& dumpFolder, int samplePeriod );
+	void StartTimedTelemetry( const std::string& server, float samplePeriod );
+	void StartTelemetryDump( const std::string& dumpFolder, float samplePeriod );
 
 	void PauseTelemetry();
 	void ResumeTelemetry();

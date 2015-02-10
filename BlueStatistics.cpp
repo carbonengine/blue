@@ -201,7 +201,7 @@ void BlueStatistics::StartTelemetry( const std::string& server )
 	StartTimedTelemetry( server, 0 );
 }
 
-void BlueStatistics::StartTimedTelemetry( const std::string& server, int samplePeriod )
+void BlueStatistics::StartTimedTelemetry( const std::string& server, float samplePeriod )
 {
 #if CCP_TELEMETRY_ENABLED
 	if( s_isTelemetryConnected )
@@ -218,7 +218,7 @@ void BlueStatistics::StartTimedTelemetry( const std::string& server, int sampleP
 #endif
 }
 
-void BlueStatistics::StartTelemetryDump( const std::string& dumpFolder, int samplePeriod )
+void BlueStatistics::StartTelemetryDump( const std::string& dumpFolder, float samplePeriod )
 {
 #if CCP_TELEMETRY_ENABLED
 	if( s_isTelemetryConnected )
