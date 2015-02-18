@@ -178,22 +178,6 @@ const Be::ClassInfo* BlueResMan::ExposeToBlue()
 	EXPOSURE_BEGIN( BlueResMan, "" )
 		MAP_INTERFACE( IBlueResMan )
 
-		MAP_PROPERTY
-		(
-			"substituteBlackForRed",
-			GetSubstituteBlackForRed, SetSubstituteBlackForRed,
-			"If set, then calls to LoadObject attempt to load from black files when red files are\n"
-			"requested. If no black file exists, the red file is loaded."
-		)
-
-		MAP_ATTRIBUTE
-		(
-			"loadObjectPreloadFiles",
-			m_loadObjectPreloadFiles,
-			"If set, then files are preloaded and tasklet yields while file read takes place.",
-			Be::READWRITE
-		)
-
 		MAP_ATTRIBUTE
 		(
 			"loadObjectCacheEnabled",
@@ -421,10 +405,6 @@ const Be::ClassInfo* BlueResMan::ExposeToBlue()
 			"Waits for currently scheduled urgent resource loads to finish"
 		)
 
-#if BLUE_WITH_PYTHON
-		MAP_METHOD_AND_WRAP( "QueueCallbackForResourceLoads", QueueCallbackForResourceLoads, "Schedule a callback that is issued once currently queued resource loads have finished" )
-		MAP_METHOD_AND_WRAP( "QueueCallbackForUrgentResourceLoads", QueueCallbackForUrgentResourceLoads, "Schedule a callback that is issued once currently queued urgent resource loads have finished" )
-#endif
 		MAP_METHOD_AND_WRAP( "SetUrgentResourceLoads", SetUrgentResourceLoads, "Enables (or disables) urgent resource loads" )
 		MAP_METHOD_AND_WRAP( "ResetQueueStats", ResetQueueStats, "Resets stats for load and prep queues" )
 

@@ -1160,11 +1160,6 @@ bool BlueOS::Startup( short interfaceVersion, int pyOptimizeFlag )
 	{
 		TASKLETS[i].mContext = PyString_InternFromString(TASKLETS[i].mName);
 	}
-
-	if( PyOS->IsPackaged() )
-	{
-		BeResMan->SetSubstituteBlackForRed( true );
-	}
 #endif
 
 	return true;

@@ -98,11 +98,6 @@ BLUE_INTERFACE( IBlueResMan ) : public IRoot
 	virtual void SetUrgentResourceLoads( bool b ) = 0;
 	virtual bool IsUrgentResourceLoads() = 0;
 
-#if BLUE_WITH_PYTHON
-	virtual void QueueCallbackForResourceLoads( PyObject* cb, PyObject* args ) = 0;
-	virtual void QueueCallbackForUrgentResourceLoads( PyObject* cb, PyObject* args ) = 0;
-#endif
-
 	// Notify manager of memory use. This function blocks if reserved memory exceeds
 	// limits - other threads must release memory before calling thread is allowed
 	// to continue.
@@ -111,10 +106,6 @@ BLUE_INTERFACE( IBlueResMan ) : public IRoot
 
 	virtual unsigned int GetPendingLoads() const = 0;
 	virtual unsigned int GetPendingPrepares() const = 0;
-
-	virtual bool GetSubstituteBlackForRed() const = 0;
-	virtual void SetSubstituteBlackForRed( bool val ) = 0;
-
 };
 
 extern BLUEIMPORT IBlueResMan* BeResMan;

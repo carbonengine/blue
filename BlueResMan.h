@@ -85,11 +85,6 @@ public:
 	void SetUrgentResourceLoads( bool b );
 	bool IsUrgentResourceLoads();
 
-#if BLUE_WITH_PYTHON
-	void QueueCallbackForResourceLoads( PyObject* cb, PyObject* args );
-	void QueueCallbackForUrgentResourceLoads( PyObject* cb, PyObject* args );
-#endif
-
 	// Notify manager of memory use. This function blocks if reserved memory exceeds
 	// limits - other threads must release memory before calling thread is allowed
 	// to continue.
@@ -98,9 +93,6 @@ public:
 
 	unsigned int GetPendingLoads() const;
 	unsigned int GetPendingPrepares() const;
-
-	bool GetSubstituteBlackForRed() const;
-	void SetSubstituteBlackForRed( bool val );
 
 	void SetLoadingThreadPriority( int prio );
 
@@ -119,9 +111,6 @@ private:
 
 	IBlueResource* GetResourceHelper( const std::wstring& path, const std::wstring& ex, IBlueResManNotifications* notifications = nullptr );
 
-	// If set, LoadObject attempts to load from a black file whenever red files are requested
-	bool m_substituteBlackForRed;
-
 	// If set, objects are looked up in the loadObject cache before reading from disk.
 	// This is the default - can be disabled to simplify content generators lives.
 	bool m_loadObjectCacheEnabled;
@@ -131,9 +120,6 @@ private:
 
 	// Time slice for LoadObject
 	float m_loadObjectTimeSlice;
-
-	// Should files be preloaded?
-	bool m_loadObjectPreloadFiles;
 
 	bool m_urgentResourceLoads;
 

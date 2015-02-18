@@ -63,9 +63,7 @@ void BLUEIMPORT BlueResManRegisterFileExtension( const wchar_t* ext, BlueResManC
 }
 
 BlueResMan::BlueResMan( IRoot* lockobj ) :
-	m_substituteBlackForRed( false ),
 	PARENTLOCK( m_loadObjectCache ),
-	m_loadObjectPreloadFiles( true ),
 	m_loadObjectCacheEnabled( true ),
 	m_loadObjectTimeSlice( 0.005f ),
 	m_urgentResourceLoads( false ),
@@ -530,89 +528,6 @@ bool BlueResMan::IsUrgentResourceLoads()
 	return m_urgentResourceLoads;
 }
 
-#if BLUE_WITH_PYTHON
-class PyFunctionCallback
-{
-public:
-	PyFunctionCallback( PyObject* cb, PyObject* args, bool isUrgent ) : m_callback( cb ), m_args( args ), m_isUrgent( isUrgent )
-	{
-	}
-
-	static void PassThroughLoadQueue( void* context )
-	{
-		PyFunctionCallback* pThis = static_cast<PyFunctionCallback*>( context );
-		uint32_t flags = IBlueCallbackMan::BCBF_NONE;
-		if( pThis->m_isUrgent )
-		{
-			flags |= IBlueCallbackMan::BCBF_URGENT;
-		}
-		BeResMan->AddToQueue( BRMQ_MAIN, PyFunctionCallback::Handle, context, flags, NULL );
-	}
-
-	static void Handle( void* context )
-	{
-		PyFunctionCallback* pThis = static_cast<PyFunctionCallback*>( context );
-		pThis->DoIt();
-	}
-
-	void DoIt()
-	{
-		if( !m_callback )
-		{
-			return;
-		}
-
-		PyObject* ret = PyObject_CallFunction( m_callback, const_cast<char*>("O"), m_args );
-		if( !ret )
-		{
-			PyOS->PyFlushError( "Resource load callback failed!" );
-		}
-		else
-		{
-			Py_XDECREF( ret );
-		}
-
-		Py_DECREF( m_callback );
-		Py_DECREF( m_args );
-
-		CCP_DELETE this;
-	}
-
-	PyObject* m_callback;
-	PyObject* m_args;
-	bool m_isUrgent;
-};
-
-void BlueResMan::QueueCallbackForResourceLoads( PyObject* cb, PyObject* args )
-{
-	Py_INCREF( cb );
-	Py_INCREF( args );
-	PyFunctionCallback* context = CCP_NEW( "BlueResMan::QueueCallbackForResourceLoads/context" ) PyFunctionCallback( cb, args, false );
-	m_threadQueues[BRMQ_BACKGROUND]->Add( PyFunctionCallback::PassThroughLoadQueue, context, 0, NULL );
-}
-
-static PyObject* PyQueueCallbackForResourceLoads( PyObject* self, PyObject *args )
-{
-	PyObject* obj;
-	PyObject* context;
-	if( !PyArg_ParseTuple( args, "OO", &obj, &context ) )
-	{
-		return NULL;
-	}
-
-	BeResMan->QueueCallbackForResourceLoads( obj, context );
-
-	Py_INCREF( Py_None );
-	return Py_None;
-}
-
-void BlueResMan::QueueCallbackForUrgentResourceLoads( PyObject* cb, PyObject* args )
-{
-	PyFunctionCallback* context = CCP_NEW( "BlueResMan::QueueCallbackForUrgentResourceLoads/context" ) PyFunctionCallback( cb, args, true );
-	m_threadQueues[BRMQ_BACKGROUND]->Add( PyFunctionCallback::PassThroughLoadQueue, context, IBlueCallbackMan::BCBF_URGENT, NULL );
-}
-#endif
-
 void BlueResMan::ResetQueueStats()
 {
 	m_threadQueues[BRMQ_BACKGROUND]->ResetQueueStats();
@@ -646,21 +561,6 @@ void BlueResMan::SetLoadingThreadCount( int n )
 }
 
 #if BLUE_WITH_PYTHON
-static PyObject* PyQueueCallbackForUrgentResourceLoads( PyObject* self, PyObject *args )
-{
-	PyObject* obj;
-	PyObject* context;
-	if( !PyArg_ParseTuple( args, "OO", &obj, &context ) )
-	{
-		return NULL;
-	}
-
-	BeResMan->QueueCallbackForUrgentResourceLoads( obj, context );
-
-	Py_INCREF( Py_None );
-	return Py_None;
-}
-
 static PyObject* PySetUrgentResourceLoads( PyObject* self, PyObject* args )
 {
 	bool isUrgent;
@@ -1008,20 +908,6 @@ bool BlueResMan::SaveObjectW( IRoot* obj, const wchar_t* name )
 
 	CCP_DELETE w;
 	return Be::IsSuccess( result );
-}
-
-bool BlueResMan::GetSubstituteBlackForRed() const
-{
-	return m_substituteBlackForRed;
-}
-
-void BlueResMan::SetSubstituteBlackForRed( bool val )
-{
-	if( val != m_substituteBlackForRed )
-	{
-		m_substituteBlackForRed = val;
-		m_loadObjectCache.Clear();
-	}
 }
 
 Be::Result<std::string> BlueResMan::GetResourceFromScript( const std::wstring& path, const std::wstring& ex, IRoot** resource )
