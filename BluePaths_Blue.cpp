@@ -137,10 +137,11 @@ const Be::ClassInfo* BluePaths::ExposeToBlue()
 			"Returns True if the given path exists as a file, otherwise False."
 		)
 
-		MAP_METHOD_AND_WRAP
+		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS
 		(
 			"open",
 			Open,
+			1,
 			"Opens the given file. Raises a RuntimeError if it fails to open."
 		)
 

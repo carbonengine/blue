@@ -36,14 +36,18 @@ public:
 			MAPPYTHON( Read,	"Read" )
 			MAPPYTHON( read,	"read" )
 			MAPPYTHON( Write,	"Write" )
+			MAPPYTHON( write,	"write" )
 			MAPPYTHON( Seek,	"Seek" )
+			MAPPYTHON( seek,	"seek" )
 		THUNKER_END()
 	}
 
 	DECLARE_PYMETHODTHUNK( Read );
 	DECLARE_PYMETHODTHUNK( read );
 	DECLARE_PYMETHODTHUNK( Write );
+	DECLARE_PYMETHODTHUNK( write );
 	DECLARE_PYMETHODTHUNK( Seek );
+	DECLARE_PYMETHODTHUNK( seek );
 };
 
 BLUE_REGISTER_THUNKER(IBlueStream_Thunk::Defs(), IBlueStream_Thunk::IID());
@@ -88,6 +92,11 @@ PyObject* IBlueStream_Thunk::PyRead(PyObject* args)
 //--------------------------------------------------------------------
 // IBlueStream::Write
 //--------------------------------------------------------------------
+PyObject* IBlueStream_Thunk::Pywrite(PyObject* args)
+{
+	return PyWrite( args );
+}
+
 PyObject* IBlueStream_Thunk::PyWrite(PyObject* args)
 {
 	PyObject* pyobj;
@@ -134,18 +143,25 @@ PyObject* IBlueStream_Thunk::PyWrite(PyObject* args)
 //--------------------------------------------------------------------
 // IBlueStream::Seek
 //--------------------------------------------------------------------
+PyObject* IBlueStream_Thunk::Pyseek(PyObject* args)
+{
+	return PySeek( args );
+}
+
 PyObject* IBlueStream_Thunk::PySeek(PyObject* args)
 {
 	int pos;
+	int whence = 0;
 
-	if (!PyArg_ParseTuple(args, "i", &pos))
-		return NULL;
+	if( !PyArg_ParseTuple( args, "i|i", &pos, &whence ) )
+	{
+		return nullptr;
+	}
 
-	//if (!IsOpen())
-	//	return NULL;
-
-	if (Seek(pos, SO_BEGIN) == -1)
-		return NULL;
+	if( Seek( pos, (IBlueStream::SeekOrigin)whence ) == -1 )
+	{
+		return nullptr;
+	}
 
 	Py_INCREF(Py_None);
 	return Py_None;

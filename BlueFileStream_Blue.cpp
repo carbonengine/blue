@@ -37,5 +37,12 @@ const Be::ClassInfo* BlueFileStream::ExposeToBlue()
 			"meaning that other processes will not change the contents of the file while\n"
 			"is being read."
 		)
+
+		MAP_METHOD_AND_WRAP
+		(
+			"close",
+			Close,
+			"Close the file stream."
+		)
 	EXPOSURE_END()
 }

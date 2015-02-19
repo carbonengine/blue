@@ -87,7 +87,7 @@ private:
 	std::map<std::string, std::vector<std::wstring>> GetExpandedSearchPathsAsDict();
 
 	std::vector<std::wstring> ListDirFromScript( const std::wstring& dir );
-	Be::Result<std::string> Open( const std::wstring& filename, const std::string& mode, IBlueStream** stream );
+	Be::Result<std::string> Open( const std::wstring& filename, Be::Optional<std::string> mode, IBlueStream** stream );
 
 	std::wstring GetInitialWorkingDirectory() { return m_localFileSystem->GetInitialWorkingDirectory(); }
 

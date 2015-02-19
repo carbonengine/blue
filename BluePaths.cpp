@@ -11,6 +11,7 @@
 #include "RemoteFileCache.h"
 #include "BackgroundReader.h"
 #include "BlueResFile.h"
+#include "BlueFileStream.h"
 #include "include/IBlueResMan.h"
 #include "Include/IBlueOS.h"
 #include "Include/BlueFileUtil.h"
@@ -241,8 +242,39 @@ std::vector<std::wstring> BluePaths::ListDirFromScript( const std::wstring& dir 
 	return finalResults;
 }
 
-Be::Result<std::string> BluePaths::Open( const std::wstring& filename, const std::string& mode, IBlueStream** stream )
+Be::Result<std::string> BluePaths::Open( const std::wstring& filename, Be::Optional<std::string> mode, IBlueStream** stream )
 {
+	if( mode.IsAssigned() )
+	{
+		std::string fileMode = mode;
+		if( fileMode.size() > 0 )
+		{
+			if( fileMode[0] == 'w' )
+			{
+				BlueFileStreamPtr fileStream;
+				fileStream.CreateInstance();
+				if( fileStream->Create( filename.c_str() ) )
+				{
+					*stream = fileStream.Detach();
+					return Be::Result<std::string>();
+				}
+				return Be::Result<std::string>("Couldn't create file");
+			}
+			else if( fileMode[0] == 'a' )
+			{
+				BlueFileStreamPtr fileStream;
+				fileStream.CreateInstance();
+				if( fileStream->Open( filename.c_str(), BlueFileStream::OM_READWRITE, BlueFileStream::SM_NOSHARING ) )
+				{
+					fileStream->Seek( 0, ICcpStream::SO_END );
+					*stream = fileStream.Detach();
+					return Be::Result<std::string>();
+				}
+				return Be::Result<std::string>("Couldn't open file");
+			}
+		}
+	}
+
 	if( GetStreamFromPathW( filename.c_str(), stream ) )
 	{
 		return Be::Result<std::string>();
