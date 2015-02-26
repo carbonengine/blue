@@ -991,24 +991,13 @@ void BlueOS::PumpOS()
 	SafeAutoTasklet _at(PyOS->GetTaskletTimer(), TASKLETS[BLUETASKLET].mContext);
 
 	// Sleep until we need to wake up
-	bool doSleep;
-	if (mOverrideFG)
-	{
-		doSleep = mOverrideFG < 0;
-	}
-	else
-	{
-		doSleep = mSleepTime != 0;
-	}
-
-	if (doSleep)
 	{
 		//CCP_STATS_ZONE( "BlueOS/PumpOS/DoSleep" );
 		// Defining this directly to be able to mark this as an "idle" telemetry zone
 		tmZone( g_telemetryContext, TMZF_IDLE, "BlueOS/PumpOS/DoSleep" );
 
 		DoSleep();
-		mNextScheduledEvent = 10000; // 10 secs. to next event
+		mNextScheduledEvent = mSleepTime;
 	}
 
 	// alert the IO watchdog that events have been delivered recently
@@ -1132,7 +1121,7 @@ bool BlueOS::Startup( short interfaceVersion, int pyOptimizeFlag )
 #endif
 
 	// pump yielding
-	mSleepTime = 1;
+	mSleepTime = 10000;
 	mOverrideFG = 0;
 
 	// framerate counters
