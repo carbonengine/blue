@@ -81,6 +81,8 @@ namespace
 #ifdef _WIN32
 void GetIEProxySettings( bool& autoProxy, std::wstring& autoConfigUrl, std::string& explicitProxy, std::string& explicitProxyBypass )
 {
+	CCP_STATS_ZONE( __FUNCTION__ );
+
 	autoProxy = false;
 	autoConfigUrl = L"";
 	explicitProxy = "";
@@ -133,6 +135,8 @@ void GetIEProxySettings( bool& autoProxy, std::wstring& autoConfigUrl, std::stri
 
 void GetAutoProxyUrl( const char* url, const wchar_t* autoConfigUrl, std::string& proxy, std::string& proxyBypass )
 {
+	CCP_STATS_ZONE( __FUNCTION__ );
+
 	static HINTERNET http = nullptr;
 	static bool createdHttp = false;
 	proxy = "";
@@ -169,32 +173,39 @@ void GetAutoProxyUrl( const char* url, const wchar_t* autoConfigUrl, std::string
 	}
 	proxyOptions.fAutoLogonIfChallenged = TRUE;
 
-	WINHTTP_PROXY_INFO proxyInfo;
-	if( WinHttpGetProxyForUrl( http, CA2W( url ), &proxyOptions, &proxyInfo ) )
+
 	{
-		if( proxyInfo.lpszProxy )
+		CCP_STATS_ZONE( __FUNCTION__ "WinHttpGetProxyForUrl");
+
+		WINHTTP_PROXY_INFO proxyInfo;
+		if( WinHttpGetProxyForUrl( http, CA2W( url ), &proxyOptions, &proxyInfo ) )
 		{
-			proxy = CW2A( proxyInfo.lpszProxy );
-		}
-		if( proxyInfo.lpszProxyBypass )
-		{
-			proxyBypass = CW2A( proxyInfo.lpszProxyBypass );
-			for( auto it = proxyBypass.begin(); it != proxyBypass.end(); ++it )
+			if( proxyInfo.lpszProxy )
 			{
-				if( *it == ';' || *it == ' ' )
+				proxy = CW2A( proxyInfo.lpszProxy );
+			}
+			if( proxyInfo.lpszProxyBypass )
+			{
+				proxyBypass = CW2A( proxyInfo.lpszProxyBypass );
+				for( auto it = proxyBypass.begin(); it != proxyBypass.end(); ++it )
 				{
-					*it = ',';
+					if( *it == ';' || *it == ' ' )
+					{
+						*it = ',';
+					}
 				}
 			}
+			GlobalFree( proxyInfo.lpszProxy );
+			GlobalFree( proxyInfo.lpszProxyBypass );
 		}
-		GlobalFree( proxyInfo.lpszProxy );
-		GlobalFree( proxyInfo.lpszProxyBypass );
 	}
 }
 
 
 void ConvertProxySettingToServer( const char* url, const char* setting, std::string& proxyServer )
 {
+	CCP_STATS_ZONE( __FUNCTION__ );
+
 	if( !strchr( setting, '=' ) )
 	{
 		proxyServer = setting;
@@ -230,6 +241,8 @@ void ConvertProxySettingToServer( const char* url, const char* setting, std::str
 
 void GetProxySettings( const char* url, CURL* connection )
 {
+	CCP_STATS_ZONE( __FUNCTION__ );
+
 	static bool gotIESettings = false;
 	static bool autoProxy = false;
 	static std::string explicitProxy;
@@ -240,6 +253,10 @@ void GetProxySettings( const char* url, CURL* connection )
 	{
 		GetIEProxySettings( autoProxy, autoConfigUrl, explicitProxy, explicitProxyBypass );
 		gotIESettings = true;
+
+		// autoProxy is too slow - disabling until we figure out if it is really needed
+		// and we can make it faster somehow
+		autoProxy = false;
 	}
 
 	if( autoProxy )
@@ -606,6 +623,8 @@ void BlueRemoteStream::TrimHeaders()
 
 CURL* BlueRemoteStream::PrepareConnection( const char* resUrl )
 {
+	CCP_STATS_ZONE( __FUNCTION__ );
+
 	CURL* connection = s_connectionManager.GetConnection();
 
 	curl_easy_setopt( connection, CURLOPT_URL, resUrl );

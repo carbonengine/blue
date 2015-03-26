@@ -98,6 +98,15 @@ const Be::ClassInfo* RemoteFileCache::ExposeToBlue()
 			"Log all headers received from the server on network problems.",
 			Be::READWRITE
 		)
+
+		MAP_ATTRIBUTE
+		(
+			"verifyContents",
+			m_verifyContents,
+			"If set, the contents of downloaded files is verified against the md5 checksum\n"
+			"before caching the file.",
+			Be::READWRITE
+		)
 		
 		MAP_METHOD_AND_WRAP
 		(
