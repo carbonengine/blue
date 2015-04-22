@@ -38,6 +38,9 @@
     <ClInclude Include="BlueMemStream.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="BlueNetworkStream.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
     <ClInclude Include="BlueObjectBuilderPython.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -381,6 +384,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="BlueNet.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BlueNetworkStream.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BlueNetworkStream_Blue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="BlueObjectBuilderPython.cpp">

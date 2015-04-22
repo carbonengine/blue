@@ -238,9 +238,37 @@ void ConvertProxySettingToServer( const char* url, const char* setting, std::str
 		proxyServer = "";
 	}
 }
+#endif
+
+
+bool FindHeader( const char* headers, const char* name, std::string& value )
+{
+	std::string decorated = "\n";
+	decorated += name;
+	decorated += ": ";
+	if( auto found = strstr( headers, decorated.c_str() ) )
+	{
+		found += decorated.length();
+		auto end = strchr( found, '\n' );
+		if( end )
+		{
+			value = std::string( found, end );
+			value.append( char( 0 ), size_t( 0 ) );
+		}
+		else
+		{
+			value = found;
+		}
+		return true;
+	}
+	return false;
+}
+
+}
 
 void GetProxySettings( const char* url, CURL* connection )
 {
+#ifdef _WIN32
 	CCP_STATS_ZONE( __FUNCTION__ );
 
 	static bool gotIESettings = false;
@@ -285,33 +313,7 @@ void GetProxySettings( const char* url, CURL* connection )
 	}
 	curl_easy_setopt( connection, CURLOPT_PROXY, nullptr );
 	curl_easy_setopt( connection, CURLOPT_NOPROXY, nullptr );
-}
 #endif
-
-
-bool FindHeader( const char* headers, const char* name, std::string& value )
-{
-	std::string decorated = "\n";
-	decorated += name;
-	decorated += ": ";
-	if( auto found = strstr( headers, decorated.c_str() ) )
-	{
-		found += decorated.length();
-		auto end = strchr( found, '\n' );
-		if( end )
-		{
-			value = std::string( found, end );
-			value.append( char( 0 ), size_t( 0 ) );
-		}
-		else
-		{
-			value = found;
-		}
-		return true;
-	}
-	return false;
-}
-
 }
 
 BlueRemoteStream::BlueRemoteStream() :
@@ -633,9 +635,7 @@ CURL* BlueRemoteStream::PrepareConnection( const char* resUrl )
 	curl_easy_setopt( connection, CURLOPT_HEADERFUNCTION, WriteHeaderCallback );
 	curl_easy_setopt( connection, CURLOPT_HEADERDATA, (void*)this );
 
-#ifdef _WIN32
 	GetProxySettings( resUrl, connection );
-#endif
 
 	return connection;
 }

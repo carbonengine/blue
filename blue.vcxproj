@@ -501,6 +501,7 @@
     <ClInclude Include="blueloginmemory.h"/>
     <ClInclude Include="BlueMemoryTracker.h"/>
     <ClInclude Include="BlueMemStream.h"/>
+    <ClInclude Include="BlueNetworkStream.h"/>
     <ClInclude Include="BlueObjectBuilderPython.h"/>
     <ClInclude Include="BlueObjectProxy.h"/>
     <ClInclude Include="BlueObjectRecycler.h"/>
@@ -618,6 +619,8 @@
     <ClCompile Include="BlueMemStream.cpp"/>
     <ClCompile Include="BlueMemStream_Blue.cpp"/>
     <ClCompile Include="BlueNet.cpp"/>
+    <ClCompile Include="BlueNetworkStream.cpp"/>
+    <ClCompile Include="BlueNetworkStream_Blue.cpp"/>
     <ClCompile Include="BlueObjectBuilderPython.cpp"/>
     <ClCompile Include="BlueObjectBuilderPython_Blue.cpp"/>
     <ClCompile Include="BlueObjectProxy.cpp"/>

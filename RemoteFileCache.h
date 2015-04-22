@@ -20,7 +20,7 @@ public:
 	RemoteFileCache();
 
 	bool DownloadFileIndex( const std::string& url );
-	void SetFileIndex( const std::string& fileIndex );
+	void AddFileIndex( const std::string& fileIndex );
 
 	void SetCacheFolder( const wchar_t* folderName );
 	void SetServer( const char* url );
@@ -63,8 +63,8 @@ private:
 	bool m_verifyContents;
 
 private:
-	bool SetFileIndexFromStream( IBlueStream* stream );
-	void SetFileIndexImpl( const char* contents, ssize_t size );
+	bool AddFileIndexFromStream( IBlueStream* stream );
+	void AddFileIndexImpl( const char* contents, ssize_t size );
 
 	Be::Result<std::string> CreateFileStreamForCachedFile( const std::wstring &cachedName, IBlueStream** stream );
 	bool GetFileInfo(  const wchar_t* resPath, FileInfo& fileInfo );

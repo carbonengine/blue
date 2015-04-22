@@ -106,7 +106,7 @@ bool RemoteFileCache::DownloadFileIndex( const std::string& index )
 		return false;
 	}
 	
-	return SetFileIndexFromStream( stream );
+	return AddFileIndexFromStream( stream );
 }
 
 void RemoteFileCache::SetCacheFolder( const wchar_t* folderName )
@@ -261,7 +261,7 @@ bool RemoteFileCache::GetFileInfo( const wchar_t* resPath, struct FileInfo& file
 	return true;
 }
 
-void RemoteFileCache::SetFileIndexImpl( const char* contents, ssize_t size )
+void RemoteFileCache::AddFileIndexImpl( const char* contents, ssize_t size )
 {
 	const char* p = contents;
 	ssize_t ix = 0;
@@ -313,9 +313,9 @@ void RemoteFileCache::SetFileIndexImpl( const char* contents, ssize_t size )
 	}
 }
 
-void RemoteFileCache::SetFileIndex( const std::string& fileIndex )
+void RemoteFileCache::AddFileIndex( const std::string& fileIndex )
 {
-	SetFileIndexImpl( fileIndex.c_str(), fileIndex.size() );
+	AddFileIndexImpl( fileIndex.c_str(), fileIndex.size() );
 }
 
 void RemoteFileCache::AddResPathToFolderIndex( const std::string& resPath )
@@ -450,7 +450,7 @@ void RemoteFileCache::CacheContentsOfRemoteStream( BlueRemoteStream* stream, con
 	}
 }
 
-bool RemoteFileCache::SetFileIndexFromStream( IBlueStream* stream )
+bool RemoteFileCache::AddFileIndexFromStream( IBlueStream* stream )
 {
 	char* contents = nullptr;
 	ssize_t size = stream->GetSize();
@@ -460,7 +460,7 @@ bool RemoteFileCache::SetFileIndexFromStream( IBlueStream* stream )
 		return false;
 	}
 
-	SetFileIndexImpl( contents, size );
+	AddFileIndexImpl( contents, size );
 
 	return true;
 }

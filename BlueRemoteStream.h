@@ -81,4 +81,8 @@ private:
 
 TYPEDEF_BLUECLASS( BlueRemoteStream );
 
+
+void GetProxySettings( const char* url, CURL* connection );
+
+
 #endif

@@ -118,9 +118,9 @@ const Be::ClassInfo* RemoteFileCache::ExposeToBlue()
 
 		MAP_METHOD_AND_WRAP
 		(
-			"SetFileIndex",
-			SetFileIndex,
-			"Set the file index directly from the given string."
+			"AddFileIndex",
+			AddFileIndex,
+			"Load the file index directly from the given string."
 		)
 
 		MAP_METHOD_AND_WRAP
