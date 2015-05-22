@@ -533,6 +533,7 @@
     <ClInclude Include="IOLoop.h"/>
     <ClInclude Include="IRootReader.h"/>
     <ClInclude Include="IRootWriter.h"/>
+    <ClInclude Include="LogglyForwarder.h"/>
     <ClInclude Include="LogToPython.h"/>
     <ClInclude Include="manifest.h"/>
     <ClInclude Include="Marshal.h"/>
@@ -677,6 +678,7 @@
     <ClCompile Include="IRootReader.cpp"/>
     <ClCompile Include="IRootWriter.cpp"/>
     <ClCompile Include="IRootWriter_Blue.cpp"/>
+    <ClCompile Include="LogglyForwarder.cpp"/>
     <ClCompile Include="LogToPython.cpp"/>
     <ClCompile Include="manifest.cpp"/>
     <ClCompile Include="Marshal.cpp"/>
