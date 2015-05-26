@@ -28,6 +28,7 @@
 #include "TaskletTimer.h"
 
 #include <structmember.h>
+#include <sstream>
 
 #if !CCP_STACKLESS
 	#define PyCCP_MemSetContext(x)
@@ -405,22 +406,27 @@ void TaskletTimer::WarnSlice(Be::Time now, Stack *stack, PyObject *newctxt, bool
 	forder = logf(forder)/logf(2.0f); // compute the base 2 logarithm.
 	int order = (int)ceilf(forder);
 	
-	char msg[256];
-	_snprintf_s(msg, _countof(msg), _TRUNCATE, "Timeslice warning order %d, %dms (%dms in frame)",
-		order, rms, fms);
-	CCP_LOGWARN_CH( s_ch, "%s", msg);
+	std::stringstream combinedMessage;
+	combinedMessage << "Timeslice warning order " << order << ", " << rms << "ms (" << fms << "ms in frame)" << std::endl;
+
 	if (newctxt) {
 		BluePy nstr(PyObject_Repr(newctxt));
 		if (!nstr)
 			PyErr_Clear();
-		_snprintf_s(msg, _countof(msg), _TRUNCATE, "%s %s from:",
-			switching?"switching to":"entering",
-			PyString_AsString(nstr)
-		);
+		if( switching )
+		{
+			combinedMessage << "switching to:";
+		}
+		else
+		{
+			combinedMessage << "entering:";
+		}
+		combinedMessage << PyString_AsString(nstr);
 	} else {
-		_snprintf_s(msg, _countof(msg), _TRUNCATE, "returning from:");
+		combinedMessage << "returning from:";
 	}
-	CCP_LOGWARN_CH( s_ch, "%s", msg);
+	combinedMessage << std::endl;
+
 	//and now, the stack:
 	std::vector<std::string> tb;
 	for(; frame; frame = frame->Parent()) {
@@ -431,11 +437,10 @@ void TaskletTimer::WarnSlice(Be::Time now, Stack *stack, PyObject *newctxt, bool
 			tb.push_back("unknown");
 	}
 	while(tb.size()) {
-		std::string line = "  ->";
-		line += tb.back();
+		combinedMessage << "  ->" << tb.back() << std::endl;
 		tb.pop_back();
-		CCP_LOGWARN_CH( s_ch, "%s", line.c_str());
 	}
+	CCP_LOGWARN_CH(s_ch, "%s", combinedMessage.str().c_str());
 }
 
 
