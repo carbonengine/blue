@@ -337,7 +337,6 @@ bool BlueFileStream::Open( const wchar_t* filename, OpenMode mode, ShareMode sha
 
 	if( m_fileDescriptor == INVALID_FILE )
 	{
-		BeOS->SetError(BE32, Clsid(), "Open failed on \"%S\"", filename );
 		return false;
 	}
 
@@ -352,7 +351,6 @@ bool BlueFileStream::Create( const wchar_t* filename )
 
 	if( m_fileDescriptor == INVALID_FILE )
 	{
-		BeOS->SetError(BE32, Clsid(), "Create failed on \"%S\"", filename );
 		return false;
 	}
 

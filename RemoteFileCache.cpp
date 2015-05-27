@@ -26,28 +26,6 @@ CCP_STATS_DECLARE( remoteFileCacheCorruptFiles, "Blue/RemoteFileCache/CorruptFil
 namespace
 {
 	CcpLogChannel_t s_ch = CCP_LOG_DEFINE_CHANNEL( "RemoteFileCache" );
-
-	void RenameFile( const std::wstring& src, const std::wstring& dst )
-	{
-		CCP_STATS_ZONE( __FUNCTION__ );
-
-#ifdef _WIN32
-		wchar_t srcBuffer[CCP_MAX_PATH];
-		wchar_t dstBuffer[CCP_MAX_PATH];
-		GetFullPathNameW( src.c_str(), CCP_MAX_PATH, srcBuffer, NULL );
-		GetFullPathNameW( dst.c_str(), CCP_MAX_PATH, dstBuffer, NULL );
-
-		if( !MoveFileW( srcBuffer, dstBuffer ) )
-		{
-			CCP_LOGWARN_CH( s_ch, "Couldn't rename file (%d)", GetLastError() );
-		}
-#else
-        if( rename( CW2A( src.c_str() ), CW2A( dst.c_str() ) ) )
-        {
-			CCP_LOGWARN_CH( s_ch, "Couldn't rename file (%d)", errno );
-        }
-#endif
-	}
 }
 
 RemoteFileCache::RemoteFileCache() :
@@ -420,6 +398,26 @@ void RemoteFileCache::CacheContentsOfRemoteStream( BlueRemoteStream* stream, con
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
+	// Write contents to a temp file, then rename. This prevents cases where the file
+	// was found but another process was still writing to it.
+	std::wstring cachedNameOnDisk = BePaths->ResolvePathForWritingW(cachedName);
+	std::wstring tempNameOnDisk = cachedNameOnDisk + L".tmp";
+
+	// Checks for existing files are to deal with the cases where other clients (or
+	// the launcher) are downloading the same files. We don't start a download if
+	// the file is already cached locally, but two clients may start downloading the
+	// same file, then report errors when trying to cache it if another client has
+	// already done so.
+	if( CcpIsPathExistingFile( cachedNameOnDisk ) )
+	{
+		return;
+	}
+
+	if( CcpIsPathExistingFile( tempNameOnDisk ) )
+	{
+		return;
+	}
+
 	void* data = nullptr;
 	ssize_t size = stream->GetSize();
 
@@ -428,22 +426,26 @@ void RemoteFileCache::CacheContentsOfRemoteStream( BlueRemoteStream* stream, con
 		BlueFileStreamPtr fileStream;
 		fileStream.CreateInstance();
 
-		// Write contents to a temp file, then rename. This prevents cases where the file
-		// was found but another process was still writing to it.
-		std::wstring cachedNameOnDisk = BePaths->ResolvePathForWritingW( cachedName );
-		std::wstring tempNameOnDisk = cachedNameOnDisk + L".tmp";
-
-		if( fileStream->Create( tempNameOnDisk.c_str() ) )
+		if (fileStream->Create(tempNameOnDisk.c_str()))
 		{
-			fileStream->Write( data, size );
+			fileStream->Write(data, size);
 			fileStream->Close();
 
-			CCP_LOG_CH( s_ch, "Cached %S as %S", resPath, cachedNameOnDisk.c_str() );
+			CCP_LOG_CH(s_ch, "Cached %S as %S", resPath, cachedNameOnDisk.c_str());
 
-			RenameFile( tempNameOnDisk, cachedNameOnDisk );
-
-			++m_filesCached;
-			m_bytesCached += size;
+			if( CcpRenameFile( tempNameOnDisk, cachedNameOnDisk ) )
+			{
+				++m_filesCached;
+				m_bytesCached += size;
+			}
+			else if( !CcpIsPathExistingFile( cachedNameOnDisk ) )
+			{
+				CCP_LOGWARN_CH( s_ch, "Failed to rename file %S, yet it does not exist", cachedNameOnDisk.c_str() );
+			}
+		}
+		else if( !CcpIsPathExistingFile( tempNameOnDisk ) )
+		{
+			CCP_LOGWARN_CH( s_ch, "Couldn't create file %S, yet it does not exist", tempNameOnDisk.c_str() );
 		}
 
 		stream->UnlockData();
