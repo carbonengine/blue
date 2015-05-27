@@ -45,6 +45,7 @@ public:
 		{
 			connection = curl_easy_init();
 			curl_easy_setopt( connection, CURLOPT_FAILONERROR, 1 );
+			curl_easy_setopt( connection, CURLOPT_FOLLOWLOCATION, 1 );
 			curl_easy_setopt( connection, CURLOPT_ACCEPT_ENCODING, "gzip" );
 
 			std::wstring cert_str = BePaths->ResolvePathW(L"bin://cacert.pem");
