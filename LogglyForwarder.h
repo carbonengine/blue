@@ -9,7 +9,7 @@
 #ifndef LogglyForwarder_h
 #define LogglyForwarder_h
 
-#include "curl\curl.h"
+#include "curl/curl.h"
 
 BLUE_DECLARE(LogglyForwarder);
 
