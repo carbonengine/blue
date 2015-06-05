@@ -16,8 +16,6 @@
 
 BLUE_DECLARE( BluePaths );
 
-extern double g_thresholdForWarningLongDownloadTime;
-
 class BluePaths : public IBluePaths
 {
 public:
@@ -90,9 +88,6 @@ private:
 	Be::Result<std::string> Open( const std::wstring& filename, Be::Optional<std::string> mode, IBlueStream** stream );
 
 	std::wstring GetInitialWorkingDirectory() { return m_localFileSystem->GetInitialWorkingDirectory(); }
-
-	double GetThresholdForWarningLongDownloadTime() { return g_thresholdForWarningLongDownloadTime; }
-	void SetThresholdForWarningLongDownloadTime( double val ) { g_thresholdForWarningLongDownloadTime = val; }
 
 	BlueResFileSystemLocalPtr m_localFileSystem;
 

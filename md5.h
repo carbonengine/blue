@@ -89,9 +89,7 @@ private:
 
   static void encode    (uint1 *dest, uint4 *src, uint4 length);
   static void decode    (uint4 *dest, uint1 *src, uint4 length);
-  static void memcpy    (uint1 *dest, uint1 *src, uint4 length);
-  static void memset    (uint1 *start, uint1 val, uint4 length);
-
+  
   static inline uint4  rotate_left (uint4 x, uint4 n);
   static inline uint4  F           (uint4 x, uint4 y, uint4 z);
   static inline uint4  G           (uint4 x, uint4 y, uint4 z);

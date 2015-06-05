@@ -11,6 +11,9 @@
 
 #include "include/IBluePersist.h"
 
+extern double g_thresholdForWarningLongDownloadTime;
+extern double g_thresholdForAbortingLongDownloadTime;
+
 BLUE_CLASS( RemoteFileCache ) :
 	public IRoot
 {
@@ -60,20 +63,26 @@ private:
 	uint32_t m_filesUsedFromCache;
 
 	bool m_fullHeaderLogging;
-	bool m_verifyContents;
+	bool m_verifyContentsOnSave;
+	bool m_verifyContentsOnLoad;
 
 private:
 	bool AddFileIndexFromStream( IBlueStream* stream );
 	void AddFileIndexImpl( const char* contents, ssize_t size );
 
-	Be::Result<std::string> CreateFileStreamForCachedFile( const std::wstring &cachedName, IBlueStream** stream );
+	Be::Result<std::string> CreateFileStreamForCachedFile( const std::wstring &cachedName, const std::string& checksum, IBlueStream** stream );
 	bool GetFileInfo(  const wchar_t* resPath, FileInfo& fileInfo );
 	void AddResPathToFolderIndex( const std::string& resPath );
 	bool ValidateResPath( const wchar_t* resPath, std::string& validatedPath );
-	Be::Result<std::string> VerifyChecksum( void* data, ssize_t size, const FileInfo &info );
 	void CacheContentsOfRemoteStream( class BlueRemoteStream* stream, const std::wstring& cachedName, const wchar_t* resPath );
 
 	bool TryDownload( std::string server, std::string filename, BlueRemoteStream* remoteStream, size_t expectedSize, const wchar_t* resPath );
+
+	double GetThresholdForWarningLongDownloadTime() { return g_thresholdForWarningLongDownloadTime; }
+	void SetThresholdForWarningLongDownloadTime( double val ) { g_thresholdForWarningLongDownloadTime = val; }
+
+	double GetThresholdForAbortingLongDownloadTime() { return g_thresholdForAbortingLongDownloadTime; }
+	void SetThresholdForAbortingLongDownloadTime( double val ) { g_thresholdForAbortingLongDownloadTime = val; }
 };
 
 TYPEDEF_BLUECLASS( RemoteFileCache );

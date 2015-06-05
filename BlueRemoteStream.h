@@ -51,6 +51,7 @@ public:
 private:
 	static size_t WriteMemoryCallback( void* contents, size_t size, size_t nmemb, void* context );
 	static size_t WriteHeaderCallback( void* contents, size_t size, size_t nmemb, void* context );
+	static int ProgressCallback( void* context, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow );
 
 	CURL* PrepareConnection( const char* resUrl );
 	void GatherStats( CURL* connection, const wchar_t* niceName, const char* resUrl );
@@ -58,11 +59,14 @@ private:
 	void ReceiveData( void* data, size_t size );
 	void InitializeCurl();
 	void TrimHeaders();
+	bool ShouldAbort();
 
 private:
 	// Pointer to data block in memory
 	uint8_t* m_data;
 	uint8_t* m_readLocation;
+
+	uint64_t m_timeOfLastDataReceived;
 
 	// Size of the data in m_data
 	size_t m_dataSize;

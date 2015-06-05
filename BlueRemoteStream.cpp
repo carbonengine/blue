@@ -28,6 +28,7 @@ CCP_STATS_DECLARE( remoteStreamPretransferTime, "Blue/BlueRemoteStream/Pretransf
 CCP_STATS_DECLARE( remoteStreamDownloadTime, "Blue/BlueRemoteStream/DownloadTime", false, CST_TIME, "Total download time in milliseconds" );
 
 double g_thresholdForWarningLongDownloadTime = 3.0;
+double g_thresholdForAbortingLongDownloadTime = 30.0;
 
 class ConnectionManager
 {
@@ -47,6 +48,7 @@ public:
 			curl_easy_setopt( connection, CURLOPT_FAILONERROR, 1 );
 			curl_easy_setopt( connection, CURLOPT_FOLLOWLOCATION, 1 );
 			curl_easy_setopt( connection, CURLOPT_ACCEPT_ENCODING, "gzip" );
+			curl_easy_setopt( connection, CURLOPT_NOPROGRESS, 0 );
 
 			std::wstring cert_str = BePaths->ResolvePathW(L"bin://cacert.pem");
 			CW2A cert_path( cert_str.c_str() );
@@ -320,6 +322,7 @@ void GetProxySettings( const char* url, CURL* connection )
 BlueRemoteStream::BlueRemoteStream() :
 	m_data( nullptr ),
 	m_readLocation( nullptr ),
+	m_timeOfLastDataReceived( 0 ),
 	m_dataSize( 0 ),
 	m_bufferSize( 0 ),
 	m_fullHeaderLogging( false )
@@ -365,6 +368,8 @@ bool BlueRemoteStream::Open( const char* resUrl, size_t expectedSize, const wcha
 		m_bufferSize = expectedSize;
 	}
 	m_headers.clear();
+
+	m_timeOfLastDataReceived = 0;
 
 	CURLcode res;
 	
@@ -559,9 +564,17 @@ size_t BlueRemoteStream::WriteHeaderCallback( void* contents, size_t size, size_
 	return realsize;
 }
 
+int BlueRemoteStream::ProgressCallback( void* context, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow )
+{
+	BlueRemoteStream* pThis = reinterpret_cast<BlueRemoteStream*>(context);
+	return (int)pThis->ShouldAbort();
+}
+
 void BlueRemoteStream::ReceiveData( void* data, size_t size )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
+
+	m_timeOfLastDataReceived = CcpGetTimestamp();
 
 	size_t newSize = m_dataSize + size;
 	if( newSize > m_bufferSize )
@@ -635,6 +648,8 @@ CURL* BlueRemoteStream::PrepareConnection( const char* resUrl )
 	curl_easy_setopt( connection, CURLOPT_WRITEDATA, (void*)this );
 	curl_easy_setopt( connection, CURLOPT_HEADERFUNCTION, WriteHeaderCallback );
 	curl_easy_setopt( connection, CURLOPT_HEADERDATA, (void*)this );
+	curl_easy_setopt( connection, CURLOPT_XFERINFOFUNCTION, ProgressCallback );
+	curl_easy_setopt( connection, CURLOPT_XFERINFODATA, (void*)this );
 
 	GetProxySettings( resUrl, connection );
 
@@ -670,3 +685,23 @@ void BlueRemoteStream::GatherStats( CURL* connection, const wchar_t* niceName, c
 			niceName, resUrl, size, speed, pretransferTime, totalTime );
 	}
 }
+
+bool BlueRemoteStream::ShouldAbort()
+{
+	if( !m_timeOfLastDataReceived )
+	{
+		return false;
+	}
+
+	uint64_t now = CcpGetTimestamp();
+	uint64_t delta = now - m_timeOfLastDataReceived;
+	double deltaInSeconds = (double)delta / (double)CcpGetTimestampFrequency();
+
+	if( deltaInSeconds > g_thresholdForAbortingLongDownloadTime )
+	{
+		return true;
+	}
+
+	return false;
+}
+

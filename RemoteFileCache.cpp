@@ -16,6 +16,7 @@
 #ifdef __ANDROID__
 #include <errno.h>
 #endif
+#include "md5.h"
 
 CCP_STATS_DECLARE( remoteFileCacheGetStream, "Blue/RemoteFileCache/GetStreamFromPath", false, CST_TIME, "Total time spent in RemoteFileCache::GetStreamFromPathW" );
 CCP_STATS_DECLARE( remoteFileCacheGetStreamCount, "Blue/RemoteFileCache/GetStreamFromPathCount", false, CST_COUNTER_LOW, "Number of calls to RemoteFileCache::GetStreamFromPathW" );
@@ -38,7 +39,8 @@ RemoteFileCache::RemoteFileCache() :
 	m_filesCached( 0 ),
 	m_filesUsedFromCache( 0 ),
 	m_fullHeaderLogging( false ),
-	m_verifyContents( true )
+	m_verifyContentsOnSave( true ),
+	m_verifyContentsOnLoad( true )
 {
 }
 
@@ -57,7 +59,7 @@ bool RemoteFileCache::DownloadFileIndex( const std::string& index )
 	if( BePaths->FileExists( cachedName ) )
 	{
 		CCP_LOG_CH( s_ch, "Index %s exists locally", index.c_str() );
-		CreateFileStreamForCachedFile( cachedName, &stream );
+		CreateFileStreamForCachedFile( cachedName, std::string(), &stream );
 	}
 
 	if( !stream )
@@ -113,7 +115,19 @@ Be::Result<std::string> RemoteFileCache::GetStreamFromPathW( const wchar_t* resP
 
 	if( BePaths->FileExistsLocally( cachedName.c_str() ) )
 	{
-		return CreateFileStreamForCachedFile( cachedName, stream );
+		std::string checksum;
+		if( m_verifyContentsOnLoad )
+		{
+			checksum = info.checksum;
+		}
+		auto result = CreateFileStreamForCachedFile( cachedName, checksum, stream );
+		if( Be::IsSuccess( result ) )
+		{
+			return result;
+		}
+
+		CCP_LOGERR_CH( s_ch, "%s - %S", result.value.c_str(), cachedName.c_str() );
+		CcpRemoveFile( cachedName.c_str() );
 	}
 
 	// File does not exist in the cache folder - download and add to cache
@@ -152,7 +166,7 @@ Be::Result<std::string> RemoteFileCache::GetStreamFromPathW( const wchar_t* resP
 			return Be::Result<std::string>( "Size does not match expected value" );
 		}
 
-		if( m_verifyContents )
+		if( m_verifyContentsOnSave )
 		{
 			if( !remoteStream->VerifyContents( info.checksum.c_str() ) )
 			{
@@ -170,8 +184,33 @@ Be::Result<std::string> RemoteFileCache::GetStreamFromPathW( const wchar_t* resP
 	return Be::Result<std::string>( "Couldn't download file" );
 }
 
-Be::Result<std::string> RemoteFileCache::CreateFileStreamForCachedFile( const std::wstring &cachedName, IBlueStream** stream )
+bool VerifyChecksum( IBlueStream* stream, const std::string& expectedChecksum )
 {
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+	auto size = stream->GetSize();
+	CcpMallocBuffer data( "VerifyChecksum/data", size );
+
+	stream->Read( data.get(), data.size() );
+	stream->Seek( 0, IBlueStream::SO_BEGIN );
+
+	MD5 checkSum;
+	checkSum.update( reinterpret_cast<unsigned char*>(data.get()), (unsigned int)data.size() );
+	checkSum.finalize();
+
+	const char* checkSumAsHex = checkSum.hex_digest();
+	if( strcmp( expectedChecksum.c_str(), checkSumAsHex ) != 0 )
+	{
+		return false;
+	}
+
+	return true;
+}
+
+Be::Result<std::string> RemoteFileCache::CreateFileStreamForCachedFile( const std::wstring &cachedName, const std::string& checksum, IBlueStream** stream )
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+
 	BlueFileStreamPtr fileStream;
 	fileStream.CreateInstance();
 
@@ -181,9 +220,16 @@ Be::Result<std::string> RemoteFileCache::CreateFileStreamForCachedFile( const st
 	{
 		if( fileStream->Open( cachedNameOnDisk.c_str(), BlueFileStream::OM_READONLY, BlueFileStream::SM_READSHARING ) )
 		{
-			*stream = fileStream.Detach();
-			++m_filesUsedFromCache;
-			return Be::Result<std::string>();
+			if( checksum.empty() || VerifyChecksum( fileStream, checksum ) )
+			{
+				*stream = fileStream.Detach();
+				++m_filesUsedFromCache;
+				return Be::Result<std::string>();
+			}
+			else
+			{
+				return Be::Result<std::string>( "File is corrupt" );
+			}
 		}
 
 		CcpThreadSleep( 10 );

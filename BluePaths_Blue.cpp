@@ -175,12 +175,5 @@ const Be::ClassInfo* BluePaths::ExposeToBlue()
 			"are 'Stuff' and 'Remote' (case sensitive)"
 		)
 
-		MAP_PROPERTY
-		(
-			"thresholdForWarningLongDownloads",
-			GetThresholdForWarningLongDownloadTime, SetThresholdForWarningLongDownloadTime,
-			"Threshold (in seconds) for issuing warnings on long downloads. Set to zero to disable warnings altogether."
-		)
-
 	EXPOSURE_END()
 }

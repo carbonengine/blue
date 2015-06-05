@@ -101,10 +101,19 @@ const Be::ClassInfo* RemoteFileCache::ExposeToBlue()
 
 		MAP_ATTRIBUTE
 		(
-			"verifyContents",
-			m_verifyContents,
+			"verifyContentsOnSave",
+			m_verifyContentsOnSave,
 			"If set, the contents of downloaded files is verified against the md5 checksum\n"
 			"before caching the file.",
+			Be::READWRITE
+		)
+		
+		MAP_ATTRIBUTE
+		(
+			"verifyContentsOnLoad",
+			m_verifyContentsOnLoad,
+			"If set, the contents of downloaded files is verified against the md5 checksum\n"
+			"when using the file from the local cache.",
 			Be::READWRITE
 		)
 		
@@ -152,5 +161,20 @@ const Be::ClassInfo* RemoteFileCache::ExposeToBlue()
 			IsDirectory,
 			""
 		)
+
+		MAP_PROPERTY
+		(
+			"thresholdForWarningLongDownloads",
+			GetThresholdForWarningLongDownloadTime, SetThresholdForWarningLongDownloadTime,
+			"Threshold (in seconds) for issuing warnings on long downloads. Set to zero to disable warnings altogether."
+		)
+
+		MAP_PROPERTY
+		(
+			"thresholdForAbortingLongDownloads",
+			GetThresholdForAbortingLongDownloadTime, SetThresholdForAbortingLongDownloadTime,
+			"Threshold (in seconds) for aborting long downloads. Set to zero to disable altogether."
+		)
+
 	EXPOSURE_END()
 }
