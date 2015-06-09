@@ -23,11 +23,13 @@ LogglyForwarder* LogglyForwarder::GetInstance()
 	return &s_instance;
 }
 
+// This is registered as log echo function - it simply forwards to the Log member function of the LogglyForwarder
 void LogglyForwarder::Log_s(CcpLogChannel_t& channel, CCP::LogType type, unsigned long userData, const char* message)
 {
 	GetInstance()->Log(channel, type, userData, message);
 }
 
+// The read callback for curl - this is what curl reads to send to the destination
 size_t LogglyForwarder::read_callback(void *ptr, size_t size, size_t nmemb, void *context)
 {
 	if (size*nmemb < 1)
@@ -54,12 +56,14 @@ size_t LogglyForwarder::read_callback(void *ptr, size_t size, size_t nmemb, void
 	return 0;
 }
 
+// The write callback for curl - for writing the response from the server
 size_t write_callback(char *ptr, size_t size, size_t nmemb, void *userdata)
 {
 	// We don't care about the results sent from Loggly
 	return size * nmemb;
 }
 
+// The log echo function
 void LogglyForwarder::Log(CcpLogChannel_t& channel, CCP::LogType type, unsigned long userData, const char* message)
 {
 	static const char* s_logType[] = { "info", "notice", "warning", "error" };
@@ -84,30 +88,43 @@ void LogglyForwarder::Log(CcpLogChannel_t& channel, CCP::LogType type, unsigned 
 	strcpy(timestamp, "Missing timestamp");
 #endif
 
-	std::string sanitizedMessage;
-	for (int i = 0; i < 512; ++i)
+	char sanitizedMessage[1536];
+
+	int writeIndex = 0;
+	for( int i = 0; writeIndex < sizeof( sanitizedMessage ) - 1; ++i )
 	{
 		char c = message[i];
 		if( c == 0 )
 		{
 			break;
 		}
-		if( c == '"' )
-		{
-			sanitizedMessage += "\\";
+		switch( c ) {
+		case '"':
+			sanitizedMessage[writeIndex++] = '\\';
+			sanitizedMessage[writeIndex++] = '"';
+			break;
+		case '\n':
+			sanitizedMessage[writeIndex++] = '\\';
+			sanitizedMessage[writeIndex++] = 'n';
+			break;
+
+		default:
+			sanitizedMessage[writeIndex++] = c;
 		}
-		sanitizedMessage += c;
 	}
+	sanitizedMessage[writeIndex] = 0;
 
-	const char* formatString = "{\"timestamp\": \"%s\", \"type\": \"%s\", \"session\": \"%s\", \"message\": \"%s\"}";
+	const char* formatString = "{\"timestamp\": \"%s\", \"sessionid\": \"%s\", \"type\": \"%s\", \"module\": \"%s\", \"channel\": \"%s\", \"message\": \"%s\"}";
 
-	char jsonMsg[1024];
-	sprintf_s(jsonMsg, formatString, timestamp, s_logType[type], m_sessionId.c_str(), sanitizedMessage.c_str());
+	char jsonMsg[2048];
+	sprintf_s(jsonMsg, formatString, timestamp, m_sessionId.c_str(), s_logType[type], channel.facility, channel.object, sanitizedMessage);
 
 	LogJson(jsonMsg);
 }
 
-void LogglyForwarder::Start(CCP::LogType threshold, const char* url, const char* sessionId)
+// Registers a log echo function and starts sending log messages at the given threshold to Loggly
+// at the given url. The messages are sent as a json package, with one field being the given session id.
+void LogglyForwarder::Start( CCP::LogType threshold, const std::string& url, const std::string& sessionId )
 {
 	m_sessionId = sessionId;
 	if (!m_isActive)
@@ -121,6 +138,7 @@ void LogglyForwarder::Start(CCP::LogType threshold, const char* url, const char*
 	}
 }
 
+// Stops forwarding log messages to Loggly
 void LogglyForwarder::Stop()
 {
 	CCP::UnregisterLogEcho(Log_s);
@@ -150,10 +168,10 @@ LogglyForwarder::WritePackage* LogglyForwarder::PopQueue()
 	return nullptr;
 }
 
-void LogglyForwarder::SendThreadFunc(const char* url)
+void LogglyForwarder::SendThreadFunc( std::string url )
 {
 	CURL* curl = curl_easy_init();
-	curl_easy_setopt(curl, CURLOPT_URL, url);
+	curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 
 	std::wstring cert_str = BePaths->ResolvePathW(L"bin://cacert.pem");
 	CW2A cert_path(cert_str.c_str());
@@ -177,7 +195,7 @@ void LogglyForwarder::SendThreadFunc(const char* url)
 	}
 }
 
-void EnableLogglyLogging(int threshold, const char* url, const char* sessionId)
+void EnableLogglyLogging( int threshold, const std::string& url, const std::string& sessionId )
 {
 	if (threshold < CCP::LOGTYPE_LOWEST)
 	{
@@ -195,5 +213,11 @@ void DisableLogglyLogging()
 	LogglyForwarder::GetInstance()->Stop();
 }
 
-MAP_FUNCTION_AND_WRAP( "EnableLogglyLogging", EnableLogglyLogging, "Enable loggly logging" );
-MAP_FUNCTION_AND_WRAP("DisableLogglyLogging", DisableLogglyLogging, "Disable loggly logging");
+bool IsLogglyEnabled()
+{
+	return LogglyForwarder::GetInstance()->IsActive();
+}
+
+MAP_FUNCTION_AND_WRAP( "EnableLogglyLogging", EnableLogglyLogging, "Enable Loggly logging" );
+MAP_FUNCTION_AND_WRAP("DisableLogglyLogging", DisableLogglyLogging, "Disable Loggly logging");
+MAP_FUNCTION_AND_WRAP( "IsLogglyEnabled", IsLogglyEnabled, "Returns true if Loggly logging is enabled" );

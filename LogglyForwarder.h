@@ -21,8 +21,10 @@ public:
 
 	static LogglyForwarder* GetInstance();
 
-	void Start(CCP::LogType threshold, const char* url, const char* sessionId);
+	void Start( CCP::LogType threshold, const std::string& url, const std::string& sessionId );
 	void Stop();
+
+	bool IsActive() { return m_isActive; }
 
 	void LogJson(char * jsonMsg);
 
@@ -32,7 +34,7 @@ protected:
 	// The log echo function that will be registered with the log system
 	static void Log_s(CcpLogChannel_t& channel, CCP::LogType type, unsigned long userData, const char* message);
 	static size_t read_callback(void *ptr, size_t size, size_t nmemb, void *context);
-	static void SendThreadFunc(const char* url);
+	static void SendThreadFunc( std::string url );
 
 	void Log(CcpLogChannel_t& channel, CCP::LogType type, unsigned long userData, const char* message);
 
