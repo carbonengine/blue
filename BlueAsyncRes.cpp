@@ -36,7 +36,8 @@ BlueAsyncRes::BlueAsyncRes() :
 	m_isForcedSynchronous( false ),
 	m_reloadNotifyTargets( nullptr ),
 	m_reloadNotifyTargetsCount( 0 ),
-	m_reservedMemory( 0 )
+	m_reservedMemory( 0 ),
+	m_queryArguments( "BlueAsyncRes::m_queryArguments" )
 {
 }
 
@@ -183,6 +184,12 @@ void BlueAsyncRes::InitializeImpl( const wchar_t* name, const wchar_t* ext )
 {
 	CCP_STATS_ZONE( "BlueAsyncRes/Initialize" );
 
+	m_queryArguments.clear();
+	auto query = wcschr( name, L'?' );
+	if( query )
+	{
+		ParseQuery( query + 1 );
+	}
 	m_path = name;
 
 	CW2A asciiName( name );
@@ -364,7 +371,16 @@ void BlueAsyncRes::Reload()
 
 bool BlueAsyncRes::DoOpenStream()
 {
-	bool open = BePaths->GetStreamFromPathW( m_path.c_str(), &m_dataStream );
+	bool open;
+	auto query = m_path.find( L'?' );
+	if( query != std::wstring::npos )
+	{
+		open = BePaths->GetStreamFromPathW( m_path.substr( 0, query ).c_str(), &m_dataStream );
+	}
+	else
+	{
+		open = BePaths->GetStreamFromPathW( m_path.c_str(), &m_dataStream );
+	}
 	return open;
 }
 
@@ -380,5 +396,69 @@ void BlueAsyncRes::CloseStream()
 	{
 		m_dataStream.Unlock();
 		OnCloseStream();
+	}
+}
+
+void BlueAsyncRes::ParseQuery( const wchar_t* query )
+{
+	auto end = query + wcslen( query );
+	while( query < end )
+	{
+		auto amp = wcschr( query, L'&' );
+		if( !amp )
+		{
+			amp = end;
+		}
+		QueryArgument argument;
+		auto eq = wcschr( query, L'=' );
+		if( eq && eq < amp )
+		{
+			argument.first.assign( query, eq );
+			argument.second.assign( eq + 1, amp );
+		}
+		else
+		{
+			argument.first.assign( query, amp );
+		}
+		m_queryArguments.emplace_back( argument );
+		query = amp + 1;
+	}
+}
+
+BlueAsyncRes::QueryArgument* BlueAsyncRes::FindFirstQueryArgumentByName( const wchar_t* name )
+{
+	for( auto it = m_queryArguments.begin(); it != m_queryArguments.end(); ++it )
+	{
+		if( wcscmp( name, it->first.c_str() ) == 0 )
+		{
+			return &( *it );
+		}
+	}
+	return nullptr;
+}
+
+std::wstring BlueAsyncRes::GetFilePath() const
+{
+	auto query = m_path.find( L'?' );
+	if( query != std::wstring::npos )
+	{
+		return m_path.substr( 0, query );
+	}
+	else
+	{
+		return m_path;
+	}
+}
+
+std::wstring&& BlueAsyncRes::GetQuery() const
+{
+	auto query = m_path.find( L'?' );
+	if( query != std::wstring::npos )
+	{
+		return std::move( m_path.substr( query + 1 ) );
+	}
+	else
+	{
+		return std::move( std::wstring() );
 	}
 }

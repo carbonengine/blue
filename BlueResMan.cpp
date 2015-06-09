@@ -270,9 +270,10 @@ IBlueResource* BlueResMan::GetResourceHelper( const std::wstring& path, const st
 	}
 	else
 	{
+		auto query = path.find( '?' );
 		// Get the extension from the path
-		size_t lastDotIx = path.find_last_of( '.' );
-		std::wstring extension = path.substr( lastDotIx + 1 );
+		size_t lastDotIx = path.find_last_of( '.', query );
+		std::wstring extension = path.substr( lastDotIx + 1, query - lastDotIx - 1 );
 		if( extension.empty() )
 		{
 			// No extension found

@@ -96,6 +96,12 @@ public:
 		return m_isGood == 1;
 	}
 
+	std::wstring GetFilePath() const;
+	std::wstring&& GetQuery() const;
+
+	typedef std::pair<std::wstring, std::wstring> QueryArgument;
+	typedef TrackableStdVector<QueryArgument> QueryArguments;
+
 protected:
 	void InitializeImpl( const wchar_t* name, const wchar_t* ext );
 
@@ -124,6 +130,7 @@ protected:
 
 
 protected:
+
 	static void StaticLoadAsync( void* pContext );
 	void LoadAsync();
 	static void StaticPrepareAsync( void* pContext );
@@ -141,9 +148,13 @@ protected:
 	void SetPrepared( bool b );
 	void SetGood( bool b );
 
+	void ParseQuery( const wchar_t* query );
+
+	QueryArgument* FindFirstQueryArgumentByName( const wchar_t* name );
 protected:
 	std::wstring m_path;
 	std::wstring m_ext;
+	QueryArguments m_queryArguments;
 
 	IBlueStreamPtr m_dataStream;
 
