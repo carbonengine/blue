@@ -205,7 +205,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>_DEBUG;_CRT_SECURE_NO_WARNINGS;YAML_DECLARE_STATIC;WIN32;CURL_STATICLIB;BLUE_WITH_LUA;YAML_DECLARE_STATIC;CURL_STATICLIB;BLUE_WITH_LUA;BLUEPROJECT;_SCL_SECURE_NO_WARNINGS;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;../../../carbon/src/lua/src;$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;../../../carbon/src/lua/src;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\zlib\1.2.3\include;$(CcpSdkPath)\telemetry\2.0n\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;../../../carbon/src/lua/src;$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;../../../carbon/src/lua/src;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\zlib\1.2.3\include;$(CcpSdkPath)\telemetry\2.1A3\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>True</TreatWarningAsError>
@@ -217,7 +217,7 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/x64;../../autobuild/lua/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/x64;../../autobuild/lua/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\zlib\1.2.3\lib\vc100.sp1\$(Platform);../../autobuild/BlueExposure/lua/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\telemetry\2.0n\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/x64;../../autobuild/lua/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/x64;../../autobuild/lua/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\zlib\1.2.3\lib\vc100.sp1\$(Platform);../../autobuild/BlueExposure/lua/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\telemetry\2.1A3\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
@@ -234,7 +234,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>_DEBUG;BLUE_LIVELIST_ENABLED=1;YAML_DECLARE_STATIC;WIN32;CURL_STATICLIB;CCP_STACKLESS=1;BLUE_WITH_PYTHON=1;YAML_DECLARE_STATIC;CURL_STATICLIB;BLUEPROJECT;_SCL_SECURE_NO_WARNINGS;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;..\..\..\carbon\src\stackless\pc;..\..\..\carbon\src\stackless\include;..\..\..\carbon\src\stackless\stackless;$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\zlib\1.2.3\include;$(CcpSdkPath)\telemetry\2.0n\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;..\..\..\carbon\src\stackless\pc;..\..\..\carbon\src\stackless\include;..\..\..\carbon\src\stackless\stackless;$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\zlib\1.2.3\include;$(CcpSdkPath)\telemetry\2.1A3\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>True</TreatWarningAsError>
@@ -246,7 +246,7 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/win32;..\..\..\carbon\autobuild\stackless\$(Platform);$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/win32;$(CcpSdkPath)\zlib\1.2.3\lib\vc100.sp1\$(Platform);../../autobuild/BlueExposure/exefile/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\telemetry\2.0n\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/win32;..\..\..\carbon\autobuild\stackless\$(Platform);$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/win32;$(CcpSdkPath)\zlib\1.2.3\lib\vc100.sp1\$(Platform);../../autobuild/BlueExposure/exefile/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\telemetry\2.1A3\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
@@ -263,7 +263,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>YAML_DECLARE_STATIC;WIN32;CURL_STATICLIB;BLUE_WITH_PYTHON=1;NDEBUG;YAML_DECLARE_STATIC;CURL_STATICLIB;BLUEPROJECT;_SCL_SECURE_NO_WARNINGS;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;$(CcpSdkPath)\Python\27\include;$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\zlib\1.2.3\include;$(CcpSdkPath)\telemetry\2.0n\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;$(CcpSdkPath)\Python\27\include;$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\zlib\1.2.3\include;$(CcpSdkPath)\telemetry\2.1A3\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>True</TreatWarningAsError>
@@ -275,7 +275,7 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/win32;$(CcpSdkPath)\Python\27\libs;$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/win32;$(CcpSdkPath)\zlib\1.2.3\lib\vc100.sp1\$(Platform);../../../carbon/autobuild/BlueExposure/python_27/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\telemetry\2.0n\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/win32;$(CcpSdkPath)\Python\27\libs;$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/win32;$(CcpSdkPath)\zlib\1.2.3\lib\vc100.sp1\$(Platform);../../../carbon/autobuild/BlueExposure/python_27/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\telemetry\2.1A3\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
@@ -292,7 +292,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>_DEBUG;BLUE_LIVELIST_ENABLED=1;YAML_DECLARE_STATIC;WIN32;CURL_STATICLIB;CCP_STACKLESS=1;BLUE_WITH_PYTHON=1;YAML_DECLARE_STATIC;CURL_STATICLIB;BLUEPROJECT;_SCL_SECURE_NO_WARNINGS;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;..\..\..\carbon\src\stackless\pc;..\..\..\carbon\src\stackless\include;..\..\..\carbon\src\stackless\stackless;$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\zlib\1.2.3\include;$(CcpSdkPath)\telemetry\2.0n\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;..\..\..\carbon\src\stackless\pc;..\..\..\carbon\src\stackless\include;..\..\..\carbon\src\stackless\stackless;$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\zlib\1.2.3\include;$(CcpSdkPath)\telemetry\2.1A3\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>True</TreatWarningAsError>
@@ -304,7 +304,7 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/x64;..\..\..\carbon\autobuild\stackless\$(Platform);$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/x64;$(CcpSdkPath)\zlib\1.2.3\lib\vc100.sp1\$(Platform);../../autobuild/BlueExposure/exefile/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\telemetry\2.0n\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/x64;..\..\..\carbon\autobuild\stackless\$(Platform);$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/x64;$(CcpSdkPath)\zlib\1.2.3\lib\vc100.sp1\$(Platform);../../autobuild/BlueExposure/exefile/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\telemetry\2.1A3\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
@@ -321,7 +321,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>YAML_DECLARE_STATIC;WIN32;CURL_STATICLIB;BLUE_WITH_PYTHON=1;NDEBUG;YAML_DECLARE_STATIC;CURL_STATICLIB;BLUEPROJECT;_SCL_SECURE_NO_WARNINGS;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;$(CcpSdkPath)\Python\27_64\include;$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\zlib\1.2.3\include;$(CcpSdkPath)\telemetry\2.0n\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;$(CcpSdkPath)\Python\27_64\include;$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\zlib\1.2.3\include;$(CcpSdkPath)\telemetry\2.1A3\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>True</TreatWarningAsError>
@@ -333,7 +333,7 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/x64;$(CcpSdkPath)\Python\27_64\libs;$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/x64;$(CcpSdkPath)\zlib\1.2.3\lib\vc100.sp1\$(Platform);../../../carbon/autobuild/BlueExposure/python_27/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\telemetry\2.0n\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/x64;$(CcpSdkPath)\Python\27_64\libs;$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/x64;$(CcpSdkPath)\zlib\1.2.3\lib\vc100.sp1\$(Platform);../../../carbon/autobuild/BlueExposure/python_27/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\telemetry\2.1A3\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
@@ -350,7 +350,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>_DEBUG;_CRT_SECURE_NO_WARNINGS;YAML_DECLARE_STATIC;WIN32;CURL_STATICLIB;BLUE_WITH_LUA;YAML_DECLARE_STATIC;CURL_STATICLIB;BLUE_WITH_LUA;BLUEPROJECT;_SCL_SECURE_NO_WARNINGS;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;../../../carbon/src/lua/src;$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;../../../carbon/src/lua/src;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\zlib\1.2.3\include;$(CcpSdkPath)\telemetry\2.0n\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;../../../carbon/src/lua/src;$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;../../../carbon/src/lua/src;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\zlib\1.2.3\include;$(CcpSdkPath)\telemetry\2.1A3\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>True</TreatWarningAsError>
@@ -362,7 +362,7 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/win32;../../autobuild/lua/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/win32;../../autobuild/lua/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\zlib\1.2.3\lib\vc100.sp1\$(Platform);../../autobuild/BlueExposure/lua/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\telemetry\2.0n\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/win32;../../autobuild/lua/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/win32;../../autobuild/lua/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\zlib\1.2.3\lib\vc100.sp1\$(Platform);../../autobuild/BlueExposure/lua/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\telemetry\2.1A3\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
@@ -379,7 +379,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>YAML_DECLARE_STATIC;WIN32;CURL_STATICLIB;BLUE_WITH_PYTHON=1;NDEBUG;YAML_DECLARE_STATIC;CURL_STATICLIB;BLUEPROJECT;_SCL_SECURE_NO_WARNINGS;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;$(CcpSdkPath)\Python\26\include;$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\zlib\1.2.3\include;$(CcpSdkPath)\telemetry\2.0n\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;$(CcpSdkPath)\Python\26\include;$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\zlib\1.2.3\include;$(CcpSdkPath)\telemetry\2.1A3\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>True</TreatWarningAsError>
@@ -391,7 +391,7 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/win32;$(CcpSdkPath)\Python\26\libs;$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/win32;$(CcpSdkPath)\zlib\1.2.3\lib\vc100.sp1\$(Platform);../../autobuild/BlueExposure/python_26/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\telemetry\2.0n\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/win32;$(CcpSdkPath)\Python\26\libs;$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/win32;$(CcpSdkPath)\zlib\1.2.3\lib\vc100.sp1\$(Platform);../../autobuild/BlueExposure/python_26/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\telemetry\2.1A3\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
@@ -408,7 +408,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>YAML_DECLARE_STATIC;WIN32;CURL_STATICLIB;CCP_STACKLESS=1;BLUE_WITH_PYTHON=1;NDEBUG;YAML_DECLARE_STATIC;CURL_STATICLIB;BLUEPROJECT;_SCL_SECURE_NO_WARNINGS;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;..\..\..\carbon\src\stackless\pc;..\..\..\carbon\src\stackless\include;..\..\..\carbon\src\stackless\stackless;$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\zlib\1.2.3\include;$(CcpSdkPath)\telemetry\2.0n\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;..\..\..\carbon\src\stackless\pc;..\..\..\carbon\src\stackless\include;..\..\..\carbon\src\stackless\stackless;$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\zlib\1.2.3\include;$(CcpSdkPath)\telemetry\2.1A3\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>True</TreatWarningAsError>
@@ -420,7 +420,7 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/x64;..\..\..\carbon\autobuild\stackless\$(Platform);$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/x64;$(CcpSdkPath)\zlib\1.2.3\lib\vc100.sp1\$(Platform);../../autobuild/BlueExposure/exefile/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\telemetry\2.0n\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/x64;..\..\..\carbon\autobuild\stackless\$(Platform);$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/x64;$(CcpSdkPath)\zlib\1.2.3\lib\vc100.sp1\$(Platform);../../autobuild/BlueExposure/exefile/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\telemetry\2.1A3\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
@@ -437,7 +437,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>YAML_DECLARE_STATIC;WIN32;CURL_STATICLIB;BLUE_WITH_PYTHON=1;NDEBUG;YAML_DECLARE_STATIC;CURL_STATICLIB;BLUEPROJECT;_SCL_SECURE_NO_WARNINGS;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;$(CcpSdkPath)\Python\26_64\include;$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\zlib\1.2.3\include;$(CcpSdkPath)\telemetry\2.0n\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;$(CcpSdkPath)\Python\26_64\include;$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\zlib\1.2.3\include;$(CcpSdkPath)\telemetry\2.1A3\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>True</TreatWarningAsError>
@@ -449,7 +449,7 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/x64;$(CcpSdkPath)\Python\26_64\libs;$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/x64;$(CcpSdkPath)\zlib\1.2.3\lib\vc100.sp1\$(Platform);../../autobuild/BlueExposure/python_26/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\telemetry\2.0n\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/x64;$(CcpSdkPath)\Python\26_64\libs;$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/x64;$(CcpSdkPath)\zlib\1.2.3\lib\vc100.sp1\$(Platform);../../autobuild/BlueExposure/python_26/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\telemetry\2.1A3\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
@@ -466,7 +466,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>YAML_DECLARE_STATIC;WIN32;CURL_STATICLIB;CCP_STACKLESS=1;BLUE_WITH_PYTHON=1;NDEBUG;YAML_DECLARE_STATIC;CURL_STATICLIB;BLUEPROJECT;_SCL_SECURE_NO_WARNINGS;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;..\..\..\carbon\src\stackless\pc;..\..\..\carbon\src\stackless\include;..\..\..\carbon\src\stackless\stackless;$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\zlib\1.2.3\include;$(CcpSdkPath)\telemetry\2.0n\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;..\..\..\carbon\src\stackless\pc;..\..\..\carbon\src\stackless\include;..\..\..\carbon\src\stackless\stackless;$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\zlib\1.2.3\include;$(CcpSdkPath)\telemetry\2.1A3\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>True</TreatWarningAsError>
@@ -478,7 +478,7 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/win32;..\..\..\carbon\autobuild\stackless\$(Platform);$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/win32;$(CcpSdkPath)\zlib\1.2.3\lib\vc100.sp1\$(Platform);../../autobuild/BlueExposure/exefile/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\telemetry\2.0n\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/win32;..\..\..\carbon\autobuild\stackless\$(Platform);$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/win32;$(CcpSdkPath)\zlib\1.2.3\lib\vc100.sp1\$(Platform);../../autobuild/BlueExposure/exefile/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\telemetry\2.1A3\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
