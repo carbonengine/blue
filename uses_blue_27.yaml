@@ -1,7 +1,7 @@
 # This file defines settings for all modules that link against Blue with Python 2.6
 Imports:
 - ../../../../../../sdk/python/Python_2.7.yaml
-- ../../../../../../sdk/Telemetry/2.0n/telemetry_2.0n.yaml
+- ../../../../../../sdk/Telemetry/2.1A3/telemetry_2.1A3.yaml
 
 General:
   OutDir: ../../autobuild/$(ProjectName)/python_27/$(Platform)/$(PlatformToolset)/

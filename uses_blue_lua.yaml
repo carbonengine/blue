@@ -1,7 +1,7 @@
 # This file defines settings for all modules that link against Blue with Stackless
 Imports:
 - ../lua/uses_Lua.yaml
-- ../../../../../../sdk/telemetry/2.0n/telemetry_2.0n.yaml
+- ../../../../../../sdk/telemetry/2.1A3/telemetry_2.1A3.yaml
 
 General:
   OutDir: ../../autobuild/$(ProjectName)/lua/$(Platform)/$(PlatformToolset)/
