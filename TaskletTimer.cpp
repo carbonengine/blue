@@ -26,6 +26,7 @@
 
 #include "BlueOS.h"
 #include "TaskletTimer.h"
+#include "SimpleJson.h"
 
 #include <structmember.h>
 #include <sstream>
@@ -406,26 +407,20 @@ void TaskletTimer::WarnSlice(Be::Time now, Stack *stack, PyObject *newctxt, bool
 	forder = logf(forder)/logf(2.0f); // compute the base 2 logarithm.
 	int order = (int)ceilf(forder);
 	
-	std::stringstream combinedMessage;
-	combinedMessage << "Timeslice warning order " << order << ", " << rms << "ms (" << fms << "ms in frame)" << std::endl;
+	SimpleJson json;
+	json.set( "time", rms );
+	json.set( "order", order );
+	json.set( "inframe", fms );
 
-	if (newctxt) {
+	if (newctxt)
+	{
 		BluePy nstr(PyObject_Repr(newctxt));
-		if (!nstr)
+		if( !nstr )
+		{
 			PyErr_Clear();
-		if( switching )
-		{
-			combinedMessage << "switching to:";
 		}
-		else
-		{
-			combinedMessage << "entering:";
-		}
-		combinedMessage << PyString_AsString(nstr);
-	} else {
-		combinedMessage << "returning from:";
+		json.set( "next", PyString_AsString( nstr ) );
 	}
-	combinedMessage << std::endl;
 
 	//and now, the stack:
 	std::vector<std::string> tb;
@@ -437,10 +432,13 @@ void TaskletTimer::WarnSlice(Be::Time now, Stack *stack, PyObject *newctxt, bool
 			tb.push_back("unknown");
 	}
 	while(tb.size()) {
-		combinedMessage << "  ->" << tb.back() << std::endl;
+		char buffer[16];
+		sprintf_s( buffer, "stack_%d", tb.size() );
+		json.set( buffer, tb.back() );
+
 		tb.pop_back();
 	}
-	CCP_LOGWARN_CH(s_ch, "%s", combinedMessage.str().c_str());
+	CCP_LOGWARN_CH( s_ch, "!! timeslice %s", json.str().c_str() );
 }
 
 
@@ -477,11 +475,14 @@ void TaskletTimer::SimpleWarnSlice(Be::Time now, const char *what, PyObject *new
 		nc = BluePyStr("<bad>");
 	}
 
-	char msg[256];
-	_snprintf_s(msg, _countof(msg), _TRUNCATE, "Timeslice warning order %d, %dms in tasklet: %s '%s' from '%s'",
-		order, rms, 
-		what, nc.Str(), oc.Str());
-	CCP_LOGWARN_CH( s_ch, "%s", msg);
+	SimpleJson json;
+	json.set( "time", rms );
+	json.set( "order", order );
+	json.set( "what", what );
+	json.set( "new", nc.Str() );
+	json.set( "old", oc.Str() );
+
+	CCP_LOGWARN_CH( s_ch, "!! timeslice %s", json.str().c_str() );
 }
 
 

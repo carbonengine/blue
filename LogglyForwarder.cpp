@@ -63,6 +63,7 @@ size_t write_callback(char *ptr, size_t size, size_t nmemb, void *userdata)
 	return size * nmemb;
 }
 
+
 // The log echo function
 void LogglyForwarder::Log(CcpLogChannel_t& channel, CCP::LogType type, unsigned long userData, const char* message)
 {
@@ -89,35 +90,67 @@ void LogglyForwarder::Log(CcpLogChannel_t& channel, CCP::LogType type, unsigned 
 #endif
 
 	char sanitizedMessage[1536];
+	char datatype[32];
 
 	int writeIndex = 0;
-	for( int i = 0; writeIndex < sizeof( sanitizedMessage ) - 1; ++i )
+	bool isJson = strncmp( message, "!! ", 3 ) == 0;
+	if( isJson )
 	{
-		char c = message[i];
-		if( c == 0 )
+		int readIndex = 3;
+		while( message[readIndex] == ' ' )
 		{
-			break;
+			readIndex++;
 		}
-		switch( c ) {
-		case '"':
-			sanitizedMessage[writeIndex++] = '\\';
-			sanitizedMessage[writeIndex++] = '"';
-			break;
-		case '\n':
-			sanitizedMessage[writeIndex++] = '\\';
-			sanitizedMessage[writeIndex++] = 'n';
-			break;
+		while( (message[readIndex] != ' ') && (message[readIndex] != '{') )
+		{
+			if( writeIndex < sizeof(datatype) - 1)
+			{
+				datatype[writeIndex++] = message[readIndex];
+			}
+			readIndex++;
+		}
+		datatype[writeIndex] = 0;
+		while( message[readIndex] != '{' )
+		{
+			readIndex++;
+		}
 
-		default:
-			sanitizedMessage[writeIndex++] = c;
-		}
+		strcpy( sanitizedMessage, message + readIndex - 1 );
 	}
-	sanitizedMessage[writeIndex] = 0;
+	else
+	{
+		strcpy( datatype, "message");
 
-	const char* formatString = "{\"timestamp\": \"%s\", \"sessionid\": \"%s\", \"type\": \"%s\", \"module\": \"%s\", \"channel\": \"%s\", \"message\": \"%s\"}";
+		sanitizedMessage[writeIndex++] = '"';
+		for( int i = 0; writeIndex < sizeof( sanitizedMessage ) - 3; ++i )
+		{
+			char c = message[i];
+			if( c == 0 )
+			{
+				break;
+			}
+			switch( c ) {
+			case '"':
+				sanitizedMessage[writeIndex++] = '\\';
+				sanitizedMessage[writeIndex++] = '"';
+				break;
+			case '\n':
+				sanitizedMessage[writeIndex++] = '\\';
+				sanitizedMessage[writeIndex++] = 'n';
+				break;
+
+			default:
+				sanitizedMessage[writeIndex++] = c;
+			}
+		}
+		sanitizedMessage[writeIndex++] = '"';
+		sanitizedMessage[writeIndex] = 0;
+	}
+
+	const char* formatString = "{\"timestamp\": \"%s\", \"sessionid\": \"%s\", \"type\": \"%s\", \"module\": \"%s\", \"channel\": \"%s\", \"%s\": %s}";
 
 	char jsonMsg[2048];
-	sprintf_s(jsonMsg, formatString, timestamp, m_sessionId.c_str(), s_logType[type], channel.facility, channel.object, sanitizedMessage);
+	sprintf_s(jsonMsg, formatString, timestamp, m_sessionId.c_str(), s_logType[type], channel.facility, channel.object, datatype, sanitizedMessage);
 
 	LogJson(jsonMsg);
 }
