@@ -401,10 +401,10 @@ void BlueAsyncRes::CloseStream()
 
 void BlueAsyncRes::ParseQuery( const wchar_t* query )
 {
-	auto end = query + wcslen( query );
+	const wchar_t* end = query + wcslen( query );
 	while( query < end )
 	{
-		auto amp = wcschr( query, L'&' );
+		const wchar_t* amp = wcschr( query, L'&' );
 		if( !amp )
 		{
 			amp = end;
@@ -413,8 +413,8 @@ void BlueAsyncRes::ParseQuery( const wchar_t* query )
 		auto eq = wcschr( query, L'=' );
 		if( eq && eq < amp )
 		{
-			argument.first.assign( query, eq );
-			argument.second.assign( eq + 1, amp );
+			argument.first.assign( query, eq - query );
+			argument.second.assign( eq + 1, amp - ( eq + 1 ) );
 		}
 		else
 		{
