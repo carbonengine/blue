@@ -33,6 +33,8 @@ public:
 	Be::Result<std::string> CreateObjectFromStream( IBlueStream* stream, IRoot** obj );
 	Be::Result<std::string> CreateObjectFromFile( const std::wstring& filename, IRoot** obj );
 
+	bool IsHeaderValid( IBlueStream* stream );
+
 	//////////////////////////////////////////////////////////////////////////
 	// IRootReader
 	IRoot* ReadFromStream( IBlueStream* stream );

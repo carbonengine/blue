@@ -7,6 +7,7 @@
 #include "CallbackMan.h"
 #include "include/IBlueOS.h"
 #include "MotherLode.h"
+#include "IRootReader.h"
 
 BLUE_DECLARE( BlueResMan );
 
@@ -110,6 +111,8 @@ private:
 	std::set<std::wstring> m_filesInProgress;
 
 	IBlueResource* GetResourceHelper( const std::wstring& path, const std::wstring& ex, IBlueResManNotifications* notifications = nullptr );
+
+	void GetReaderForStream( std::wstring filename, IBlueStream* sourceStream, IRootReaderPtr& reader );
 
 	// If set, objects are looked up in the loadObject cache before reading from disk.
 	// This is the default - can be disabled to simplify content generators lives.

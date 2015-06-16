@@ -43,6 +43,40 @@ BlackReader::~BlackReader()
 	Cleanup();
 }
 
+bool BlackReader::IsHeaderValid( IBlueStream* stream )
+{
+	int32_t magicValue;
+
+	if( !ReadValueFromStream( stream, magicValue ) )
+	{
+		Cleanup();
+		return false;
+	}
+
+	if( magicValue != 0xb1acf11e )
+	{
+		Cleanup();
+		return false;
+	}
+
+	int32_t version;
+	if( !ReadValueFromStream( stream, version ) )
+	{
+		Cleanup();
+		return false;
+	}
+
+	if( version != 1 )
+	{
+		// Note - keep the PyGetVersionsSupported up to date if this version
+		// changes, or newer versions are added.
+		Cleanup();
+		return false;
+	}
+
+	return true;
+}
+
 IRoot* BlackReader::ReadFromStream( IBlueStream* stream )
 {
 	Cleanup();
@@ -63,31 +97,8 @@ bool BlackReader::ReadForCachingFromStream( IBlueStream* stream )
 
 	try
 	{
-		int32_t magicValue;
-
-		if( !ReadValueFromStream( stream, magicValue ) )
+		if( !IsHeaderValid( stream ) )
 		{
-			Cleanup();
-			throw IRootReaderException( "Invalid file" );
-		}
-
-		if( magicValue != 0xb1acf11e )
-		{
-			Cleanup();
-			throw IRootReaderException( "Invalid file" );
-		}
-
-		int32_t version;
-		if( !ReadValueFromStream( stream, version ) )
-		{
-			Cleanup();
-			throw IRootReaderException( "Invalid file" );
-		}
-
-		if( version != 1 )
-		{
-			// Note - keep the PyGetVersionsSupported up to date if this version
-			// changes, or newer versions are added.
 			Cleanup();
 			throw IRootReaderException( "Invalid file" );
 		}

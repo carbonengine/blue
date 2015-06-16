@@ -138,6 +138,10 @@ void LogglyForwarder::Log(CcpLogChannel_t& channel, CCP::LogType type, unsigned 
 				sanitizedMessage[writeIndex++] = '\\';
 				sanitizedMessage[writeIndex++] = 'n';
 				break;
+			case '\\':
+				sanitizedMessage[writeIndex++] = '\\';
+				sanitizedMessage[writeIndex++] = '\\';
+				break;
 
 			default:
 				sanitizedMessage[writeIndex++] = c;

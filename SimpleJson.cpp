@@ -18,7 +18,7 @@ std::string SimpleJson::str()
 	if( !m_isDone )
 	{
 		m_output << "}";
-		m_isDone;
+		m_isDone = true;
 	}
 	return m_output.str();
 }

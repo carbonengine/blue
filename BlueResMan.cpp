@@ -7,7 +7,6 @@
 #include "BlueMemStream.h"
 #include "BlackWriter.h"
 #include "BlackReader.h"
-#include "IRootReader.h"
 #include "BlueResFile.h"
 #include "include/BlueAsyncRes.h"
 #include "include/IBlueResource.h"
@@ -714,122 +713,122 @@ IRoot* BlueResMan::LoadObjectW( const wchar_t* unnormalizedName, Be::LOADOBJECT_
 		return NULL;
 	}
 
-	const wchar_t *dot = wcsrchr(name, L'.');
-	if( !dot )
+	std::wstring filename = name;
+
+	IBlueObjectBuilderPtr builder;
+	if( m_loadObjectCacheEnabled )
 	{
-		BeOS->SetError( BEDEF, 0, "%s: invalid filename, missing extension (\"%ls\")", __FUNCTION__, name );
-		return NULL;
+		switch( m_loadObjectCache.Lookup( filename.c_str(), GetIBlueObjectBuilderIID(), (void**)&builder ) )
+		{
+			case IMotherLode::LOOKUP_FAILED:
+				// The cache lookup itself failed - something must be corrupt
+				CCP_LOGERR_CH( s_ch, "%s: Lookup in loadObjectCache failed", __FUNCTION__ );
+				return nullptr;
+
+			case IMotherLode::LOOKUP_SUCCESS:
+				if( builder )
+				{
+					CCP_STATS_INC( resManLoadObjectShared );
+				}
+				break;
+
+			case IMotherLode::LOOKUP_CACHED:
+				if( builder )
+				{
+					CCP_STATS_INC( resManLoadObjectCacheHit );
+				}
+				break;
+		}
 	}
 
+	if( !builder )
 	{
-		// We have a '.red' extension or something else - try to load it as a YAML file.
-		// The YamlReader is cached so we look for one in the object cache. If it's not there,
-		// we open the file, parse it, store the reader in the object cache and create an
-		// object with the reader.
-		bool loadFromBlackFile = false;
-		std::wstring filename = name;
+		// Builder was not found in cache - create it. First we create the file object
+		// and read the file.
+		IBlueStreamPtr sourceStream;
 
-		IBlueObjectBuilderPtr builder;
+		auto result = GetFileContentsWithYield(filename, sourceStream);
+		if( !Be::IsSuccess( result ) )
+		{
+			CCP_LOGERR_CH( s_ch, "%s", result.value.c_str() );
+			return nullptr;
+		}
+
+		IRootReaderPtr reader;
+		GetReaderForStream( filename, sourceStream, reader );
+
+		builder = BlueCastPtr( reader );
+
 		if( m_loadObjectCacheEnabled )
 		{
-			switch( m_loadObjectCache.Lookup( filename.c_str(), GetIBlueObjectBuilderIID(), (void**)&builder ) )
-			{
-				case IMotherLode::LOOKUP_FAILED:
-					// The cache lookup itself failed - something must be corrupt
-					CCP_LOGERR_CH( s_ch, "%s: Lookup in loadObjectCache failed", __FUNCTION__ );
-					return nullptr;
-
-				case IMotherLode::LOOKUP_SUCCESS:
-					if( builder )
-					{
-						CCP_STATS_INC( resManLoadObjectShared );
-					}
-					break;
-
-				case IMotherLode::LOOKUP_CACHED:
-					if( builder )
-					{
-						CCP_STATS_INC( resManLoadObjectCacheHit );
-					}
-					break;
-			}
+			m_loadObjectCache.Insert( filename.c_str(), builder );
 		}
-
-		if( !builder )
-		{
-			// Builder was not found in cache - create it. First we create the file object
-			// and read the file.
-			IBlueStreamPtr sourceStream;
-
-			auto result = GetFileContentsWithYield(filename, sourceStream);
-			if( !Be::IsSuccess( result ) )
-			{
-				CCP_LOGERR_CH( s_ch, "%s", result.value.c_str() );
-				return nullptr;
-			}
-
-			IRootReaderPtr reader;
-
-			BlackReaderPtr blackReader;
-			blackReader.CreateInstance();
-
-			CCP_LOG_CH( s_ch, "Reading %S", filename.c_str() );
-			blackReader->SetFileName( filename.c_str() );
-
-			CCP_ASSERT( sourceStream );
-			if( blackReader->ReadForCachingFromStream( sourceStream ) )
-			{
-				reader = blackReader;
-			}
-			else
-			{
-				sourceStream->Seek( 0, ICcpStream::SO_BEGIN );
-
-				YamlReaderPtr yamlReader;
-				yamlReader.CreateInstance();
-				yamlReader->SetFileName( filename.c_str() );
-
-				if( yamlReader->ReadForCachingFromStream( sourceStream ) )
-				{
-					reader = yamlReader;
-				}
-				else
-				{
-					std::string msg;
-					yamlReader->GetErrorMessage( msg );
-					CCP_LOGERR_CH( s_ch, "Error reading %S: %s", filename.c_str(), msg.c_str() );
-					return nullptr;
-				}
-			}
-
-			builder = BlueCastPtr( reader );
-
-			if( m_loadObjectCacheEnabled )
-			{
-				m_loadObjectCache.Insert( filename.c_str(), builder );
-			}
-		}
-
-		IRootReaderPtr rd = BlueCastPtr( builder );
-		if( rd )
-		{
-			rd->SetDoInitialize( init == Be::LDOBJ_INITIALIZE );
-			rd->SetTimeSlice( m_loadObjectTimeSlice );
-		}
-
-		CCP_LOG_CH( s_ch, "Creating object from %S", filename.c_str() );
-		IRoot* obj = builder->CreateObjectWithYield( NULL, NULL );
-
-		if( !obj )
-		{
-			std::string msg;
-			builder->GetErrorMessage( msg );
-			CCP_LOGERR_CH( s_ch, msg.c_str() );
-		}
-		return obj;
 	}
 
-	return NULL;
+	IRootReaderPtr rd = BlueCastPtr( builder );
+	if( rd )
+	{
+		rd->SetDoInitialize( init == Be::LDOBJ_INITIALIZE );
+		rd->SetTimeSlice( m_loadObjectTimeSlice );
+	}
+
+	CCP_LOG_CH( s_ch, "Creating object from %S", filename.c_str() );
+	IRoot* obj = builder->CreateObjectWithYield( NULL, NULL );
+
+	if( !obj )
+	{
+		std::string msg;
+		builder->GetErrorMessage( msg );
+		CCP_LOGERR_CH( s_ch, msg.c_str() );
+	}
+	return obj;
+}
+
+
+void BlueResMan::GetReaderForStream( std::wstring filename, IBlueStream* sourceStream, IRootReaderPtr& reader )
+{
+	reader = nullptr;
+
+	BlackReaderPtr blackReader;
+	blackReader.CreateInstance();
+
+	CCP_LOG_CH( s_ch, "Reading %S", filename.c_str() );
+	blackReader->SetFileName( filename.c_str() );
+
+	CCP_ASSERT( sourceStream );
+	if( blackReader->IsHeaderValid( sourceStream ) )
+	{
+		sourceStream->Seek( 0, ICcpStream::SO_BEGIN );
+		if( blackReader->ReadForCachingFromStream( sourceStream ) )
+		{
+			reader = blackReader;
+		}
+		else
+		{
+			std::string msg;
+			blackReader->GetErrorMessage( msg );
+			CCP_LOGERR_CH( s_ch, "Error reading %S: %s", filename.c_str(), msg.c_str() );
+		}
+	}
+	else
+	{
+		sourceStream->Seek( 0, ICcpStream::SO_BEGIN );
+
+		YamlReaderPtr yamlReader;
+		yamlReader.CreateInstance();
+		yamlReader->SetFileName( filename.c_str() );
+
+		if( yamlReader->ReadForCachingFromStream( sourceStream ) )
+		{
+			reader = yamlReader;
+		}
+		else
+		{
+			std::string msg;
+			yamlReader->GetErrorMessage( msg );
+			CCP_LOGERR_CH( s_ch, "Error reading %S: %s", filename.c_str(), msg.c_str() );
+		}
+	}
 }
 
 #if BLUE_WITH_PYTHON
