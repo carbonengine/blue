@@ -40,32 +40,49 @@ protected:
 
 	bool m_isActive;
 	CURL* m_curl;
-	std::string m_sessionId;
+
+	struct LogPackage
+	{
+		LogPackage(CcpLogChannel_t& channel, CCP::LogType type, unsigned long userData, const char* message) : m_channel(channel), m_type(type)
+		{
+#ifdef WIN32
+			GetSystemTime( &m_systemtime );
+#endif
+			m_message = CCP_STRDUP( "LogPackage/m_message", message );
+		}
+		
+		~LogPackage()
+		{
+			CCP_FREE( reinterpret_cast<void*>(m_message) );
+		}
+
+#ifdef WIN32
+		SYSTEMTIME m_systemtime;
+#endif
+		CcpLogChannel_t m_channel;
+		CCP::LogType m_type;
+		char* m_message;
+	};
 
 	struct WritePackage
 	{
-		WritePackage(const char* d)
-		{
-			data = CCP_STRDUP("WritePackage/data", d);
-			dataSize = strlen(data);
-			curData = data;
-		}
+		WritePackage(LogPackage* lp);
 
 		~WritePackage()
 		{
-			CCP_FREE(data);
+			CCP_FREE(m_data);
 		}
 
-		char* data;
-		size_t dataSize;
-		const char* curData;
+		char* m_data;
+		size_t m_dataSize;
+		const char* m_curData;
 	};
 
-	TrackableStdDeque<WritePackage*> m_queue;
+	TrackableStdDeque<LogPackage*> m_queue;
 	CcpMutex m_queueMutex;
 	CcpSemaphore m_queueSignal;
 
-	WritePackage* PopQueue();
+	LogPackage* PopQueue();
 };
 
 #endif // BlueLogInMemory_h
