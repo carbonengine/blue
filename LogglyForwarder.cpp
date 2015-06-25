@@ -222,6 +222,7 @@ LogglyForwarder::WritePackage::WritePackage( LogPackage* lp )
 		readIndex--;
 
 		writeIndex = 0;
+		bool inField = false;
 		for( ; writeIndex < sizeof( sanitizedMessage ) - 1; ++readIndex )
 		{
 			char c = message[readIndex];
@@ -229,9 +230,19 @@ LogglyForwarder::WritePackage::WritePackage( LogPackage* lp )
 			{
 				break;
 			}
+
 			switch( c ) {
 			case '\n':
-			case '\r':
+				if( inField )
+				{
+					sanitizedMessage[writeIndex++] = '\\';
+					sanitizedMessage[writeIndex++] = 'n';
+				}
+				break;
+
+			case '"':
+				inField = !inField;
+				sanitizedMessage[writeIndex++] = c;
 				break;
 
 			default:
