@@ -385,13 +385,11 @@ static PyObject* PyCrashHorribly( PyObject* module, PyObject* args )
 	{
 		Py_RETURN_NONE;
 	}
-
-	CCP_LOGERR( "About to throw an exception that will kill Blue." );
+	
 	BeOS->SetError( BEFLUSH, 0, "" );
+	CcpCrashOnPurpose();
 
-	volatile int i = 0;
-
-	return PyLong_FromLong( 1/i );
+	Py_RETURN_NONE;
 }
 MAP_FUNCTION( "CrashHorribly", PyCrashHorribly, "CrashHorribly( bool reallyCrash )\nCrashes Blue. Pass in True if you really want to crash.\n Intended for testing crashdumps etc." );
 

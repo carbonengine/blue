@@ -632,7 +632,7 @@ void YamlReader::ReadFloatArray( float* values, size_t count )
 			const char* type = nullptr;
 			ReadClassType( type );
 
-			if( strcmp( type, "TriVector") != 0 )
+			if( !type || strcmp( type, "TriVector") != 0 )
 			{
 				// Not a TriVector, can't make anything of this data
 				ReportError( "Expected a float sequence of 3 floats, or a fallback to TriVector" );

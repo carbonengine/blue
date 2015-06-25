@@ -1382,8 +1382,7 @@ void BlueOS::Terminate( int retCode )
 
 	// If we ever get here something has gone horribly wrong - induce a crash so
 	// we learn about this via the crash dumps.
-	int* crashPointer = nullptr;
-	*crashPointer = 42;
+	CcpCrashOnPurpose();
 #elif defined(__ORBIS__)
 	// TODO: kill it!
 #else
