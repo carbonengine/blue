@@ -174,6 +174,8 @@ MAP_FUNCTION_AND_WRAP( "IsLogglyEnabled", IsLogglyEnabled, "Returns true if Logg
 LogglyForwarder::WritePackage::WritePackage( LogPackage* lp )
 {
 	static const char* s_logType[] = { "info", "notice", "warning", "error" };
+	static char s_sanitizedMessage[64000];
+	static char s_jsonMsg[65535];
 
 	char timestamp[64];
 
@@ -194,7 +196,6 @@ LogglyForwarder::WritePackage::WritePackage( LogPackage* lp )
 
 	const char* message = lp->m_message;
 
-	char sanitizedMessage[32768];
 	char datatype[32];
 
 	int writeIndex = 0;
@@ -223,7 +224,7 @@ LogglyForwarder::WritePackage::WritePackage( LogPackage* lp )
 
 		writeIndex = 0;
 		bool inField = false;
-		for( ; writeIndex < sizeof( sanitizedMessage ) - 1; ++readIndex )
+		for( ; writeIndex < sizeof( s_sanitizedMessage ) - 1; ++readIndex )
 		{
 			char c = message[readIndex];
 			if( c == 0 )
@@ -235,28 +236,28 @@ LogglyForwarder::WritePackage::WritePackage( LogPackage* lp )
 			case '\n':
 				if( inField )
 				{
-					sanitizedMessage[writeIndex++] = '\\';
-					sanitizedMessage[writeIndex++] = 'n';
+					s_sanitizedMessage[writeIndex++] = '\\';
+					s_sanitizedMessage[writeIndex++] = 'n';
 				}
 				break;
 
 			case '"':
 				inField = !inField;
-				sanitizedMessage[writeIndex++] = c;
+				s_sanitizedMessage[writeIndex++] = c;
 				break;
 
 			default:
-				sanitizedMessage[writeIndex++] = c;
+				s_sanitizedMessage[writeIndex++] = c;
 			}
 		}
-		sanitizedMessage[writeIndex] = 0;
+		s_sanitizedMessage[writeIndex] = 0;
 	}
 	else
 	{
 		strcpy( datatype, "message" );
 
-		sanitizedMessage[writeIndex++] = '"';
-		for( int i = 0; writeIndex < sizeof( sanitizedMessage ) - 3; ++i )
+		s_sanitizedMessage[writeIndex++] = '"';
+		for( int i = 0; writeIndex < sizeof( s_sanitizedMessage ) - 3; ++i )
 		{
 			char c = message[i];
 			if( c == 0 )
@@ -265,32 +266,31 @@ LogglyForwarder::WritePackage::WritePackage( LogPackage* lp )
 			}
 			switch( c ) {
 			case '"':
-				sanitizedMessage[writeIndex++] = '\\';
-				sanitizedMessage[writeIndex++] = '"';
+				s_sanitizedMessage[writeIndex++] = '\\';
+				s_sanitizedMessage[writeIndex++] = '"';
 				break;
 			case '\n':
-				sanitizedMessage[writeIndex++] = '\\';
-				sanitizedMessage[writeIndex++] = 'n';
+				s_sanitizedMessage[writeIndex++] = '\\';
+				s_sanitizedMessage[writeIndex++] = 'n';
 				break;
 			case '\\':
-				sanitizedMessage[writeIndex++] = '\\';
-				sanitizedMessage[writeIndex++] = '\\';
+				s_sanitizedMessage[writeIndex++] = '\\';
+				s_sanitizedMessage[writeIndex++] = '\\';
 				break;
 
 			default:
-				sanitizedMessage[writeIndex++] = c;
+				s_sanitizedMessage[writeIndex++] = c;
 			}
 		}
-		sanitizedMessage[writeIndex++] = '"';
-		sanitizedMessage[writeIndex] = 0;
+		s_sanitizedMessage[writeIndex++] = '"';
+		s_sanitizedMessage[writeIndex] = 0;
 	}
 
 	const char* formatString = "{\"timestamp\": \"%s\", \"sessionid\": \"%s\", \"type\": \"%s\", \"module\": \"%s\", \"channel\": \"%s\", \"%s\": %s}";
 
-	char jsonMsg[32768];
-	sprintf_s( jsonMsg, formatString, timestamp, s_sessionId.c_str(), s_logType[lp->m_type], lp->m_channel.facility, lp->m_channel.object, datatype, sanitizedMessage );
+	sprintf_s( s_jsonMsg, formatString, timestamp, s_sessionId.c_str(), s_logType[lp->m_type], lp->m_channel.facility, lp->m_channel.object, datatype, s_sanitizedMessage );
 
-	m_data = CCP_STRDUP( "WritePackage/data", jsonMsg );
+	m_data = CCP_STRDUP( "WritePackage/data", s_jsonMsg );
 	m_dataSize = strlen( m_data );
 	m_curData = m_data;
 }

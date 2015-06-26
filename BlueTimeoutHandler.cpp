@@ -51,13 +51,12 @@ uint32_t BlueTimeoutHandler::PythonDiagnosticFunction( void* context )
 {
 	CCP_LOG( "Running Python diagnostics for freeze detection" );
 
-	PyObject *bluepy;
 	PyGILState_STATE state = PyGILState_Ensure();
-	bluepy = PyImport_ImportModule("bluepy");
-	if( bluepy )
+	PyObject* module = PyImport_ImportModule( "pythonstatus" );
+	if( module )
 	{
 		CCP_LOG( "Calling pythonstatus" );
-		PyObject* result = PyObject_CallMethod(bluepy, const_cast<char*>( "pythonstatus" ), const_cast<char*>( "" ) );
+		PyObject* result = PyObject_CallMethod( module, const_cast<char*>("pythonstatus"), const_cast<char*>("") );
 		if( result )
 		{
 			CCP_LOG( "Calling pythonstatus - done" );
@@ -67,11 +66,11 @@ uint32_t BlueTimeoutHandler::PythonDiagnosticFunction( void* context )
 		{
 			PyErr_WriteUnraisable( Py_None );
 		}
-		Py_DECREF(bluepy);
+		Py_DECREF( module );
 	}
 	else
 	{
-		CCP_LOGERR( "Failed to import bluepy module" );
+		CCP_LOGERR( "Failed to import pythonstatus module" );
 		PyErr_WriteUnraisable( Py_None );
 	}
 	PyGILState_Release(state);
