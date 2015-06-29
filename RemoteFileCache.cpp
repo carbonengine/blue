@@ -22,7 +22,8 @@ CCP_STATS_DECLARE( remoteFileCacheGetStream, "Blue/RemoteFileCache/GetStreamFrom
 CCP_STATS_DECLARE( remoteFileCacheGetStreamCount, "Blue/RemoteFileCache/GetStreamFromPathCount", false, CST_COUNTER_LOW, "Number of calls to RemoteFileCache::GetStreamFromPathW" );
 CCP_STATS_DECLARE( remoteFileCacheFailedPrimary, "Blue/RemoteFileCache/FailedPrimary", false, CST_COUNTER_LOW, "Count of failed downloads from primary server" );
 CCP_STATS_DECLARE( remoteFileCacheFailedBackup, "Blue/RemoteFileCache/FailedBackup", false, CST_COUNTER_LOW, "Count of failed downloads from backup server" );
-CCP_STATS_DECLARE( remoteFileCacheCorruptFiles, "Blue/RemoteFileCache/CorruptFiles", false, CST_COUNTER_LOW, "Count of corrupt downloads" );
+CCP_STATS_DECLARE( remoteFileCacheCorruptDownloads, "Blue/RemoteFileCache/CorruptDownloads", false, CST_COUNTER_LOW, "Count of corrupt downloads" );
+CCP_STATS_DECLARE( remoteFileCacheCorruptFiles, "Blue/RemoteFileCache/CorruptFiles", false, CST_COUNTER_LOW, "Count of corrupt files in the cache" );
 
 namespace
 {
@@ -162,7 +163,7 @@ Be::Result<std::string> RemoteFileCache::GetStreamFromPathW( const wchar_t* resP
 
 		if( size != info.size )
 		{
-			CCP_STATS_INC( remoteFileCacheCorruptFiles );
+			CCP_STATS_INC( remoteFileCacheCorruptDownloads );
 			return Be::Result<std::string>( "Size does not match expected value" );
 		}
 
@@ -170,7 +171,7 @@ Be::Result<std::string> RemoteFileCache::GetStreamFromPathW( const wchar_t* resP
 		{
 			if( !remoteStream->VerifyContents( info.checksum.c_str() ) )
 			{
-				CCP_STATS_INC( remoteFileCacheCorruptFiles );
+				CCP_STATS_INC( remoteFileCacheCorruptDownloads );
 				return Be::Result<std::string>( "Checksum does not match expected value" );
 			}
 		}
@@ -228,6 +229,7 @@ Be::Result<std::string> RemoteFileCache::CreateFileStreamForCachedFile( const st
 			}
 			else
 			{
+				CCP_STATS_INC( remoteFileCacheCorruptFiles );
 				return Be::Result<std::string>( "File is corrupt" );
 			}
 		}

@@ -36,6 +36,7 @@
 #endif
 
 static CcpLogChannel_t s_ch = CCP_LOG_DEFINE_CHANNEL( "TaskletTimer" );
+CCP_STATS_DECLARE( timesliceWarnings, "Blue/TimesliceWarnings", false, CST_COUNTER_LOW, "Count of timeslice warnings issued" );
 
 
 PyObject *Frame::ToPython(double iFreq) const
@@ -439,6 +440,7 @@ void TaskletTimer::WarnSlice(Be::Time now, Stack *stack, PyObject *newctxt, bool
 		tb.pop_back();
 	}
 	CCP_LOGWARN_CH( s_ch, "!! timeslice %s", json.str().c_str() );
+	CCP_STATS_INC( timesliceWarnings );
 }
 
 
@@ -483,6 +485,7 @@ void TaskletTimer::SimpleWarnSlice(Be::Time now, const char *what, PyObject *new
 	json.set( "old", oc.Str() );
 
 	CCP_LOGWARN_CH( s_ch, "!! timeslice %s", json.str().c_str() );
+	CCP_STATS_INC( timesliceWarnings );
 }
 
 
