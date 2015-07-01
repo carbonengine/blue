@@ -731,7 +731,7 @@ const wchar_t* YamlReader::ReadWString()
 	}
 
 	yaml_scalar_style_t style = m_event->data.scalar.style;
-	if( style != YAML_DOUBLE_QUOTED_SCALAR_STYLE && style != YAML_SINGLE_QUOTED_SCALAR_STYLE )
+	if( style != YAML_DOUBLE_QUOTED_SCALAR_STYLE && style != YAML_SINGLE_QUOTED_SCALAR_STYLE && style != YAML_PLAIN_SCALAR_STYLE )
 	{
 		// asString should be equal to NULL or something of that nature - it's at least no string
 		return NULL;
@@ -762,7 +762,7 @@ const char* YamlReader::ReadString()
 	}
 
 	yaml_scalar_style_t style = m_event->data.scalar.style;
-	if( style != YAML_DOUBLE_QUOTED_SCALAR_STYLE && style != YAML_SINGLE_QUOTED_SCALAR_STYLE )
+	if( style != YAML_DOUBLE_QUOTED_SCALAR_STYLE && style != YAML_SINGLE_QUOTED_SCALAR_STYLE && style != YAML_PLAIN_SCALAR_STYLE )
 	{
 		// asString should be equal to NULL or something of that nature - it's at least no string
 		return NULL;
