@@ -20,6 +20,7 @@
 #endif
 
 #ifdef _WIN32
+#include "win32.h"
 #include "crypto.h"
 #include "Logger/Logger.h"
 #endif
@@ -1117,7 +1118,7 @@ bool BlueOS::Startup( short interfaceVersion, int pyOptimizeFlag )
 #endif
 
 	mOsInfo.dwOSVersionInfoSize = sizeof mOsInfo;
-	GetVersionEx(&mOsInfo);
+	GetWindowsVersion( mOsInfo );
 #endif
 
 	// pump yielding

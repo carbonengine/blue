@@ -16,6 +16,7 @@ const char* g_moduleName = "blue";
 std::wstring s_logDeviceName( L"EVE" );
 
 #ifdef _WIN32
+#include "win32.h"
 static HINSTANCE s_instance = NULL;
 #endif
 
@@ -163,27 +164,15 @@ BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID)
 		
 		OSVERSIONINFOEX ver = {0};
 		ver.dwOSVersionInfoSize = sizeof(ver);
-		if (GetVersionEx((OSVERSIONINFO*)&ver)) {
-			CCP_LOG( "Windows version %d.%d.%d \"%s\" platform:%d sp:%d.%d suitemask:%d product:%d",
-				ver.dwMajorVersion,
-				ver.dwMinorVersion,
-				ver.dwBuildNumber,
-				ver.szCSDVersion,
-				ver.dwPlatformId, 
-				ver.wServicePackMajor, ver.wServicePackMinor, 
-				ver.wSuiteMask, ver.wProductType);
-		} else {
-			//supports only older version
-			OSVERSIONINFO over = {0};
-			over.dwOSVersionInfoSize = sizeof(ver);
-			GetVersionEx(&over);
-			CCP_LOG( "Windows version %d.%d.%d \"%s\" platform:%d",
-				over.dwMajorVersion,
-				over.dwMinorVersion,
-				over.dwBuildNumber,
-				over.szCSDVersion,
-				over.dwPlatformId);
-		}	
+		GetWindowsVersion( ver );
+		CCP_LOG( "Windows version %d.%d.%d \"%s\" platform:%d sp:%d.%d suitemask:%d product:%d",
+			ver.dwMajorVersion,
+			ver.dwMinorVersion,
+			ver.dwBuildNumber,
+			ver.szCSDVersion,
+			ver.dwPlatformId, 
+			ver.wServicePackMajor, ver.wServicePackMinor, 
+			ver.wSuiteMask, ver.wProductType);
 
 		if( memoryLoad )
 		{

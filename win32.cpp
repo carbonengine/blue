@@ -491,7 +491,90 @@ PyMethodDef heapqmethods[] = {
 	{0}
 };
 
-	
+
+bool GetWindowsVersionFromFile( OSVERSIONINFOEX& info )
+{
+	wchar_t folder[MAX_PATH];
+	if( FAILED( SHGetFolderPathW( nullptr, CSIDL_SYSTEM, nullptr, SHGFP_TYPE_CURRENT, folder ) ) )
+	{
+		return false;
+	}
+	std::wstring path( folder );
+	path += L"\\kernel32.dll";
+	DWORD handle = 0;
+	auto size = GetFileVersionInfoSizeW( path.c_str(), &handle );
+	if( !size )
+	{
+		return false;
+	}
+	std::unique_ptr<char[]> versionInfo( new char[size] );
+	if( !GetFileVersionInfoW( path.c_str(), handle, size, versionInfo.get() ) )
+	{
+		return false;
+	}
+
+
+	struct LANGANDCODEPAGE 
+	{
+		  WORD language;
+		  WORD codePage;
+	} *translate;
+	UINT translateSize;
+
+	if( !VerQueryValueW( versionInfo.get(), L"\\VarFileInfo\\Translation", reinterpret_cast<LPVOID*>( &translate ), &translateSize ) )
+	{
+		return false;
+	}
+
+	for( UINT i = 0; i < translateSize / sizeof( LANGANDCODEPAGE ); ++i )
+	{
+		wchar_t subBlock[512];
+		swprintf_s( subBlock, L"\\StringFileInfo\\%04x%04x\\ProductVersion", translate[i].language, translate[i].codePage );
+		wchar_t *version;
+		UINT size;
+		if( VerQueryValueW( versionInfo.get(), subBlock, reinterpret_cast<LPVOID*>( &version ), &size ) )
+		{
+			unsigned major, minor, build;
+			if( swscanf_s( version, L"%u.%u.%u", &major, &minor, &build ) != 3 )
+			{
+				return false;
+			}
+			info.dwMajorVersion = major;
+			info.dwMinorVersion = minor;
+			info.dwBuildNumber = build;
+			info.dwPlatformId = VER_PLATFORM_WIN32_NT;
+			info.szCSDVersion[0] = 0;
+			info.wServicePackMajor = 0;
+			info.wServicePackMinor = 0;
+			info.wSuiteMask = 0;
+			info.wProductType = VER_NT_WORKSTATION;
+			return true;
+		}
+	}
+	return false;
+}
+
+void GetWindowsVersionFromApi( OSVERSIONINFOEX &info )
+{
+	memset( &info, 0, sizeof( info ) );
+	info.dwOSVersionInfoSize = sizeof( info );
+	if( !GetVersionEx( reinterpret_cast<OSVERSIONINFO*>( &info ) ) )
+	{
+		info.dwOSVersionInfoSize = sizeof( OSVERSIONINFO );
+		if( !GetVersionEx( reinterpret_cast<OSVERSIONINFO*>( &info ) ) )
+		{
+			auto ver = GetVersion();
+			info.dwMajorVersion = LOBYTE( LOWORD( ver ) );
+			info.dwMinorVersion = HIBYTE( LOWORD( ver ) );
+			if( ver < 0x80000000 )
+			{
+				info.dwBuildNumber = HIWORD( ver );
+			}
+		}
+	}
+}
+
+
 PyObject *PyGetSystemDirectory(PyObject *self, PyObject *args)
 {
 	if (!PyArg_ParseTuple(args, ""))
@@ -2415,9 +2498,7 @@ PyObject *PyGetVersionEx(PyObject *self, PyObject *args)
 		return 0;
 	OSVERSIONINFOEX vi;
 	vi.dwOSVersionInfoSize = sizeof(vi);
-	BOOL ok = GetVersionEx((LPOSVERSIONINFO)&vi);
-	if (!ok)
-		return PyWin32Error("GetVersionEx");
+	GetWindowsVersion( vi );
 	return Py_BuildValue("{si si si si si ss si si si si}", 
 #define V(S) #S, vi.S
 		V(dwOSVersionInfoSize),
@@ -3351,6 +3432,39 @@ void
 	Py_InitModule("blue.heapq", heapqmethods);
 	DefineErrors(win32);
 	DefineConsts(win32);
+}
+
+
+void GetWindowsVersion( OSVERSIONINFOEX &info )
+{
+	OSVERSIONINFOEX fileInfo;
+	bool hasFileInfo = GetWindowsVersionFromFile( fileInfo );
+	OSVERSIONINFOEX osInfo;
+	GetWindowsVersionFromApi( osInfo );
+	if( !hasFileInfo || ( fileInfo.dwMajorVersion == osInfo.dwMajorVersion && fileInfo.dwMinorVersion == osInfo.dwMinorVersion && fileInfo.dwBuildNumber == osInfo.dwBuildNumber ) )
+	{
+		info = osInfo;
+	}
+	else
+	{
+		info = fileInfo;
+	}
+}
+
+void GetWindowsVersion( OSVERSIONINFO &info )
+{
+	OSVERSIONINFOEX fileInfo;
+	bool hasFileInfo = GetWindowsVersionFromFile( fileInfo );
+	OSVERSIONINFOEX osInfo;
+	GetWindowsVersionFromApi( osInfo );
+	if( !hasFileInfo || ( fileInfo.dwMajorVersion == osInfo.dwMajorVersion && fileInfo.dwMinorVersion == osInfo.dwMinorVersion && fileInfo.dwBuildNumber == osInfo.dwBuildNumber ) )
+	{
+		memcpy( &info, &osInfo, sizeof( info ) );
+	}
+	else
+	{
+		memcpy( &info, &fileInfo, sizeof( info ) );
+	}
 }
 
 #endif

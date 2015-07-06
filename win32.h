@@ -5,4 +5,7 @@
 void initwin32(void);
 PyObject *PyWin32Error(const char *msg = 0, DWORD code = 0);
 
+void GetWindowsVersion( OSVERSIONINFO &info );
+void GetWindowsVersion( OSVERSIONINFOEX &info );
+
 #endif
