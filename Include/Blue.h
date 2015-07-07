@@ -36,5 +36,7 @@
 
 #undef _BLUE_H_INCLUDING
 
+void BlueModuleStartup();
+
 #endif
 

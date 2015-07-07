@@ -11,6 +11,7 @@
 #include "logger/Logger.h"
 #include "ResourceLoading.h"
 #include "BlueExposure/BlueLuaThunkers.h"
+#include "BlueSocketLogger.h"
 
 const char* g_moduleName = "blue";
 std::wstring s_logDeviceName( L"EVE" );
@@ -51,9 +52,21 @@ namespace
 	}
 }
 
+#endif
+
 #if BLUE_WITH_PYTHON
 PyObject* PyAttachToLogServer( PyObject* self, PyObject* args )
 {
+	if( StartSocketLogger() )
+	{
+		CCP::RegisterLogEcho( &LogToSocketLogger, CCP::LOGTYPE_INFO, true );
+		CCP_LOG( "Socket logger has been attached" );
+	}
+	else
+	{
+		CCP_LOG( "Failed to attach to socket logger" );
+	}
+#ifdef _WIN32
 	if( Log__IsLogging() )
 	{
 		CCP_LOG( "LogServer can't reattach" );
@@ -71,10 +84,13 @@ PyObject* PyAttachToLogServer( PyObject* self, PyObject* args )
 	{
 		CCP_LOG( "Failed to attach to LogServer" );
 	}
+#endif
 	Py_RETURN_NONE;
 }
 
 MAP_FUNCTION( "AttachToLogServer", PyAttachToLogServer, "Attaches to the log server" );
+
+#ifdef _WIN32
 
 PyObject* PyEnableDebuggerLogging( PyObject* self, PyObject* args )
 {
@@ -100,7 +116,10 @@ PyObject* PyEnableDebuggerLogging( PyObject* self, PyObject* args )
 
 MAP_FUNCTION( "EnableDebuggerLogging", PyEnableDebuggerLogging, "Enables echoing of log to debugger output window" );
 #endif
+#endif
 
+
+#ifdef _WIN32
 
 BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID)
 {
@@ -113,101 +132,10 @@ BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID)
 		int newFlag = (oldFlag & 0xffff) | _CRTDBG_CHECK_DEFAULT_DF;
 		newFlag &= ~_CRTDBG_CHECK_ALWAYS_DF;
 		_CrtSetDbgFlag(newFlag);
-
+    
 		DisableThreadLibraryCalls(instance);
 
-		// Inform the logging system of the main thread
-		CCP::SetLogMainThreadId();
-
-		unsigned int memoryLoad = 0;
-
-		// This is duplicating work from ExeFile but I don't see a good
-		// way around that. If I have ExeFile call functions in BeOS or
-		// something I can't get data from arguments until after all
-		// the initialization process is done.
-		std::vector<std::wstring> argv = GetSplitCommandLine();
-
-		for( size_t i = 1; i < argv.size(); ++i )
-		{
-			const std::wstring &arg = argv[i];
-			if( arg.find( L"/logDevice=" ) == 0 )
-			{
-				s_logDeviceName = arg.substr( 11 );
-			}
-			else if( arg.find( L"/logDebugger" ) == 0 )
-			{
-				// Instruct the CCP logging system to echo to the debugger output window.
-				CCP::RegisterLogEcho( &CCP::LogToDebugger, CCP::LOGTYPE_INFO, true );
-			}
-			else if( arg.find( L"/memoryTracking" ) == 0 )
-			{
-				MemoryTrackerInitialize();
-			}
-			else if( arg.find( L"/memoryTracking=" ) == 0 )
-			{
-				MemoryTrackerInitialize();
-			}
-			else if( arg.find( L"/memoryLoad=" ) == 0 )
-			{
-				memoryLoad = _wtoi( arg.substr( 12 ).c_str() );
-			}
-		}
-
-		Log__InitLibrary( (LONG_PTR)s_instance, CW2A( s_logDeviceName.c_str()));
-		if( Log__IsLogging() )
-		{
-			// Instruct the CCP logging system to echo to the LogServer as well
-			CCP::RegisterLogEcho( &LogToLogServer, CCP::LOGTYPE_INFO, true );
-		}
-				
-		CCP_LOG( "Blue module starting" );
-		
-		OSVERSIONINFOEX ver = {0};
-		ver.dwOSVersionInfoSize = sizeof(ver);
-		GetWindowsVersion( ver );
-		CCP_LOG( "Windows version %d.%d.%d \"%s\" platform:%d sp:%d.%d suitemask:%d product:%d",
-			ver.dwMajorVersion,
-			ver.dwMinorVersion,
-			ver.dwBuildNumber,
-			ver.szCSDVersion,
-			ver.dwPlatformId, 
-			ver.wServicePackMajor, ver.wServicePackMinor, 
-			ver.wSuiteMask, ver.wProductType);
-
-		if( memoryLoad )
-		{
-			unsigned int memSize = memoryLoad * 1024*1024;
-			unsigned int oneHundredMegs = 100*1024*1024;
-			while( memSize >= oneHundredMegs )
-			{
-				void* p = CCP_MALLOC( "memoryLoad", oneHundredMegs );
-				if( !p )
-				{
-					CCP_LOGERR( "Allocating 100 MB for artificial memory load failed" );
-				}
-				else
-				{
-					CCP_LOG( "Allocated 100 MB for artificial memory load" );
-					memset( p, 0, oneHundredMegs );
-				}
-				memSize -= oneHundredMegs;
-			}
-			void* p = CCP_MALLOC( "memoryLoad", memSize );
-			if( !p )
-			{
-				CCP_LOGERR( "Allocating %d MB for artificial memory load failed", memSize / (1024*1024) );
-			}
-			else
-			{
-				CCP_LOG( "Allocated %d MB for artificial memory load", memSize / (1024*1024) );
-				memset( p, 0, memSize );
-			}
-		}
-
-#if CCP_STACKLESS
-		BeClasses->RegisterClasses( BlueRegistration::GetClassRegs() );
-		BlueInitializePaths();
-#endif
+		BlueModuleStartup();
 	}
 	else if (reason == DLL_PROCESS_DETACH)
 	{
@@ -234,6 +162,116 @@ extern "C" int DLLEXPORT module_start( size_t, const void* )
 	return 0;
 }
 #endif
+
+void BlueModuleStartup()
+{
+    // Inform the logging system of the main thread
+    CCP::SetLogMainThreadId();
+    
+    unsigned int memoryLoad = 0;
+    
+    // This is duplicating work from ExeFile but I don't see a good
+    // way around that. If I have ExeFile call functions in BeOS or
+    // something I can't get data from arguments until after all
+    // the initialization process is done.
+    std::vector<std::wstring> argv = GetSplitCommandLine();
+    
+    for( size_t i = 1; i < argv.size(); ++i )
+    {
+        const std::wstring &arg = argv[i];
+        if( arg.find( L"/logDevice=" ) == 0 )
+        {
+            s_logDeviceName = arg.substr( 11 );
+        }
+        else if( arg.find( L"/logDebugger" ) == 0 )
+        {
+            // Instruct the CCP logging system to echo to the debugger output window.
+            CCP::RegisterLogEcho( &CCP::LogToDebugger, CCP::LOGTYPE_INFO, true );
+        }
+        else if( arg.find( L"/memoryTracking" ) == 0 )
+        {
+            MemoryTrackerInitialize();
+        }
+        else if( arg.find( L"/memoryTracking=" ) == 0 )
+        {
+            MemoryTrackerInitialize();
+        }
+        else if( arg.find( L"/memoryLoad=" ) == 0 )
+        {
+            memoryLoad = atoi( CW2A( arg.substr( 12 ).c_str() ) );
+        }
+    }
+    
+#ifdef _WIN32
+    Log__InitLibrary( (LONG_PTR)s_instance, CW2A( s_logDeviceName.c_str()));
+    if( Log__IsLogging() )
+    {
+        // Instruct the CCP logging system to echo to the LogServer as well
+        CCP::RegisterLogEcho( &LogToLogServer, CCP::LOGTYPE_INFO, true );
+    }
+#endif
+    
+	if( StartSocketLogger() )
+	{
+		CCP::RegisterLogEcho( &LogToSocketLogger, CCP::LOGTYPE_INFO, true );
+		CCP_LOG( "Socket logger has been attached" );
+	}
+	else
+	{
+		CCP_LOG( "Failed to attach to socket logger" );
+	}
+
+    CCP_LOG( "Blue module starting" );
+    
+#ifdef _WIN32
+		OSVERSIONINFOEX ver = {0};
+		ver.dwOSVersionInfoSize = sizeof(ver);
+		GetWindowsVersion( ver );
+		CCP_LOG( "Windows version %d.%d.%d \"%s\" platform:%d sp:%d.%d suitemask:%d product:%d",
+			ver.dwMajorVersion,
+			ver.dwMinorVersion,
+			ver.dwBuildNumber,
+			ver.szCSDVersion,
+			ver.dwPlatformId, 
+			ver.wServicePackMajor, ver.wServicePackMinor, 
+			ver.wSuiteMask, ver.wProductType);
+#endif
+    
+    if( memoryLoad )
+    {
+        unsigned int memSize = memoryLoad * 1024*1024;
+        unsigned int oneHundredMegs = 100*1024*1024;
+        while( memSize >= oneHundredMegs )
+        {
+            void* p = CCP_MALLOC( "memoryLoad", oneHundredMegs );
+            if( !p )
+            {
+                CCP_LOGERR( "Allocating 100 MB for artificial memory load failed" );
+            }
+            else
+            {
+                CCP_LOG( "Allocated 100 MB for artificial memory load" );
+                memset( p, 0, oneHundredMegs );
+            }
+            memSize -= oneHundredMegs;
+        }
+        void* p = CCP_MALLOC( "memoryLoad", memSize );
+        if( !p )
+        {
+            CCP_LOGERR( "Allocating %d MB for artificial memory load failed", memSize / (1024*1024) );
+        }
+        else
+        {
+            CCP_LOG( "Allocated %d MB for artificial memory load", memSize / (1024*1024) );
+            memset( p, 0, memSize );
+        }
+    }
+    
+#if CCP_STACKLESS
+    BeClasses->RegisterClasses( BlueRegistration::GetClassRegs() );
+    BlueInitializePaths();
+#endif
+}
 
 #if !CCP_STACKLESS
 
@@ -322,6 +360,9 @@ void PatchPythonExit()
 PyMODINIT_FUNC
 	initblue(void)
 {
+#ifndef _WIN32
+    BlueModuleStartup();
+#endif
 	// Inform the logging system of the main thread
 	CCP::SetLogMainThreadId();
 
