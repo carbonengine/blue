@@ -517,6 +517,7 @@
     <ClInclude Include="BlueResFileSystemStuff.h"/>
     <ClInclude Include="BlueResMan.h"/>
     <ClInclude Include="BlueResManBackgroundCall.h"/>
+    <ClInclude Include="BlueSocketLogger.h"/>
     <ClInclude Include="BlueStuffFileStream.h"/>
     <ClInclude Include="BlueTestHelpers.h"/>
     <ClInclude Include="BlueTextResource.h"/>
@@ -650,6 +651,7 @@
     <ClCompile Include="BlueResMan.cpp"/>
     <ClCompile Include="BlueResManBackgroundCall.cpp"/>
     <ClCompile Include="BlueResMan_Blue.cpp"/>
+    <ClCompile Include="BlueSocketLogger.cpp"/>
     <ClCompile Include="BlueStatistics.cpp"/>
     <ClCompile Include="BlueStatistics_Blue.cpp"/>
     <ClCompile Include="BlueStreamMethods.cpp"/>
