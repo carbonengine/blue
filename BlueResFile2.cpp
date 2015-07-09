@@ -53,6 +53,7 @@ bool ResFile::OpenW( const wchar_t* filename, bool readOnly )
 
 	if( readOnly )
 	{
+		m_stream.Unlock();
 		if( BePaths->GetStreamFromPathW( filename, &m_stream ) )
 		{
 			return true;

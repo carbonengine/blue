@@ -185,6 +185,7 @@ void BlueCallbackMan::Cancel( uint32_t id )
 
 void BlueCallbackMan::Run()
 {
+	Sleep(10000);
 	m_isRunningOwnThreads = true;
 	m_stop = false;
 
@@ -492,8 +493,6 @@ void BlueCallbackMan::SetName( const char* name )
 {
 	m_name = name;
 	m_queueMutex.SetOwner( name );
-
-	CCP_ASSERT( m_threads.size() <= 8 );
 
 	for( unsigned int i = 0; i < m_threads.size(); ++i )
 	{
