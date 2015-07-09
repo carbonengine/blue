@@ -343,8 +343,8 @@ void LogToSocketLogger( CcpLogChannel_t& logObject, CCP::LogType type, unsigned 
 			msg->type = length > TextMessage::TEXT_SIZE ? LARGE_MESSAGE : MESSAGE;
 		}
 		msg->text.severity = type;
-		strcpy_s( msg->text.module, logObject.facility );
-		strcpy_s( msg->text.channel, logObject.object );
+		strncpy_s( msg->text.module, logObject.facility, sizeof( msg->text.module ) - 1 );
+		strncpy_s( msg->text.channel, logObject.object, sizeof( msg->text.module ) - 1 );
 		auto chunk = std::min( TextMessage::TEXT_SIZE - 1, length - i );
 		memcpy( msg->text.message, message + i, chunk );
 		msg->text.message[chunk] = 0;
