@@ -185,7 +185,6 @@ void BlueCallbackMan::Cancel( uint32_t id )
 
 void BlueCallbackMan::Run()
 {
-	Sleep(10000);
 	m_isRunningOwnThreads = true;
 	m_stop = false;
 
