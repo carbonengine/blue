@@ -759,6 +759,11 @@ IRoot* BlueResMan::LoadObjectW( const wchar_t* unnormalizedName, Be::LOADOBJECT_
 
 		builder = BlueCastPtr( reader );
 
+		if( !builder )
+		{
+			return nullptr;
+		}
+
 		if( m_loadObjectCacheEnabled )
 		{
 			m_loadObjectCache.Insert( filename.c_str(), builder );
