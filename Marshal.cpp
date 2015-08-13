@@ -109,7 +109,10 @@ Marshal::Marshal() :
 	mTimer_GetState(PyString_FromString("Marshal::GetState")),
 	mTimer_SetState(PyString_FromString("Marshal::SetState")),
 	mTimer_SaveCallback(PyString_FromString("Marshal::SaveCallback")),
-	mTimer_LoadCallback(PyString_FromString("Marshal::LoadCallback"))
+	mTimer_LoadCallback(PyString_FromString("Marshal::LoadCallback")),
+
+	m_typesLoaded(64, 0),
+	m_typesSaved(64, 0)
 {
 	mMapSent = mTotalSent = 0;
 	mGlobalsBlacklistInit = false;
@@ -1123,6 +1126,8 @@ PyObject* Marshal::ReadObject(ReadStream *stream)
 	if (IS_SHARED(type) && !stream->MarkShared(obj)) return 0;\
 }while(0)
 	
+	m_typesLoaded[type & TY_TYPEMASK] += 1;
+
 	switch (type & TY_TYPEMASK)
 	{
 	case TY_NONE:
@@ -1409,6 +1414,7 @@ PyObject* Marshal::ReadObjectOrMarker(ReadStream *stream, bool &mark)
 	PYTYPES type;
 	if (!stream->PeekType(type)) return 0;
 	if (type == TY_MARK) {
+		m_typesLoaded[type] += 1;
 		if (!stream->ReadType(type)) return 0; //perform the actual read
 		mark = true;
 		return 0;
@@ -1688,7 +1694,7 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 	CCP_ASSERT(o != static_cast<PyObject*>(stream));
 
 	Incrementor _inc(mRecursionLevel);
-	if (!_inc.Test(sRecursionLimit))
+	if( !_inc.Test( sRecursionLimit ) )
 		return false;
 
 
@@ -1698,10 +1704,11 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 		if (!stream->ObjectReferenced(referred, o))\
 			/* error in output */\
 			return false; \
-		if (referred)\
+		if (referred) {\
 			/* reference link successful, exit true */\
+			m_typesSaved[TY_REFERENCE] += 1; \
 			return true;\
-		/* otherwise, continue */\
+		} /* otherwise, continue */\
 	}\
 } while(false)
 
@@ -1712,7 +1719,7 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 		{
 			CHECKREF();
 			Py_ssize_t size = PyDict_Size(o);
-			RETFAIL(stream->WriteType(TY_DICT));
+			RETFAIL(WriteType(stream, TY_DICT));
 			RETFAIL(stream->WriteInteger((int)size));
 			Py_ssize_t pos = 0;
 			PyObject* key;
@@ -1730,7 +1737,7 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 	case 'N':
 		if (o == Py_None)
 		{
-			RETFAIL(stream->WriteType(TY_NONE));
+			RETFAIL(WriteType(stream, TY_NONE));
 			return true;
 		}
 		break;
@@ -1744,21 +1751,21 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 		{
 			Py_ssize_t size = PyTuple_GET_SIZE(o);
 			if (!size) {
-				RETFAIL(stream->WriteType(TY_TUPLE0));
+				RETFAIL(WriteType(stream, TY_TUPLE0));
 				return true;
 			}			
 			CHECKREF();
 			if (size == 1) {
-				RETFAIL(stream->WriteType(TY_TUPLE1));
+				RETFAIL(WriteType(stream, TY_TUPLE1));
 				RETFAIL(WriteObject(stream, PyTuple_GET_ITEM(o, 0)));
 				return true;
 			} else if (size == 2) {
-				RETFAIL(stream->WriteType(TY_TUPLE2));
+				RETFAIL(WriteType(stream, TY_TUPLE2));
 				RETFAIL(WriteObject(stream, PyTuple_GET_ITEM(o, 0)));
 				RETFAIL(WriteObject(stream, PyTuple_GET_ITEM(o, 1)));
 				return true;
 			}
-			RETFAIL(stream->WriteType(TY_TUPLE));
+			RETFAIL(WriteType(stream, TY_TUPLE));
 			RETFAIL(stream->WriteInteger((int)size));
 			for (int i = 0; i < PyTuple_GET_SIZE(o); i++)
 				RETFAIL(WriteObject(stream, PyTuple_GET_ITEM(o, i)));
@@ -1774,28 +1781,28 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 			switch(i)
 			{
 			case -1:
-				return stream->WriteType(TY_INT_N1);
+				return WriteType(stream, TY_INT_N1);
 
 			case 0:
-				return stream->WriteType(TY_INT_0);
+				return WriteType(stream, TY_INT_0);
 				
 			case 1:
-				return stream->WriteType(TY_INT_1);
+				return WriteType(stream, TY_INT_1);
 				
 			default:
 				if (i >= CHAR_MIN && i <= CHAR_MAX)
 				{
-					RETFAIL(stream->WriteType(TY_INT8));
+					RETFAIL(WriteType(stream, TY_INT8));
 					RETFAIL(stream->Write<__int8>(i));
 				}
 				else if (i >= SHRT_MIN && i <= SHRT_MAX)
 				{
-					RETFAIL(stream->WriteType(TY_INT16));
+					RETFAIL(WriteType(stream, TY_INT16));
 					RETFAIL(stream->Write<__int16>(i));
 				}
 				else
 				{
-					RETFAIL(stream->WriteType(TY_INT32));
+					RETFAIL(WriteType(stream, TY_INT32));
 					RETFAIL(stream->Write<__int32>(i));
 				}
 				return true;
@@ -1820,14 +1827,14 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 		{
 			Py_ssize_t size = PyList_GET_SIZE(o);
 			if (!size)
-				return stream->WriteType(TY_LIST0);
+				return WriteType(stream, TY_LIST0);
 				
 			CHECKREF();
 			if (size == 1)
-				return stream->WriteType(TY_LIST1) &&
+				return WriteType(stream, TY_LIST1) &&
 					   WriteObject(stream, PyList_GET_ITEM(o, 0));
 				
-			RETFAIL(stream->WriteType(TY_LIST));
+			RETFAIL(WriteType(stream, TY_LIST));
 			RETFAIL(stream->WriteInteger((int)size));
 			for (int i = 0; i < PyList_GET_SIZE(o); i++)
 				RETFAIL(WriteObject(stream, PyList_GET_ITEM(o, i)));
@@ -1839,9 +1846,9 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 		if (PyFloat_CheckExact(o))
 		{
 			if (PyFloat_AS_DOUBLE(o) == 0.0)
-				return stream->WriteType(TY_FLOAT_0);
+				return WriteType(stream, TY_FLOAT_0);
 			else
-				return stream->WriteType(TY_FLOAT) &&
+				return WriteType(stream, TY_FLOAT) &&
 					   stream->Write(PyFloat_AS_DOUBLE(o));
 		}
 		else if (PyFunction_Check(o))
@@ -1859,23 +1866,23 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 
 			if (size == 0)
 			{
-				RETFAIL(stream->WriteType(TY_STR_EMPTY));
+				RETFAIL(WriteType(stream, TY_STR_EMPTY));
 			}
 			else if (size == 1)
 			{
-				RETFAIL(stream->WriteType(TY_STR_CHAR));
+				RETFAIL(WriteType(stream, TY_STR_CHAR));
 				RETFAIL(stream->Write<char>(string[0]));
 			} else {
 				PyObject* index = PyDict_GetItem(mStrTable, o);
 				if (index)
 				{
-					RETFAIL(stream->WriteType(TY_STR_TABLE));
+					RETFAIL(WriteType(stream, TY_STR_TABLE));
 					RETFAIL(stream->Write((char)PyInt_AS_LONG(index)));
 				} else {
 					//Write the string as buffer.  This gives us object sharing and all
 					//The old TY_STR_SHORT and TY_STR are kept for backwards compatibility
 					CHECKREF();
-					RETFAIL(stream->WriteType(TY_BUFFER));
+					RETFAIL(WriteType(stream, TY_BUFFER));
 					RETFAIL(stream->WriteBuff(string, size));					
 				}
 			}
@@ -1899,9 +1906,9 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 			Py_ssize_t size = PyUnicode_GET_SIZE(o);
 			const wchar_t *data = PyUnicode_AS_UNICODE(o);
 			if (!size) {
-				return stream->WriteType(TY_UNICODE_0);
+				return WriteType(stream, TY_UNICODE_0);
 			} else if (size == 1) {
-				return stream->WriteType(TY_UNICODE_1) && stream->Write(*data);
+				return WriteType(stream, TY_UNICODE_1) && stream->Write(*data);
 			} else {
 				//we want to try UTF8 encoding
 				BluePy s(PyUnicode_AsUTF8String(o));
@@ -1909,12 +1916,12 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 					Py_ssize_t ssize = PyString_GET_SIZE(s.o);
 					if (ssize < size*(int)sizeof(wchar_t)) {
 						//yes, utf8 is shorter
-						return stream->WriteType(TY_UTF8) && stream->WriteInteger((int)ssize) &&
+						return WriteType(stream, TY_UTF8) && stream->WriteInteger((int)ssize) &&
 							   stream->WriteBuffWoSize(PyString_AS_STRING(s.o), ssize);	
 					}
 				} else
 					PyErr_Clear();
-				return stream->WriteType(TY_UNICODE) &&	stream->WriteInteger((int)size) &&
+				return WriteType(stream, TY_UNICODE) &&	stream->WriteInteger((int)size) &&
 					stream->WriteBuffWoSize(data, size*sizeof(wchar_t));
 			}
 		}
@@ -1922,25 +1929,25 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 
 	case  'b':
 		if (o == Py_True)
-			return stream->WriteType(TY_TRUE);
+			return WriteType(stream, TY_TRUE);
 		else if (o == Py_False)
-			return stream->WriteType(TY_FALSE);
+			return WriteType(stream, TY_FALSE);
 		
 		if (PyBuffer_Check(o))
 		{
 			CHECKREF();
 			void* srcbuff;
 			Py_ssize_t bufflen = o->ob_type->tp_as_buffer->bf_getreadbuffer(o, 0, &srcbuff);
-			return stream->WriteType(TY_BUFFER) && stream->WriteBuff(srcbuff, bufflen);
+			return WriteType(stream, TY_BUFFER) && stream->WriteBuff(srcbuff, bufflen);
 		}
 #if CCP_STACKLESS
 		if (o->ob_type == DBRow::GetType())
 			//name is blue.DBRow
-			return stream->WriteType(TY_DBROW) && static_cast<DBRow*>(o)->Write(*this, *stream);
+			return WriteType(stream, TY_DBROW) && static_cast<DBRow*>(o)->Write(*this, *stream);
 #endif
 		
 		if (o->ob_type == WriteStream::GetType())
-			return stream->WriteType(TY_WSTREAM) && static_cast<WriteStream*>(o)->Write(*this, *stream);
+			return WriteType(stream, TY_WSTREAM) && static_cast<WriteStream*>(o)->Write(*this, *stream);
 
 		break;
 
@@ -1976,7 +1983,7 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 	//new style pickle generation fallback.
 	PyObject *p = stream->GetPickler();
 	if (!p) return false;
-	RETFAIL(stream->WriteType(TY_PICKLER));
+	RETFAIL(WriteType(stream, TY_PICKLER));
 	PyObject *r = PyObject_CallMethod(p, "dump", "(O)", o);
 	Py_XDECREF(r);
 	return r!=0;
@@ -1986,7 +1993,7 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 //Write marker object
 bool Marshal::WriteMarker(WriteStream *stream)
 {
-	return stream->WriteType(TY_MARK);
+	return WriteType(stream, TY_MARK);
 }
 
 
@@ -2019,7 +2026,7 @@ bool Marshal::WriteObjectGlobal(WriteStream* stream, PyObject *o)
 	const char *buff = fullname.Str(len);
 	if (!buff)
 		return false;
-	RETFAIL(stream->WriteType(TY_GLOBAL));
+	RETFAIL(WriteType(stream, TY_GLOBAL));
 	return stream->WriteBuff(buff, len);
 }
 		
@@ -2046,7 +2053,7 @@ bool Marshal::WriteObjectInstance(WriteStream* stream, PyObject* o)
 
 		if (ret != Py_None)
 		{
-			bool ok = stream->WriteType(TY_CALLBACK) && WriteObject(stream, ret);
+			bool ok = WriteType(stream, TY_CALLBACK) && WriteObject(stream, ret);
 			Py_DECREF(ret);
 			return ok;
 		}
@@ -2079,7 +2086,7 @@ bool Marshal::WriteObjectInstance(WriteStream* stream, PyObject* o)
 
 	// Write guid out as python string so it will get tokenized in the
 	// table cache.
-	bool ok = stream->WriteType(TY_INSTANCE) && WriteObject(stream, guid);
+	bool ok = WriteType(stream, TY_INSTANCE) && WriteObject(stream, guid);
 	Py_DECREF(guid);
 	if (!ok)
 		return false;
@@ -2187,7 +2194,7 @@ bool Marshal::WriteObjectReduce(bool &handled, WriteStream* stream, PyObject* o)
 	//do it!
 	handled = true;
 	size_t pos = stream->GetPos();
-	RETFAIL(stream->WriteType(type));
+	RETFAIL(WriteType(stream, type));
 	return WriteObject(stream, data) && WriteListIter(stream, listitems) && WriteDictIter(stream, dictitems);
 }
 
@@ -2237,7 +2244,7 @@ bool Marshal::WriteDictIter(WriteStream* stream, PyObject* o)
 
 bool Marshal::WriteLong(WriteStream *stream, PyObject *lng)
 {
-	if (!stream->WriteType(TY_LONG))
+	if (!WriteType(stream, TY_LONG))
 		return false;
 	
 	int sign = _PyLong_Sign(lng);
@@ -2270,6 +2277,11 @@ PyObject* Marshal::SaveObject(PyObject* o, PyObject* cb, int useChecksum, int ve
 	if (!streamO) return 0;
 	WriteStream *stream = static_cast<WriteStream*>(streamO.o);
 	if (!stream->Init(cb, !!useChecksum, version)) return 0;
+
+	if( useChecksum )
+	{
+		m_typesSaved[TY_CRC_CHECK] += 1;
+	}
 
 	//swap out the stringmap dict if necessary for the duration
 	BluePy tmpMap = mStrTable;
@@ -2670,6 +2682,42 @@ PyObject *Marshal::Get_overhead()
 {
 	double f = (double)mMapSent / (double)mTotalSent;
 	return PyFloat_FromDouble(f);
+}
+
+PyObject* Marshal::ResetTypeStats()
+{
+	m_typesLoaded = std::vector<unsigned int>( 64, 0 );
+	m_typesSaved = std::vector<unsigned int>( 64, 0 );
+	Py_RETURN_NONE;
+}
+
+PyObject* Marshal::GetTypeStats()
+{
+	auto n = m_typesLoaded.size();
+	
+	PyObject* loaded = PyList_New( n );
+	for( size_t i = 0; i < n; ++i )
+	{
+		PyList_SET_ITEM( loaded, i, PyLong_FromLong( m_typesLoaded[i] ) );
+	}
+
+	PyObject* saved = PyList_New( n );
+	for( size_t i = 0; i < n; ++i )
+	{
+		PyList_SET_ITEM( saved, i, PyLong_FromLong( m_typesSaved[i] ) );
+	}
+
+	PyObject* result = PyTuple_New( 2 );
+	PyTuple_SET_ITEM( result, 0, loaded );
+	PyTuple_SET_ITEM( result, 1, saved );
+
+	return result;
+}
+
+bool Marshal::WriteType( class WriteStream* stream, enum PYTYPES type )
+{
+	m_typesSaved[type & TY_TYPEMASK] += 1;
+	return stream->WriteType(type );
 }
 
 

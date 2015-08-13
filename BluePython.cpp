@@ -13,11 +13,11 @@
 #include "BlueLogInMemory.h"
 #include "LogToPython.h"
 #include "PrettyPrint.h"
+#include "Marshal.h"
 
 #if _WIN32
 #include "win32.h"
 #if CCP_STACKLESS
-#include "Marshal.h"
 #include "Synchro.h"
 #include "PyRowset.h"
 #include "Logger/Logger.h"
@@ -219,12 +219,10 @@ bool BluePyOS::InitBasicModuleSupport()
 	initwin32();
 	if (!InitCrypto())
 		return false;
-#if CCP_STACKLESS
-	BeNet->Init(); // c-routing support
 
 	if (!MarshalInit(mBlueModule))
 		return false;
-	
+
 	// Insert custom marshaller
 	PyObject* marshal = Marshal::New();
 	if( marshal )
@@ -232,6 +230,9 @@ bool BluePyOS::InitBasicModuleSupport()
 		if (PyModule_AddObject(mBlueModule, "marshal", marshal))
 			return false;
 	}
+
+#if CCP_STACKLESS
+	BeNet->Init(); // c-routing support
 
 	// Insert synchro
 	mSynchro = CCP_NEW( "BluePyOS/mSyncro" ) Synchro;

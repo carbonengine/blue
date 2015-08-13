@@ -73,7 +73,10 @@ public:
 
 	// Global class instancing statistics.  optional dict, key = global, value = num occurrance.
 	BluePy mStatGlobals;
-	
+
+	std::vector<unsigned int> m_typesSaved;
+	std::vector<unsigned int> m_typesLoaded;
+
 	// Last packet checksumed or not
 	int mPacketHadCrc;
 
@@ -112,6 +115,8 @@ public:
 		METHOD_VARARGS(Flush, "")
 		METHOD_NOARGS(GetNWriteStreams, "")
 		METHOD_NOARGS(GetWriteStreamMem, "")
+		METHOD_NOARGS(ResetTypeStats, "Resets the statistics on types saved/loaded")
+		METHOD_NOARGS(GetTypeStats, "")
 	PYTHON_METHODS_END()
 
 	// published members
@@ -162,6 +167,7 @@ private:
 	PyObject *Get_overhead();
 
 	bool WriteObject(class WriteStream* stream, PyObject* o);
+	bool WriteType( class WriteStream* stream, enum PYTYPES type );
 	
 	bool UpdateGlobalNames(PyObject *module, PyObject*name); //update globalname stats
 
@@ -192,6 +198,8 @@ private:
 
 	PyObject *GetNWriteStreams();
 	PyObject *GetWriteStreamMem();
+	PyObject* ResetTypeStats();
+	PyObject* GetTypeStats();
 };
 
 
