@@ -122,9 +122,6 @@
     <ClInclude Include="FileLogger.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Filer.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="Heap.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -546,9 +543,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="FileLogger.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Filer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="IBlueEventListener_Blue.cpp">

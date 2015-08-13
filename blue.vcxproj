@@ -529,7 +529,6 @@
     <ClInclude Include="DictReader.h"/>
     <ClInclude Include="EmbedFs.h"/>
     <ClInclude Include="FileLogger.h"/>
-    <ClInclude Include="Filer.h"/>
     <ClInclude Include="Heap.h"/>
     <ClInclude Include="IOLoop.h"/>
     <ClInclude Include="IRootReader.h"/>
@@ -673,7 +672,6 @@
     <ClCompile Include="DictReader_Blue.cpp"/>
     <ClCompile Include="EmbedFs.cpp"/>
     <ClCompile Include="FileLogger.cpp"/>
-    <ClCompile Include="Filer.cpp"/>
     <ClCompile Include="IBlueEventListener_Blue.cpp"/>
     <ClCompile Include="IBlueObjectBuilder_Blue.cpp"/>
     <ClCompile Include="IBluePlacementObserver_Blue.cpp"/>
