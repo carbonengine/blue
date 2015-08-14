@@ -25,8 +25,6 @@
 #ifndef _PYTEMPLATES_H_
 #define _PYTEMPLATES_H_
 
-#include <windows.h>
-#include <crtdbg.h>
 #include <python.h>
 #include <structmember.h>
 
@@ -209,17 +207,17 @@ public:
 	}
 
 	// Help thunk for get/setting int64
-	template <__int64 T::*P>
+	template <int64_t T::*P>
 	static PyObject* PyCFuncGetInt64(PyObject* self, void*)
 	{
 		T* pThis = static_cast<T*>(self);
 		return PyLong_FromLongLong(pThis->*P);
 	}
 
-	template <__int64 T::*P>
+	template <int64_t T::*P>
 	static int PyCFuncSetInt64(PyObject* self, PyObject* v, void*)
 	{
-		__int64 tmp = PyLong_AsLongLong(v);
+		int64_t tmp = PyLong_AsLongLong(v);
 		if (tmp == -1 && PyErr_Occurred())
 			return -1;
 
@@ -510,144 +508,5 @@ struct DList
 	int mSize;
 };
 
-
-template <class LI>
-struct DListMT : public DList<LI>
-{
-	DListMT()
-	{
-		InitializeCriticalSection(&mLock);
-	}
-	~DListMT()
-	{
-		DeleteCriticalSection(&mLock);
-	}
-	void Lock()
-	{
-		EnterCriticalSection(&mLock);
-	}
-	void Unlock()
-	{
-		LeaveCriticalSection(&mLock);
-	}
-
-	CRITICAL_SECTION mLock;
-};
-
-
-template <class T, int lst_tag, bool autoUnlink = true>
-struct DListItem
-{
-public:
-
-	typedef T _TClass;
-	typedef DListItem<T, lst_tag> _Class;
-	typedef DList<_Class> _List;
-
-	DListItem() :
-		mPrev(NULL),
-		mNext(NULL),
-		mCurrentList(NULL)
-	{
-	}
-
-	~DListItem()
-	{
-		Unlink();
-	}
-
-	void Link(_List& list)
-	{
-		_ASSERTE(&list != mCurrentList);
-
-		list.Lock();
-
-		if (autoUnlink)
-			Unlink();
-
-		// Add to top of list
-		mCurrentList = &list;
-		mNext = list.mFirst;
-
-		if (list.mFirst)
-			list.mFirst->DListItem<T, lst_tag>::mPrev = static_cast<T*>(this);
-
-		list.mFirst = static_cast<T*>(this);
-		mPrev = NULL;
-		list.mSize++;
-		list.Unlock();
-	}
-
-	void Unlink()
-	{
-		if (mCurrentList == NULL)
-			return;
-
-		mCurrentList->Lock();
-		// Remove from list
-		if (mPrev == NULL)
-			mCurrentList->mFirst = mNext;
-		else
-			mPrev->DListItem<T, lst_tag>::mNext = mNext;
-
-		if (mNext)
-			mNext->DListItem<T, lst_tag>::mPrev = mPrev;
-
-		mCurrentList->mSize--;
-		mCurrentList->Unlock();
-		mCurrentList = NULL;
-	}
-
-	void SetPrev(T* prev)
-	{
-
-		mPrev = prev;
-	}
-
-	void SetNext(T* next)
-	{
-		mNext = next;
-	}
-
-
-	T* mNext;
-	T* mPrev;
-	_List* mCurrentList;
-};
-
-#define DECLARE_LIST(_li) \
-	_li::_TClass* _li::mFirst = NULL; \
-	int _li::mSize = 0;
-
-
-// Adds automatic list manip. to the class
-const int INSTANCELIST = -1;
-
-template <class T>
-struct AutoList :
-	public DListItem<T, INSTANCELIST>
-{
-public:
-
-	typedef AutoList<T> _Class;
-	static _List mInstanceList;
-
-	AutoList()
-	{
-		Link(mInstanceList);
-	}
-
-	~AutoList()
-	{
-		Unlink();
-	}
-
-	// Python property access for autolist
-	static PyObject* _getAutoList(PyObject* self, void*)
-	{
-		T* pThis = (T*)self;
-		return pThis->mInstanceList.GetList();
-	}
-};
 
 #endif
