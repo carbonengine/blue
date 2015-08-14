@@ -14,12 +14,12 @@
 #include "LogToPython.h"
 #include "PrettyPrint.h"
 #include "Marshal.h"
+#include "PyRowset.h"
 
 #if _WIN32
 #include "win32.h"
 #if CCP_STACKLESS
 #include "Synchro.h"
-#include "PyRowset.h"
 #include "Logger/Logger.h"
 #endif
 #endif
@@ -209,27 +209,26 @@ bool BluePyOS::InitBasicModuleSupport()
 	if (PyDict_SetItemString(dict, "LogChannel", (PyObject*)LogChannelType()))
 		return false;
 
-#if _WIN32
-#if CCP_STACKLESS
 	// Add the DBRowsetStuff
-	if (!DBRowsetInit(mBlueModule))
-		return false;
-#endif
-	//init the submodules blue.win32, blue.heapq and blue.crypto.  The latter is required for the Marshal::New()
-	initwin32();
-	if (!InitCrypto())
+	if( !DBRowsetInit( mBlueModule ) )
 		return false;
 
-	if (!MarshalInit(mBlueModule))
+	if( !MarshalInit( mBlueModule ) )
 		return false;
 
 	// Insert custom marshaller
 	PyObject* marshal = Marshal::New();
 	if( marshal )
 	{
-		if (PyModule_AddObject(mBlueModule, "marshal", marshal))
+		if( PyModule_AddObject( mBlueModule, "marshal", marshal ) )
 			return false;
 	}
+
+#if _WIN32
+	//init the submodules blue.win32, blue.heapq and blue.crypto.  The latter is required for the Marshal::New()
+	initwin32();
+	if (!InitCrypto())
+		return false;
 
 #if CCP_STACKLESS
 	BeNet->Init(); // c-routing support

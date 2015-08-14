@@ -5,8 +5,6 @@
 	
 #include "StdAfx.h"
 
-#if CCP_STACKLESS
-
 #include "PyRowset.h"
 
 #include "PyTemplates.h"
@@ -1686,5 +1684,3 @@ bool DBRowsetInit(PyObject *module)
 
 	return true;
 }
-
-#endif

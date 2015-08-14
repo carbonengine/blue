@@ -1392,10 +1392,8 @@ PyObject* Marshal::ReadObject(ReadStream *stream)
 		return ReadObjectReduce(*stream, IS_SHARED(type));
 	case TY_NEWOBJ:
 		return ReadObjectNewobj(*stream, IS_SHARED(type));
-#if CCP_STACKLESS
 	case TY_DBROW:
 		return DBRow::Read(*this, *stream);
-#endif
 	case TY_WSTREAM:
 		return WriteStream::Read(*this, *stream);
 	case TY_LONG:
@@ -1940,12 +1938,11 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 			Py_ssize_t bufflen = o->ob_type->tp_as_buffer->bf_getreadbuffer(o, 0, &srcbuff);
 			return WriteType(stream, TY_BUFFER) && stream->WriteBuff(srcbuff, bufflen);
 		}
-#if CCP_STACKLESS
+
 		if (o->ob_type == DBRow::GetType())
 			//name is blue.DBRow
 			return WriteType(stream, TY_DBROW) && static_cast<DBRow*>(o)->Write(*this, *stream);
-#endif
-		
+
 		if (o->ob_type == WriteStream::GetType())
 			return WriteType(stream, TY_WSTREAM) && static_cast<WriteStream*>(o)->Write(*this, *stream);
 
