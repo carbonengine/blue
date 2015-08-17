@@ -7,6 +7,18 @@
 static CcpLogChannel_t s_chPy = CCP_LOG_DEFINE_CHANNEL( "Python Logs" );
 static CcpLogChannel_t s_chStdErr = CCP_LOG_DEFINE_CHANNEL( "stderr" );
 
+static const char* NO_LOGGING_PREFIX = "#nolog: ";
+static size_t NO_LOGGING_PREFIX_LEN = strlen( NO_LOGGING_PREFIX );
+
+static CCP::LogType FLAGS[] = {
+	CCP::LOGTYPE_INFO,
+	CCP::LOGTYPE_ERR,
+	CCP::LOGTYPE_INFO,
+	CCP::LOGTYPE_WARN,
+	CCP::LOGTYPE_ERR,
+	CCP::LOGTYPE_ERR
+};
+
 //////////////////////////////////////////////////////////////////////
 //
 // PythonEvents class
@@ -26,57 +38,37 @@ PyObject* PythonEvents::Pywrite(PyObject* args)
 	if (!PyArg_ParseTuple(args, "s", &text))
 		return NULL;
 
+	bool nolog = strncmp( text, NO_LOGGING_PREFIX, NO_LOGGING_PREFIX_LEN ) == 0;
+
 	if (mPort == PYSTDOUT || mPort == PYSTDERR)
 	{
-		if (sPyEventHandler)
-			sPyEventHandler->OnWrite(mPort, text);
+		if( sPyEventHandler )
+		{
+			if( nolog )
+			{
+				text += NO_LOGGING_PREFIX_LEN;
+			}
+			sPyEventHandler->OnWrite( mPort, text );
+		}
 	}
 
 	if (mPort != PYSTDOUT)
 	{
-		CCP::LogType FLAGS[] = {
-			CCP::LOGTYPE_INFO, 
-			CCP::LOGTYPE_ERR, 
-			CCP::LOGTYPE_INFO, 
-			CCP::LOGTYPE_WARN, 
-			CCP::LOGTYPE_ERR, 
-			CCP::LOGTYPE_ERR
-		};
 		CCP::LogType logflag = FLAGS[mPort];
 
-		// Need to feed the logger with one line at a time.
-		while(*text)
+		if( !nolog && (strcmp( text, "\n" ) != 0 ) )
 		{
-			const char *lf = strchr(text, '\n');
-			int len;
-			if( lf )
+			CcpLogChannel_t* ch;
+			if( mPort == PYSTDERR )
 			{
-				len = (int)(lf-text);
+				ch = &s_chStdErr;
 			}
 			else
 			{
-				len = (int)strlen(text);
+				ch = &s_chPy;
 			}
 
-			if( len )
-			{
-				CcpLogChannel_t* ch;
-				if( mPort == PYSTDERR )
-				{
-					ch = &s_chStdErr;
-				}
-				else
-				{
-					ch = &s_chPy;
-				}
-
-				CCP::LogFuncChannel( *ch, logflag, 0, "%.*s", len, text );
-			}
-			if( !lf )
-			{
-				break;
-			}
-			text += len+1;
+			CCP::LogFuncChannel( *ch, logflag, 0, "%s", text );
 		}
 	}
 
