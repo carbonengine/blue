@@ -1450,9 +1450,11 @@ void SetBlueTime(Be::Time time)
 }
 
 
-Be::Time BlueOS::GetActualTime() const
+Be::Time BlueOS::GetActualTime()
 {	
-	return mUTCAdj + const_cast<SuperTime &>(mWallclock).Get(); // Adjust for server sync
+	static CcpMutex s_getActualTimeMutex( "GetActualTime", "BeOS" );
+	CcpAutoMutex locker( s_getActualTimeMutex );
+	return mUTCAdj + mWallclock.Get(); // Adjust for server sync
 }
 
 Be::Time BlueOS::GetSmoothedTime()

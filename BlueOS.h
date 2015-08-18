@@ -54,7 +54,7 @@ public:
 	~BlueOS();
 	
 	void SetTime(Be::Time time = 0);
-	Be::Time GetActualTime() const;
+	Be::Time GetActualTime();
 	Be::Time GetCurrentFrameTime() const { return mSimTime; }
 
 #if BLUE_WITH_PYTHON

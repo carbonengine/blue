@@ -56,7 +56,7 @@ private:
 	CURL* PrepareConnection( const char* resUrl );
 	void GatherStats( CURL* connection, const wchar_t* niceName, const char* resUrl );
 
-	void ReceiveData( void* data, size_t size );
+	size_t ReceiveData( void* data, size_t size );
 	void InitializeCurl();
 	void TrimHeaders();
 	bool ShouldAbort();

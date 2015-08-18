@@ -550,8 +550,7 @@ size_t BlueRemoteStream::WriteMemoryCallback( void* contents, size_t size, size_
 
 	size_t realsize = size * nmemb;
 	BlueRemoteStream* pThis = reinterpret_cast<BlueRemoteStream*>( context );
-	pThis->ReceiveData( contents, realsize );
-	return realsize;
+	return pThis->ReceiveData( contents, realsize );
 }
 
 size_t BlueRemoteStream::WriteHeaderCallback( void* contents, size_t size, size_t nmemb, void* context )
@@ -570,7 +569,7 @@ int BlueRemoteStream::ProgressCallback( void* context, curl_off_t dltotal, curl_
 	return (int)pThis->ShouldAbort();
 }
 
-void BlueRemoteStream::ReceiveData( void* data, size_t size )
+size_t BlueRemoteStream::ReceiveData( void* data, size_t size )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -582,8 +581,17 @@ void BlueRemoteStream::ReceiveData( void* data, size_t size )
 		m_bufferSize = newSize;
 		m_data = reinterpret_cast<uint8_t*>( CCP_REALLOC( "BlueRemoteStream", m_data, newSize ) );
 	}
-	memcpy( m_data + m_dataSize, data, size );
-	m_dataSize = newSize;
+
+	if( m_data )
+	{
+		memcpy( m_data + m_dataSize, data, size );
+		m_dataSize = newSize;
+		return size;
+	}
+	else
+	{
+		return 0;
+	}
 }
 
 void BlueRemoteStream::InitializeCurl()
@@ -599,6 +607,11 @@ void BlueRemoteStream::InitializeCurl()
 bool BlueRemoteStream::VerifyContents( const char* expectedChecksum )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
+
+	if( !m_data )
+	{
+		return false;
+	}
 
 	MD5 checkSum;
 	checkSum.update( reinterpret_cast<unsigned char*>( m_data ), (unsigned int)m_dataSize );

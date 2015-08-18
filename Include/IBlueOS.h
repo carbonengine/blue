@@ -212,7 +212,7 @@ BLUE_INTERFACE(IBlueOS) : public IRoot
 		) = 0;
 
 	virtual Be::Time GetActualTime(
-		) const = 0;
+		) = 0;
 
 	virtual void NextScheduledEvent(
 		int millisec
