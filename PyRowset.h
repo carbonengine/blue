@@ -59,7 +59,8 @@ public:
 	
 	//Object constructor - destructor
 	static PyObject *_New(PyTypeObject *type, PyObject *args, PyObject *kwds);
-	
+	static PyObject * CreateFromRowDescriptor( PyObject *rowDescriptor );
+
 	//Reduce to a tuple
 	PyObject *__reduce_ex__(PyObject *protocol);
 	PyObject *__getstate__();

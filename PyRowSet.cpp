@@ -715,6 +715,23 @@ PyObject *DBRow::_New(PyTypeObject *type, PyObject *args, PyObject *kwds)
 	return row;
 }
 
+PyObject * DBRow::CreateFromRowDescriptor( PyObject *rowDescriptor )
+{
+	DBRowDescriptor *rd = static_cast<DBRowDescriptor*>(rowDescriptor);
+	void *raw = _Alloc( GetType(), rd->mTotalLen );
+	if( !raw )
+	{
+		return 0;
+	}
+
+	DBRow *row = new(raw)DBRow(); //c++ constructor
+	if( !row->Init( rd, 0, 0 ) )
+	{
+		Py_DECREF( row );
+		return 0;
+	}
+	return row;
+}
 
 DBRow::~DBRow()
 {
@@ -1606,7 +1623,7 @@ PyObject *DBRow::Read(Marshal &m, ReadStream &s)
 	BluePy rd(m.ReadObject(&s)); //read row descriptor
 	if (!rd) return 0;
 	//Create object
-	BluePy rowO(DBRow::_New(DBRow::GetType(), rd, 0)); //special optimzation, pass rd without an args tuple.
+	BluePy rowO(DBRow::CreateFromRowDescriptor( rd ) ); 
 	if (!rowO) return 0;
 	DBRow *row = static_cast<DBRow*>(rowO.o);
 

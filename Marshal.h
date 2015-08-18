@@ -33,6 +33,8 @@
 
 bool MarshalInit(PyObject *module);
 
+struct ReadStream;
+
 class Marshal :
 	public PyXObject<Marshal>
 {
@@ -174,11 +176,11 @@ private:
 	//unpickling support routines
 	PyObject *ReadObjectOrMarker(struct ReadStream *s, bool &mark); //reads an object or a marker
 	PyObject *ReadObjectBuffer(struct ReadStream &s);
-	PyObject *ReadObjectGlobal(struct ReadStream &s, bool shared);
-	PyObject *ReadObjectInstance(struct ReadStream &s, bool shared);
-	PyObject *ReadObjectReduce(struct ReadStream &s, bool shared);
-	PyObject *ReadObjectNewobj(struct ReadStream &s, bool shared);
-	PyObject *ReadObjectLong(struct ReadStream &s, bool shared);
+	PyObject *ReadObjectGlobal( struct ReadStream *s, bool shared );
+	PyObject *ReadObjectInstance(struct ReadStream *s, bool shared);
+	PyObject *ReadObjectReduce(struct ReadStream *s, bool shared);
+	PyObject *ReadObjectNewobj(struct ReadStream *s, bool shared);
+	PyObject *ReadObjectLong(struct ReadStream *s, bool shared);
 
 	PyObject *GetGlobalObject(PyObject *name);
 	bool ReadObjectListIter(struct ReadStream &s, PyObject *target);
@@ -200,6 +202,47 @@ private:
 	PyObject *GetWriteStreamMem();
 	PyObject* ResetTypeStats();
 	PyObject* GetTypeStats();
+
+	typedef PyObject * (Marshal::*ReadObjectTypeHandler)( ReadStream * stream, bool isShared );
+	static ReadObjectTypeHandler s_typeHandlers[64];
+	friend bool MarshalInit( PyObject *module );
+
+	PyObject * ReadObjectIntOne( ReadStream * stream, bool isShared );
+	PyObject * ReadObjectIntZero( ReadStream * stream, bool isShared );
+	PyObject * ReadObjectIntNegativeOne( ReadStream * stream, bool isShared );
+	PyObject * ReadObjectInt8( ReadStream * stream, bool isShared );
+	PyObject * ReadObjectInt16( ReadStream * stream, bool isShared );
+	PyObject * ReadObjectInt32( ReadStream * stream, bool isShared );
+	PyObject * ReadObjectInt64( ReadStream * stream, bool isShared );
+	PyObject * ReadObjectNone( ReadStream* stream, bool isShared );
+	PyObject * ReadObjectTuple0( ReadStream * stream, bool isShared );
+	PyObject * ReadObjectUtf8( ReadStream * stream, bool isShared );
+	PyObject * ReadObjectUnicode1( ReadStream * stream, bool isShared );
+	PyObject * ReadObjectUnicode0( ReadStream * stream, bool isShared );
+	PyObject * ReadObjectUnicode( ReadStream * stream, bool isShared );
+	PyObject * ReadObjectStrTable( ReadStream * stream, bool isShared );
+	PyObject * ReadObjectStrShort( ReadStream * stream, bool isShared );
+	PyObject * ReadObjectStrChar( ReadStream * stream, bool isShared );
+	PyObject * ReadObjectStrEmpty( ReadStream * stream, bool isShared );
+	PyObject * ReadObjectFalse( ReadStream * stream, bool isShared );
+	PyObject * ReadObjectTrue( ReadStream * stream, bool isShared );
+	PyObject * ReadObjectFloatZero( ReadStream * stream, bool isShared );
+	PyObject * ReadObjectFloat( ReadStream * stream, bool isShared );
+	PyObject * ReadObjectWStream( ReadStream * stream, bool isShared );
+	PyObject * ReadObjectDBRow( ReadStream * stream, bool isShared );
+	PyObject * ReadObjectCrcCheck( ReadStream * stream, bool isShared );
+	PyObject * ReadObjectReference( ReadStream * stream, bool isShared );
+	PyObject * ReadObjectPickler( ReadStream * stream, bool isShared );
+	PyObject * ReadObjectPickle( ReadStream * stream, bool isShared );
+	PyObject * ReadObjectCallback( ReadStream * stream, bool isShared );
+	PyObject * ReadObjectDict( ReadStream * stream, bool isShared );
+	PyObject * ReadObjectList( ReadStream * stream, bool isShared );
+	PyObject * ReadObjectList1( ReadStream * stream, bool isShared );
+	PyObject * ReadObjectList0( ReadStream * stream, bool isShared );
+	PyObject * ReadObjectTuple( ReadStream * stream, bool isShared );
+	PyObject * ReadObjectTuple2( ReadStream * stream, bool isShared );
+	PyObject * ReadObjectTuple1( ReadStream * stream, bool isShared );
+	PyObject * ReadObjectBuffer( ReadStream * stream, bool isShared );
 };
 
 

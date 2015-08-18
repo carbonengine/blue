@@ -37,12 +37,160 @@ const PyTypeObject* MarshalType = Marshal::GetType();
 static DWORD const CODE_READPASTEOF = 0xE0000001;
 static DWORD const CODE_INVALIDMAPREF = 0xE0000002;
 
+//--------------------------------------------------------------------
+// Python builtin types
+//
+// Fundamental types:
+//		<type 'NoneType'>
+//		<type 'type'>
+//
+// Numerical types:
+//		<type 'int'>
+//		<type 'long'>
+//		<type 'float'>
+//		<type 'complex'>
+//
+// Sequence objects:
+//		<type 'str'>
+//		<type 'unicode'>
+//		<type 'buffer'>
+//		<type 'tuple'>
+//		<type 'list'>
+//
+// Mapping objects:
+//		<type 'dict'>
+//
+// Other objects:
+//		<type 'instance'>
+//		<type 'class'> ? need to support this, perhaps not
+enum PYTYPES
+{
+	TY_INVALID = 0,
+	TY_SIGNATURE = 126,	// marks beginning of marshal format
+	TY_SIGNATURE2 = 125,  // new marker, followed by a version char
+
+	TY_NONE = 1,
+	TY_GLOBAL = 2,	//A global object by name
+
+	TY_INT64 = 3,
+	TY_INT32 = 4,
+	TY_INT16 = 5,
+	TY_INT8 = 6,
+	TY_INT_N1 = 7,
+	TY_INT_0 = 8,
+	TY_INT_1 = 9,
+
+	TY_FLOAT = 10,
+	TY_FLOAT_0 = 11,
+
+	TY_COMPLEX = 12,
+
+	TY_STR = 13,
+	TY_STR_EMPTY = 14,
+	TY_STR_CHAR = 15,
+	TY_STR_SHORT = 16,
+	TY_STR_TABLE = 17,
+	TY_UNICODE = 18,
+
+	TY_BUFFER = 19,
+	TY_TUPLE = 20,
+	TY_LIST = 21,
+
+	TY_DICT = 22,
+
+	TY_INSTANCE = 23,
+	// TY_BLUEWRAPPER		= 24, // Deprecated
+	TY_CALLBACK = 25,	// callback method specific
+
+	TY_PICKLE = 26,	// fallback.  Deprecated, backwards compatibility only.
+
+	// reference pointers
+	TY_REFERENCE = 27,
+
+	// packet format and flags
+	TY_CRC_CHECK = 28,
+	//TY_COMPRESSED  		= 29,   //unused
+
+	TY_TRUE = 31,	//these two are so common, they deserve their own thing
+	TY_FALSE = 32,
+
+	TY_PICKLER = 33,	//new style pickle, use a single pickler for the whole stream
+	TY_REDUCE = 34,	//__reduce__ protocol
+	TY_NEWOBJ = 35,	//the newobj special case of __reduce__ protocol 2
+
+	TY_TUPLE0 = 36,	//an empty tuple
+	TY_TUPLE1 = 37,	//a tuple of one item
+	TY_LIST0 = 38,	//an empty list
+	TY_LIST1 = 39,	//a list of one item
+
+	TY_UNICODE_0 = 40,	//empty unicode string
+	TY_UNICODE_1 = 41,	//single unicode char
+
+	TY_DBROW = 42,	//a custom marshaled DBROW
+	TY_WSTREAM = 43,	//the marshallers own WriteStream
+
+	TY_TUPLE2 = 44,	//a two-tuple, surprisingly common
+	TY_MARK = 45,	//a marker for dynamic lists and other dynamic forms
+
+	TY_UTF8 = 46,	//unicode as utf-8
+
+	TY_LONG = 47,	//a proper long
+
+	// flags and masks
+	TY_SHAREDFLAG = 0x40, //64.  don't go above that
+	TY_TYPEMASK = 0x3F	// type id's are from 1 to 63
+};
 
 ///////////////////////////////////////////////////////////////////
 // Initialize the blue module
 bool MarshalInit(PyObject *module)
 {
-	Py_INCREF(WriteStream::GetType());
+	memset( Marshal::s_typeHandlers, 0, sizeof( Marshal::s_typeHandlers ) );
+
+	Marshal::s_typeHandlers[ TY_NONE ] = &Marshal::ReadObjectNone;
+	Marshal::s_typeHandlers[ TY_GLOBAL ] = &Marshal::ReadObjectGlobal;
+	Marshal::s_typeHandlers[ TY_INT64 ] = &Marshal::ReadObjectInt64;
+	Marshal::s_typeHandlers[ TY_INT32 ] = &Marshal::ReadObjectInt32;
+	Marshal::s_typeHandlers[ TY_INT16 ] = &Marshal::ReadObjectInt16;
+	Marshal::s_typeHandlers[ TY_INT8 ] = &Marshal::ReadObjectInt8;
+	Marshal::s_typeHandlers[ TY_INT_N1 ] = &Marshal::ReadObjectIntNegativeOne;
+	Marshal::s_typeHandlers[ TY_INT_0 ] = &Marshal::ReadObjectIntZero;
+	Marshal::s_typeHandlers[ TY_INT_1 ] = &Marshal::ReadObjectIntOne;
+	Marshal::s_typeHandlers[ TY_FLOAT ] = &Marshal::ReadObjectFloat;
+	Marshal::s_typeHandlers[ TY_FLOAT_0 ] = &Marshal::ReadObjectFloatZero;
+	Marshal::s_typeHandlers[ TY_TRUE ] = &Marshal::ReadObjectTrue;
+	Marshal::s_typeHandlers[ TY_FALSE ] = &Marshal::ReadObjectFalse;
+	Marshal::s_typeHandlers[ TY_STR	] = &Marshal::ReadObjectBuffer;
+	Marshal::s_typeHandlers[ TY_STR_EMPTY ] = &Marshal::ReadObjectStrEmpty;
+	Marshal::s_typeHandlers[ TY_STR_CHAR ] = &Marshal::ReadObjectStrChar;
+	Marshal::s_typeHandlers[ TY_STR_SHORT ] = &Marshal::ReadObjectStrShort;
+	Marshal::s_typeHandlers[ TY_STR_TABLE ] = &Marshal::ReadObjectStrTable;
+	Marshal::s_typeHandlers[ TY_UNICODE	] = &Marshal::ReadObjectUnicode;
+	Marshal::s_typeHandlers[ TY_UNICODE_0 ] = &Marshal::ReadObjectUnicode0;
+	Marshal::s_typeHandlers[ TY_UNICODE_1 ] = &Marshal::ReadObjectUnicode1;
+	Marshal::s_typeHandlers[ TY_UTF8 ] = &Marshal::ReadObjectUtf8;
+	Marshal::s_typeHandlers[ TY_BUFFER ] = &Marshal::ReadObjectBuffer;
+	Marshal::s_typeHandlers[ TY_TUPLE0 ] = &Marshal::ReadObjectTuple0;
+	Marshal::s_typeHandlers[ TY_TUPLE1 ] = &Marshal::ReadObjectTuple1;
+	Marshal::s_typeHandlers[ TY_TUPLE2 ] = &Marshal::ReadObjectTuple2;
+	Marshal::s_typeHandlers[ TY_TUPLE ] = &Marshal::ReadObjectTuple;
+	Marshal::s_typeHandlers[ TY_LIST0 ] = &Marshal::ReadObjectList0;
+	Marshal::s_typeHandlers[ TY_LIST1 ] = &Marshal::ReadObjectList1;
+	Marshal::s_typeHandlers[ TY_LIST ] = &Marshal::ReadObjectList;
+	Marshal::s_typeHandlers[ TY_DICT ] = &Marshal::ReadObjectDict;
+	Marshal::s_typeHandlers[ TY_INSTANCE ] = &Marshal::ReadObjectInstance;
+	Marshal::s_typeHandlers[ TY_CALLBACK ] = &Marshal::ReadObjectCallback;
+	Marshal::s_typeHandlers[ TY_PICKLE ] = &Marshal::ReadObjectPickle;
+	Marshal::s_typeHandlers[ TY_PICKLER	] = &Marshal::ReadObjectPickler;
+	Marshal::s_typeHandlers[ TY_REFERENCE ] = &Marshal::ReadObjectReference;
+	Marshal::s_typeHandlers[ TY_CRC_CHECK ] = &Marshal::ReadObjectCrcCheck;
+	Marshal::s_typeHandlers[ TY_REDUCE ] = &Marshal::ReadObjectReduce;
+	Marshal::s_typeHandlers[ TY_NEWOBJ ] = &Marshal::ReadObjectNewobj;
+	Marshal::s_typeHandlers[ TY_DBROW ] = &Marshal::ReadObjectDBRow;
+	Marshal::s_typeHandlers[ TY_WSTREAM	] = &Marshal::ReadObjectWStream;
+	Marshal::s_typeHandlers[ TY_LONG ] = &Marshal::ReadObjectLong;
+
+	Py_INCREF( WriteStream::GetType() );
 	if (PyModule_AddObject(module, "MarshalStream", (PyObject*)WriteStream::GetType()))
 		return false;
 	return true;
@@ -354,110 +502,6 @@ bool Marshal::Init()
 Marshal::~Marshal()
 {}
 
-
-//--------------------------------------------------------------------
-// Python builtin types
-//
-// Fundamental types:
-//		<type 'NoneType'>
-//		<type 'type'>
-//
-// Numerical types:
-//		<type 'int'>
-//		<type 'long'>
-//		<type 'float'>
-//		<type 'complex'>
-//
-// Sequence objects:
-//		<type 'str'>
-//		<type 'unicode'>
-//		<type 'buffer'>
-//		<type 'tuple'>
-//		<type 'list'>
-//
-// Mapping objects:
-//		<type 'dict'>
-//
-// Other objects:
-//		<type 'instance'>
-//		<type 'class'> ? need to support this, perhaps not
-enum PYTYPES
-{
-	TY_INVALID			= 0,
-	TY_SIGNATURE		= 126,	// marks beginning of marshal format
-	TY_SIGNATURE2		= 125,  // new marker, followed by a version char
-
-	TY_NONE				= 1,
-	TY_GLOBAL			= 2,	//A global object by name
-
-	TY_INT64			= 3,
-	TY_INT32			= 4,
-	TY_INT16			= 5,
-	TY_INT8				= 6,
-	TY_INT_N1			= 7,
-	TY_INT_0			= 8,
-	TY_INT_1			= 9,
-
-	TY_FLOAT			= 10,
-	TY_FLOAT_0			= 11,
-
-	TY_COMPLEX			= 12,
-
-	TY_STR				= 13,
-	TY_STR_EMPTY		= 14,
-	TY_STR_CHAR			= 15,
-	TY_STR_SHORT		= 16,
-	TY_STR_TABLE		= 17,
-	TY_UNICODE			= 18,
-
-	TY_BUFFER			= 19,
-	TY_TUPLE			= 20,
-	TY_LIST				= 21,
-
-	TY_DICT				= 22,
-
-	TY_INSTANCE			= 23,
-	// TY_BLUEWRAPPER		= 24, // Deprecated
-	TY_CALLBACK			= 25,	// callback method specific
-
-	TY_PICKLE			= 26,	// fallback.  Deprecated, backwards compatibility only.
-
-	// reference pointers
-	TY_REFERENCE		= 27,
-
-	// packet format and flags
-	TY_CRC_CHECK		= 28,
-	//TY_COMPRESSED  		= 29,   //unused
-
-	TY_TRUE				= 31,	//these two are so common, they deserve their own thing
-	TY_FALSE			= 32,  
-
-	TY_PICKLER			= 33,	//new style pickle, use a single pickler for the whole stream
-	TY_REDUCE    		= 34,	//__reduce__ protocol
-	TY_NEWOBJ			= 35,	//the newobj special case of __reduce__ protocol 2
-
-	TY_TUPLE0			= 36,	//an empty tuple
-	TY_TUPLE1			= 37,	//a tuple of one item
-	TY_LIST0			= 38,	//an empty list
-	TY_LIST1			= 39,	//a list of one item
-
-	TY_UNICODE_0	    = 40,	//empty unicode string
-	TY_UNICODE_1		= 41,	//single unicode char
-
-	TY_DBROW		    = 42,	//a custom marshaled DBROW
-	TY_WSTREAM			= 43,	//the marshallers own WriteStream
-
-	TY_TUPLE2			= 44,	//a two-tuple, surprisingly common
-	TY_MARK				= 45,	//a marker for dynamic lists and other dynamic forms
-
-	TY_UTF8				= 46,	//unicode as utf-8
-
-	TY_LONG				= 47,	//a proper long
-	
-	// flags and masks
-	TY_SHAREDFLAG		= 0x40, //64.  don't go above that
-	TY_TYPEMASK			= 0x3F	// type id's are from 1 to 63
-};
 
 
 //--------------------------------------------------------------------
@@ -1110,296 +1154,345 @@ PyObject *ReadStream::GetOSUnpickler(Marshal *m) //similar, but returns a one-sh
 
 //--------------------------------------------------------------------
 
+PyObject * Marshal::ReadObjectTuple0( ReadStream * stream, bool isShared )
+{
+	return PyTuple_New( 0 );
+}
 
-PyObject* Marshal::ReadObject(ReadStream *stream)
+PyObject * Marshal::ReadObjectBuffer( ReadStream * stream, bool isShared )
+{
+	BluePy r( ReadObjectBuffer( *stream ) );
+	if( !r ) return 0;
+	if (isShared && !stream->MarkShared( r )) return 0;
+	return r.Detach();
+}
+
+PyObject * Marshal::ReadObjectUtf8( ReadStream * stream, bool isShared )
+{
+	int len;
+	const char *buff;
+	if( !stream->ReadInteger( len ) || !stream->GetBuffer( buff, len ) ) return 0;
+	return PyUnicode_DecodeUTF8( (char*)buff, len, 0 );
+}
+
+PyObject * Marshal::ReadObjectUnicode1( ReadStream * stream, bool isShared )
+{
+	wchar_t code;
+	if( !stream->Read( code ) ) return 0;
+	return PyUnicode_FromWideChar( &code, 1 );
+}
+
+PyObject * Marshal::ReadObjectUnicode0( ReadStream * stream, bool isShared )
+{
+	wchar_t code = 0; //need this for the api
+	return PyUnicode_FromWideChar( &code, 0 );
+}
+
+PyObject * Marshal::ReadObjectUnicode( ReadStream * stream, bool isShared )
+{
+	int len;
+	const wchar_t *buff;
+	if( !stream->ReadInteger( len ) || !stream->GetBuffer( buff, len ) ) return 0;
+	return PyUnicode_FromWideChar( buff, len );
+}
+
+PyObject * Marshal::ReadObjectStrTable( ReadStream * stream, bool isShared )
+{
+	unsigned char uc;
+	if( !stream->Read( uc ) ) return 0;
+	if( uc<1 || uc>PyList_GET_SIZE( mStrTableRev.o ) )
+		return PyErr_Format( PyExc_RuntimeError, "Invalid string table index %d", uc ), 0;
+	--uc;
+	PyObject *r = PyList_GET_ITEM( mStrTableRev.o, uc );
+	Py_INCREF( r );
+	return r;
+}
+
+PyObject * Marshal::ReadObjectStrShort( ReadStream * stream, bool isShared )
+{
+	unsigned char uc;
+	const char *buf;
+	if( !stream->Read( uc ) || !stream->GetBuffer( buf, uc ) ) return 0;
+	return PyString_FromStringAndSize( buf, uc );
+}
+
+PyObject * Marshal::ReadObjectStrChar( ReadStream * stream, bool isShared )
+{
+	char chr;
+	if( !stream->Read( chr ) ) return 0;
+	return PyString_FromStringAndSize( &chr, 1 );
+}
+
+PyObject * Marshal::ReadObjectStrEmpty( ReadStream * stream, bool isShared )
+{
+	return mStock_EmptyStr.NewRef();
+}
+
+PyObject * Marshal::ReadObjectFalse( ReadStream * stream, bool isShared )
+{
+	Py_INCREF( Py_False );
+	return Py_False;
+}
+
+PyObject * Marshal::ReadObjectTrue( ReadStream * stream, bool isShared )
+{
+	Py_INCREF( Py_True );
+	return Py_True;
+}
+
+PyObject * Marshal::ReadObjectFloatZero( ReadStream * stream, bool isShared )
+{
+	return mStock_Float0.NewRef();
+}
+
+PyObject * Marshal::ReadObjectFloat( ReadStream * stream, bool isShared )
+{
+	double r;
+	if( !stream->Read( r ) ) return 0;
+	return PyFloat_FromDouble( r );
+}
+
+PyObject * Marshal::ReadObjectIntOne( ReadStream * stream, bool isShared )
+{
+	return mStock_Int1.NewRef();
+}
+
+PyObject * Marshal::ReadObjectIntZero( ReadStream * stream, bool isShared )
+{
+	return mStock_Int0.NewRef();
+}
+
+PyObject * Marshal::ReadObjectIntNegativeOne( ReadStream * stream, bool isShared )
+{
+	return mStock_IntN1.NewRef();
+}
+
+PyObject * Marshal::ReadObjectInt8( ReadStream * stream, bool isShared )
+{
+	__int8 r;
+	if( !stream->Read( r ) ) return 0;
+	return PyInt_FromLong( r );
+}
+
+PyObject * Marshal::ReadObjectInt16( ReadStream * stream, bool isShared )
+{
+	__int16 r;
+	if( !stream->Read( r ) ) return 0;
+	return PyInt_FromLong( r );
+}
+
+PyObject * Marshal::ReadObjectInt32( ReadStream * stream, bool isShared )
+{
+	__int32 r;
+	if( !stream->Read( r ) ) return 0;
+	return PyInt_FromLong( r );
+}
+
+PyObject * Marshal::ReadObjectInt64( ReadStream * stream, bool isShared )
+{
+	__int64 r;
+	if( !stream->Read( r ) ) return 0;
+	return PyLong_FromLongLong( r );
+}
+
+PyObject * Marshal::ReadObjectNone( ReadStream* stream, bool isShared )
+{
+	Py_INCREF( Py_None );
+	return Py_None;
+}
+
+PyObject * Marshal::ReadObjectWStream( ReadStream * stream, bool isShared )
+{
+	return WriteStream::Read( *this, *stream );
+}
+
+PyObject * Marshal::ReadObjectDBRow( ReadStream * stream, bool isShared )
+{
+	return DBRow::Read( *this, *stream );
+}
+
+PyObject * Marshal::ReadObjectCrcCheck( ReadStream * stream, bool isShared )
+{
+	stream->mGotCRC = true;
+	if( !stream->Read<int>( stream->mCrc ) ) return 0;
+	stream->mCrcPos = stream->GetPos();
+	if( stream->GetVersion() == 0 && !mSkipCrcCheck ) {
+		if( !stream->Crc() )
+			return 0;
+	}
+	return ReadObject( stream );
+}
+
+PyObject * Marshal::ReadObjectReference( ReadStream * stream, bool isShared )
 {
 	int len;
 	PyObject* ret;
-	PyObject* tmp;
-	int i; // for loops.
-	
+
+	if( !stream->ReadInteger( len ) ) return 0;
+	if( stream->GetVersion() == 0 ) {
+		if( len < 1 || len > stream->mMapCount || !(ret = stream->mShared[len - 1]) ) {
+			PyErr_SetString( PyExc_ValueError, "Invalid TY_REFERENCE in stream" );
+			return 0;
+		}
+	}
+	else {
+		if( len < 0 || len >= (int)stream->mShared.size() )
+			return PyErr_SetString( PyExc_ValueError, "Invalid TY_REFERENCE in stream" ), 0;
+		ret = stream->mShared[len];
+	}
+	Py_INCREF( ret );
+	return ret;
+}
+
+PyObject * Marshal::ReadObjectPickler( ReadStream * stream, bool isShared )
+{
+	PyObject *up = stream->GetUnpickler( this );
+	if( !up ) return 0;
+	BluePy r( PyObject_CallMethod( up, "load", 0 ) );
+	if( !r ) return 0;
+	if (isShared && !stream->MarkShared( r )) return 0;
+	return r.Detach();
+}
+
+PyObject * Marshal::ReadObjectPickle( ReadStream * stream, bool isShared )
+{
+	int len;
+	if( !stream->ReadInteger( len ) ) return 0; //don't need this, length is inherent in pickle,
+	PyObject *up = stream->GetOSUnpickler( this ); //borrowed ref 
+	if( !up ) return 0;
+	return PyObject_CallMethod( up, "load", 0 );
+}
+
+PyObject * Marshal::ReadObjectCallback( ReadStream * stream, bool isShared )
+{
+	if( stream->mCallback == NULL ) {
+		PyErr_SetString( PyExc_RuntimeError,
+			"Unmarshal stream contains custom data but I have no callback method" );
+		return NULL;
+	}
+	BluePy data( ReadObject( stream ) );
+	if( !data ) return 0;
+
+	AutoTasklet _at( PyOS->GetTaskletTimer(), mTimer_LoadCallback );
+	return PyObject_CallFunctionObjArgs( stream->mCallback, data.o, 0 );
+}
+
+PyObject * Marshal::ReadObjectDict( ReadStream * stream, bool isShared )
+{
+	int len;
+	if( !stream->ReadInteger( len ) ) return 0;
+	BluePyDict r( 1 );
+	if( !r ) return 0;
+	if (isShared && !stream->MarkShared( r )) return 0;
+
+	for( int i = 0; i < len; i++ ) {
+		BluePy val( ReadObject( stream ) );
+		if( !val ) return 0;
+		BluePy key( ReadObject( stream ) );
+		if( !key || !r.Set( key, val ) ) return 0;
+	}
+	return r.Detach();
+}
+
+PyObject * Marshal::ReadObjectList( ReadStream * stream, bool isShared )
+{
+	int len;
+	if( !stream->ReadInteger( len ) ) return 0;
+	if( !stream->CheckSpace( len ) ) return 0; //rudimentary security check
+	BluePy r( PyList_New( len ) );
+	if( !r ) return 0;
+	if (isShared && !stream->MarkShared( r )) return 0;
+
+	for( int i = 0; i < len; i++ ) {
+		PyObject* tmp = ReadObject( stream );
+		if( !tmp ) return 0;
+		PyList_SET_ITEM( r.o, i, tmp );
+	}
+	return r.Detach();
+}
+
+PyObject * Marshal::ReadObjectList1( ReadStream * stream, bool isShared )
+{
+	BluePy r( PyList_New( 1 ) );
+	if( !r ) return 0;
+	if (isShared && !stream->MarkShared( r )) return 0;
+	PyObject* tmp = ReadObject( stream );
+	if( !tmp ) return 0;
+	PyList_SET_ITEM( r.o, 0, tmp );
+	return r.Detach();
+}
+
+PyObject * Marshal::ReadObjectList0( ReadStream * stream, bool isShared )
+{
+	return PyList_New( 0 );
+}
+
+PyObject * Marshal::ReadObjectTuple( ReadStream * stream, bool isShared )
+{
+	int len;
+	if( !stream->ReadInteger( len ) ) return 0;
+	if( !stream->CheckSpace( len ) ) return 0; //must be at least this many bytes left
+	BluePy r( PyTuple_New( len ) );
+	if( !r ) return 0;
+	if (isShared && !stream->MarkShared( r )) return 0;
+
+	for( int i = 0; i < len; i++ ) {
+		PyObject* tmp = ReadObject( stream );
+		if( !tmp ) return 0;
+		if( tmp == r )
+			return PyErr_Format( PyExc_RuntimeError, "Self referencing tuple" ), 0;
+		PyTuple_SET_ITEM( r.o, i, tmp );
+	}
+	return r.Detach();
+}
+
+PyObject * Marshal::ReadObjectTuple2( ReadStream * stream, bool isShared )
+{
+	BluePy r( PyTuple_New( 2 ) );
+	if( !r ) return 0;
+	if (isShared && !stream->MarkShared( r )) return 0;
+	for( int i = 0; i < 2; i++ ) {
+		PyObject* tmp = ReadObject( stream );
+		if( !tmp ) return 0;
+		if( tmp == r )
+			return PyErr_Format( PyExc_RuntimeError, "Self referencing tuple" ), 0;
+		PyTuple_SET_ITEM( r.o, i, tmp );
+	}
+	return r.Detach();
+}
+
+PyObject * Marshal::ReadObjectTuple1( ReadStream * stream, bool isShared )
+{
+	BluePy r( PyTuple_New( 1 ) );
+	if( !r ) return 0;
+	if (isShared && !stream->MarkShared( r )) return 0;
+	PyObject* tmp = ReadObject( stream );
+	if( !tmp ) return 0;
+	//Directly self referencing tuples must be prevented.  A lot of code
+	//in python assumes that tuples are not directly self referencing.
+	//The protocol allows for specifying them, unlike the pickle protocol.
+	if( tmp == r )
+		return PyErr_Format( PyExc_RuntimeError, "Self referencing tuple" ), 0;
+	PyTuple_SET_ITEM( r.o, 0, tmp );
+	return r.Detach();
+}
+
+PyObject* Marshal::ReadObject( ReadStream *stream )
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+
 	PYTYPES type;
 	if (!stream->ReadType(type)) return 0;
 
-#define IS_SHARED(t) (((t)&TY_SHAREDFLAG) != 0)
-#define UPDATE_SHARED(obj) do {\
-	if (IS_SHARED(type) && !stream->MarkShared(obj)) return 0;\
-}while(0)
-	
 	m_typesLoaded[type & TY_TYPEMASK] += 1;
 
-	switch (type & TY_TYPEMASK)
+	bool isShared = (type & TY_SHAREDFLAG) == TY_SHAREDFLAG;
+
+	ReadObjectTypeHandler handler = s_typeHandlers[type & TY_TYPEMASK];
+	if( handler )
 	{
-	case TY_NONE:
-		Py_INCREF(Py_None);
-		return Py_None;
-
-	case TY_GLOBAL:
-		return ReadObjectGlobal(*stream, IS_SHARED(type));
-		
-	// -- Integers -------------------------------------
-	case TY_INT64: {
-		__int64 r;
-		if (!stream->Read(r)) return 0;
-		return PyLong_FromLongLong(r); }
-
-	case TY_INT32: {
-		__int32 r;
-		if (!stream->Read(r)) return 0;
-		return PyInt_FromLong(r); }
-
-	case TY_INT16: {
-		__int16 r;
-		if (!stream->Read(r)) return 0;
-		return PyInt_FromLong(r); }
-
-	case TY_INT8: {
-		__int8 r;
-		if (!stream->Read(r)) return 0;
-		return PyInt_FromLong(r); }
-
-	case TY_INT_N1:
-		return mStock_IntN1.NewRef();
-
-	case TY_INT_0:
-		return mStock_Int0.NewRef();
-
-	case TY_INT_1:
-		return mStock_Int1.NewRef();
-
-	// -- Floats -------------------------------------
-
-	case TY_FLOAT: {
-		double r;
-		if (!stream->Read(r)) return 0;
-		return PyFloat_FromDouble(r); }
-
-	case TY_FLOAT_0:
-		return mStock_Float0.NewRef();
-
-	// -- Bools   -------------------------------------
-	case TY_TRUE:
-		Py_INCREF(Py_True);
-		return Py_True;
-
-	case TY_FALSE:
-		Py_INCREF(Py_False);
-		return Py_False;
-
-	// -- Strings -------------------------------------
-	case TY_STR:
-		return ReadObjectBuffer(*stream);
-		
-	case TY_STR_EMPTY:
-		return mStock_EmptyStr.NewRef();
-
-	case TY_STR_CHAR: {
-		char chr;
-		if (!stream->Read(chr)) return 0;
-		return PyString_FromStringAndSize(&chr, 1); }
-
-	case TY_STR_SHORT: { //hm, don't need this, STR does it already for short strings.
-		unsigned char uc;
-		const char *buf;
-		if (!stream->Read(uc) || !stream->GetBuffer(buf, uc)) return 0;
-		return PyString_FromStringAndSize(buf, uc); }
-
-	case TY_STR_TABLE: {
-		unsigned char uc;
-		if (!stream->Read(uc)) return 0;
-		if (uc<1 || uc>PyList_GET_SIZE(mStrTableRev.o))
-			return PyErr_Format(PyExc_RuntimeError, "Invalid string table index %d", uc), 0;
-		--uc;
-		PyObject *r = PyList_GET_ITEM(mStrTableRev.o, uc);
-		Py_INCREF(r);
-		return r; }
-		
-	case TY_UNICODE: {
-		const wchar_t *buff;
-		if (!stream->ReadInteger(len) || !stream->GetBuffer(buff, len)) return 0;
-		return PyUnicode_FromWideChar(buff, len); }
-
-	case TY_UNICODE_0:  {
-		wchar_t code = 0; //need this for the api
-		return PyUnicode_FromWideChar(&code, 0); }
-
-	case TY_UNICODE_1: {
-		wchar_t code;
-		if (!stream->Read(code)) return 0;
-		return PyUnicode_FromWideChar(&code, 1); }
-
-	case TY_UTF8: {
-		const char *buff;
-		if (!stream->ReadInteger(len) || !stream->GetBuffer(buff, len)) return 0;
-		return PyUnicode_DecodeUTF8((char*)buff, len, 0); }
-		
-	// -- Buffer -------------------------------------
-	case TY_BUFFER: {
-		BluePy r(ReadObjectBuffer(*stream));
-		if (!r) return 0;
-		UPDATE_SHARED(r);
-		return r.Detach(); }
-
-	// -- Tuple -------------------------------------
-	case TY_TUPLE0:
-		return PyTuple_New(0);
-
-	case TY_TUPLE1: {
-		BluePy r(PyTuple_New(1));
-		if (!r) return 0;
-		UPDATE_SHARED(r);
-		tmp = ReadObject(stream);
-		if (!tmp) return 0;
-		//Directly self referencing tuples must be prevented.  A lot of code
-		//in python assumes that tuples are not directly self referencing.
-		//The protocol allows for specifying them, unlike the pickle protocol.
-		if (tmp == r)
-			return PyErr_Format(PyExc_RuntimeError, "Self referencing tuple"), 0;
-		PyTuple_SET_ITEM(r.o, 0, tmp);
-		return r.Detach(); }
-
-	case TY_TUPLE2: {
-		BluePy r(PyTuple_New(2));
-		if (!r) return 0;
-		UPDATE_SHARED(r);
-		for(int i = 0; i<2; i++) {
-			tmp = ReadObject(stream);
-			if (!tmp) return 0;
-			if (tmp == r)
-				return PyErr_Format(PyExc_RuntimeError, "Self referencing tuple"), 0;
-			PyTuple_SET_ITEM(r.o, i, tmp);
-		}
-		return r.Detach(); }
-
-	case TY_TUPLE: {
-		if (!stream->ReadInteger(len)) return 0;
-		if (!stream->CheckSpace(len)) return 0; //must be at least this many bytes left
-		BluePy r(PyTuple_New(len));
-		if (!r) return 0;
-		UPDATE_SHARED(r);
-
-		for (i = 0; i < len; i++) {
-			tmp = ReadObject(stream);
-			if (!tmp) return 0;
-			if (tmp == r)
-				return PyErr_Format(PyExc_RuntimeError, "Self referencing tuple"), 0;	
-			PyTuple_SET_ITEM(r.o, i, tmp);
-		}
-		return r.Detach(); }
-
-	
-	// -- List -------------------------------------
-	case TY_LIST0:
-		return PyList_New(0);
-	case TY_LIST1: {
-		BluePy r(PyList_New(1));
-		if (!r) return 0;
-		UPDATE_SHARED(r);
-		tmp = ReadObject(stream);
-		if (!tmp) return 0;
-		PyList_SET_ITEM(r.o, 0, tmp);
-		return r.Detach(); }
-	case TY_LIST: {
-		if (!stream->ReadInteger(len)) return 0;
-		if (!stream->CheckSpace(len)) return 0; //rudimentary security check
-		BluePy r(PyList_New(len));
-		if (!r) return 0;
-		UPDATE_SHARED(r);
-
-		for (i = 0; i < len; i++) {
-			tmp = ReadObject(stream);
-			if (!tmp) return 0;
-			PyList_SET_ITEM(r.o, i, tmp);
-		}
-		return r.Detach(); }
-	
-	// -- Dict -------------------------------------
-	case TY_DICT: {
-		if (!stream->ReadInteger(len)) return 0;
-		BluePyDict r(1);
-		if (!r) return 0;
-		UPDATE_SHARED(r);
-
-		for (i = 0; i < len; i++) {
-			BluePy val(ReadObject(stream));
-			if (!val) return 0;
-			BluePy key(ReadObject(stream));
-			if (!key || !r.Set(key, val)) return 0;
-		}
-		return r.Detach(); }
-
-	// -- Instance -------------------------------------
-	// Note, this only deals with oldschool instances.  Must update for newstyle.
-	case TY_INSTANCE: 
-		return ReadObjectInstance(*stream, IS_SHARED(type));
-		
-	// -- Custom marshalling -------------------------------------
-	case TY_CALLBACK: {
-		if (stream->mCallback == NULL) {
-			PyErr_SetString(PyExc_RuntimeError,
-				"Unmarshal stream contains custom data but I have no callback method");
-			return NULL;
-		}
-		BluePy data(ReadObject(stream));
-		if (!data) return 0;
-
-		AutoTasklet _at(PyOS->GetTaskletTimer(), mTimer_LoadCallback);
-		return PyObject_CallFunctionObjArgs(stream->mCallback, data.o, 0); }
-
-	// -- Pickle marshal -------------------------------------
-	case TY_PICKLE: {
-		if (!stream->ReadInteger(len)) return 0; //don't need this, length is inherent in pickle,
-		PyObject *up = stream->GetOSUnpickler(this); //borrowed ref 
-		if (!up) return 0;
-		return PyObject_CallMethod(up, "load", 0); }
-		
-	// -- New style pickle marshal ------------------------------------
-	case TY_PICKLER: {
-		PyObject *up = stream->GetUnpickler(this);
-		if (!up) return 0;
-		BluePy r(PyObject_CallMethod(up, "load", 0));
-		if (!r) return 0;
-		UPDATE_SHARED(r);
-		return r.Detach(); }
-
-	// -- Shared object reference -------------------------------------
-	case TY_REFERENCE:
-		if (!stream->ReadInteger(len)) return 0;
-		if (stream->GetVersion() == 0) {
-			if (len < 1 || len > stream->mMapCount || !(ret = stream->mShared[len-1])) {
-				PyErr_SetString(PyExc_ValueError,	"Invalid TY_REFERENCE in stream");
-				return 0;
-			}
-		} else {
-			if (len < 0 || len >= (int)stream->mShared.size())
-				return PyErr_SetString(PyExc_ValueError,	"Invalid TY_REFERENCE in stream"), 0;
-			ret = stream->mShared[len];
-		}
-		Py_INCREF(ret);
-		return ret;
-
-	case TY_CRC_CHECK: {
-		stream->mGotCRC = true;
-		if (!stream->Read<int>(stream->mCrc)) return 0;
-		stream->mCrcPos = stream->GetPos();
-		if (stream->GetVersion() == 0 && !mSkipCrcCheck) {
-			if (!stream->Crc())
-				return 0;
-		}
-		return ReadObject(stream); }
-
-	case TY_REDUCE:
-		return ReadObjectReduce(*stream, IS_SHARED(type));
-	case TY_NEWOBJ:
-		return ReadObjectNewobj(*stream, IS_SHARED(type));
-	case TY_DBROW:
-		return DBRow::Read(*this, *stream);
-	case TY_WSTREAM:
-		return WriteStream::Read(*this, *stream);
-	case TY_LONG:
-		return ReadObjectLong(*stream, IS_SHARED(type));
+		return (this->*handler)( stream, isShared );
 	}
-
 	PyErr_Format(PyExc_RuntimeError, "Invalid type tag %d in stream.", type);
 	return NULL;
 }
@@ -1438,27 +1531,27 @@ PyObject *Marshal::ReadObjectBuffer(ReadStream &s)
 
 
 //reads and instantiates a global object from its string name.
-PyObject *Marshal::ReadObjectGlobal(ReadStream &stream, bool shared)
+PyObject *Marshal::ReadObjectGlobal(ReadStream *stream, bool shared)
 {
-	BluePy name(ReadObjectBuffer(stream));
+	BluePy name(ReadObjectBuffer(*stream));
 	if (!name) return 0;
 	BluePy obj(GetGlobalObject(name));
 	if (!obj) return 0;
-	if (shared && !stream.MarkShared(obj)) return 0;
+	if (shared && !stream->MarkShared(obj)) return 0;
 	if (!UpdateGlobalNames(0, name)) return 0;
 	return obj.Detach();
 }
 
 
 //Read an instance of an old-style class
-PyObject *Marshal::ReadObjectInstance(ReadStream &stream, bool shared)
+PyObject *Marshal::ReadObjectInstance(ReadStream *stream, bool shared)
 {
 	//mark shared according to stream position
 	size_t index;
-	if (shared && (index = stream.MarkShared()) == -1)
+	if (shared && (index = stream->MarkShared()) == -1)
 		return 0;
 
-	BluePy guid(ReadObject(&stream));
+	BluePy guid(ReadObject(stream));
 	if (!guid) return 0;
 	BluePy klass(GetGlobalObject(guid));
 	if (!klass) return 0;
@@ -1477,11 +1570,11 @@ PyObject *Marshal::ReadObjectInstance(ReadStream &stream, bool shared)
 	BluePy inst(PyInstance_NewRaw(klass, 0));
 	if (!inst)
 		return 0;
-	if (shared && !stream.UpdateShared(index, inst))
+	if (shared && !stream->UpdateShared(index, inst))
 		return 0;
 	
 	// Get the instance data
-	BluePy data(ReadObject(&stream));
+	BluePy data(ReadObject(stream));
 	if (!data) return 0;
 
 	// set the state
@@ -1505,12 +1598,12 @@ PyObject *Marshal::ReadObjectInstance(ReadStream &stream, bool shared)
 }
 	
 
-PyObject *Marshal::ReadObjectReduce(ReadStream &stream, bool shared)
+PyObject *Marshal::ReadObjectReduce(ReadStream *stream, bool shared)
 {
 	size_t ix;
-	if (shared && (ix = stream.MarkShared()) == -1) return 0;
+	if (shared && (ix = stream->MarkShared()) == -1) return 0;
 
-	BluePy rv(ReadObject(&stream));
+	BluePy rv(ReadObject(stream));
 	if (!rv)
 		return 0;
 	PyObject *callable = PyTuple_GetItem(rv, 0);
@@ -1522,7 +1615,7 @@ PyObject *Marshal::ReadObjectReduce(ReadStream &stream, bool shared)
 	r = BluePy(PyObject_CallObject(callable, args));
 	if (!r) return 0;
 	//object is constructed, now update r
-	if (shared && !stream.UpdateShared(ix, r)) return 0;
+	if (shared && !stream->UpdateShared(ix, r)) return 0;
 	
 	//further initialization
 	if (PyTuple_GET_SIZE(rv.o)>2) {
@@ -1540,19 +1633,19 @@ PyObject *Marshal::ReadObjectReduce(ReadStream &stream, bool shared)
 	}
 
 	//read the iterators
-	if (!ReadObjectListIter(stream, r) || !ReadObjectDictIter(stream, r))
+	if (!ReadObjectListIter(*stream, r) || !ReadObjectDictIter(*stream, r))
 		return 0;
 
 	return r.Detach();
 }
 
 
-PyObject *Marshal::ReadObjectNewobj(ReadStream &stream, bool shared)
+PyObject *Marshal::ReadObjectNewobj(ReadStream* stream, bool shared)
 {
 	size_t ix;
-	if (shared && (ix = stream.MarkShared()) == -1) return 0;
+	if (shared && (ix = stream->MarkShared()) == -1) return 0;
 
-	BluePy rv(ReadObject(&stream));
+	BluePy rv(ReadObject(stream));
 	if (!rv)
 		return 0;
 	PyObject *args = PyTuple_GetItem(rv, 0);
@@ -1566,7 +1659,7 @@ PyObject *Marshal::ReadObjectNewobj(ReadStream &stream, bool shared)
 	if (!r) return 0;
 
 	//object is constructed, now update r
-	if (shared && !stream.UpdateShared(ix, r)) return 0;
+	if (shared && !stream->UpdateShared(ix, r)) return 0;
 	
 	//further initialization
 	if (PyTuple_GET_SIZE(rv.o)>1) {
@@ -1583,7 +1676,7 @@ PyObject *Marshal::ReadObjectNewobj(ReadStream &stream, bool shared)
 		}
 	}
 	//read the iterators
-	if (!ReadObjectListIter(stream, r) || !ReadObjectDictIter(stream, r))
+	if (!ReadObjectListIter(*stream, r) || !ReadObjectDictIter(*stream, r))
 		return 0;
 	return r.Detach();
 }
@@ -1628,11 +1721,11 @@ bool Marshal::ReadObjectDictIter(ReadStream &stream, PyObject *target)
 
 
 //Read a Long object
-PyObject *Marshal::ReadObjectLong(ReadStream &stream, bool shared)
+PyObject *Marshal::ReadObjectLong(ReadStream *stream, bool shared)
 {
 	const char *buf;
 	int s;
-	if (!stream.GetBuff(buf, s))
+	if (!stream->GetBuff(buf, s))
 		return 0;
 	PyObject *result;
 	if (!s)
@@ -1642,7 +1735,7 @@ PyObject *Marshal::ReadObjectLong(ReadStream &stream, bool shared)
 	if (!result)
 		return 0;
 
-	if (shared && !stream.MarkShared(result)) {
+	if (shared && !stream->MarkShared(result)) {
 		Py_DECREF(result);
 		return 0;
 	}
@@ -2716,6 +2809,8 @@ bool Marshal::WriteType( class WriteStream* stream, enum PYTYPES type )
 	m_typesSaved[type & TY_TYPEMASK] += 1;
 	return stream->WriteType(type );
 }
+
+Marshal::ReadObjectTypeHandler Marshal::s_typeHandlers[64];
 
 
 #endif
