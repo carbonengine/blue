@@ -213,6 +213,13 @@ bool BluePyOS::InitBasicModuleSupport()
 	if( !DBRowsetInit( mBlueModule ) )
 		return false;
 
+#if _WIN32
+	//init the submodules blue.win32, blue.heapq and blue.crypto.  The latter is required for the Marshal::New()
+	initwin32();
+	if( !InitCrypto() )
+		return false;
+#endif
+
 	if( !MarshalInit( mBlueModule ) )
 		return false;
 
@@ -224,11 +231,6 @@ bool BluePyOS::InitBasicModuleSupport()
 			return false;
 	}
 
-#if _WIN32
-	//init the submodules blue.win32, blue.heapq and blue.crypto.  The latter is required for the Marshal::New()
-	initwin32();
-	if (!InitCrypto())
-		return false;
 
 #if CCP_STACKLESS
 	BeNet->Init(); // c-routing support
@@ -237,7 +239,6 @@ bool BluePyOS::InitBasicModuleSupport()
 	mSynchro = CCP_NEW( "BluePyOS/mSyncro" ) Synchro;
 	mPySynchro = mSynchro;
 	PyDict_SetItemString(dict, "synchro", mSynchro);
-#endif
 #endif
 
 
