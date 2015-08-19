@@ -13,11 +13,11 @@
 #include "BlueLogInMemory.h"
 #include "LogToPython.h"
 #include "PrettyPrint.h"
-#include "Marshal.h"
-#include "PyRowset.h"
 
 #if _WIN32
 #include "win32.h"
+#include "Marshal.h"
+#include "PyRowset.h"
 #if CCP_STACKLESS
 #include "Synchro.h"
 #include "Logger/Logger.h"
@@ -209,16 +209,15 @@ bool BluePyOS::InitBasicModuleSupport()
 	if (PyDict_SetItemString(dict, "LogChannel", (PyObject*)LogChannelType()))
 		return false;
 
+#if _WIN32
 	// Add the DBRowsetStuff
 	if( !DBRowsetInit( mBlueModule ) )
 		return false;
 
-#if _WIN32
 	//init the submodules blue.win32, blue.heapq and blue.crypto.  The latter is required for the Marshal::New()
 	initwin32();
 	if( !InitCrypto() )
 		return false;
-#endif
 
 	if( !MarshalInit( mBlueModule ) )
 		return false;
@@ -230,6 +229,7 @@ bool BluePyOS::InitBasicModuleSupport()
 		if( PyModule_AddObject( mBlueModule, "marshal", marshal ) )
 			return false;
 	}
+#endif
 
 
 #if CCP_STACKLESS
