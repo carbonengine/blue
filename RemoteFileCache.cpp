@@ -237,8 +237,6 @@ Be::Result<std::string> RemoteFileCache::CreateFileStreamForCachedFile( const st
 		CcpThreadSleep( 10 );
 	}
 
-	CCP_DEBUG_BREAK();
-
 	return Be::Result<std::string>( "Couldn't open cached file" );
 }
 
