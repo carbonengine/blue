@@ -181,12 +181,48 @@ private:
 		clientService.sin_family = AF_INET;
 		clientService.sin_addr.s_addr = inet_addr( ip );
 		clientService.sin_port = htons( port );
-		if( connect( m_socket, reinterpret_cast<sockaddr*>( &clientService ), sizeof( clientService ) ) )
+#ifdef _WIN32
+		unsigned long nonBlocking = 1;
+		ioctlsocket( m_socket, FIONBIO, &nonBlocking );
+
+		if( connect( m_socket, reinterpret_cast<sockaddr*>( &clientService ), sizeof( clientService ) ) != 0 )
+		{
+			if( WSAGetLastError() == WSAEWOULDBLOCK )
+			{
+				fd_set writeFd;
+				FD_ZERO( &writeFd );
+				FD_SET( m_socket, &writeFd );
+				timeval timeout;
+				timeout.tv_sec = 1;
+				timeout.tv_usec = 0;
+				if( select( 0, nullptr, &writeFd, nullptr, &timeout ) )
+				{
+					int result;
+					int resultLen = sizeof( result );
+					if ( getsockopt( m_socket, SOL_SOCKET, SO_ERROR, reinterpret_cast<char*>( &result ), &resultLen ) == 0 && 
+						result == 0 ) 
+					{
+						unsigned long blocking = 0;
+						ioctlsocket( m_socket, FIONBIO, &blocking );
+						return true;
+					}
+				}
+			}
+			closesocket( m_socket );
+			m_socket = InvalidSocket;
+			return false;
+		}
+
+		unsigned long blocking = 0;
+		ioctlsocket( m_socket, FIONBIO, &blocking );
+#else
+		if( connect( m_socket, reinterpret_cast<sockaddr*>( &clientService ), sizeof( clientService ) ) != 0 )
 		{
 			closesocket( m_socket );
 			m_socket = InvalidSocket;
 			return false;
 		}
+#endif
 		return true;
 	}
 

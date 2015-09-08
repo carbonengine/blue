@@ -208,8 +208,11 @@ void BlueModuleStartup()
     {
         // Instruct the CCP logging system to echo to the LogServer as well
         CCP::RegisterLogEcho( &LogToLogServer, CCP::LOGTYPE_INFO, true );
+		CCP_LOG( "Shared memory logger has been attached" );
     }
 #endif
+
+    CCP_LOG( "Connecting to socket logger" );
     
 	if( StartSocketLogger() )
 	{
