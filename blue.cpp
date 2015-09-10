@@ -163,6 +163,21 @@ extern "C" int DLLEXPORT module_start( size_t, const void* )
 }
 #endif
 
+void BlueInitializeSocketLogger()
+{
+    CCP_LOG( "Connecting to socket logger" );
+    
+	if( StartSocketLogger() )
+	{
+		CCP::RegisterLogEcho( &LogToSocketLogger, CCP::LOGTYPE_INFO, true );
+		CCP_LOG( "Socket logger has been attached" );
+	}
+	else
+	{
+		CCP_LOG( "Failed to attach to socket logger" );
+	}
+}
+
 void BlueModuleStartup()
 {
     // Inform the logging system of the main thread
@@ -211,18 +226,6 @@ void BlueModuleStartup()
 		CCP_LOG( "Shared memory logger has been attached" );
     }
 #endif
-
-    CCP_LOG( "Connecting to socket logger" );
-    
-	if( StartSocketLogger() )
-	{
-		CCP::RegisterLogEcho( &LogToSocketLogger, CCP::LOGTYPE_INFO, true );
-		CCP_LOG( "Socket logger has been attached" );
-	}
-	else
-	{
-		CCP_LOG( "Failed to attach to socket logger" );
-	}
 
     CCP_LOG( "Blue module starting" );
     
@@ -366,6 +369,8 @@ PyMODINIT_FUNC
 #ifndef _WIN32
     BlueModuleStartup();
 #endif
+	BlueInitializeSocketLogger();
+
 	// Inform the logging system of the main thread
 	CCP::SetLogMainThreadId();
 
