@@ -164,7 +164,7 @@ const Be::ClassInfo* BluePaths::ExposeToBlue()
 			"RegisterFileSystemBeforeLocal",
 			RegisterFileSystemBeforeLocal,
 			"Registers a file system that is searched before the local file system. Currently available values\n"
-			"are 'Stuff' and 'Remote' (case sensitive)"
+			"are 'Remote' (case sensitive)"
 		)
 
 		MAP_METHOD_AND_WRAP
@@ -172,7 +172,7 @@ const Be::ClassInfo* BluePaths::ExposeToBlue()
 			"RegisterFileSystemAfterLocal",
 			RegisterFileSystemAfterLocal,
 			"Registers a file system that is searched after the local file system. Currently available values\n"
-			"are 'Stuff' and 'Remote' (case sensitive)"
+			"are 'Remote' (case sensitive)"
 		)
 
 	EXPOSURE_END()

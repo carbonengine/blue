@@ -30,7 +30,7 @@ PyObject *BluePyOS::PyXUtil_Filter(PyObject *args)
     PyObject* retset;
 	struct {
 		Py_ssize_t dataIdx;
-		__int64 cond;
+		int64_t cond;
 		DBRow::datatypes type;
 	} myvec[4];
     
@@ -46,7 +46,7 @@ PyObject *BluePyOS::PyXUtil_Filter(PyObject *args)
     
     // Error out if indices and condvalues don't match up or if we get more then we're ready for
     if (PyList_GET_SIZE(indices) != PyList_GET_SIZE(condvalues))
-        return PyErr_SetString(PyExc_RuntimeError, "XUtil_Filter: Length of index list value list don't match up"), 0;
+        return PyErr_SetString(PyExc_RuntimeError, "XUtil_Filter: Length of index list value list don't match up"), nullptr;
 
 	//Get initial dude.  We assume all of them are the same, so we use this for info on how to index the data
     PyObject *first;
@@ -65,17 +65,17 @@ PyObject *BluePyOS::PyXUtil_Filter(PyObject *args)
 		if (idxO == Py_None || cndO == Py_None)
 			continue;
 		
-		if (numConds >= _countof(myvec))
-			 return PyErr_SetString(PyExc_RuntimeError, "XUtil_Filter: Too many conditions to Filter on."), 0;
+		if (numConds >= sizeof(myvec) / sizeof(myvec[0]))
+			 return PyErr_SetString(PyExc_RuntimeError, "XUtil_Filter: Too many conditions to Filter on."), nullptr;
 		
-        int idx = PyInt_AS_LONG(idxO);
+        int idx = int( PyInt_AS_LONG(idxO) );
         Py_ssize_t nullOffset; //throwaway
 		myvec[numConds].dataIdx = static_cast<DBRow*>( first )->GetDataOffset(idx, myvec[numConds].type, nullOffset);
 		if (myvec[numConds].dataIdx<0)
-			return PyErr_SetString(PyExc_ValueError, "invalid column"), 0;
+			return PyErr_SetString(PyExc_ValueError, "invalid column"), nullptr;
 		myvec[numConds].cond = PyLong_AsLongLong(cndO);
-		if (myvec[numConds].cond == (__int64)(-1) && PyErr_Occurred())
-			return PyErr_SetString(PyExc_OverflowError, "XUtil_Filter: 64 bit value overflowed! "), 0;
+		if (myvec[numConds].cond == (int64_t)(-1) && PyErr_Occurred())
+			return PyErr_SetString(PyExc_OverflowError, "XUtil_Filter: 64 bit value overflowed! "), nullptr;
 		++numConds;
     }
 	
@@ -92,9 +92,9 @@ PyObject *BluePyOS::PyXUtil_Filter(PyObject *args)
         bool include = true;
         for (long j = 0; j < numConds; j++)
         {  
-            __int64 value;
+            int64_t value;
 			if ( ! static_cast<DBRow*>( row )->GetValue(myvec[j].type, myvec[j].dataIdx, value) )
-                return PyErr_SetString(PyExc_RuntimeError, "XUtil_Filter: Unsupported data type or index out of range for DBRow"),0;
+                return PyErr_SetString(PyExc_RuntimeError, "XUtil_Filter: Unsupported data type or index out of range for DBRow"), nullptr;
             if (myvec[j].cond != value)
             {
                 include = false;

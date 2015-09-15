@@ -1,5 +1,9 @@
 #include "StdAfx.h"
 
+#ifdef __APPLE__
+#include <CoreFoundation/CoreFoundation.h>
+#endif
+
 #include "BlueOS.h"
 #include "include/IBluePersist.h"
 #include "include/IBlueCallbackMan.h"
@@ -11,7 +15,6 @@
 #include "MotherLode.h"
 #include "BlueLogInMemory.h"
 #include "BluePaths.h"
-#include "Stuffer.h"
 #include "BlueResFile.h"
 
 #if BLUE_WITH_PYTHON
@@ -27,14 +30,17 @@
 
 #if CCP_STACKLESS
 #include "include/BitPacker.h"
+#if !PORTING_TO_LINUX
 #include "include/BlueNet.h"
 #include "include/BlueNetTypes.h"
-#include <stacklessio_api.h>
 #include "CcpUtils/PyCpp.h"
+#endif
+#include <stacklessio_api.h>
 #endif
 
 #include <sstream> // for message creation
 #include <algorithm>
+#include <iomanip>
 #include "BlueTimeoutHandler.h"
 
 static CcpLogChannel_t s_chOS = CCP_LOG_DEFINE_CHANNEL( "OS" );
@@ -53,7 +59,7 @@ bool g_carbonIoFastWakeup = false;
 
 bool g_carbonIoManualWakeup = true;
 
-#if CCP_STACKLESS
+#if CCP_STACKLESS && !PORTING_TO_LINUX
 
 const int BNT_SIMCLOCK_SYNC_INIT = BlueNet::BlueNetKeyFromName( "SimClock::SycInit" );
 const int BNT_SIMCLOCK_SYNC_UPDATE = BlueNet::BlueNetKeyFromName( "SimClock::SycUpdate" );
@@ -168,6 +174,7 @@ void BlueWinError::Format(DWORD errcode)
 //------------------------------------------------------------------------------
 static void OnIOTaskletScheduled( bool force )
 {
+#if !PORTING_TO_LINUX
 	if( g_carbonIoFastWakeup )
 	{
 		SetEvent(gBreakCarbonIo);
@@ -186,16 +193,18 @@ static void OnIOTaskletScheduled( bool force )
 			sPendingWakeup = true;
 		}
 	}
+#endif
 }
 
 //------------------------------------------------------------------------------
 static void IOWakeupWatchdogThread( void *arg )
 {
+#if !PORTING_TO_LINUX
 	// periodically wake up and check to see if a pending wakeup was
 	// issued but never serviced, this will happen only when IO is unbusy.
 	for(;;)
 	{
-		if ( sPendingWakeup )
+        if ( sPendingWakeup )
 		{
 			unsigned int current = GetTickCount();
 			if ( current > sNextScheduledIOWakeup )
@@ -207,6 +216,7 @@ static void IOWakeupWatchdogThread( void *arg )
 
 		Sleep( BeNet->GetWatchdogInterval() );
 	}
+#endif
 }
 
 
@@ -397,7 +407,7 @@ BlueOS::BlueOS() :
 
 	mMiniDump = false;
 
-#if CCP_STACKLESS
+#if CCP_STACKLESS && !PORTING_TO_LINUX
 	gBreakSleep = CreateEvent(NULL, FALSE, FALSE, NULL);
 	gBreakCarbonIo = CreateEvent(NULL, FALSE, FALSE, NULL);
 
@@ -425,8 +435,9 @@ BlueOS::~BlueOS()
 	Py_XDECREF(mFrameClock);
 #endif
 	CCP_FREE(mLastKeyValue);
-
+#if !PORTING_TO_LINUX
 	CloseHandle(gBreakSleep);
+#endif
 }
 
 
@@ -555,7 +566,13 @@ void Py_FatalError( char *msg )
 void BlueOS::DoSleep()
 {
 #if CCP_STACKLESS
-
+#if PORTING_TO_LINUX
+    if( mNextScheduledEvent <= 0 )
+    {
+        return;
+    }
+    CcpThreadSleep( mNextScheduledEvent );
+#else
 	if( mNextScheduledEvent <= 0 )
 	{
 		// Quick return if there is no desire to sleep
@@ -632,7 +649,7 @@ void BlueOS::DoSleep()
 		}
 	}
 	ResetEvent( gBreakSleep );
-
+#endif
 #endif
 }
 
@@ -780,9 +797,13 @@ void BlueOS::ComputeTimeValues(Be::Time* ptrActualTime, float* ptrDeltaT_sec)
 
 #if CCP_STACKLESS
     // See if we have a sync nudge to apply - ignoring sub-millisecond shifts
-    if( abs(mTimeSyncAdjust) > ONE_MILLISECOND )
+    if( mTimeSyncAdjust > ONE_MILLISECOND || mTimeSyncAdjust < -ONE_MILLISECOND )
     {
-        Be::Time maxMagnitude = abs( Be::Time(smoothedDeltaT * mTimeSyncAdjustFactor) );
+        Be::Time maxMagnitude = Be::Time(smoothedDeltaT * mTimeSyncAdjustFactor);
+        if( maxMagnitude < 0 )
+        {
+            maxMagnitude = -maxMagnitude;
+        }
 
         // Clamp our adjustment to the max magnitude allowed
         Be::Time tickAdjust = std::min( maxMagnitude, std::max( -maxMagnitude, mTimeSyncAdjust ) );
@@ -995,16 +1016,18 @@ void BlueOS::PumpOS()
 	{
 		//CCP_STATS_ZONE( "BlueOS/PumpOS/DoSleep" );
 		// Defining this directly to be able to mark this as an "idle" telemetry zone
+#if CCP_TELEMETRY_ENABLED
 		tmZone( g_telemetryContext, TMZF_IDLE, "BlueOS/PumpOS/DoSleep" );
-
+#endif
 		DoSleep();
-		mNextScheduledEvent = mSleepTime;
+		mNextScheduledEvent = int( mSleepTime );
 	}
-
+#if !PORTING_TO_LINUX
 	// alert the IO watchdog that events have been delivered recently
 	sNextScheduledIOWakeup = GetTickCount() + MIN_SCHEDULED_IO_INTERVAL;
 
 	BeNet->DeliverCPackets(); // dispatch any waiting callbacks
+#endif
 #endif
 
 
@@ -1116,9 +1139,6 @@ bool BlueOS::Startup( short interfaceVersion, int pyOptimizeFlag )
 		return false;
 	}
 #endif
-
-	mOsInfo.dwOSVersionInfoSize = sizeof mOsInfo;
-	GetWindowsVersion( mOsInfo );
 #endif
 
 	// pump yielding
@@ -1202,7 +1222,7 @@ bool BlueOS::RunStackless()
 	PyObject* me = BlueWrapObjectForPython( this );
 	if( me )
 	{
-		PyObject* ret = PyStackless_CallMethod_Main(me, "StacklessMain", NULL);
+		PyObject* ret = PyStackless_CallMethod_Main(me, (char*)"StacklessMain", NULL);
 		Py_DECREF(me);
 		if (!ret)
 		{
@@ -1233,11 +1253,10 @@ bool BlueOS::RunStackless()
 PyObject* BlueOS::PyStacklessMain( PyObject* args )
 {
 #if CCP_STACKLESS
-
 	if( HasStartupArg( L"telemetryServer" ) )
 	{
 		std::wstring server = GetStartupArgValue( L"telemetryServer" );
-		std::string aServer = CW2A( server.c_str() );
+		std::string aServer( CW2A( server.c_str() ) );
 		const int ARENA_SIZE = 8*1024*1024;
 		g_statistics->SetTelemetryBufferSize( ARENA_SIZE );
 		g_statistics->StartTelemetry( aServer );
@@ -1292,7 +1311,7 @@ PyObject* BlueOS::PyStacklessMain( PyObject* args )
 	{
 		{
 			CCP_STATS_ZONE( "Main loop");
-
+#if !PORTING_TO_LINUX
 			MSG msg;
 			while(PeekMessageW(&msg, 0, 0, 0, PM_REMOVE))
 			{
@@ -1305,7 +1324,7 @@ PyObject* BlueOS::PyStacklessMain( PyObject* args )
 				TranslateMessage(&msg);
 				DispatchMessageW(&msg);
 			}
-
+#endif
 			BeOS->PumpOS();
 		}
 	}
@@ -1493,7 +1512,9 @@ void BlueOS::NextScheduledEvent(int millisec)
 #if CCP_STACKLESS
 	if( millisec <= 0 )
 	{
+#if !PORTING_TO_LINUX
 		SetEvent(gBreakSleep); //If we are sleeping (this could be an async window message we're in, wake up!)
+#endif
 		mNextScheduledEvent = -1;
 	}
 	else if( millisec < mNextScheduledEvent )
@@ -1693,7 +1714,7 @@ void BlueOS::FormatError( char** errorstring )
 
 	if( *errorstring )
 	{
-		strncpy_s( *errorstring, len - 1, error.c_str(), _TRUNCATE);
+		strncpy_s( *errorstring, len, error.c_str(), _TRUNCATE);
 	}
 
 }
@@ -2202,9 +2223,65 @@ PyObject* BlueOS::PyFormatUTC( PyObject* args )
 	return list;
 
 #else
+    
+    PyObject* t = NULL;
+    long localtime = 1;
+    
+    if( !PyArg_ParseTuple(args, "|O!i", &PyLong_Type, &t, &localtime) )
+    {
+        return NULL;
+    }
+    
+    time_t timet;
+    if( t )
+    {
+        auto fileTime = PyLong_AsLongLong(t);
+        if( fileTime == -1 && PyErr_Occurred() )
+        {
+            return 0;
+        }
+        
+        timet = time_t( fileTime  / 10000000ULL - 11644473600ULL );
+    }
+    else
+    {
+        ::time( &timet );
+    }
 
-	// TODO: Implement for non-Win32
-	return nullptr;
+    struct tm time;
+    if( localtime )
+    {
+        memcpy( &time, ::localtime( &timet ), sizeof( time ) );
+    }
+    else
+    {
+        memcpy( &time, ::gmtime( &timet ), sizeof( time ) );
+    }
+    
+    char tmp[1024];
+    
+    PyObject* list = PyList_New(3);
+    
+    if( !list )
+    {
+        return NULL;
+    }
+    
+    std::ostringstream s1;
+    s1.imbue( std::locale::classic() );
+    s1 << std::put_time( &time, "%Ec" );
+    PyList_SET_ITEM( list, 0, PyString_FromString( s1.str().c_str() ) );
+    
+    std::ostringstream s2;
+    s2.imbue( std::locale::classic() );
+    s2 << std::put_time( &time, "%c" );
+    PyList_SET_ITEM( list, 1, PyString_FromString( s2.str().c_str() ) );
+    
+    std::ostringstream s3;
+    s3 << std::put_time( &time, "%c" );
+    PyList_SET_ITEM( list, 2, PyString_FromString( s3.str().c_str() ) );
+    
+    return list;
 
 #endif
 }
@@ -2270,9 +2347,9 @@ PyObject* BlueOS::PyRegisterClientIDForSimTimeUpdates( PyObject* args )
 	packer.Pack( mRealTime );
 
 	int len = packer.Finalize();
-
+#if !PORTING_TO_LINUX
 	BeNet->SendPacketToClient(clientID, BNT_SIMCLOCK_SYNC_INIT, data, len);
-
+#endif
 #endif
 
 	Py_INCREF(Py_None);
@@ -2304,10 +2381,11 @@ PyObject* BlueOS::PyUnregisterClientIDForSimTimeUpdates( PyObject* args )
 	{
 		// That's our last reference, erase and detatch them.
 		mSimDilationSyncClients.erase(clientID);
-
+#if !PORTING_TO_LINUX
 		// It doesn't look like BlueNet handles sending an empty payload, so send a 0.
 		char data = 0;
 		BeNet->SendPacketToClient(clientID, BNT_SIMCLOCK_SYNC_DETACH, &data, 1);
+#endif
 	}
 
 #endif
@@ -2348,10 +2426,10 @@ void BlueOS::SendDilationEvent( BlueOS::PendingDilationEvent newEvent )
 	CCP_LOG_CH( s_chOS, "TIDI Event send - %f", newEvent.mNextDilationFactor);
 
 	int len = packer.Finalize();
-
+#if !PORTING_TO_LINUX
 	// Shoot it home~
 	BeNet->SendPacketToClientList( clientList, numClients, BNT_SIMCLOCK_SYNC_UPDATE, data, len );
-
+#endif
 	delete[] clientList;
 
 #endif
@@ -2378,7 +2456,7 @@ void BlueOS::UnregisterForSimTimeRebase( ISimTimeRebaseNotify* cb )
 
 void BlueOS::SimClockPacketCallBack( const unsigned long long fromID, const int blueNetType, const char* data, const int len )
 {
-#if CCP_STACKLESS
+#if CCP_STACKLESS && !PORTING_TO_LINUX
 
 	// We recieved a TiDi packet, time to care about the sim clock
 	mSimClockLockedToRealClock = false;
@@ -2477,7 +2555,7 @@ void SimClockPacketCallBackHelper( const unsigned long long fromID, const int bl
 void BlueOS::EvaluateTimeDilation()
 {
 #if CCP_STACKLESS
-
+#if !PORTING_TO_LINUX
 	// Needed a post-construction place to set up the packet handler.  This'll do.
 	static bool packetsHandled = false;
 	if( !packetsHandled )
@@ -2487,7 +2565,7 @@ void BlueOS::EvaluateTimeDilation()
 		BeNet->RegisterCallbackSync( SimClockPacketCallBackHelper, BNT_SIMCLOCK_SYNC_DETACH );
 		packetsHandled = true;
 	}
-
+#endif
 	// If I'm not in control of my own sim clock, there's nothing left to do.
 	if( !mDynamicSimDilationEnabled )
 	{
@@ -3007,6 +3085,23 @@ void BlueOS::CaptureLogCountsToStats()
 	CCP::GetLogCounter( CCP::LOGTYPE_NOTICE ) = 0;
 	CCP::GetLogCounter( CCP::LOGTYPE_WARN ) = 0;
 	CCP::GetLogCounter( CCP::LOGTYPE_ERR ) = 0;
+}
+
+void BlueOS::ShowErrorMessageBox( const wchar_t* title, const wchar_t* message )
+{
+#ifdef _WIN32
+	MessageBoxW( nullptr, message, title, MB_ICONSTOP );
+#elif defined(__APPLE__)
+    CFStringEncoding encoding = (CFByteOrderLittleEndian == CFByteOrderGetCurrent()) ? kCFStringEncodingUTF32LE : kCFStringEncodingUTF32BE;
+    
+    CFStringRef titleRef = CFStringCreateWithBytes( nullptr, reinterpret_cast<const UInt8*>( title ), wcslen( title ) * sizeof( wchar_t ), encoding, false );
+    CFStringRef messageRef = CFStringCreateWithBytes( nullptr, reinterpret_cast<const UInt8*>( message ), wcslen( message ) * sizeof( wchar_t ), encoding, false );
+    
+    CFOptionFlags result;  //result code from the message box
+    
+    CFUserNotificationDisplayAlert( 0, kCFUserNotificationStopAlertLevel, nullptr, nullptr, nullptr, titleRef, messageRef, nullptr, nullptr, nullptr, &result );
+    
+#endif
 }
 
 #ifdef OptimizeOff

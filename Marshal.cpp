@@ -8,8 +8,6 @@
 #include "StdAfx.h"
 #if BLUE_WITH_PYTHON
 
-#ifdef _WIN32
-
 // TODO: PyTemplates needs a lot of work to compile under clang
 
 #include "Marshal.h"
@@ -34,112 +32,9 @@ static CcpLogChannel_t s_ch = CCP_LOG_DEFINE_CHANNEL( "Marshal" );
 const PyTypeObject* MarshalType = Marshal::GetType();
 
 // EOF exception
-static DWORD const CODE_READPASTEOF = 0xE0000001;
-static DWORD const CODE_INVALIDMAPREF = 0xE0000002;
+static uint32_t const CODE_READPASTEOF = 0xE0000001;
+static uint32_t const CODE_INVALIDMAPREF = 0xE0000002;
 
-//--------------------------------------------------------------------
-// Python builtin types
-//
-// Fundamental types:
-//		<type 'NoneType'>
-//		<type 'type'>
-//
-// Numerical types:
-//		<type 'int'>
-//		<type 'long'>
-//		<type 'float'>
-//		<type 'complex'>
-//
-// Sequence objects:
-//		<type 'str'>
-//		<type 'unicode'>
-//		<type 'buffer'>
-//		<type 'tuple'>
-//		<type 'list'>
-//
-// Mapping objects:
-//		<type 'dict'>
-//
-// Other objects:
-//		<type 'instance'>
-//		<type 'class'> ? need to support this, perhaps not
-enum PYTYPES
-{
-	TY_INVALID = 0,
-	TY_SIGNATURE = 126,	// marks beginning of marshal format
-	TY_SIGNATURE2 = 125,  // new marker, followed by a version char
-
-	TY_NONE = 1,
-	TY_GLOBAL = 2,	//A global object by name
-
-	TY_INT64 = 3,
-	TY_INT32 = 4,
-	TY_INT16 = 5,
-	TY_INT8 = 6,
-	TY_INT_N1 = 7,
-	TY_INT_0 = 8,
-	TY_INT_1 = 9,
-
-	TY_FLOAT = 10,
-	TY_FLOAT_0 = 11,
-
-	TY_COMPLEX = 12,
-
-	TY_STR = 13,
-	TY_STR_EMPTY = 14,
-	TY_STR_CHAR = 15,
-	TY_STR_SHORT = 16,
-	TY_STR_TABLE = 17,
-	TY_UNICODE = 18,
-
-	TY_BUFFER = 19,
-	TY_TUPLE = 20,
-	TY_LIST = 21,
-
-	TY_DICT = 22,
-
-	TY_INSTANCE = 23,
-	// TY_BLUEWRAPPER		= 24, // Deprecated
-	TY_CALLBACK = 25,	// callback method specific
-
-	TY_PICKLE = 26,	// fallback.  Deprecated, backwards compatibility only.
-
-	// reference pointers
-	TY_REFERENCE = 27,
-
-	// packet format and flags
-	TY_CRC_CHECK = 28,
-	//TY_COMPRESSED  		= 29,   //unused
-
-	TY_TRUE = 31,	//these two are so common, they deserve their own thing
-	TY_FALSE = 32,
-
-	TY_PICKLER = 33,	//new style pickle, use a single pickler for the whole stream
-	TY_REDUCE = 34,	//__reduce__ protocol
-	TY_NEWOBJ = 35,	//the newobj special case of __reduce__ protocol 2
-
-	TY_TUPLE0 = 36,	//an empty tuple
-	TY_TUPLE1 = 37,	//a tuple of one item
-	TY_LIST0 = 38,	//an empty list
-	TY_LIST1 = 39,	//a list of one item
-
-	TY_UNICODE_0 = 40,	//empty unicode string
-	TY_UNICODE_1 = 41,	//single unicode char
-
-	TY_DBROW = 42,	//a custom marshaled DBROW
-	TY_WSTREAM = 43,	//the marshallers own WriteStream
-
-	TY_TUPLE2 = 44,	//a two-tuple, surprisingly common
-	TY_MARK = 45,	//a marker for dynamic lists and other dynamic forms
-
-	TY_UTF8 = 46,	//unicode as utf-8
-
-	TY_LONG = 47,	//a proper long
-
-	// flags and masks
-	TY_SHAREDFLAG = 0x40, //64.  don't go above that
-	TY_TYPEMASK = 0x3F	// type id's are from 1 to 63
-};
 
 ///////////////////////////////////////////////////////////////////
 // Initialize the blue module
@@ -516,7 +411,7 @@ PyObject *WriteStream::_New(PyTypeObject *subtype, PyObject *args, PyObject *kwd
 	void *raw = _Alloc(subtype);
 	if (!raw)
 		return 0;
-	WriteStream *stream = new(raw) WriteStream(); //c++ constructor
+	WriteStream *stream = new(raw) WriteStream; //c++ constructor
 	if (args) {
 		char *data;
 		int datalen;
@@ -664,16 +559,16 @@ bool WriteStream::WriteBuffWoSize(const void* buff, size_t size)
 bool WriteStream::WriteInteger(int i)
 {
 	if (i >= 0 && i < UCHAR_MAX)
-		return Write<unsigned char>(i);
+		return Write<uint8_t>(i);
 	else
-		return Write<unsigned char>(UCHAR_MAX) && Write<__int32>(i);
+		return Write<uint8_t>(UCHAR_MAX) && Write<int32_t>(i);
 }
 
 PyObject *WriteStream::write(PyObject *s)
 {
 	if (mFinalized)
 		//after finalization, object is immutable
-		return PyErr_SetString(PyExc_IOError, "finalized buffer is read only"), 0;
+		return PyErr_SetString(PyExc_IOError, "finalized buffer is read only"), nullptr;
 	Py_ssize_t len;
 	char *data;
 	if (PyString_AsStringAndSize(s, &data, &len))
@@ -687,7 +582,7 @@ PyObject *WriteStream::write(PyObject *s)
 PyObject *WriteStream::Str()
 {
 	if (!mFinalized)
-		return PyErr_SetString(PyExc_RuntimeError, "stream isn't finalized yet"), 0;
+		return PyErr_SetString(PyExc_RuntimeError, "stream isn't finalized yet"), nullptr;
 	return PyString_FromStringAndSize(mBuff, mPos);
 }
 
@@ -695,7 +590,7 @@ PyObject *WriteStream::Str()
 PyObject *WriteStream::Len()
 {
 	if (!mFinalized)
-		return PyErr_SetString(PyExc_RuntimeError, "stream isn't finalized yet"), 0;
+		return PyErr_SetString(PyExc_RuntimeError, "stream isn't finalized yet"), nullptr;
 	return PyLong_FromLongLong(mPos);
 }
 
@@ -703,7 +598,7 @@ PyObject *WriteStream::Len()
 PyObject *WriteStream::__reduce_ex__(PyObject *proto)
 {
 	if (!mFinalized)
-		return PyErr_SetString(PyExc_RuntimeError, "stream isn't finalized yet"), 0;
+		return PyErr_SetString(PyExc_RuntimeError, "stream isn't finalized yet"), nullptr;
 	return Py_BuildValue("O(s#)", GetType(), mBuff, mPos);
 }
 
@@ -737,7 +632,7 @@ PyObject *WriteStream::GetPickler()
 	if (!mPickler) {
 		BluePy cpickle(PyImport_ImportModule("cPickle"));
 		if (!cpickle) return 0;
-		mPickler = BluePy(PyObject_CallMethod(cpickle, "Pickler", "Oi", this, 2)); //2 == HIGHEST_PROTOCOL
+		mPickler = BluePy(PyObject_CallMethod(cpickle, (char*)"Pickler", (char*)"Oi", this, 2)); //2 == HIGHEST_PROTOCOL
 	}
 	return mPickler;
 }
@@ -825,20 +720,20 @@ bool WriteStream::Finalize(size_t &totalLen, size_t &mapLen)
 	if (mVersion == 0) {
 		//finish the reference indirection map
 		// Write out shared object mapping
-		int n = (int)mRefHits.size();
+		int32_t n = (int32_t)mRefHits.size();
 		//first, sort according to streampos
 		std::sort(mRefHits.begin(), mRefHits.end());
 		//write out the map
-		for (int i = 0; i < n; i++) {
-			int id = (int)mRefHits[i].second;
-			if (!Write<int>(id)) return false;
+		for (int32_t i = 0; i < n; i++) {
+			int32_t id = (int)mRefHits[i].second;
+			if (!Write<int32_t>(id)) return false;
 		}
 		mapLen = n*sizeof(int);
 		
 		//write lenght
 		size_t tmp = GetPos();
 		SetPos(1);
-		if (!Write<int>(n)) return false;
+		if (!Write<int32_t>(n)) return false;
 		SetPos(tmp);
 	}
 	size_t size = GetPos();
@@ -846,7 +741,7 @@ bool WriteStream::Finalize(size_t &totalLen, size_t &mapLen)
 
 	if (mChecksumPos != -1)
 	{
-		int a32 = adler32(1, (const unsigned char*)mBuff + mChecksumPos+4, (unsigned int)(size - (mChecksumPos+4))); //add support for long buffers
+		int32_t a32 = int32_t( adler32(1, (const unsigned char*)mBuff + mChecksumPos+4, (unsigned int)(size - (mChecksumPos+4))) ); //add support for long buffers
 		SetPos(mChecksumPos);
 		if (!Write<int>(a32)) return false;
 		SetPos(size);
@@ -898,18 +793,18 @@ PyObject *WriteStream::SequenceGet(PyObject *selfO, Py_ssize_t i)
 {
 	WriteStream *self = static_cast<WriteStream*>(selfO);
 	if (!self->mFinalized)
-		return PyErr_SetString(PyExc_RuntimeError, "buffer not ready"), 0;
+		return PyErr_SetString(PyExc_RuntimeError, "buffer not ready"), nullptr;
 	if (i<0 || (size_t)i >= self->mPos)
-		return PyErr_Format(PyExc_IndexError, "index out of range: %d", i), 0;
+		return PyErr_Format(PyExc_IndexError, "index out of range: %d", int( i )), nullptr;
 	return PyString_FromStringAndSize(self->mBuff+i, 1);
 }
 PyObject *WriteStream::SequenceGetSlice(PyObject *selfO, Py_ssize_t ilow, Py_ssize_t ihigh)
 {
 	WriteStream *self = static_cast<WriteStream*>(selfO);
 	if (!self->mFinalized)
-		return PyErr_SetString(PyExc_RuntimeError, "buffer not ready"), 0;
+		return PyErr_SetString(PyExc_RuntimeError, "buffer not ready"), nullptr;
 	if (ilow<0 || (size_t)ilow >= self->mPos)
-		return PyErr_Format(PyExc_IndexError, "index out of range: %d", ilow), 0;
+		return PyErr_Format(PyExc_IndexError, "index out of range: %d", int( ilow )), nullptr;
 
 	if (ihigh < ilow)
 		ihigh = ilow;
@@ -976,18 +871,17 @@ ReadStream::~ReadStream()
 bool ReadStream::CheckSpace(int n, size_t esize)
 {
 		//don't multiply n and esize, to avoid rollover
-		if (n<0) goto error;
+		if (n<0)
+            return PyErr_Format( PyExc_RuntimeError, "Can't read %d elements", n ), false;
 		size_t left = mSSize - mPos;
 		if (esize > 1) {
 			if ((size_t)n > left/esize)
-				goto error;
+                return PyErr_Format(PyExc_RuntimeError, "Can't read %d elements of %d bytes, only have %" CCP_SIZET_FORMAT " bytes left", n, int( esize ), left), false;
 		} else {
 			if ((size_t)n > left)
-				goto error;
+                return PyErr_Format(PyExc_RuntimeError, "Can't read %d elements of %d bytes, only have %" CCP_SIZET_FORMAT " bytes left", n, int( esize ), left), false;
 		}
 		return true;
-error:
-		return PyErr_Format(PyExc_RuntimeError, "Can't read %d elements of %d bytes, only have %d bytes left", n, esize, left), false;
 }
 
 
@@ -1015,7 +909,7 @@ bool ReadStream::ReadInteger(int &r)
 		if (!Read(c))
 			return 0;
 		if (c == UCHAR_MAX)
-			return Read<__int32>(r);
+			return Read<int32_t>(r);
 		r = (int)c;
 		return true;
 }
@@ -1067,13 +961,13 @@ bool ReadStream::MarkShared(PyObject *o)
 
 // compute the data CRC and compare it with the reference value
 bool ReadStream::Crc() const {
-	_ASSERT(mGotCRC);
+	CCP_ASSERT(mGotCRC);
 	size_t end;
 	if (mVersion == 0)
 		end = mSize;
 	else
 		end = GetPos();
-	int a32	= adler32(1, (const unsigned char*)mBuff + mCrcPos, (unsigned int)(end - mCrcPos));
+	int a32	= int( adler32(1, (const unsigned char*)mBuff + mCrcPos, (unsigned int)(end - mCrcPos)) );
 	if (a32 != mCrc)
 		return PyErr_SetString(PyExc_ValueError, "Bad CRC"), false;
 	return true;
@@ -1087,7 +981,7 @@ PyObject *ReadStream::read(PyObject *len)
 		if (l==-1 && PyErr_Occurred())
 			return 0;
 		const char *buf;
-		if (GetBuffer(buf, l))
+		if (GetBuffer(buf, int( l )))
 			return PyString_FromStringAndSize(buf, l);
 		return 0;
 }
@@ -1115,7 +1009,7 @@ PyObject *ReadStream::readline()
 PyObject *ReadStream::GetUnpicklerInt(){
 		BluePy cpickle(PyImport_ImportModule("cPickle"));
 		if (!cpickle) return 0;
-		return PyObject_CallMethod(cpickle, "Unpickler", "(O)", (PyObject*)this);
+		return PyObject_CallMethod(cpickle, (char*)"Unpickler", (char*)"(O)", (PyObject*)this);
 }
 
 
@@ -1146,7 +1040,7 @@ PyObject *ReadStream::GetOSUnpickler(Marshal *m) //similar, but returns a one-sh
 		//clear the memory
 		BluePy memo(PyObject_GetAttrString(mOSUnpickler, "memo"));
 		if (!memo) return 0;
-		BluePy r(PyObject_CallMethod(memo, "clear", 0));
+		BluePy r(PyObject_CallMethod(memo, (char*)"clear", 0));
 		if (!r) return 0;
 		return mOSUnpickler;
 }
@@ -1201,7 +1095,7 @@ PyObject * Marshal::ReadObjectStrTable( ReadStream * stream, bool isShared )
 	unsigned char uc;
 	if( !stream->Read( uc ) ) return 0;
 	if( uc<1 || uc>PyList_GET_SIZE( mStrTableRev.o ) )
-		return PyErr_Format( PyExc_RuntimeError, "Invalid string table index %d", uc ), 0;
+		return PyErr_Format( PyExc_RuntimeError, "Invalid string table index %d", uc ), nullptr;
 	--uc;
 	PyObject *r = PyList_GET_ITEM( mStrTableRev.o, uc );
 	Py_INCREF( r );
@@ -1269,28 +1163,28 @@ PyObject * Marshal::ReadObjectIntNegativeOne( ReadStream * stream, bool isShared
 
 PyObject * Marshal::ReadObjectInt8( ReadStream * stream, bool isShared )
 {
-	__int8 r;
+	int8_t r;
 	if( !stream->Read( r ) ) return 0;
 	return PyInt_FromLong( r );
 }
 
 PyObject * Marshal::ReadObjectInt16( ReadStream * stream, bool isShared )
 {
-	__int16 r;
+	int16_t r;
 	if( !stream->Read( r ) ) return 0;
 	return PyInt_FromLong( r );
 }
 
 PyObject * Marshal::ReadObjectInt32( ReadStream * stream, bool isShared )
 {
-	__int32 r;
+	int32_t r;
 	if( !stream->Read( r ) ) return 0;
 	return PyInt_FromLong( r );
 }
 
 PyObject * Marshal::ReadObjectInt64( ReadStream * stream, bool isShared )
 {
-	__int64 r;
+	int64_t r;
 	if( !stream->Read( r ) ) return 0;
 	return PyLong_FromLongLong( r );
 }
@@ -1337,7 +1231,7 @@ PyObject * Marshal::ReadObjectReference( ReadStream * stream, bool isShared )
 	}
 	else {
 		if( len < 0 || len >= (int)stream->mShared.size() )
-			return PyErr_SetString( PyExc_ValueError, "Invalid TY_REFERENCE in stream" ), 0;
+			return PyErr_SetString( PyExc_ValueError, "Invalid TY_REFERENCE in stream" ), nullptr;
 		ret = stream->mShared[len];
 	}
 	Py_INCREF( ret );
@@ -1348,7 +1242,7 @@ PyObject * Marshal::ReadObjectPickler( ReadStream * stream, bool isShared )
 {
 	PyObject *up = stream->GetUnpickler( this );
 	if( !up ) return 0;
-	BluePy r( PyObject_CallMethod( up, "load", 0 ) );
+	BluePy r( PyObject_CallMethod( up, (char*)"load", 0 ) );
 	if( !r ) return 0;
 	if (isShared && !stream->MarkShared( r )) return 0;
 	return r.Detach();
@@ -1360,7 +1254,7 @@ PyObject * Marshal::ReadObjectPickle( ReadStream * stream, bool isShared )
 	if( !stream->ReadInteger( len ) ) return 0; //don't need this, length is inherent in pickle,
 	PyObject *up = stream->GetOSUnpickler( this ); //borrowed ref 
 	if( !up ) return 0;
-	return PyObject_CallMethod( up, "load", 0 );
+	return PyObject_CallMethod( up, (char*)"load", 0 );
 }
 
 PyObject * Marshal::ReadObjectCallback( ReadStream * stream, bool isShared )
@@ -1440,7 +1334,7 @@ PyObject * Marshal::ReadObjectTuple( ReadStream * stream, bool isShared )
 		PyObject* tmp = ReadObject( stream );
 		if( !tmp ) return 0;
 		if( tmp == r )
-			return PyErr_Format( PyExc_RuntimeError, "Self referencing tuple" ), 0;
+			return PyErr_Format( PyExc_RuntimeError, "Self referencing tuple" ), nullptr;
 		PyTuple_SET_ITEM( r.o, i, tmp );
 	}
 	return r.Detach();
@@ -1455,7 +1349,7 @@ PyObject * Marshal::ReadObjectTuple2( ReadStream * stream, bool isShared )
 		PyObject* tmp = ReadObject( stream );
 		if( !tmp ) return 0;
 		if( tmp == r )
-			return PyErr_Format( PyExc_RuntimeError, "Self referencing tuple" ), 0;
+			return PyErr_Format( PyExc_RuntimeError, "Self referencing tuple" ), nullptr;
 		PyTuple_SET_ITEM( r.o, i, tmp );
 	}
 	return r.Detach();
@@ -1472,7 +1366,7 @@ PyObject * Marshal::ReadObjectTuple1( ReadStream * stream, bool isShared )
 	//in python assumes that tuples are not directly self referencing.
 	//The protocol allows for specifying them, unlike the pickle protocol.
 	if( tmp == r )
-		return PyErr_Format( PyExc_RuntimeError, "Self referencing tuple" ), 0;
+		return PyErr_Format( PyExc_RuntimeError, "Self referencing tuple" ), nullptr;
 	PyTuple_SET_ITEM( r.o, 0, tmp );
 	return r.Detach();
 }
@@ -1582,7 +1476,7 @@ PyObject *Marshal::ReadObjectInstance(ReadStream *stream, bool shared)
 	if (setstate)
 	{
 		AutoTasklet _at(PyOS->GetTaskletTimer(), mTimer_SetState);
-		BluePy r(PyObject_CallMethodObjArgs(inst, mStock_SetState, data, NULL));
+		BluePy r(PyObject_CallMethodObjArgs(inst, mStock_SetState, data.o, NULL));
 		if (!r)
 			return 0;
 	} 
@@ -1754,7 +1648,7 @@ PyObject *Marshal::GetGlobalObject(PyObject *nameO)
 	}
 
 	if (!PyString_Check(nameO))
-		return PyErr_SetString(PyExc_RuntimeError, "expected string"), 0;
+		return PyErr_SetString(PyExc_RuntimeError, "expected string"), nullptr;
 	const char *name = PyString_AS_STRING(nameO);
 	const char *dot = strrchr(name, '.');
 	BluePyStr modulename;
@@ -1867,7 +1761,7 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 	case  'i':
 		if (PyInt_CheckExact(o))
 		{
-			int i = PyInt_AS_LONG(o);
+			int i = int( PyInt_AS_LONG(o) );
 
 			switch(i)
 			{
@@ -1884,17 +1778,17 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 				if (i >= CHAR_MIN && i <= CHAR_MAX)
 				{
 					RETFAIL(WriteType(stream, TY_INT8));
-					RETFAIL(stream->Write<__int8>(i));
+					RETFAIL(stream->Write<int8_t>(i));
 				}
 				else if (i >= SHRT_MIN && i <= SHRT_MAX)
 				{
 					RETFAIL(WriteType(stream, TY_INT16));
-					RETFAIL(stream->Write<__int16>(i));
+					RETFAIL(stream->Write<int16_t>(i));
 				}
 				else
 				{
 					RETFAIL(WriteType(stream, TY_INT32));
-					RETFAIL(stream->Write<__int32>(i));
+					RETFAIL(stream->Write<int32_t>(i));
 				}
 				return true;
 			}
@@ -1982,7 +1876,7 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 			if (*string && mStatStrings && PyDict_Check(mStatStrings.o))
 			{
 				PyObject* count = PyDict_GetItem(mStatStrings, o);
-				int icount = count != NULL ? PyInt_AS_LONG(count) : 0;
+				int icount = count != NULL ? int( PyInt_AS_LONG(count) ) : 0;
 				PyObject* newcount = PyInt_FromLong(icount + 1);
 				PyDict_SetItem(mStatStrings, o, newcount);
 				Py_DECREF(newcount);
@@ -1995,7 +1889,7 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 		if (PyUnicode_CheckExact(o))
 		{
 			Py_ssize_t size = PyUnicode_GET_SIZE(o);
-			const wchar_t *data = PyUnicode_AS_UNICODE(o);
+			const wchar_t *data = (const wchar_t*)PyUnicode_AS_UNICODE(o);
 			if (!size) {
 				return WriteType(stream, TY_UNICODE_0);
 			} else if (size == 1) {
@@ -2074,7 +1968,7 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 	PyObject *p = stream->GetPickler();
 	if (!p) return false;
 	RETFAIL(WriteType(stream, TY_PICKLER));
-	PyObject *r = PyObject_CallMethod(p, "dump", "(O)", o);
+	PyObject *r = PyObject_CallMethod(p, (char*)"dump", (char*)"(O)", o);
 	Py_XDECREF(r);
 	return r!=0;
 }
@@ -2205,11 +2099,11 @@ bool Marshal::WriteObjectInstance(WriteStream* stream, PyObject* o)
 bool Marshal::WriteObjectReduce(bool &handled, WriteStream* stream, PyObject* o)
 {
 	handled = false;
-	BluePy rv(PyObject_CallMethod(o, "__reduce_ex__", "(i)", 2));
+	BluePy rv(PyObject_CallMethod(o, (char*)"__reduce_ex__", (char*)"(i)", 2));
 	if (!rv) {
 		//fallback
 		PyErr_Clear();
-		rv = BluePy(PyObject_CallMethod(o, "__reduce__", 0));
+		rv = BluePy(PyObject_CallMethod(o, (char*)"__reduce__", 0));
 	}
 	if (!rv || !PyTuple_Check(rv.o))
 		return PyErr_Clear(), true; //no, can't reduce.
@@ -2400,24 +2294,24 @@ PyObject* Marshal::Save(PyObject* args, PyObject* kw)
 	int version = 0; //default is 0 until later
 	PyObject *stringMap = Py_None;
 
-	static char *kwlist[] = {"object", "callback", "useChecksum", "version", "stringMap", NULL};
+	static const char *kwlist[] = {"object", "callback", "useChecksum", "version", "stringMap", NULL};
 
 	if (PyTuple_Check(args)) {
-		if (!PyArg_ParseTupleAndKeywords(args, kw, "O|OiiO:Save", kwlist,	&o, &callback, &useChecksum, &version, &stringMap))
+		if (!PyArg_ParseTupleAndKeywords(args, kw, "O|OiiO:Save", (char**)kwlist,	&o, &callback, &useChecksum, &version, &stringMap))
 			return NULL;
 		if (callback == Py_None)
 			callback = NULL;
 		if (callback && !PyCallable_Check(callback))
-			return PyErr_SetString(PyExc_TypeError, "callback argument must be callable"), 0;
+			return PyErr_SetString(PyExc_TypeError, "callback argument must be callable"), nullptr;
 		if (version != 0 && version != 1)
-			return PyErr_SetString(PyExc_ValueError, "invalid version"), 0;
+			return PyErr_SetString(PyExc_ValueError, "invalid version"), nullptr;
 	} else
 		o = args;
 	
 	if (stringMap == Py_None)
 		stringMap = 0;
 	else if (!PyDict_Check(stringMap))
-		return PyErr_SetString(PyExc_TypeError, "stringMap must be a dict"), 0;
+		return PyErr_SetString(PyExc_TypeError, "stringMap must be a dict"), nullptr;
 
 	return SaveObject(o, callback, useChecksum, version, stringMap);
 }
@@ -2436,25 +2330,25 @@ PyObject* Marshal::Load(PyObject* args, PyObject *kw)
 	AutoTasklet _at(PyOS->GetTaskletTimer(), mTimer_Load);
 
 	if (PyTuple_Check(args)) {
-		static char *kwlist[] = {"buffer", "callback", "skipCrcCheck", "offset", "stringTable", 0};
-		if (!PyArg_ParseTupleAndKeywords(args, kw, "O|OinO:Load", kwlist, &o, &callback, &mSkipCrcCheck, &offset, &stringTable ))
+		static const char *kwlist[] = {"buffer", "callback", "skipCrcCheck", "offset", "stringTable", 0};
+		if (!PyArg_ParseTupleAndKeywords(args, kw, "O|OinO:Load", (char**)kwlist, &o, &callback, &mSkipCrcCheck, &offset, &stringTable ))
 			return 0;
 		if (callback == Py_None)
 			callback = NULL;
 		if (callback && !PyCallable_Check(callback))
-			return PyErr_SetString(PyExc_TypeError, "callback argument must be callable"), 0;
+			return PyErr_SetString(PyExc_TypeError, "callback argument must be callable"), nullptr;
 	} else
 		o = args;  //internal calls do this.
 		
 	// 'o' must support buffer protocol
 	if (o->ob_type->tp_as_buffer == NULL ||	o->ob_type->tp_as_buffer->bf_getreadbuffer == NULL)
-		return PyErr_SetString(PyExc_TypeError, "argument must be a string or buffer"), 0;
+		return PyErr_SetString(PyExc_TypeError, "argument must be a string or buffer"), nullptr;
 
 	void* srcbuff;
 	Py_ssize_t bufflen = o->ob_type->tp_as_buffer->bf_getreadbuffer(o, 0, &srcbuff);
 	if (offset >= 0) {
 		if (offset > bufflen)
-			return PyErr_Format(PyExc_ValueError, "invalid offset %d", (int)offset), 0;
+			return PyErr_Format(PyExc_ValueError, "invalid offset %d", (int)offset), nullptr;
 		srcbuff = (void*)((char*)srcbuff + offset);
 		bufflen -= offset;
 	}
@@ -2465,7 +2359,7 @@ PyObject* Marshal::Load(PyObject* args, PyObject *kw)
 	BluePy oldStringTable = mStrTableRev;
 	if (stringTable != Py_None) {
 		if (!PyList_Check(stringTable))
-			return PyErr_SetString(PyExc_TypeError, "stringTable must be a list"), 0;
+			return PyErr_SetString(PyExc_TypeError, "stringTable must be a list"), nullptr;
 		mStrTableRev = BluePy(stringTable, true);
 	}
 
@@ -2486,7 +2380,7 @@ PyObject* Marshal::Load(PyObject* args, PyObject *kw)
 	if (result && stream.mGotCRC) {
 		if (stream.GetVersion() > 0 && !mSkipCrcCheck) {
 			if (!stream.Crc())
-				return false;
+				return nullptr;
 		}
 		mPacketHadCrc = 1;
 	}
@@ -2533,7 +2427,7 @@ PyObject* Marshal::ReadHeader(ReadStream *streamptr)
 	if (!stream.ReadType(token)) return 0;
 	if (token != TY_SIGNATURE && token != TY_SIGNATURE2) {
 		//Must start with the header
-		return PyErr_Format(PyExc_ValueError, "invalid marshal header"), 0;
+		return PyErr_Format(PyExc_ValueError, "invalid marshal header"), nullptr;
 	}
 	if (token == TY_SIGNATURE2) {
 		unsigned char version;
@@ -2553,8 +2447,8 @@ PyObject* Marshal::ReadHeader(ReadStream *streamptr)
 			//don't multiply maplen, it may cause overflow and destroy our test.
 			if (stream.Remaining()/(int)sizeof(int) < stream.mMapCount)	{
 				PyErr_Format(PyExc_ValueError,
-						"Too little data in marshal stream, %u bytes. "
-						"I really wanted at least %u bytes total, mapcount in header is %d",
+						"Too little data in marshal stream, %" CCP_SIZET_FORMAT " bytes. "
+						"I really wanted at least %" CCP_SIZET_FORMAT " bytes total, mapcount in header is %d",
 						stream.mSize, stream.mPos + (size_t)stream.mMapCount * sizeof (int), stream.mMapCount
 					);
 				return NULL;
@@ -2574,7 +2468,7 @@ PyObject* Marshal::ReadHeader(ReadStream *streamptr)
 			// validate content
 			for (int i = 0; i < stream.mMapCount; i++) {
 				if (stream.mMapping[i] < 1 || stream.mMapping[i] > stream.mMapCount)
-					return PyErr_SetString(PyExc_ValueError,	"Bogus map data in marshal stream."	), 0;
+					return PyErr_SetString(PyExc_ValueError,	"Bogus map data in marshal stream."	), nullptr;
 			}
 		}
 	} else
@@ -2764,7 +2658,7 @@ bool Marshal::UpdateGlobalNames(PyObject *module, PyObject *name)
 			return false;
 	} else
 		val = 0;
-	BluePyInt n(1 + val);
+	BluePyInt n(int(1 + val));
 	return (0==PyDict_SetItem(dict, s, n));
 }
 
@@ -2813,5 +2707,4 @@ bool Marshal::WriteType( class WriteStream* stream, enum PYTYPES type )
 Marshal::ReadObjectTypeHandler Marshal::s_typeHandlers[64];
 
 
-#endif
 #endif

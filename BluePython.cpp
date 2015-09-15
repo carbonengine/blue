@@ -13,17 +13,20 @@
 #include "BlueLogInMemory.h"
 #include "LogToPython.h"
 #include "PrettyPrint.h"
+#include "BlueHeapq.h"
+#include "Marshal.h"
+#include "PyRowset.h"
 
 #if _WIN32
 #include "win32.h"
-#include "Marshal.h"
-#include "PyRowset.h"
 #if CCP_STACKLESS
-#include "Synchro.h"
 #include "Logger/Logger.h"
 #endif
 #endif
 
+#if CCP_STACKLESS
+#include "Synchro.h"
+#endif
 
 #ifdef _WIN32
 #include <Psapi.h>
@@ -33,7 +36,9 @@
 #include "resource.h"
 
 #if CCP_STACKLESS
+#if !PORTING_TO_LINUX
 #include "include/BlueNet.h"
+#endif
 #include <stacklessio_api.h>
 #endif
 
@@ -166,10 +171,8 @@ BluePyOS::BluePyOS(IRoot*) :
 
 #if CCP_STACKLESS
 	//simple tasklet timing
-	QueryPerformanceCounter(&mLastSwitchTime);
-	LARGE_INTEGER freq;
-	QueryPerformanceFrequency(&freq);
-	mSwitchTimePeriod = 1.0/double(freq.QuadPart);
+    mLastSwitchTime = CcpGetTimestamp();
+	mSwitchTimePeriod = 1.0/double( CcpGetTimestampFrequency() );
 #endif
 }
 
@@ -193,7 +196,7 @@ bool BluePyOS::InitBasicModuleSupport()
 	BlueRegisterExceptionsToModule( mBlueModule, BlueRegistration::GetExceptionRegs() );
 	
 		// Initialize error exception
-	PyDict_SetItemString(dict, "error", PyExc_BlueError);
+    PyDict_SetItemString(dict, "error", PyExc_BlueError);
 
 	PyModule_AddObject( mBlueModule, "logInMemory", BlueWrapObjectForPython( BlueLogInMemory::GetInstance() ));
 
@@ -209,17 +212,20 @@ bool BluePyOS::InitBasicModuleSupport()
 	if (PyDict_SetItemString(dict, "LogChannel", (PyObject*)LogChannelType()))
 		return false;
 
+	InitHeapq();
+	 
+    // Add the DBRowsetStuff
+    if( !DBRowsetInit( mBlueModule ) )
+        return false;
+    
 #if _WIN32
-	// Add the DBRowsetStuff
-	if( !DBRowsetInit( mBlueModule ) )
-		return false;
-
 	//init the submodules blue.win32, blue.heapq and blue.crypto.  The latter is required for the Marshal::New()
 	initwin32();
 	if( !InitCrypto() )
 		return false;
+#endif
 
-	if( !MarshalInit( mBlueModule ) )
+	if (!MarshalInit(mBlueModule))
 		return false;
 
 	// Insert custom marshaller
@@ -229,20 +235,19 @@ bool BluePyOS::InitBasicModuleSupport()
 		if( PyModule_AddObject( mBlueModule, "marshal", marshal ) )
 			return false;
 	}
-#endif
 
 
 #if CCP_STACKLESS
+#if _WIN32
 	BeNet->Init(); // c-routing support
-
+#endif
+    
 	// Insert synchro
 	mSynchro = CCP_NEW( "BluePyOS/mSyncro" ) Synchro;
 	mPySynchro = mSynchro;
 	PyDict_SetItemString(dict, "synchro", mSynchro);
-#endif
 
 
-#if CCP_STACKLESS
 	// Redirect python stdout and stderr and
 	// add log support
 	PyObject* sysmodule = PyImport_ImportModule("sys");
@@ -258,22 +263,23 @@ bool BluePyOS::InitBasicModuleSupport()
 	Py_DECREF(sysmodule);
 #endif
 
+    PyObject *m = PyImport_ImportModule("blue.heapq");
+    if (m)
+        PyModule_AddObject(mBlueModule, "heapq", m);
+#if !PORTING_TO_LINUX
 	//init the submodules into the blue module
-	PyObject *m = PyImport_ImportModule("blue.win32");
+	m = PyImport_ImportModule("blue.win32");
 	if (m)
 		PyModule_AddObject(mBlueModule, "win32", m);
-	m = PyImport_ImportModule("blue.heapq");
-	if (m)
-		PyModule_AddObject(mBlueModule, "heapq", m);
 	m = PyImport_ImportModule("blue.crypto");
 	if (m)
 		PyModule_AddObject(mBlueModule, "crypto", m);
-
-	#if CCP_STACKLESS 
+	#if CCP_STACKLESS
 		m = PyImport_ImportModule("blue.net");
 		if (m)
 			PyModule_AddObject(mBlueModule, "net", m);
 	#endif
+#endif
 
 	return true;
 }
@@ -401,23 +407,18 @@ static PyObject* ClockThis(PyObject*, PyObject* args, PyObject* kw)
 {
 	// def ClockThis(ctx, fn, *args, **kw)
 
-	if (PyTuple_GET_SIZE(args) < 2)
-		goto ERR;
-	
-	PyObject* ctx = PyTuple_GET_ITEM(args, 0);
-	if (!PyString_Check(ctx) && !PyUnicode_Check(ctx))
-		goto ERR;
-	
-	PyObject* fn = PyTuple_GET_ITEM(args, 1);
-	if (!PyCallable_Check(fn))
-		goto ERR;
-	
-	PyObject* realArgs = PyTuple_GetSlice(args, 2, PyTuple_GET_SIZE(args));
-	PyObject* ret = ClockThisImpl(ctx, fn, realArgs, kw);
-	Py_DECREF(realArgs);
-	return ret;
-
-ERR:
+	if (PyTuple_GET_SIZE(args) >= 2)
+    {
+        PyObject* ctx = PyTuple_GET_ITEM(args, 0);
+        PyObject* fn = PyTuple_GET_ITEM(args, 1);
+        if( ( PyString_Check(ctx) || PyUnicode_Check(ctx) ) && PyCallable_Check(fn) )
+        {
+            PyObject* realArgs = PyTuple_GetSlice(args, 2, PyTuple_GET_SIZE(args));
+            PyObject* ret = ClockThisImpl(ctx, fn, realArgs, kw);
+            Py_DECREF(realArgs);
+            return ret;
+        }
+    }
 	PyErr_SetString(PyExc_TypeError, "I want string/unicode as first argument and callable as second");
 	return 0;
 }
@@ -435,7 +436,7 @@ static PyObject* ClockThisWithoutStars(PyObject*, PyObject* args)
 		return NULL;
 
 	if (!PyString_Check(ctx) && !PyUnicode_Check(ctx))
-		return PyErr_SetString(PyExc_TypeError, "I want a string/unicode context as first argument"), 0;
+		return PyErr_SetString(PyExc_TypeError, "I want a string/unicode context as first argument"), nullptr;
 
 	if (!PyCallable_Check(fn))
 	{
@@ -455,7 +456,7 @@ static PyMethodDef clockthis[] = {
 	{0}
 };
 
-
+#ifdef _WIN32
 //
 // Block allocator
 //
@@ -499,7 +500,7 @@ size_t PyCCP_BlockMsize( void* ptr, void* arg )
 }
 
 PyCCP_CustomAllocator_t s_pyBlockAllocator = { PyCCP_BlockMalloc, PyCCP_BlockRealloc, PyCCP_BlockFree, PyCCP_BlockMsize, NULL };
-
+#endif
 #endif
 
 
@@ -556,7 +557,7 @@ bool BluePyOS::Startup(
 		CCP_LOGERR( "InitSysIncludePaths() failed" );
 		return false;
 	}
-
+#ifdef _WIN32
 	//Initialize, using the path we computed
 	Py_GetPathWData = (wchar_t *)path.c_str();
 	
@@ -566,7 +567,9 @@ bool BluePyOS::Startup(
 	{
 		PyCCP_SetAllocator( 1, &s_pyBlockAllocator );
 	}
-
+#else
+    Py_SetPath( CW2A( path.c_str() ) );
+#endif
 	Py_Initialize();
 
 	if (!Py_IsInitialized())
@@ -785,7 +788,7 @@ void BluePyOS::OnTaskletSwitch(PyObject* _from, PyObject* _to)
 	PyObject *etype, *evalue, *etraceback;
 	PyErr_Fetch(&etype, &evalue, &etraceback);
 	
-	PyObject *prev = mTTimer.SwitchStack((INT_PTR)to);
+	PyObject *prev = mTTimer.SwitchStack((intptr_t)to);
 	
 	//Store the context we came from in our tasklet extension object.
 	bool fromNotMain = from && !PyTasklet_IsMain(from);
@@ -807,7 +810,7 @@ void BluePyOS::OnTaskletSwitch(PyObject* _from, PyObject* _to)
 	Py_ssize_t n = PyList_GET_SIZE(mContextHooks);
 	for (Py_ssize_t i=0; i<n; i++) {
 		PyObject *hook = PyList_GET_ITEM(mContextHooks, i);
-		PyObject *result = PyObject_CallFunction(hook, "OO", from, to);
+		PyObject *result = PyObject_CallFunction(hook, (char*)"OO", from, to);
 		Py_XDECREF(result);
 		if (!result)
 			PyError();
@@ -823,9 +826,8 @@ void BluePyOS::OnTaskletSwitch(PyObject* _from, PyObject* _to)
 //--------------------------------------------------------------------
 double BluePyOS::GetTimeSinceSwitch(bool update)
 {
-	LARGE_INTEGER now;
-	QueryPerformanceCounter(&now);
-	double elapsed = (double(now.QuadPart)-double(mLastSwitchTime.QuadPart)) * mSwitchTimePeriod;
+	auto now = CcpGetTimestamp();
+	double elapsed = (double(now)-double(mLastSwitchTime)) * mSwitchTimePeriod;
 	if (update)
 		mLastSwitchTime = now;
 	return elapsed;
@@ -1739,11 +1741,11 @@ PyObject* BluePyOS::PyDumpState(PyObject* args)
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
 
-	char tmp[MAX_PATH];
+	char tmp[CCP_MAX_PATH];
 
 	IPythonEventsPtr tmpp = sPyEventHandler;
 	sPyEventHandler = static_cast<IPythonEvents*>( this );
-	PyObject* file = PySys_GetObject("stderr");
+	PyObject* file = PySys_GetObject((char*)"stderr");
 
 	if (!file)
 		return NULL;
@@ -2116,12 +2118,12 @@ PyObject * BluePyOS::CallMethodWithTrap(PyObject *target, const char *method, co
 	if (ctxt) {
 		AutoTasklet _at(&mTTimer, ctxt);
 		if (method && *method)
-			ret = BluePy(PyObject_CallMethod(target, (char*)method, "O", args.o));
+			ret = BluePy(PyObject_CallMethod(target, (char*)method, (char*)"O", args.o));
 		else
 			ret = BluePy(PyObject_CallObject(target, args));
 	} else {
 		if (method && *method)
-			ret = BluePy(PyObject_CallMethod(target, (char*)method, "O", args.o));
+			ret = BluePy(PyObject_CallMethod(target, (char*)method, (char*)"O", args.o));
 		else
 			ret = BluePy(PyObject_CallObject(target, args));
 	}
@@ -2184,7 +2186,7 @@ bool BluePyOS::PythonEvent(const char *event, PyObject * arg)
 
 void BluePyOS::LogCpuUsageAndOtherStats()
 {
-#if CCP_STACKLESS
+#if CCP_STACKLESS && !PORTING_TO_LINUX
 	//Log cpu usage and other stats.
 	__int64 now;
 	GetSystemTimeAsFileTime((FILETIME*)&now);
@@ -2290,6 +2292,7 @@ void BluePyOS::ProcessSpyHandles()
 
 void BluePyOS::ShowMessageBoxForVerificationFailure( int type, const std::wstring& errmsg )
 {
+#if !PORTING_TO_LINUX
 	const wchar_t *text = L"Your EVE client installation may have modified, damaged or corrupt files. Please run repair.exe located in the EVE game directory or re-install the game client.";
 	const wchar_t *text1 = L"Your EVE client installation appears to have some extra files.  Make sure to reboot after patching.";
 	const wchar_t *caption = L"Verification Failure";
@@ -2317,10 +2320,12 @@ void BluePyOS::ShowMessageBoxForVerificationFailure( int type, const std::wstrin
 	std::wstring msg(text);
 	msg += L"\n" + errmsg;
 	MessageBoxW(0, msg.c_str(), caption, MB_ICONERROR | MB_OK);
+#endif
 }
 
 bool BluePyOS::VerifyManifestAndGatherDirectives( directives_t& directives )
 {
+#if !PORTING_TO_LINUX
 	//We always read our manifest.  We have a null manifest that we try first for kicks.
 	std::wstring errmsg;
 	const wchar_t *manifest = L"root:/manifest.dat";
@@ -2341,7 +2346,7 @@ bool BluePyOS::VerifyManifestAndGatherDirectives( directives_t& directives )
 		ShowMessageBoxForVerificationFailure( type, errmsg );
 		return false;
 	}
-
+#endif
 	return true;
 }
 
@@ -2355,7 +2360,7 @@ void BluePyOS::ProcessLibDirectives( const directives_t& directives, std::vector
 		if (d.find(L"lib:") == 0) {
 			mPackaged = true;
 			std::wstring fullname = BePaths->ResolvePathW(d.substr(4).c_str());
-			CCP_LOG_CH( s_chPy, "Directive %s : %s", (char*)CW2A(d.c_str()), (char*)CW2A(fullname.c_str()));
+			CCP_LOG_CH( s_chPy, "Directive %s : %s", (const char*)CW2A(d.c_str()), (const char*)CW2A(fullname.c_str()));
 			zips.push_back(fullname.c_str());
 		}
 	}
@@ -2365,6 +2370,11 @@ void BluePyOS::ProcessLibDirectives( const directives_t& directives, std::vector
 
 void BluePyOS::BuildConcatenatedPathFromPathlist( const std::vector<std::wstring>& pathlist, std::wstring& path )
 {
+#ifdef _WIN32
+	const wchar_t separator = L';';
+#else
+    const wchar_t separator = L':';
+#endif
 	path.clear();
 	for(size_t i = 0; i<pathlist.size(); i++) {
 		std::wstring elem = pathlist[i];
@@ -2373,7 +2383,7 @@ void BluePyOS::BuildConcatenatedPathFromPathlist( const std::vector<std::wstring
 		if (!elem.size())
 			continue;
 		if (i)
-			path += L';';
+			path += separator;
 		path += elem;
 	}
 }

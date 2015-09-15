@@ -23,20 +23,7 @@ public:
 	BlueFileStream();
 	~BlueFileStream();
 
-	enum OpenMode
-	{
-		OM_READWRITE,
-		OM_READONLY
-	};
-
-	enum ShareMode
-	{
-		SM_NOSHARING,
-		SM_READSHARING,
-		SM_RWSHARING
-	};
-
-	bool Open( const wchar_t* filename, OpenMode mode, ShareMode shareMode );
+	bool Open( const wchar_t* filename, CcpOpenMode mode, CcpShareMode shareMode );
 	bool Create( const wchar_t* filename );
 	void Close();
 

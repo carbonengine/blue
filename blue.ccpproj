@@ -239,10 +239,37 @@ Configurations:
       AdditionalOptions:
       - -pthread
 
+  Release|Mac64:
+    Imports:
+    - ../stackless/stackless.yaml
+    - ../../../../../../sdk/libcurl/7.32.0/libcurl_7.32.0.yaml
+    - ../../../../../../sdk/libyaml/yaml-0.1.2/yaml_0.1.2.yaml
+    General:
+      CcpConfigType: Release
+      OutDir: ../../autobuild/blue/exefile/$(Platform)/$(PlatformToolset)/
+      TargetName: blue
+      TargetExt: .so
+    ClCompile:
+      PreprocessorDefinitions:
+      - NDEBUG
+      - PORTING_TO_LINUX=1
+      Optimization: MaxSpeed
+      RuntimeLibrary: MultiThreadedDLL
+      DebugInformationFormat: ProgramDatabase
+    Link:
+      AdditionalDependencies:
+      - dl
+      - util
+      AdditionalAppleFrameworks:
+      - IOKit
+      AdditionalOptions:
+      - -pthread
+
   Release_27|Mac64:
     Imports:
     - ../../../../../../sdk/python/Python_2.7.yaml
     - ../../../../../../sdk/libcurl/7.32.0/libcurl_7.32.0.yaml
+    - ../../../../../../sdk/libyaml/yaml-0.1.2/yaml_0.1.2.yaml
     General:
       # The config type is used for selecting the manifest file - usually the same as the configuration
       CcpConfigType: Release
@@ -256,15 +283,11 @@ Configurations:
       Optimization: MaxSpeed
       RuntimeLibrary: MultiThreadedDLL
       DebugInformationFormat: ProgramDatabase
-      AdditionalIncludeDirectories:
-      - /usr/local/include
     Link:
-      # These additional settings are needed to prevent undefined symbols coming from Python
-      AdditionalLibraryDirectories:
-      - /usr/local/lib
       AdditionalDependencies:
       - dl
       - util
-      - yaml
+      AdditionalAppleFrameworks:
+      - IOKit
       AdditionalOptions:
       - -pthread

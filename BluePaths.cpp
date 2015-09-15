@@ -264,7 +264,7 @@ Be::Result<std::string> BluePaths::Open( const std::wstring& filename, Be::Optio
 			{
 				BlueFileStreamPtr fileStream;
 				fileStream.CreateInstance();
-				if( fileStream->Open( filename.c_str(), BlueFileStream::OM_READWRITE, BlueFileStream::SM_NOSHARING ) )
+				if( fileStream->Open( filename.c_str(), CCP_OM_READWRITE, CCP_SM_NOSHARING ) )
 				{
 					fileStream->Seek( 0, ICcpStream::SO_END );
 					*stream = fileStream.Detach();

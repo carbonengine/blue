@@ -39,41 +39,41 @@ public:
 
 	// add an entry.  Put it at the tail and percolate to the top.
 	void Insert(const T &item){
-		push_back(item);
-		PercolateUp(size()-1);
+		this->push_back(item);
+		PercolateUp(this->size()-1);
 	}
 
 	// Return the topmost member and return
 	T Shift(){
-		_ASSERTE(size());  // must be something here!
+		CCP_ASSERT(this->size());  // must be something here!
 
-		const T result(front());
-		if (size()>1) {
-			front() = back();
-			pop_back();
+		const T result(this->front());
+		if (this->size()>1) {
+			this->front() = this->back();
+			this->pop_back();
 			PercolateDown(0);
 		} else
-			pop_back();
+			this->pop_back();
 		return result;
 	}
 
 	// Remove a particular member and return it.  The index is zero based.
-	T Remove(iterator item) {
+    T Remove(typename parent::iterator item) {
 		const T result(*item);
-		if (item != end()-1) {
-			*item = back();
-			pop_back();
+		if (item != this->end()-1) {
+			*item = this->back();
+			this->pop_back();
 			Reorder(item);
 		} else
-			pop_back();  //it was the last item
+			this->pop_back();  //it was the last item
 		return result;
 	}
 
 
 	// an item has changed its priority, put it in its place
-	void Reorder(iterator item) {
-		size_t index = item - begin();
-		_ASSERTE(index < (int)size());
+    void Reorder(typename parent::iterator item) {
+		size_t index = item - this->begin();
+		CCP_ASSERT(index < this->size());
 
 		//first move up, then down again
 		size_t oldplace = index;
@@ -86,7 +86,7 @@ public:
 	// Use this if you have just put random stuff into your heap, to make it ready
 	void Heapify()
 	{
-		for(i = size()/2-1; i>=0; i--)
+		for(int i = int( this->size()/2-1 ); i>=0; i--)
 			PercolateDown(i);
 	}
 
@@ -115,7 +115,7 @@ private:
 		//requires more comparisons in total.  Particularly during pop, 
 		//we are percolating down a guy that already belongs to the end.
 		klass &heap = *this;
-		size_t length = size();
+		size_t length = this->size();
 		size_t target = start;
 		const T item = heap[start];
 		for(;;) {

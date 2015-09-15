@@ -269,8 +269,8 @@ bool Synchro::Tick()
 PyObject* Synchro::Str()
 {
 	return PyString_FromFormat(
-		"Synchro with %d wallclock-sleepers, %d sim-sleepers and %d tickers", 
-		mWallclockSleepers.size(), mSimSleepers.size(), PyList_GET_SIZE(mTickers)
+		"Synchro with %" CCP_SIZET_FORMAT " wallclock-sleepers, %" CCP_SIZET_FORMAT " sim-sleepers and %" CCP_SIZET_FORMAT " tickers",
+		mWallclockSleepers.size(), mSimSleepers.size(), size_t( PyList_GET_SIZE(mTickers) )
 		);
 }
 
@@ -362,7 +362,7 @@ PyObject* Synchro::SleepWallclock(PyObject* millisec)
 	if (ms<0.0)
 		ms = 0.0;
 
-	__int64 due = now + (__int64)(ms*10000.0);
+	int64_t due = now + (int64_t)(ms*10000.0);
 	return SleepWallclock(int(ms), due);
 }
 
@@ -387,7 +387,7 @@ PyObject* Synchro::SleepSim(PyObject* millisec)
 	if (ms<0.0)
 		ms = 0.0;
 
-	__int64 due = now + (__int64)(ms*10000.0);
+	int64_t due = now + (int64_t)(ms*10000.0);
 	return SleepSim(int(ms), due);
 }
 
@@ -404,7 +404,7 @@ PyObject* Synchro::SleepUntilWallclock(PyObject* dueO)
 	AutoTasklet _at(PyOS->GetTaskletTimer(), TIMERS[TIMER_SLEEP].mContext);
 		
 	// Get millisec value
-	__int64 due = PyLong_AsLongLong(dueO);
+	int64_t due = PyLong_AsLongLong(dueO);
 	if (due == -1 && PyErr_Occurred())
 		return 0;
 
@@ -427,7 +427,7 @@ PyObject* Synchro::SleepUntilSim(PyObject* dueO)
 	AutoTasklet _at(PyOS->GetTaskletTimer(), TIMERS[TIMER_SLEEP].mContext);
 		
 	// Get millisec value
-	__int64 due = PyLong_AsLongLong(dueO);
+	int64_t due = PyLong_AsLongLong(dueO);
 	if (due == -1 && PyErr_Occurred())
 		return 0;
 
@@ -438,7 +438,7 @@ PyObject* Synchro::SleepUntilSim(PyObject* dueO)
 }
 
 
-PyObject* Synchro::SleepWallclock(int ms, const __int64 &due)
+PyObject* Synchro::SleepWallclock(int ms, const int64_t &due)
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -470,7 +470,7 @@ PyObject* Synchro::SleepWallclock(int ms, const __int64 &due)
 }
 
 
-PyObject* Synchro::SleepSim(int ms, const __int64 &due)
+PyObject* Synchro::SleepSim(int ms, const int64_t &due)
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 

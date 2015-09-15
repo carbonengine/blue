@@ -25,7 +25,7 @@
 */
 #include "StdAfx.h"
 
-#if CCP_STACKLESS
+#if CCP_STACKLESS && !PORTING_TO_LINUX
 
 #include "IOLoop.h"
 

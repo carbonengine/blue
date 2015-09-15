@@ -15,21 +15,14 @@
 #endif
 #endif
 
-// Stuffer is enabled by default on Win32, disabled on other platforms
-#ifndef STUFFER_ENABLED
-#	if defined(_WIN32) && BLUE_WITH_PYTHON
-#		define STUFFER_ENABLED 1
-#	else
-#		define STUFFER_ENABLED 0
-#	endif
-#endif
-
 // include all python stuff
 #if BLUE_WITH_PYTHON
 #include <Python.h>
 
 #if CCP_STACKLESS
 #include <stackless_api.h>
+#else
+#define CCP_NO_STACKLESS
 #endif
 
 #include <eval.h>  //for PyEval_EvalCode()

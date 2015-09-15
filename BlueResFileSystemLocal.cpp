@@ -191,7 +191,7 @@ bool BlueResFileSystemLocal::GetStreamFromPathW( const wchar_t* resPath, IBlueSt
 	{
 		CCP_LOG_CH( s_ch, "Opening %S (%S)", resPath, filenameOnDisk.c_str() );
 
-		if( fileStream->Open( filenameOnDisk.c_str(), BlueFileStream::OM_READONLY, BlueFileStream::SM_RWSHARING ) )
+		if( fileStream->Open( filenameOnDisk.c_str(), CCP_OM_READONLY, CCP_SM_RWSHARING ) )
 		{
 			*stream = fileStream.Detach();
 			return true;
@@ -521,19 +521,19 @@ void BlueResFileSystemLocal::LogPaths()
 void BlueResFileSystemLocal::InitializeStdAppPaths()
 {
 #if CCP_STACKLESS
-	//get module name
-	std::vector<wchar_t> tmp(CCP_MAX_PATH);
-	while( GetModuleFileNameW(NULL, &tmp[0], (DWORD)tmp.size()) == tmp.size() )
-	{
-		tmp.resize(tmp.size()*2);
-	}
-	std::wstring module = &tmp[0];
+	std::wstring module = CcpExecutablePath();
 
-	if( m_searchPaths.find( "bin" ) == m_searchPaths.end() )
+#ifdef _WIN32
+    const wchar_t *sep = L"\\";
+#else
+    const wchar_t *sep = L"/";
+#endif
+
+    if( m_searchPaths.find( "bin" ) == m_searchPaths.end() )
 	{
 		//no bin has been set.  By default, it is the directory where we are found
-		std::wstring bin = L"\\";
-		std::wstring::size_type s = module.rfind(L"\\");
+		std::wstring bin = sep;
+		std::wstring::size_type s = module.rfind(sep);
 		if( s != std::wstring::npos )
 		{
 			bin = module.substr(0, s);
@@ -545,10 +545,10 @@ void BlueResFileSystemLocal::InitializeStdAppPaths()
 	if( m_searchPaths.find( "root" ) == m_searchPaths.end() )
 	{
 		//no root has been set.  By default, it is the directory above the current module
-		std::wstring root = module.substr(0, module.rfind(L"\\"));
-		if( root.rfind(L"\\") != std::wstring::npos )
+		std::wstring root = module.substr(0, module.rfind(sep));
+		if( root.rfind(sep) != std::wstring::npos )
 		{
-			root = root.substr(0, root.rfind(L"\\"));
+			root = root.substr(0, root.rfind(sep));
 		}
 
 		m_searchPaths["root"] = root;
@@ -564,10 +564,11 @@ void BlueResFileSystemLocal::InitializeStdAppPaths()
 	static const char* stdFolderNames[] =
 	{"res", "bin", "lib", "macro", "stdlib", "script", "cache", "settings" };
 
-	static const wchar_t* defnames[_countof(stdFolderNames)] = 
+    const auto stdFolderNamesCount = sizeof(stdFolderNames) / sizeof(stdFolderNames[0]);
+	static const wchar_t* defnames[stdFolderNamesCount] =
 	{L"res", L"bin", L"lib;stdlib", L"macros", 0, L"script", L"cache", L"cache"};
 
-	for( int i = 0; i < _countof(stdFolderNames); ++i )
+	for( int i = 0; i < stdFolderNamesCount; ++i )
 	{
 		if( m_searchPaths.find( stdFolderNames[i] ) == m_searchPaths.end() )
 		{
@@ -589,7 +590,7 @@ void BlueResFileSystemLocal::InitializeStdAppPaths()
 			while( end != std::wstring::npos )
 			{
 				std::wstring s = value.substr( start, end - start );
-				if( PathIsRelativeW( s.c_str() ) )
+				if( CcpIsPathRelative( s.c_str() ) )
 				{
 					s.insert( 0, L"app:");
 				}
@@ -601,7 +602,7 @@ void BlueResFileSystemLocal::InitializeStdAppPaths()
 			}
 
 			std::wstring s = value.substr( start, end - start );
-			if( PathIsRelativeW( s.c_str() ) )
+			if( CcpIsPathRelative( s.c_str() ) )
 			{
 				s.insert( 0, L"app:");
 			}

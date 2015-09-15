@@ -35,9 +35,7 @@
 #include <stackless_api.h>
 #endif
 
-#ifdef _WIN32
 #include <crypto.h>
-#endif
 
 #if _MSC_VER
 #include <hash_map>
@@ -187,7 +185,7 @@ private:
 	PyScheduler mScheduler; //to run the watchdog
 
 	//The time when the last tasklet switch occurred
-	LARGE_INTEGER mLastSwitchTime;
+	uint64_t mLastSwitchTime;
 	double mSwitchTimePeriod; //inverse of frequency
 	BluePy mstoredContext_str; //attribute name strings
 	BluePy mrunTime_str;

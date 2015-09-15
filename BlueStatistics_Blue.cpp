@@ -275,10 +275,9 @@ PyObject* BlueStatistics::PyGetSingleStat( PyObject* self, PyObject* args )
 namespace
 {
 
-#if CCP_TELEMETRY_ENABLED
-
 PyObject* PyEnterZone( PyObject* self, PyObject* args )
 {
+#if CCP_TELEMETRY_ENABLED
 	PyObject* zoneO;
 
 	if( !PyArg_ParseTuple( args, "O", &zoneO ) )
@@ -293,19 +292,21 @@ PyObject* PyEnterZone( PyObject* self, PyObject* args )
 	}
 
 	tmTaskletEnter( g_telemetryContext, zone );
-
+#endif
 	Py_RETURN_NONE;
 }
 
 PyObject* PyLeaveZone( PyObject* self, PyObject* args )
 {
+#if CCP_TELEMETRY_ENABLED
 	tmTaskletLeave( g_telemetryContext );
-
+#endif
 	Py_RETURN_NONE;
 }
 
 PyObject* PyAppendToZone( PyObject* self, PyObject* args )
 {
+#if CCP_TELEMETRY_ENABLED
 	PyObject* appendTextO;
 
 	if( !PyArg_ParseTuple( args, "O", &appendTextO ) )
@@ -320,14 +321,17 @@ PyObject* PyAppendToZone( PyObject* self, PyObject* args )
 	}
 
 	tmTaskletAppendText( g_telemetryContext, appendText );
-
+#endif
 	Py_RETURN_NONE;
 }
 
+#if CCP_TELEMETRY_ENABLED
 static TmU64 s_timespanId = 0xf00000000;
-
+#endif
+    
 PyObject* PyBeginTimeSpan( PyObject* self, PyObject* args )
 {
+#if CCP_TELEMETRY_ENABLED
 	PyObject* labelO;
 
 	if( !PyArg_ParseTuple( args, "O", &labelO ) )
@@ -345,10 +349,14 @@ PyObject* PyBeginTimeSpan( PyObject* self, PyObject* args )
 	tmBeginTimeSpan( g_telemetryContext, s_timespanId, TMTSF_NONE, label );
 
 	return PyLong_FromLongLong( s_timespanId );
+#else
+    return PyLong_FromLongLong( 0 );
+#endif
 }
 
 PyObject* PyEndTimeSpan( PyObject* self, PyObject* args )
 {
+#if CCP_TELEMETRY_ENABLED
 	TmU64 id = 0;
 	PyObject* labelO;
 
@@ -364,11 +372,9 @@ PyObject* PyEndTimeSpan( PyObject* self, PyObject* args )
 	}
 
 	tmEndTimeSpan( g_telemetryContext, id, TMTSF_NONE, label );
-
+#endif
 	Py_RETURN_NONE;
 }
-
-#endif
 
 
 PyObject* PyRegister( PyObject* self, PyObject* args )
@@ -709,6 +715,7 @@ const Be::ClassInfo* BlueStatistics::ExposeToBlue()
 			"Setting this to False can reduce the size of Telemetry captures drastically,\n"
 			"making it easier to grab longer sessions if you are focusing on Python code."
 		)
+#endif
 
 		MAP_METHOD_AND_WRAP
 		(
@@ -772,7 +779,6 @@ const Be::ClassInfo* BlueStatistics::ExposeToBlue()
 			"          indicate success or failure, for example"
 			"\n"
 		)
-#endif
 
 	EXPOSURE_END()
 }

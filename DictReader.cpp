@@ -634,6 +634,7 @@ void DictReader::ThrowError( const char* msg, ... )
 	va_start( args, msg );
 
 	vsprintf_s( buffer, msg, args );
+	va_end( args );
 
 	std::string finalMsg;
 

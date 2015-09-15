@@ -200,9 +200,6 @@ public:
 	
 	// class registration stuff
 private:
-#ifdef _WIN32
-	OSVERSIONINFO mOsInfo;
-#endif
 
 	IBlueCallbackManPtr m_callbackManager;
 
@@ -406,6 +403,8 @@ public:
 	{
 		return mUseSimpleCatchupLoop;
 	}
+    
+    void ShowErrorMessageBox( const wchar_t* title, const wchar_t* message );
 
 private:
 	void DoSleep();

@@ -75,7 +75,7 @@ private:
 	// Sleeper stuff
 	struct Sleeper
 	{
-		__int64 due;		// 64 bit objects first (alignment)
+		int64_t due;		// 64 bit objects first (alignment)
 		PyChannelObject* channel;
 		//copy constructor, to copy exactly our data
 		Sleeper() {}
@@ -109,8 +109,8 @@ private:
 	//Blockable test and exception generator
 	bool CatchMain();
 
-	PyObject *SleepWallclock(int ms, const __int64 &due);
-	PyObject *SleepSim(int ms, const __int64 &due);
+	PyObject *SleepWallclock(int ms, const int64_t &due);
+	PyObject *SleepSim(int ms, const int64_t &due);
 	
 	void ScheduleTick();
 	bool FindTasklet(PyObject *tasklet, Heap<Sleeper> &sleeperHeap, SleeperIt &outSleeper);
@@ -149,7 +149,7 @@ public:
 			"SleepWallclock(ms) -> None or argument to WakeupAt\n\n"
 			"Suspends the calling tasklet for 'ms' milliseconds."
 			)
-		{"Sleep", PyCFuncArgs<&SleepWallclock>, METH_O, // TDTODO - Remove me
+		{"Sleep", PyCFuncArgs<&Synchro::SleepWallclock>, METH_O, // TDTODO - Remove me
 			"Sleep(ms) -> None or argument to WakeupAt\n\n"
 			"Suspends the calling tasklet for 'ms' milliseconds wallclock time."},
 			
@@ -164,7 +164,7 @@ public:
 			"SleepUntilWallclock(time) -> None or argument to WakeupAt\n\n"
 			"Suspends the calling tasklet until the time specified (might be later)."
 			)
-		{"SleepUntil", PyCFuncArgs<&SleepUntilWallclock>, METH_O, // TDTODO - Remove me
+		{"SleepUntil", PyCFuncArgs<&Synchro::SleepUntilWallclock>, METH_O, // TDTODO - Remove me
 			"SleepUntil(time) -> None or argument to WakeupAt\n\n"
 			"Suspends the calling tasklet until the wallclock time specified (might be later)."},
 
@@ -191,7 +191,7 @@ public:
 			"WakeupAtWallclock(tasklet,when=0,arg=None)\n"
 			"wakes up the sleeping tasklet at \"when\""
 			)
-		{"WakeupAt", PyCFuncArgs<&WakeupAtWallclock>, METH_VARARGS, // TDTODO - Remove me
+		{"WakeupAt", PyCFuncArgs<&Synchro::WakeupAtWallclock>, METH_VARARGS, // TDTODO - Remove me
 			"Wakeup(tasklet,when=0,arg=None)\n"
 			"wakes up the sleeping tasklet at \"when\" or immediately with the optional arg"
 			},

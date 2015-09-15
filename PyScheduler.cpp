@@ -28,8 +28,10 @@
 
 #include "PyScheduler.h"
 
+#ifdef _WIN32
 #include <windows.h>
 #include <crtdbg.h>
+#endif
 
 /* #define LOGG */
 #ifdef LOGG
@@ -54,9 +56,7 @@ PyScheduler::PyScheduler(double maxTime)
 	mInQueue1 = mInQueue2 = 0;
 	if ( !mPt )
 	{
-		LARGE_INTEGER pf;
-		QueryPerformanceFrequency(&pf);
-		mPt = 1.0/(double)pf.QuadPart;
+		mPt = 1.0/(double)CcpGetTimestampFrequency();
 	}
 }
 
@@ -64,27 +64,27 @@ bool PyScheduler::RunTicks(long ticks)
 {
 	LOGIT("Running %d ticks", ticks);
 	// Run tasklets for ticks time, measuring the time required and the ticks used.
-	LARGE_INTEGER time1, time2;
+	uint64_t time1, time2;
 	long tick1, tick2;
 
 	tick1 = PySys_GetTickCount();
 	mInQueue1 = PyStackless_GetRunCount()-1;
-	QueryPerformanceCounter( &time1 );
+    time1 = CcpGetTimestamp();
 	PyObject *r = PyStackless_RunWatchdogEx( ticks,
 		PY_WATCHDOG_SOFT | PY_WATCHDOG_IGNORE_NESTING | PY_WATCHDOG_TOTALTIMEOUT );
-	QueryPerformanceCounter( &time2 );
+    time2 = CcpGetTimestamp();
 	tick2 = PySys_GetTickCount();
 	mInQueue2 = PyStackless_GetRunCount()-1;
 	
 	if (!r)
 		return false;
-	_ASSERT(r == Py_None);
+	CCP_ASSERT(r == Py_None);
 	Py_DECREF(r);
 
 	//update ticks per second estimate if we have enough ticks or if we are here
 	//for the first time.
 	long dtick = tick2-tick1;
-	double dt = ( time2.QuadPart-time1.QuadPart ) * mPt;
+	double dt = ( time2 - time1 ) * mPt;
 
 	//check for positive, since QueryPerformanceCounter may be broken on some
 	//machines, giving us negative results.  The average of the positive ones ought

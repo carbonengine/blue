@@ -12,6 +12,7 @@
 #include "ResourceLoading.h"
 #include "BlueExposure/BlueLuaThunkers.h"
 #include "BlueSocketLogger.h"
+#include "CcpUtils/PyCpp.h"
 
 const char* g_moduleName = "blue";
 std::wstring s_logDeviceName( L"EVE" );
@@ -19,6 +20,8 @@ std::wstring s_logDeviceName( L"EVE" );
 #ifdef _WIN32
 #include "win32.h"
 static HINSTANCE s_instance = NULL;
+#elif defined(__APPLE__)
+#include <fcntl.h>
 #endif
 
 
@@ -89,6 +92,267 @@ PyObject* PyAttachToLogServer( PyObject* self, PyObject* args )
 }
 
 MAP_FUNCTION( "AttachToLogServer", PyAttachToLogServer, "Attaches to the log server" );
+
+
+//--------------------------------------------------------------------
+// AtomicFileRead and Write
+// The atomicity is guaratneed by the OS locking thingie, so we can
+// release the GIL.
+//--------------------------------------------------------------------
+namespace
+{
+
+PyObject* PyAtomicFileRead(PyObject *self, PyObject* args)
+{
+	PyObject *filename;
+	if (!PyArg_ParseTuple(args, "O!", &PyBaseString_Type, &filename))
+		return NULL;
+	
+	
+	BluePy ufn(PyUnicode_FromObject(filename));
+	if (!ufn) return 0;
+#ifdef _WIN32	
+	HANDLE h = INVALID_HANDLE_VALUE;
+	DWORD fileSize;
+	BY_HANDLE_FILE_INFORMATION info;
+	{
+		Ccp::PyAllowThreads _allow;
+		for(int i = 0; i<10; i++) {
+			h = CreateFileW(PyUnicode_AS_UNICODE(ufn.o),
+							GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, 0);
+			if (h==INVALID_HANDLE_VALUE) {
+				DWORD code = GetLastError();
+				if (code == ERROR_SHARING_VIOLATION) {
+					Sleep(10);
+					continue;
+				}
+			}
+			break;
+		}
+		if (h==INVALID_HANDLE_VALUE)
+			goto HERR;
+
+		fileSize = GetFileSize(h, 0);
+		if (fileSize == INVALID_FILE_SIZE)
+			goto HERR;
+		
+		BOOL success = GetFileInformationByHandle(h, &info);
+		if (!success)
+			goto HERR;
+	}
+
+	{
+		BluePy r(PyString_FromStringAndSize(0, fileSize));
+		if (!r) {
+			CloseHandle(h);
+			return 0;
+		}
+		DWORD read;
+		{
+			Ccp::PyAllowThreads _allow;
+			BOOL success = ReadFile(h, PyString_AsString(r), fileSize, &read, 0);
+			if (!success)
+				goto HERR;
+				
+			CloseHandle(h);
+			h = INVALID_HANDLE_VALUE;
+		}
+		if (read != fileSize)
+			return PyErr_SetString(PyExc_RuntimeError, "Read short file"), 0;
+		
+		return r.Detach();
+	}
+
+HERR:
+	PyWin32Error();
+	if (h != INVALID_HANDLE_VALUE)
+		CloseHandle(h);
+	return 0;
+
+#elif defined(__APPLE__)
+
+	CW2A filenameStr( reinterpret_cast<const wchar_t*>( PyUnicode_AS_UNICODE( ufn.o ) ) );
+	int f;
+	long fileSize;
+	{
+		Ccp::PyAllowThreads _allow;
+        f = open( filenameStr, O_RDONLY | O_SHLOCK );
+		if( f < 0 )
+		{
+			return PyErr_SetFromErrnoWithFilename( PyExc_OSError, filenameStr );
+		}
+		fileSize = lseek( f, 0, SEEK_END );
+		lseek( f, 0, SEEK_SET );
+	}
+
+	BluePy r( PyString_FromStringAndSize( nullptr, Py_ssize_t( fileSize ) ) );
+	if( !r )
+	{
+		close( f );
+		return nullptr;
+	}
+	ssize_t bytes;
+	{
+		Ccp::PyAllowThreads _allow;
+		bytes = read( f, PyString_AsString(r), fileSize );
+		close( f );
+	}
+	if( long( bytes ) < fileSize )
+	{
+		return PyErr_SetString(PyExc_RuntimeError, "Read short file"), nullptr;
+	}
+	return r.Detach();
+
+#else
+#error PyAtomicFileRead implementation missing
+#endif
+}
+
+
+//Again, atomicity is guaranteed by the os locking ops
+PyObject* PyAtomicFileWrite(PyObject *self, PyObject* args)
+{
+	PyObject *filename;
+	PyObject *dataO;
+	if (!PyArg_ParseTuple(args, "O!O", &PyBaseString_Type, &filename, &dataO))
+		return NULL;
+	BluePy ufn(PyUnicode_FromObject(filename));
+	if (!ufn) return 0;
+	PyBufferProcs *buffer = dataO->ob_type->tp_as_buffer;
+	if (!buffer || !buffer->bf_getreadbuffer)
+		return PyErr_SetString(PyExc_TypeError, "expected a buffer object"), nullptr;
+	
+#ifdef _WIN32
+
+	HANDLE h;
+	{
+		Ccp::PyAllowThreads _allow;		
+		for(int i = 0; i<10; i++) {
+			h = CreateFileW(PyUnicode_AS_UNICODE(ufn.o),
+							GENERIC_WRITE, 0, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, 0);
+			if (h==INVALID_HANDLE_VALUE) {
+				DWORD code = GetLastError();
+				if (code == ERROR_SHARING_VIOLATION) {
+					Sleep(10);
+					continue;
+				}
+			}
+			break;
+		}
+		if (h==INVALID_HANDLE_VALUE)
+			goto HERR;
+	}
+
+	Py_ssize_t segcount = buffer->bf_getsegcount(dataO, 0);
+	for(Py_ssize_t i = 0; i<segcount; i++){
+		void *data;
+		Py_ssize_t datalen = buffer->bf_getreadbuffer(dataO, i, &data);
+		if (datalen<0) {
+			CloseHandle(h);
+			return 0;
+		}
+		//support only DWORD sizes yet
+		DWORD written;
+		BOOL success;
+		{
+			Ccp::PyAllowThreads _allow;		
+			success = WriteFile(h, data, (DWORD)datalen, &written, 0);
+			if (!success)
+				goto HERR;
+			if (i+1 == segcount) {
+				CloseHandle(h);
+				h = INVALID_HANDLE_VALUE;
+			}
+		}
+		if (written != datalen) {
+			if (h != INVALID_HANDLE_VALUE) CloseHandle(h);
+			return PyErr_SetString(PyExc_IOError, "Wrote short file"), 0;
+		}
+		if (i+1 < segcount) {
+			DWORD moved = SetFilePointer(h, (DWORD)datalen, 0, FILE_CURRENT);
+			if (moved == INVALID_SET_FILE_POINTER)
+				goto HERR;
+		}
+	}	
+	if (h != INVALID_HANDLE_VALUE)
+		CloseHandle(h);
+	Py_INCREF(Py_None);
+	return Py_None;
+
+HERR:
+	PyWin32Error();
+	if (h != INVALID_HANDLE_VALUE)
+		CloseHandle(h);
+	return 0;
+
+#elif defined(__APPLE__)
+
+	CW2A filenameStr( reinterpret_cast<const wchar_t*>( PyUnicode_AS_UNICODE( ufn.o ) ) );
+	int f;
+	{
+		Ccp::PyAllowThreads _allow;
+		auto f = open( filenameStr, O_WRONLY | O_EXLOCK | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR );
+		if( f < 0 )
+		{
+			return PyErr_SetFromErrnoWithFilename( PyExc_OSError, filenameStr );
+		}
+	}
+	Py_ssize_t segcount = buffer->bf_getsegcount( dataO, 0 );
+	for( Py_ssize_t i = 0; i < segcount; i++ )
+	{
+		void *data;
+		Py_ssize_t datalen = buffer->bf_getreadbuffer( dataO, i, &data );
+		if( datalen < 0 ) 
+		{
+			close( f );
+			return nullptr;
+		}
+		//support only DWORD sizes yet
+		ssize_t written;
+		{
+			Ccp::PyAllowThreads _allow;
+			written = write( f, data, datalen );
+			if( i + 1 == segcount ) 
+			{
+				close( f );
+				f = -1;
+			}
+		}
+		if( written != datalen ) 
+		{
+			if( f > 0 )
+			{
+				close( f );
+			}
+			return PyErr_SetString( PyExc_IOError, "Wrote short file" ), nullptr;
+		}
+	}	
+	Py_RETURN_NONE;
+
+#else
+#error PyAtomicFileWrite implementation missing
+#endif
+}
+
+}
+
+MAP_FUNCTION( 
+	"AtomicFileRead",
+	PyAtomicFileRead,
+	"Reads an entire file atomically. Returns the contents of the file as a string.\n"
+	"Raises OSError, IOError.\n"
+	"Arguments:\n"
+	"filename - path to file" );
+
+MAP_FUNCTION( 
+	"AtomicFileWrite",
+	PyAtomicFileWrite,
+	"Writes an entire file atomically. Raises OSError, IOError.\n"
+	"Arguments:\n"
+	"filename - path to file\n"
+	"contents - buffer containing file contents to write" );
+
+
 
 #ifdef _WIN32
 

@@ -320,15 +320,6 @@ const Be::ClassInfo* BlueOS::ExposeToBlue()
 		MAP_ATTRIBUTE( "miniDump", mMiniDump, "Have ExeFile generate minidumps", Be::READWRITE )
 		MAP_ATTRIBUTE( "pid", mPID, "Process ID", Be::READ )
 
-#ifdef _WIN32
-		MAP_ATTRIBUTE( "osMajor",		mOsInfo.dwMajorVersion,	"OS major version", Be::READ )
-		MAP_ATTRIBUTE( "osMinor",		mOsInfo.dwMinorVersion,	"OS minor version", Be::READ )
-		MAP_ATTRIBUTE( "osBuild",		mOsInfo.dwBuildNumber,	"OS build number",	Be::READ )
-		MAP_ATTRIBUTE( "osPlatform",	mOsInfo.dwPlatformId,	"OS platform",		Be::READ )
-
-		MAP_ATTRIBUTE( "osPatch",		mOsInfo.szCSDVersion,	"OS patch",			Be::READ )
-#endif
-
 		MAP_ATTRIBUTE( "externalTime", mExternalTime, "time spent outside OS", Be::READ )
 		MAP_ATTRIBUTE( "useRDTSC", mUseRDTSC, "use the rdtsc opcode for performance measurements", Be::READWRITE )
 #if BLUE_WITH_PYTHON
@@ -563,6 +554,16 @@ const Be::ClassInfo* BlueOS::ExposeToBlue()
 			"Gets the value associated with the given argument, if present on the command line."
 			"If the argument is not present, the return value is an empty string."
 		)
+    
+        MAP_METHOD_AND_WRAP
+        (
+            "ShowErrorMessageBox",
+            ShowErrorMessageBox,
+            "Shows a modal message box indicating an error.\n"
+            "Arguments:\n"
+            "title - message box title\n"
+            "message - text message to show in the box"
+        )
 
 
 	EXPOSURE_END()

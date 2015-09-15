@@ -33,8 +33,8 @@
 #include "bluetime.h"
 
 #include <vector>
-#include <hash_set>
-#include <hash_map>
+#include <unordered_set>
+#include <unordered_map>
 
 
 //A class to capture time stats from the system.  A high res real time thing, and
@@ -45,14 +45,13 @@ public:
 	Times() {}
 	Times(int n) {Clear();}
 	Times(HiResTime &hires, bool full = true) {Capture(hires, full);}
-	__int64 mHires; //regular time
-	__int64 mUser;
-	__int64 mKernel;
+	int64_t mHires; //regular time
+	int64_t mUser;
+	int64_t mKernel;
 	void Capture(HiResTime &hires, bool full = true) {
 		mHires = hires.Get();
 		if (full) {
-			FILETIME dummy;
-			GetThreadTimes(GetCurrentThread(), &dummy, &dummy, (LPFILETIME)&mKernel, (LPFILETIME)&mUser);
+            CcpGetThreadTimes( mKernel, mUser );
 		} else
 			mKernel = mUser = 0;
 	}
@@ -174,7 +173,7 @@ public:
 
 	//return a vector of all leaves in all the trees
 	bool Leaves(std::vector<Frame*> &res, PyObject *filter = 0) {
-		stdext::hash_set<Frame*> set;
+		std::unordered_set<Frame*> set;
 		//collect all nodes
 		FrameSet_t::iterator i;
 		for (i = mSet.begin(); i != mSet.end(); ++i)
@@ -188,7 +187,7 @@ public:
 			set.erase(i->Parent());
 
 		//what remains in the set are the leaves.
-		for(stdext::hash_set<Frame*>::iterator i2= set.begin(); i2 != set.end(); ++i2) {
+		for(auto i2= set.begin(); i2 != set.end(); ++i2) {
 			if (filter) {
 				for (Frame* f = *i2; f; ++f ) {
 					int cmp;
@@ -237,7 +236,7 @@ private:
 class Stack {
 public:
 	//create empty, and copy empty.
-	Stack(INT_PTR Id) : 
+	Stack(intptr_t Id) :
 		mCurrent(0), 
 		mId(Id),
 		mEntryTimes("Stack/mEntryTimes")
@@ -245,7 +244,7 @@ public:
 	}
 	
 public:
-	INT_PTR Id() const {return mId;}
+	intptr_t Id() const {return mId;}
 	Be::Time ElapsedInFrame(Be::Time now) const {return now - mEntryTimes.back();}
 
 	Frame *CurrentFrame() const {return mCurrent;}
@@ -265,7 +264,7 @@ public:
 	}
 	
 private:
-	const INT_PTR mId;	   //ID of stack
+	const intptr_t mId;	   //ID of stack
 	Frame *mCurrent;
 	TrackableStdVector<Be::Time> mEntryTimes; //real time of entry for each frame.
 };
@@ -317,7 +316,7 @@ public:
 	PyObject * EnterTaskletEx(PyObject *newContext, TASKLETFLAGS flags);
 	PyObject * EnterTaskletStr(const char *newContext, TASKLETFLAGS flags);
 	bool ReturnFromTasklet(PyObject *prevContext);
-	PyObject * SwitchStack(INT_PTR stackID);
+	PyObject * SwitchStack(intptr_t stackID);
 	void TimesliceReset();
 	bool Reset();
 	
@@ -391,7 +390,7 @@ private:
 	long m_BlueOSPumpCountAtStart; // Store the BlueOS Pump counter value at the start
 	BluePy mCanonicalizationDict;
 
-	typedef TrackableStdHashMap<INT_PTR, Stack> stackmap_t;  //maps stack ids to stacks
+	typedef TrackableStdHashMap<intptr_t, Stack> stackmap_t;  //maps stack ids to stacks
 	typedef stackmap_t::iterator stackmap_i;
 	stackmap_t mStackMap;
 	Stack *mCurrentStack;

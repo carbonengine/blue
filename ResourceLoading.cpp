@@ -11,7 +11,6 @@
 #include "CallbackMan.h"
 #include "MotherLode.h"
 #include "BlueObjectRecycler.h"
-#include "Stuffer.h"
 #include "RemoteFileCache.h"
 #include "BluePaths.h"
 #include "BlueThreadMonitor.h"
@@ -113,14 +112,6 @@ BLUEIMPORT bool BlueInitializeResourceLoading()
 	// Initialize the resource manager
 	s_resourceManagerInstance.Initialize();
 	BeResMan = &s_resourceManagerInstance;
-
-#if STUFFER_ENABLED
-	Stuffer::Startup();
-	if( !BeOS->HasStartupArg( L"noStuff" ) )
-	{
-		BeStuffer->AddFilesFromFolder( BePaths->ResolvePathW( L"app:/" ) );
-	}
-#endif
 
 	BeRemoteFileCache = &s_remoteFileCache;
 

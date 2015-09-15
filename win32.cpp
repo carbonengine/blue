@@ -28,9 +28,6 @@
 #include <DbgHelp.h>
 #include <bits.h>
 
-#include <CcpUtils/PyCpp.h>
-using Ccp::PyAllowThreads;
-
 
 // Need some structure definitions for the extended TCP functionality.  Normally defined in Iphlpapi.h,
 // but does not exist in the WinSDK versions prior to Vista (Win6)
@@ -210,16 +207,10 @@ public:
 
 	SoftLoader() {
 #define LOAD(L, N) m##N = ( N##_t ) Load(L, #N)
-	LOAD("kernel32.dll", GetThreadTimes);
-	LOAD("kernel32.dll", GetProcessTimes);
 	LOAD("kernel32.dll", GetProcessWorkingSetSize);
 	LOAD("kernel32.dll", SetProcessWorkingSetSize);
-	LOAD("kernel32.dll", GetProcessHandleCount);
 	LOAD("kernel32.dll", GetProcessIoCounters);
-	LOAD("kernel32.dll", GetSystemTimeAdjustment);
 	LOAD("kernel32.dll", GetNativeSystemInfo);
-	LOAD("kernel32.dll", SetThreadIdealProcessor);
-	LOAD("kernel32.dll", IsWow64Process);
 	LOAD("kernel32.dll", GlobalMemoryStatusEx);
 	LOAD("WtsApi32.dll", WTSRegisterSessionNotification);
 	LOAD("WtsApi32.dll", WTSUnRegisterSessionNotification);
@@ -241,18 +232,12 @@ public:
 	}
 
 //typedefs
-typedef BOOL (WINAPI * GetThreadTimes_t)(HANDLE, LPFILETIME, LPFILETIME, LPFILETIME, LPFILETIME);
-typedef BOOL (WINAPI *GetProcessTimes_t)(HANDLE, LPFILETIME, LPFILETIME, LPFILETIME, LPFILETIME);
 typedef BOOL (WINAPI *GetProcessMemoryInfo_t)(HANDLE, PPROCESS_MEMORY_COUNTERS, DWORD);
 typedef BOOL (WINAPI *GetProcessWorkingSetSize_t)(HANDLE, PSIZE_T, PSIZE_T);
 typedef BOOL (WINAPI *SetProcessWorkingSetSize_t)(HANDLE, SIZE_T, SIZE_T);
-typedef BOOL (WINAPI *GetProcessHandleCount_t)(HANDLE, PDWORD);
 typedef BOOL (WINAPI *GetProcessIoCounters_t)(HANDLE, PIO_COUNTERS);
-typedef BOOL (WINAPI *GetSystemTimeAdjustment_t)(PDWORD, PDWORD, PBOOL);
 typedef void (WINAPI *GetNativeSystemInfo_t)(LPSYSTEM_INFO);
-typedef DWORD (WINAPI *SetThreadIdealProcessor_t)(HANDLE, DWORD);
 typedef BOOL (WINAPI *GlobalMemoryStatusEx_t)(LPMEMORYSTATUSEX);
-typedef BOOL (WINAPI *IsWow64Process_t)(HANDLE, PBOOL);
 typedef BOOL (WINAPI *WTSRegisterSessionNotification_t)(HWND, DWORD);
 typedef BOOL (WINAPI *WTSUnRegisterSessionNotification_t)(HWND);
 typedef DWORD (WINAPI *GetExtendedTcpTable_t)(PVOID, PDWORD, BOOL, ULONG, TCP_TABLE_CLASS, ULONG);    
@@ -266,20 +251,14 @@ typedef ULONG (WINAPI *GetPerTcpConnectionEStats_t) (PMIB_TCPROW, DWORD, PUCHAR,
 	N##_t m##N;\
 	N##_t N() {Init(); return m##N;}
 
-DEF(GetThreadTimes)
-DEF(GetProcessTimes)
 DEF(GetProcessMemoryInfo)
 DEF(GetProcessWorkingSetSize)
 DEF(SetProcessWorkingSetSize)
-DEF(GetProcessHandleCount)
 DEF(GetProcessIoCounters)
-DEF(GetSystemTimeAdjustment)
 DEF(GetNativeSystemInfo)
-DEF(SetThreadIdealProcessor)
 DEF(GlobalMemoryStatusEx)
 DEF(WTSRegisterSessionNotification)
 DEF(WTSUnRegisterSessionNotification)
-DEF(IsWow64Process)
 DEF(GetExtendedTcpTable)
 DEF(SetPerTcpConnectionEStats)
 DEF(GetPerTcpConnectionEStats)
@@ -290,54 +269,26 @@ SoftLoader *loader = 0;
 
 //Python function prototypes:
 #define PROTO(N) PyObject *Py##N(PyObject *self, PyObject *args);
-PROTO(GetSystemDirectory)
-PROTO(GetSystemWow64Directory)
 PROTO(GetFileVersionInfo)
-PROTO(MessageBox)
-
-//debug functions
-PROTO(DebugBreak)
-PROTO(DebugCrash)
-PROTO(OutputDebugString)
 
 //clipboard functions
 PROTO(GetClipboardData)
 PROTO(GetClipboardUnicode)
 PROTO(SetClipboardData)
 
-//specialfile dump functions
-PROTO(AtomicFileRead)
-PROTO(AtomicFileWrite)
-
 //registry stuff
 PROTO(RegistryGetValue)
-PROTO(RegistryGetSubkeys)
-PROTO(RegistryGetValueNames)
-PROTO(RegistryGetValues)
 
 //custom routines
-PROTO(SetNamedEvent)
 PROTO(ShellExecute)
 
-//vtune api functions
-PROTO(VTPause)
-PROTO(VTResume)
-
 //memory and time queries
-PROTO(GetThreadTimes)
-PROTO(GetProcessTimes)
 PROTO(GlobalMemoryStatus)
 PROTO(GetProcessMemoryInfo)
 PROTO(GetProcessWorkingSetSize)
 PROTO(SetProcessWorkingSetSize)
-PROTO(GetProcessHandleCount)
 PROTO(GetProcessIoCounters)
-PROTO(GetSystemTime)
 PROTO(GetSystemTimeAsFileTime)
-PROTO(GetTickCount)
-PROTO(GetSystemTimeAdjustment)
-PROTO(QueryPerformanceCounter)
-PROTO(QueryPerformanceFrequency)
 
 //network queries
 PROTO(ToggleTcpEStats)
@@ -346,38 +297,12 @@ PROTO(GetProcessTcpEStats)
 //process info and stuff
 PROTO(GetSystemInfo)
 PROTO(GetNativeSystemInfo)
-PROTO(IsWow64Process)
-PROTO(IsTransgaming)
 PROTO(TGGetVersion)
 PROTO(TGGetOS)
 PROTO(TGGetSystemInfo)
-PROTO(GetProcessBits)
-PROTO(GetSystemBits)
-PROTO(GetVersionEx)
-PROTO(GetProcessAffinityMask)
-PROTO(SetProcessAffinityMask)
-PROTO(SetThreadAffinityMask)
-PROTO(SetThreadIdealProcessor)
-PROTO(IsProcessorFeaturePresent)
 
 //IP stuff
 PROTO(GetAdaptersInfo)
-
-//Debug Heap stuff
-PROTO(_CrtSetAllocHook)
-
-PROTO(MiniDumpWriteDump)
-
-//Shell32
-PROTO(SHGetFolderPath)
-
-//Bits, Background Intelligent Transfer Service
-PROTO(BitsQueueDownload)
-PROTO(BitsGetDownloadStatus)
-PROTO(BitsAction)
-PROTO(InitializeCom)
-PROTO(UnInitializeCom)
-PROTO(GetWindowsServiceStatus)
 
 //a single test function
 PROTO(Test)
@@ -391,80 +316,26 @@ PROTO(WTSUnRegisterSessionNotification)
 //pythoh method definitions
 PyMethodDef methods[] = {
 #define DEF(N) {#N, Py##N, METH_VARARGS},
-DEF(GetSystemDirectory)
-DEF(GetSystemWow64Directory)
 DEF(GetFileVersionInfo)
-{ "MessageBox", PyMessageBox, METH_VARARGS, 
-	"Display a message box to the user, with buttons" 
-	"\n returns an integer that indicates which button was pressed, see"
-	"\n Win32 API/MessageBox function documentation for meaning of these values"
-	"\n"
-	"\nArguments:"
-	"\ntext - the message to be displayed, needs to be separated by linefeeds if"
-	"\n       it doesn't fit on one line"
-	"\ntitle - the dialog box title"
-	"\nflags - an integer that specifies what buttons are displayed to the user and"
-	"\n        what icon is used.  See Win32 API/MessageBox function documentation"
-	"\n        for details (default is question mark icon with Yes & No buttons)" 
-},
-DEF(DebugBreak)
-DEF(DebugCrash)
-DEF(OutputDebugString)
 DEF(GetClipboardData)
 DEF(GetClipboardUnicode)
 DEF(SetClipboardData)
-DEF(AtomicFileRead)
-DEF(AtomicFileWrite)
 DEF(RegistryGetValue)
-DEF(RegistryGetSubkeys)
-DEF(RegistryGetValueNames)
-DEF(RegistryGetValues)
-DEF(SetNamedEvent)
 DEF(ShellExecute)
-DEF(VTPause)
-DEF(VTResume)
-DEF(GetThreadTimes)
-DEF(GetProcessTimes)
 DEF(GlobalMemoryStatus)
 DEF(GetProcessMemoryInfo)
 DEF(GetProcessWorkingSetSize)
 DEF(SetProcessWorkingSetSize)
-DEF(GetProcessHandleCount)
 DEF(GetProcessIoCounters)
-DEF(GetSystemTime)
 DEF(GetSystemTimeAsFileTime)
-DEF(GetTickCount)
-DEF(GetSystemTimeAdjustment)
-DEF(QueryPerformanceCounter)
-DEF(QueryPerformanceFrequency)
 DEF(ToggleTcpEStats)
 DEF(GetProcessTcpEStats)
 DEF(GetSystemInfo)
 DEF(GetNativeSystemInfo)
-DEF(IsWow64Process)
-DEF(IsTransgaming)
 DEF(TGGetOS)
 DEF(TGGetVersion)
 DEF(TGGetSystemInfo)
-DEF(GetProcessBits)
-DEF(GetSystemBits)
-DEF(GetVersionEx)
-DEF(GetProcessAffinityMask)
-DEF(SetProcessAffinityMask)
-DEF(SetThreadAffinityMask)
-DEF(SetThreadIdealProcessor)
-DEF(IsProcessorFeaturePresent)
 DEF(GetAdaptersInfo)
-DEF(_CrtSetAllocHook)
-DEF(MiniDumpWriteDump)
-DEF(SHGetFolderPath)
-
-DEF(BitsQueueDownload)
-DEF(BitsGetDownloadStatus)
-DEF(BitsAction)
-DEF(InitializeCom)
-DEF(UnInitializeCom)
-DEF(GetWindowsServiceStatus)
 
 DEF(Test)
 DEF(WTSRegisterSessionNotification)
@@ -473,23 +344,6 @@ DEF(WTSUnRegisterSessionNotification)
 {0}
 };
 
-//heapq stuff, here for the time being
-PyObject *PyHeapPush(PyObject *self, PyObject *args);
-PyObject *PyHeapPop(PyObject *self, PyObject *args);
-PyObject *PyHeapify(PyObject *self, PyObject *args);
-PyObject *PyHeapReplace(PyObject *self, PyObject *args);
-PyObject *PyHeapSort(PyObject *self, PyObject *args);
-PyObject *PyHeapCheck(PyObject *self, PyObject *args);
-
-PyMethodDef heapqmethods[] = {
-	{"heappush", PyHeapPush, METH_VARARGS, "push an element onto heap"},
-	{"heappop", PyHeapPop, METH_VARARGS, "pop an element off heap"},
-	{"heapify", PyHeapify, METH_VARARGS, "put list inn heap order"},
-	{"heapreplace", PyHeapReplace, METH_VARARGS, "pop and subsequently push an item"},
-	{"heapsort", PyHeapSort, METH_VARARGS, "sort a list in heap order (large to small)"},
-	{"heapcheck", PyHeapCheck, METH_VARARGS, "Test the heap property"},
-	{0}
-};
 
 
 bool GetWindowsVersionFromFile( OSVERSIONINFOEX& info )
@@ -575,30 +429,6 @@ void GetWindowsVersionFromApi( OSVERSIONINFOEX &info )
 }
 
 
-PyObject *PyGetSystemDirectory(PyObject *self, PyObject *args)
-{
-	if (!PyArg_ParseTuple(args, ""))
-		return NULL; 
-	TCHAR szPath[MAX_PATH];
-	if (!GetSystemDirectory(szPath, MAX_PATH))
-		return PyWin32Error("GetSystemDirectory");
-	return PyString_FromString(szPath);
-}
-
-PyObject* PyGetSystemWow64Directory( PyObject* self, PyObject* args )
-{
-	if( !PyArg_ParseTuple( args, "" ) )
-	{
-		return NULL;
-	}
-	TCHAR szPath[MAX_PATH];
-	if( !GetSystemWow64Directory( szPath, MAX_PATH ) )
-	{
-		return PyWin32Error( "GetSystemWow64Directory" );
-	}
-	return PyString_FromString( szPath );
-}
-
 PyObject *PyGetFileVersionInfo(PyObject *self, PyObject *args)
 {
 	char *fileName;
@@ -665,96 +495,6 @@ PyObject *PyGetFileVersionInfo(PyObject *self, PyObject *args)
 	}
 	CCP_DELETE[] buffer;
 	return d.Detach();
-}
-
-
-PyObject *PyOutputDebugString(PyObject *self, PyObject *args)
-{
-	PyObject *data;
-	if (!PyArg_ParseTuple(args, "O:OutputDebugString", &data))
-		return NULL;
-	if (PyString_Check(data))
-		OutputDebugStringA(PyString_AS_STRING(data));
-	else if (PyUnicode_Check(data))
-		OutputDebugStringW(PyUnicode_AS_UNICODE(data));
-	else
-		return PyErr_SetString(PyExc_TypeError, "argument must be string or unicode"), 0;
-	Py_INCREF(Py_None);
-	return Py_None;
-}
-
-
-PyObject *PyDebugBreak(PyObject *self, PyObject *args)
-{
-	if (!PyArg_ParseTuple(args, ""))
-		return NULL; 
-	DebugBreak();
-	Py_INCREF(Py_None);
-	return Py_None;
-}
-
-
-PyObject *PyDebugCrash(PyObject *self, PyObject *args)
-{
-	if (!PyArg_ParseTuple(args, ""))
-		return NULL;
-	__int64 *foo = 0;
-	*foo = 123;	
-	Py_INCREF(Py_None);
-	return Py_None;
-}
-
-
-PyObject* PyMessageBox( PyObject *self, PyObject* args )
-{
-	PyObject* textObjects[2];
-	int flags = MB_ICONQUESTION | MB_YESNO;
-
-	if( !PyArg_ParseTuple( args, "OO|i:MessageBox", textObjects, textObjects+1, &flags ) )
-	{
-		return NULL;
-	}
-
-	for( int i = 0; i < 2; ++i )
-	{
-		PyObject* obj = textObjects[i];
-		// We convert Python string objects to unicode objects - so that we just have
-		// to handle unicode strings and can support the situation where just one of
-		// title and text arguments is provided as unicode.  Since the PyUnicode_From methods
-		// create new objects we add a reference when no conversion is done, so that we
-		// can always safely decrement the reference at the end of this function.
-		if( PyString_Check( obj ) )
-		{
-			// Replacing the object in textObjects is safe because the object provided by 
-			// ParseTuple is just a borrowed reference - we don't need to track it.  The new 
-			// object created here needs to be dec-ref'ed.
-			textObjects[i] = PyUnicode_FromString( PyString_AsString( obj ) );
-		}
-		else
-		{
-			// Here we add a reference to the originally borrowed reference so that
-			// we can just always dec-ref the textObjects items, regardless of where
-			// they came from.
-			Py_INCREF( obj );
-		}
-	}
-
-	const wchar_t* text = PyUnicode_AsUnicode( textObjects[0] );
-	const wchar_t* title = PyUnicode_AsUnicode( textObjects[1] );
-	if( !text || !title )
-	{
-		PyErr_SetString( PyExc_TypeError, "String or unicode arguments expected" );
-		return NULL;
-	}
-
-	int ret = ::MessageBoxW( NULL, text, title, flags );
-	// OK, we're done using the unicode strings, we can safely release our references
-	// to the Python objects ...
-	for( int i = 0; i < 2; ++i )
-	{
-		Py_DECREF( textObjects[i] );
-	}
-	return PyInt_FromLong( ret );
 }
 
 
@@ -882,170 +622,6 @@ PyObject* PySetClipboardData(PyObject *self, PyObject* args)
 	return Py_None;
 }
 
-
-//--------------------------------------------------------------------
-// AtomicFileRead and Write
-// The atomicity is guaratneed by the OS locking thingie, so we can
-// release the GIL.
-//--------------------------------------------------------------------
-PyObject* PyAtomicFileRead(PyObject *self, PyObject* args)
-{
-	PyObject *filename;
-	if (!PyArg_ParseTuple(args, "O!", &PyBaseString_Type, &filename))
-		return NULL;
-	
-	
-	BluePy ufn(PyUnicode_FromObject(filename));
-	if (!ufn) return 0;
-	
-	HANDLE h = INVALID_HANDLE_VALUE;
-	DWORD fileSize;
-	BY_HANDLE_FILE_INFORMATION info;
-	{
-		PyAllowThreads _allow;
-		for(int i = 0; i<10; i++) {
-			h = CreateFileW(PyUnicode_AS_UNICODE(ufn.o),
-							GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, 0);
-			if (h==INVALID_HANDLE_VALUE) {
-				DWORD code = GetLastError();
-				if (code == ERROR_SHARING_VIOLATION) {
-					Sleep(10);
-					continue;
-				}
-			}
-			break;
-		}
-		if (h==INVALID_HANDLE_VALUE)
-			goto HERR;
-
-		fileSize = GetFileSize(h, 0);
-		if (fileSize == INVALID_FILE_SIZE)
-			goto HERR;
-		
-		BOOL success = GetFileInformationByHandle(h, &info);
-		if (!success)
-			goto HERR;
-	}
-
-	{
-		BluePy r(PyString_FromStringAndSize(0, fileSize));
-		if (!r) {
-			CloseHandle(h);
-			return 0;
-		}
-		DWORD read;
-		{
-			PyAllowThreads _allow;
-			BOOL success = ReadFile(h, PyString_AsString(r), fileSize, &read, 0);
-			if (!success)
-				goto HERR;
-				
-			CloseHandle(h);
-			h = INVALID_HANDLE_VALUE;
-		}
-		if (read != fileSize)
-			return PyErr_SetString(PyExc_RuntimeError, "Read short file"), 0;
-		
-		BluePy fileInfo(Py_BuildValue(
-			"{s:i,s:K,s:K,s:K,s:i,s:i,s:i,s:i,s:i}",
-			"dwFileAttributes", info.dwFileAttributes,
-			"ftCreationTime", *(unsigned __int64*)&info.ftCreationTime,
-			"ftLastAccessTime", *(unsigned __int64*)&info.ftLastAccessTime,
-			"ftLastWriteTime", *(unsigned __int64*)&info.ftLastWriteTime,
-			"dwVolumeSerialNumber", info.dwVolumeSerialNumber,
-			"nFileSizeHigh", info.nFileSizeHigh, 
-			"nFileSizeLow", info.nFileSizeLow,
-			"nNumberOfLinks", info.nNumberOfLinks,
-			"nFileIndexHigh", info.nFileIndexHigh,
-			"nFileIndexLow", info.nFileIndexLow
-			));
-		if (!fileInfo)
-			return 0;
-		return Py_BuildValue("(O,O)", r.o, fileInfo.o);
-	}
-
-HERR:
-	PyWin32Error();
-	if (h != INVALID_HANDLE_VALUE)
-		CloseHandle(h);
-	return 0;
-}
-
-
-//Again, atomicity is guaranteed by the os locking ops
-PyObject* PyAtomicFileWrite(PyObject *self, PyObject* args)
-{
-	PyObject *filename;
-	PyObject *dataO;
-	if (!PyArg_ParseTuple(args, "O!O", &PyBaseString_Type, &filename, &dataO))
-		return NULL;
-	BluePy ufn(PyUnicode_FromObject(filename));
-	if (!ufn) return 0;
-	PyBufferProcs *buffer = dataO->ob_type->tp_as_buffer;
-	if (!buffer || !buffer->bf_getreadbuffer)
-		return PyErr_SetString(PyExc_TypeError, "expected a buffer object"), 0;
-	
-	HANDLE h;
-	{
-		PyAllowThreads _allow;		
-		for(int i = 0; i<10; i++) {
-			h = CreateFileW(PyUnicode_AS_UNICODE(ufn.o),
-							GENERIC_WRITE, 0, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, 0);
-			if (h==INVALID_HANDLE_VALUE) {
-				DWORD code = GetLastError();
-				if (code == ERROR_SHARING_VIOLATION) {
-					Sleep(10);
-					continue;
-				}
-			}
-			break;
-		}
-		if (h==INVALID_HANDLE_VALUE)
-			goto HERR;
-	}
-
-	Py_ssize_t segcount = buffer->bf_getsegcount(dataO, 0);
-	for(Py_ssize_t i = 0; i<segcount; i++){
-		void *data;
-		Py_ssize_t datalen = buffer->bf_getreadbuffer(dataO, i, &data);
-		if (datalen<0) {
-			CloseHandle(h);
-			return 0;
-		}
-		//support only DWORD sizes yet
-		DWORD written;
-		BOOL success;
-		{
-			PyAllowThreads _allow;		
-			success = WriteFile(h, data, (DWORD)datalen, &written, 0);
-			if (!success)
-				goto HERR;
-			if (i+1 == segcount) {
-				CloseHandle(h);
-				h = INVALID_HANDLE_VALUE;
-			}
-		}
-		if (written != datalen) {
-			if (h != INVALID_HANDLE_VALUE) CloseHandle(h);
-			return PyErr_SetString(PyExc_IOError, "Wrote short file"), 0;
-		}
-		if (i+1 < segcount) {
-			DWORD moved = SetFilePointer(h, (DWORD)datalen, 0, FILE_CURRENT);
-			if (moved == INVALID_SET_FILE_POINTER)
-				goto HERR;
-		}
-	}	
-	if (h != INVALID_HANDLE_VALUE)
-		CloseHandle(h);
-	Py_INCREF(Py_None);
-	return Py_None;
-
-HERR:
-	PyWin32Error();
-	if (h != INVALID_HANDLE_VALUE)
-		CloseHandle(h);
-	return 0;
-}
 
 /////////////////////////////////////////////
 // Registry functions.
@@ -1188,106 +764,6 @@ PyObject *PyRegistryGetValue(PyObject *self, PyObject*args)
 	return resultO;
 }
 
-
-PyObject *PyRegistryGetSubkeys(PyObject *self, PyObject*args)
-{
-	const char *keyName;
-	if (!PyArg_ParseTuple(args, "s", &keyName))
-		return NULL;
-
-	HKEY hKey;
-	CRegKey cKey;
-	if (!GetHKey(hKey, cKey, keyName, KEY_READ))
-		return 0;
-
-	ULONG maxKeyLen;
-	LONG result = RegQueryInfoKey(hKey, 0, 0, 0, 0, &maxKeyLen, 0, 0, 0, 0, 0, 0);
-	if (result != ERROR_SUCCESS)
-		return PyErr_SetFromWindowsErr(result);
-	maxKeyLen+=1;
-
-	char *buffer = CCP_NEW("PyRegistryGetSubkeys/buffer") char[maxKeyLen];
-	PyObject *resultO = PyList_New(0);
-	for(int i = 0; true; i++) {
-		DWORD keyLen = maxKeyLen;
-		FILETIME lastFileTime;
-		result = RegEnumKeyEx(hKey, i, buffer, &keyLen, 0, 0, 0, &lastFileTime);
-		if (result == ERROR_NO_MORE_ITEMS)
-			break;
-		if (result != ERROR_SUCCESS) {
-			CCP_DELETE [] buffer;
-			Py_DECREF(resultO);
-			return PyErr_SetFromWindowsErr(result);
-		}
-		PyObject *str = PyString_FromString(buffer);
-		if (!str) {
-			CCP_DELETE [] buffer;
-			Py_DECREF(resultO);
-			return 0;
-		}
-		int e = PyList_Append(resultO, str);
-		Py_DECREF(str);
-		if (e) {
-			CCP_DELETE [] buffer;
-			Py_DECREF(resultO);
-			return 0;
-		}
-	}
-	CCP_DELETE [] buffer;
-	return resultO;
-}
-
-PyObject *PyRegistryGetValueNames(PyObject *self, PyObject*args)
-{
-	const char *keyName;
-	if (!PyArg_ParseTuple(args, "s", &keyName))
-		return NULL;
-
-	HKEY hKey;
-	CRegKey cKey;
-	if (!GetHKey(hKey, cKey, keyName, KEY_READ))
-		return 0;
-
-	ULONG maxValueNameLen;
-	LONG result = RegQueryInfoKey(hKey, 0, 0, 0, 0, 0, 0, 0, &maxValueNameLen, 0, 0, 0);
-	if (result != ERROR_SUCCESS)
-		return PyErr_SetFromWindowsErr(result);
-	maxValueNameLen += 1;
-	
-	PyObject *resultO = PyList_New(0);
-	if (!result)
-		return 0;
-
-	char *buffer = CCP_NEW("PyRegistryGetValueNames/buffer") char[maxValueNameLen];
-	for(int i = 0; true; i++) {
-		DWORD valueNameLen = maxValueNameLen;
-		result = RegEnumValue(hKey, i, buffer, &valueNameLen, 0, 0, 0, 0);
-		if (result == ERROR_NO_MORE_ITEMS)
-			break;
-	
-		if (result != ERROR_SUCCESS) {
-			CCP_DELETE [] buffer;
-			Py_DECREF(resultO);
-			return PyErr_SetFromWindowsErr(result);
-		}
-		PyObject *str = PyString_FromString(buffer);
-		if (!str) {
-			CCP_DELETE [] buffer;
-			Py_DECREF(resultO);
-			return 0;
-		}
-		int e = PyList_Append(resultO, str);
-		Py_DECREF(str);
-		if (e) {
-			CCP_DELETE [] buffer;
-			Py_DECREF(resultO);
-			return 0;
-		}
-	}
-	CCP_DELETE [] buffer;
-	return resultO;
-}
-
 PyObject *PyTest(PyObject *self, PyObject *args)
 {
 	PyObject *a, *b=Py_None, *c=Py_None, *d=Py_None;
@@ -1297,82 +773,6 @@ PyObject *PyTest(PyObject *self, PyObject *args)
 	return Py_BuildValue("OO(OO)(O)", a, b, c, d, e);
 }
 	
-
-
-PyObject *PyRegistryGetValues(PyObject *self, PyObject*args)
-{
-	const char *keyName;
-	if (!PyArg_ParseTuple(args, "s", &keyName))
-		return NULL;
-
-	HKEY hKey;
-	CRegKey cKey;
-	if (!GetHKey(hKey, cKey, keyName, KEY_READ))
-		return 0;
-
-	ULONG maxValueNameLen;
-	ULONG maxValueLen;
-	LONG result = RegQueryInfoKey(hKey, 0, 0, 0, 0, 0, 0, 0, &maxValueNameLen, &maxValueLen, 0, 0);
-	if (result != ERROR_SUCCESS)
-		return PyErr_SetFromWindowsErr(result);
-	maxValueNameLen += 1;
-
-	PyObject *resultO = PyDict_New();
-	if (!resultO)
-		return 0;
-	
-	std::vector<char> nameBuffer(maxValueNameLen);
-	std::vector<char> dataBuffer(maxValueLen);
-
-	for(int i = 0; true; i++) {
-		DWORD valueNameLen = maxValueNameLen;
-		DWORD valueLen = maxValueLen;
-		DWORD type;
-		result = RegEnumValue(hKey, i, &nameBuffer[0], &valueNameLen, 0, &type, (LPBYTE)&dataBuffer[0], &valueLen);
-		if (result == ERROR_NO_MORE_ITEMS)
-			break;
-		if (result != ERROR_SUCCESS) {
-			PyErr_SetFromWindowsErr(result);
-			goto FAIL;
-		}
-		PyObject *value = ValueToPython(&dataBuffer[0], valueLen, type);
-		if (!value)
-			goto FAIL;
-		int e = PyDict_SetItemString(resultO, &nameBuffer[0], value);
-		Py_DECREF(value);
-		if (e)
-			goto FAIL;
-	}
-	return resultO;
-
-FAIL:
-	Py_XDECREF(resultO);
-	return 0;
-}
-
-
-//Events
-PyObject *PySetNamedEvent(PyObject *self, PyObject *args)
-{
-	PyObject *name;
-	if (!PyArg_ParseTuple(args, "O", &name))
-		return 0;
-	if (!PyString_Check(name) && !PyUnicode_Check(name))
-		return PyErr_SetString(PyExc_TypeError, "string or unicode expected"), 0;
-	HANDLE event;
-	if (PyString_Check(name))
-		event = CreateEventA(0, FALSE, FALSE, PyString_AS_STRING(name));
-	else
-		event = CreateEventW(0, FALSE, FALSE, PyUnicode_AS_UNICODE(name));
-	if (!event)
-		return PyWin32Error();
-	BOOL r = SetEvent(event);
-	CloseHandle(event);
-	if (!r)
-		return PyWin32Error();
-	Py_INCREF(Py_None);
-	return Py_None;
-}
 
 
 PyObject *PyShellExecute(PyObject *self, PyObject *args)
@@ -1450,323 +850,9 @@ BADARG:
 	Py_XDECREF(dir);
 	return 0;
 }
-			
-
-//heapq methods
-inline bool CallCompare(bool &r, PyObject *cmp, PyObject *a, PyObject *b)
-{
-	PyObject *res = PyObject_CallFunctionObjArgs(cmp, a, b, 0);
-	if (!res) return false;
-	int t = PyObject_IsTrue(res);
-	Py_DECREF(res);
-	if (t<0) return false;
-	r = !!t;
-	return true;
-}
-
-static bool HeapPercolateUp(PyListObject *l, Py_ssize_t ci, PyObject *cmp = 0)
-{
-	PyObject *element = PyList_GET_ITEM(l, ci);
-	if (!cmp) {
-		while (ci>0) {
-			Py_ssize_t pi = (ci-1)>>1;
-			PyObject *parent = PyList_GET_ITEM(l, pi);
-			int cmp = PyObject_RichCompareBool(parent, element, Py_LE);
-			if (cmp<0)
-				return false; //exception
-			if (cmp)
-				break; //parent is less or equal to child, break.
-			PyList_SET_ITEM(l, ci, parent);
-			ci = pi;
-		}
-	} else {
-		while (ci>0) {
-			Py_ssize_t pi = (ci-1)>>1;
-			PyObject *parent = PyList_GET_ITEM(l, pi);
-			bool t;
-			if (!CallCompare(t, cmp, parent, element)) return 0;
-			if (t)
-				break; //heap property satisfied.
-			PyList_SET_ITEM(l, ci, parent);
-			ci = pi;
-		}
-	}
-	PyList_SET_ITEM(l, ci, element);
-	return true;
-}
-
-
-bool HeapPercolateDown(PyListObject *l, Py_ssize_t size, Py_ssize_t pi, PyObject *cmp = 0)
-{
-	PyObject *element = PyList_GET_ITEM(l, pi);
-	if (!cmp) {
-		while (pi < size/2) {
-			Py_ssize_t ci = 2*pi+1;
-			PyObject *child = PyList_GET_ITEM(l, ci);
-			if (ci+1 < size) {
-				//pick smaller child
-				PyObject *child1 = PyList_GET_ITEM(l, ci+1);
-				int cmp = PyObject_RichCompareBool(child, child1, Py_LE);
-				if (cmp<0)
-					return false;
-				if (!cmp){
-					//child1 is smaller
-					child = child1;
-					ci++;
-				}
-			}
-			int cmp = PyObject_RichCompareBool(element, child, Py_LE);
-			if (cmp<0)
-				return false;
-			if (cmp)
-				break; //element is less or equal to child.
-			PyList_SET_ITEM(l, pi, child);
-			pi = ci;
-		}
-	} else {
-		while (pi < size/2) {
-			Py_ssize_t ci = 2*pi+1;
-			PyObject *child = PyList_GET_ITEM(l, ci);
-			bool t;
-			if (ci+1 < size) {
-				//pick child according to heap property
-				PyObject *child1 = PyList_GET_ITEM(l, ci+1);
-				if (!CallCompare(t, cmp, child, child1)) return 0;
-				if (!t){
-					//must pick other child
-					child = child1;
-					ci++;
-				}
-			}
-			if (!CallCompare(t, cmp, element, child)) return 0;
-			if (t)
-				break; //heap property satisfied
-			PyList_SET_ITEM(l, pi, child);
-			pi = ci;
-		}
-	}
-	PyList_SET_ITEM(l, pi, element);
-	return true;
-}
-
-
-PyObject *PyHeapPush(PyObject *self, PyObject *args)
-{
-	PyObject *list, *element, *cmp=0;
-	if (!PyArg_ParseTuple(args, "OO|O", &list, &element, &cmp))
-		return 0;
-	if (!PyList_Check(list))
-		return PyErr_SetString(PyExc_TypeError, "list object expected"), 0;
-	if (cmp && !PyCallable_Check(cmp))
-		return PyErr_SetString(PyExc_TypeError, "calalble object expected"), 0;
-	
-	if (PyList_Append(list, element))
-		return 0;
-	if (!HeapPercolateUp((PyListObject*)list, PyList_GET_SIZE(list)-1, cmp))
-		return 0;
-	Py_INCREF(Py_None);
-	return Py_None;
-}
-
-
-PyObject *PyHeapPop(PyObject *self, PyObject *args)
-{
-	PyObject *list, *cmp=0;
-	if (!PyArg_ParseTuple(args, "O|O", &list, cmp))
-		return 0;
-	if (!PyList_Check(list))
-		return PyErr_SetString(PyExc_TypeError, "list object expected"), 0;
-	if (cmp && !PyCallable_Check(cmp))
-		return PyErr_SetString(PyExc_TypeError, "calalble object expected"), 0;
-	
-	Py_ssize_t end = PyList_GET_SIZE(list)-1; //tail element
-	PyObject *result;
-	if (end>=0) {//list is one or more elements
-		//get head element
-		result = PyList_GET_ITEM(list, 0);
-		Py_INCREF(result);
-		if (end) { //more than one element
-			//swap first and last
-			PyList_SET_ITEM(list, 0, PyList_GET_ITEM(list, end));
-			PyList_SET_ITEM(list, end, result);
-			//delete last element
-			PyList_SetSlice(list, end, end+1, 0);
-			if (!HeapPercolateDown((PyListObject*)list, end, 0, cmp)) {
-				Py_DECREF(result);
-				return 0;
-			}
-		} else  //we had only one element
-			PyList_SetSlice(list, 0, 1, 0); //delete the element
-	} else
-		return PyErr_SetString(PyExc_IndexError, "heap is empty"), 0;
-	return result;
-}
-
-
-PyObject *PyHeapify(PyObject *self, PyObject *args)
-{
-	PyObject *list, *cmp=0;
-	if (!PyArg_ParseTuple(args, "O|O", &list, &cmp))
-		return 0;
-	if (!PyList_Check(list))
-		return PyErr_SetString(PyExc_TypeError, "list object expected"), 0;
-	if (cmp && !PyCallable_Check(cmp))
-		return PyErr_SetString(PyExc_TypeError, "calalble object expected"), 0;
-
-	Py_ssize_t s = PyList_GET_SIZE(list);
-	for(Py_ssize_t i = s/2-1; i>=0; i--)
-		if (!HeapPercolateDown((PyListObject*)list, s, i, cmp))
-			return 0;
-	Py_INCREF(Py_None);
-	return Py_None;
-}
-
-
-PyObject *PyHeapReplace(PyObject *self, PyObject *args)
-{
-	PyObject *list, *element, *cmp=0;
-	if (!PyArg_ParseTuple(args, "OO|O", &list, &element, &cmp))
-		return 0;
-	if (!PyList_Check(list))
-		return PyErr_SetString(PyExc_TypeError, "list object expected"), 0;
-	if (cmp && !PyCallable_Check(cmp))
-		return PyErr_SetString(PyExc_TypeError, "calalble object expected"), 0;
-	
-	Py_ssize_t s = PyList_GET_SIZE(list);
-	if (!s)
-		return PyErr_SetString(PyExc_IndexError, "heap is empty"), 0;
-
-	//swap the stuff.
-	PyObject *result = PyList_GET_ITEM(list, 0); //take the list's reference of the head
-	PyList_SET_ITEM(list, 0, element);
-	Py_INCREF(element);
-	if (!HeapPercolateDown((PyListObject*)list, s, 0, cmp)) {
-		Py_DECREF(result);
-		return 0;
-	}
-	return result;
-}
-
-	
-PyObject *PyHeapSort(PyObject *self, PyObject *args)
-{
-	PyObject *list, *cmp=0;
-	if (!PyArg_ParseTuple(args, "O|O", &list, &cmp))
-		return 0;
-	if (!PyList_Check(list))
-		return PyErr_SetString(PyExc_TypeError, "list object expected"), 0;
-	if (cmp && !PyCallable_Check(cmp))
-		return PyErr_SetString(PyExc_TypeError, "calalble object expected"), 0;
-	
-	Py_ssize_t s = PyList_GET_SIZE(list);
-	for(Py_ssize_t i = s-1; i>0; i--) {
-		//swap head and tail of current list
-		PyObject *tmp = PyList_GET_ITEM(list, i);
-		PyList_SET_ITEM(list, i, PyList_GET_ITEM(list, 0));
-		PyList_SET_ITEM(list, 0, tmp);
-		if (!HeapPercolateDown((PyListObject*)list, i, 0, cmp))
-			return 0;
-	}
-	Py_INCREF(Py_None);
-	return Py_None;
-}
-
-
-PyObject *PyHeapCheck(PyObject *self, PyObject *args)
-{
-	PyObject *list, *cmp=0;
-	if (!PyArg_ParseTuple(args, "O|O", &list, &cmp))
-		return 0;
-	if (!PyList_Check(list))
-		return PyErr_SetString(PyExc_TypeError, "list object expected"), 0;
-	if (cmp && !PyCallable_Check(cmp))
-		return PyErr_SetString(PyExc_TypeError, "calalble object expected"), 0;
-	
-	for (Py_ssize_t i = PyList_GET_SIZE(list)-1; i>0; i--) {
-		Py_ssize_t pi = (i-1)>>1;
-		bool ok;
-		if (cmp) {
-			if (!CallCompare(ok, cmp, PyList_GET_ITEM(list, pi), PyList_GET_ITEM(list, i))) return 0;
-		} else {
-			int r = PyObject_RichCompareBool(PyList_GET_ITEM(list, pi), PyList_GET_ITEM(list, i), Py_LE);
-			if (r<0) return 0;
-			ok = !!r;
-		}
-		if (!ok) { //heap property not satisfied.
-			Py_INCREF(Py_False);
-			return Py_False;
-		}
-	}
-	Py_INCREF(Py_True);
-	return Py_True;
-}
-
-//VTune stuff
-#ifdef VTUNE
-#include <VTuneApi.h>
-#endif
-
-PyObject *PyVTPause(PyObject *self, PyObject *args)
-{
-	if (!PyArg_ParseTuple(args, ""))
-		return 0;
-#ifdef VTUNE
-	VTPause();
-#endif
-	Py_INCREF(Py_None);
-	return Py_None;
-}
-PyObject *PyVTResume(PyObject *self, PyObject *args)
-{
-	if (!PyArg_ParseTuple(args, ""))
-		return 0;
-#ifdef VTUNE
-	VTResume();
-#endif
-	Py_INCREF(Py_None);
-	return Py_None;
-}
 
 
 //process and thread query functions
-
-PyObject *PyGetThreadTimes(PyObject *self, PyObject *args)
-{
-	if (!PyArg_ParseTuple(args, ":GetThreadTimes"))
-		return 0;
-	ULARGE_INTEGER creationTime, exitTime, kernelTime, userTime;
-	if (!loader->GetThreadTimes())
-		return PyErr_SetString(PyExc_NotImplementedError, "not availible on this platform"), 0;
-	BOOL ok = loader->GetThreadTimes()(GetCurrentThread(), (PFILETIME)&creationTime, (PFILETIME)&exitTime, (PFILETIME)&kernelTime, (PFILETIME)&userTime);
-	if (!ok)
-		return PyWin32Error(), 0;
-
-	return Py_BuildValue("NNNN", 
-		PyLong_FromUnsignedLongLong(creationTime.QuadPart),
-		PyLong_FromUnsignedLongLong(exitTime.QuadPart),
-		PyLong_FromUnsignedLongLong(kernelTime.QuadPart),
-		PyLong_FromUnsignedLongLong(userTime.QuadPart));
-}
-
-PyObject *PyGetProcessTimes(PyObject *self, PyObject *args)
-{
-	if (!PyArg_ParseTuple(args, ":GetProcessTimes"))
-		return 0;
-
-	if (!loader->GetProcessTimes())
-		return PyErr_SetString(PyExc_NotImplementedError, "not availible on this platform"), 0;
-	
-	ULARGE_INTEGER creationTime, exitTime, kernelTime, userTime;
-	BOOL ok = loader->GetProcessTimes()(GetCurrentProcess(), (PFILETIME)&creationTime, (PFILETIME)&exitTime, (PFILETIME)&kernelTime, (PFILETIME)&userTime);
-	if (!ok)
-		return PyWin32Error(), 0;
-
-	return Py_BuildValue("NNNN", 
-		PyLong_FromUnsignedLongLong(creationTime.QuadPart),
-		PyLong_FromUnsignedLongLong(exitTime.QuadPart),
-		PyLong_FromUnsignedLongLong(kernelTime.QuadPart),
-		PyLong_FromUnsignedLongLong(userTime.QuadPart));
-}
 
 PyObject *PyGlobalMemoryStatus(PyObject *self, PyObject *args)
 {
@@ -1874,26 +960,6 @@ PyObject *PySetProcessWorkingSetSize(PyObject *self, PyObject *args)
 }
 
 
-PyObject *PyGetProcessHandleCount(PyObject *self, PyObject *args)
-{
-	if (!PyArg_ParseTuple(args, ":GetProcessHandleCount"))
-		return 0;
-#if _WIN32_WINNT > 0x0501
-	SoftLoader::Init();
-	if (!SoftLoader::loader->GetProcessHandleCount)
-		return PyErr_SetString(PyExc_NotImplementedError, "not availible on this platform"), 0;
-	
-	DWORD handleCount;
-	BOOL ok = SoftLoader::loader->GetProcessHandleCount(GetCurrentProcess(), &handleCount);
-	if (!ok)
-		return PyWin32Error(), 0;
-	return PyInt_FromLong(handleCount);
-#else
-	return PyErr_SetString(PyExc_NotImplementedError, "only supported in builds for XP sp1 and server 2003"), 0;
-#endif
-}
-
-
 PyObject *PyGetProcessIoCounters(PyObject *self, PyObject *args)
 {
 	if (!PyArg_ParseTuple(args, ":GetProcessIoCounters"))
@@ -1916,25 +982,6 @@ PyObject *PyGetProcessIoCounters(PyObject *self, PyObject *args)
 		"OtherTransferCount", PyLong_FromUnsignedLongLong(counters.OtherTransferCount));
 }
 
-
-PyObject *PyGetSystemTime(PyObject *self, PyObject *args)
-{
-	if (!PyArg_ParseTuple(args, ":GetSystemTime"))
-		return 0;
-
-	SYSTEMTIME st;
-	GetSystemTime(&st);
-	return Py_BuildValue("{si si si si si si si si}",
-		"Year", st.wYear,
-		"Month", st.wMonth,
-		"DayOfWeek", st.wDayOfWeek,
-		"Day", st.wDay,
-		"Hour", st.wHour,
-		"Minute", st.wMinute,
-		"Second", st.wSecond, 
-		"Milliseconds", st.wMilliseconds);
-}
-
 PyObject *PyGetSystemTimeAsFileTime(PyObject *self, PyObject *args)
 {
 	if (!PyArg_ParseTuple(args, ":GetSystemTimeAsFileTime"))
@@ -1943,30 +990,6 @@ PyObject *PyGetSystemTimeAsFileTime(PyObject *self, PyObject *args)
 	ULARGE_INTEGER ft;
 	GetSystemTimeAsFileTime((LPFILETIME)&ft);
 	return PyLong_FromUnsignedLongLong(ft.QuadPart);
-}
-
-
-PyObject *PyGetTickCount(PyObject *self, PyObject *args)
-{
-	if (!PyArg_ParseTuple(args, ":GetTickCount"))
-		return 0;
-	return PyInt_FromLong(GetTickCount());
-}
-
-
-PyObject *PyGetSystemTimeAdjustment(PyObject *self, PyObject *args)
-{
-	if (!PyArg_ParseTuple(args, ":GetSystemTimeAdjustment"))
-		return 0;
-
-	DWORD adjustment = 0, increment = 549360;
-	BOOL disabled = TRUE;
-	if (loader->GetSystemTimeAdjustment()) {
-		BOOL ok = loader->GetSystemTimeAdjustment()(&adjustment, &increment, &disabled);
-		if (!ok)
-			return PyWin32Error("GetSystemTimeAdjustment");
-	}
-	return Py_BuildValue("iiO", adjustment, increment, disabled?Py_True:Py_False);
 }
 
 
@@ -2342,38 +1365,6 @@ PyObject *PyGetNativeSystemInfo(PyObject *self, PyObject *args)
 	return PackSystemInfo(si);
 }
 
-PyObject *PyIsWow64Process(PyObject *self, PyObject *args)
-{
-	if (!PyArg_ParseTuple(args, ":IsWow64Process"))
-		return 0;
-	if (!loader->IsWow64Process()) {
-		Py_INCREF(Py_False);
-		return Py_False;
-	}
-	BOOL result;
-	BOOL ok = loader->IsWow64Process()(GetCurrentProcess(), &result);
-	if (!ok)
-		return PyWin32Error("IsWow64Process");
-	PyObject *ret = result?Py_True:Py_False;
-	Py_INCREF(ret);
-	return ret;
-}
-
-
-PyObject *PyIsTransgaming(PyObject *self, PyObject *args)
-{
-	if (!PyArg_ParseTuple(args, ":IsTransgaming"))
-		return 0;
-	PyObject *result = Py_False;
-	
-	if ( IsTransgaming() )
-	{
-		result = Py_True;
-	}
-	Py_INCREF(result);
-	return result;
-}
-
 
 PyObject *PyTGGetVersion(PyObject *self, PyObject *args)
 {
@@ -2461,90 +1452,6 @@ PyObject *PyTGGetSystemInfo(PyObject *self, PyObject *args)
 		"platform_bitcount", bitcount);
 }
 
-
-PyObject *PyGetProcessBits(PyObject *self, PyObject *args)
-{
-	if (!PyArg_ParseTuple(args, ":GetProcessBits"))
-		return 0;
-#ifdef _WIN64
-	return PyInt_FromLong(64);
-#else
-	return PyInt_FromLong(32);
-#endif
-}
-
-PyObject *PyGetSystemBits(PyObject *self, PyObject *args)
-{
-	if (!PyArg_ParseTuple(args, ":GetSystemBits"))
-		return 0;
-#ifdef _WIN64
-	long bits = 64;
-#else
-	long bits = 32;
-	if (loader->IsWow64Process()) {
-		BOOL ok, r;
-		ok = loader->IsWow64Process()(GetCurrentProcess(), &r);
-		if (ok && r)
-			bits = 64;
-	}
-#endif
-	return PyInt_FromLong(bits);
-}
-
-
-PyObject *PyGetVersionEx(PyObject *self, PyObject *args)
-{
-	if (!PyArg_ParseTuple(args, ":GetVersionEx"))
-		return 0;
-	OSVERSIONINFOEX vi;
-	vi.dwOSVersionInfoSize = sizeof(vi);
-	GetWindowsVersion( vi );
-	return Py_BuildValue("{si si si si si ss si si si si}", 
-#define V(S) #S, vi.S
-		V(dwOSVersionInfoSize),
-		V(dwMajorVersion),
-		V(dwMinorVersion),
-		V(dwBuildNumber),
-		V(dwPlatformId),
-		V(szCSDVersion),
-		V(wServicePackMajor),
-		V(wServicePackMinor),
-		V(wSuiteMask),
-		V(wProductType) );
-#undef V
-}
-		
-
-PyObject *PyQueryPerformanceCounter(PyObject *self, PyObject *args)
-{
-	if (!PyArg_ParseTuple(args, ":QueryPerformanceCounter"))
-		return 0;
-	static LARGE_INTEGER safety = {0};
-	LARGE_INTEGER li;
-	BOOL r = QueryPerformanceCounter(&li);
-	if (!r)
-		return PyWin32Error("QueryPerformanceCounter");
-	//Here a failsafe for the platforms with out of sync multicore performance counters.
-	//make it at least not run backwards.
-	if (li.QuadPart > safety.QuadPart)
-		safety.QuadPart = li.QuadPart;
-	else
-		li.QuadPart = safety.QuadPart;
-	return PyLong_FromLongLong(li.QuadPart);
-}
-
-
-PyObject *PyQueryPerformanceFrequency(PyObject *self, PyObject *args)
-{
-	if (!PyArg_ParseTuple(args, ":QueryPerformanceFrequency"))
-		return 0;
-	LARGE_INTEGER li;
-	BOOL r = QueryPerformanceFrequency(&li);
-	if (!r)
-		return PyWin32Error("QueryPerformanceFrequency");
-	return PyLong_FromLongLong(li.QuadPart);
-}
-
 /****************************
  * Session Notifications
  */
@@ -2580,92 +1487,6 @@ PyObject *PyWTSUnRegisterSessionNotification(PyObject *self, PyObject *args)
 
 	Py_INCREF(Py_None);
 	return (Py_None);
-}
-/****************************
- * affinity maska
- */
-PyObject *PyGetProcessAffinityMask(PyObject *self, PyObject *args)
-{
-	if (!PyArg_ParseTuple(args, ":GetProcessAffinityMask"))
-		return 0;
-	DWORD_PTR proc, sys;
-	BOOL ok = GetProcessAffinityMask(GetCurrentProcess(), &proc, &sys);
-	if (!ok)
-		return PyWin32Error("GetProcessAffinityMask");
-	return Py_BuildValue("NN", PyLong_FromLongLong(proc), PyLong_FromLongLong(sys));
-}
-
-PyObject *PySetProcessAffinityMask(PyObject *self, PyObject *args)
-{
-	PyObject *mask;
-	if (!PyArg_ParseTuple(args, "O:SetProcessAffinityMask", &mask))
-		return 0;
-	if (!PyLong_Check(mask) && !PyInt_Check(mask))
-		return PyErr_SetString(PyExc_TypeError, "expected int or long"), 0;
-
-	DWORD_PTR m;
-	if (PyLong_Check(mask))
-		m = (DWORD_PTR)PyLong_AsLongLong(mask);
-	else
-		m = (DWORD_PTR)PyInt_AsLong(mask);
-	if (m == -1 && PyErr_Occurred())
-		return 0;
-
-	BOOL ok = SetProcessAffinityMask(GetCurrentProcess(), m);
-	if (!ok)
-		return PyWin32Error("SetProcessAffinityMask");
-	Py_INCREF(Py_None);
-	return Py_None;
-}
-
-PyObject *PySetThreadAffinityMask(PyObject *self, PyObject *args)
-{
-	PyObject *mask;
-	if (!PyArg_ParseTuple(args, "O:SetThreadAffinityMask", &mask))
-		return 0;
-	if (!PyLong_Check(mask) && !PyInt_Check(mask))
-		return PyErr_SetString(PyExc_TypeError, "expected int or long"), 0;
-
-	DWORD_PTR m;
-	if (PyLong_Check(mask))
-		m = (DWORD_PTR)PyLong_AsLongLong(mask);
-	else
-		m = (DWORD_PTR)PyInt_AsLong(mask);
-	if (m == -1 && PyErr_Occurred())
-		return 0;
-
-	DWORD_PTR old = SetThreadAffinityMask(GetCurrentThread(), m);
-	if (!old)
-		return PyWin32Error("SetThreadAffinityMask");
-	return PyLong_FromLongLong(old);
-}
-
-
-PyObject *PySetThreadIdealProcessor(PyObject *self, PyObject *args)
-{
-	DWORD p = MAXIMUM_PROCESSORS;
-	if (!PyArg_ParseTuple(args, "|i:SetThreadIdealProcessor", &p))
-		return 0;
-
-	if (!loader->SetThreadIdealProcessor())
-		return PyErr_SetString(PyExc_NotImplementedError, "not supported on this machine"), 0;
-	
-	DWORD old = loader->SetThreadIdealProcessor()(GetCurrentThread(), p);
-	if (old == -1)
-		return PyWin32Error("SetThreadIdealProcessor");
-	return PyInt_FromLong(old);
-}
-
-
-PyObject *PyIsProcessorFeaturePresent(PyObject *self, PyObject *args)
-{
-	DWORD f;
-	if (!PyArg_ParseTuple(args, "|i:IsProcessorFeaturePresent", &f))
-		return 0;
-	BOOL r = IsProcessorFeaturePresent(f);
-	PyObject *res = r?Py_True:Py_False;
-	Py_INCREF(res);
-	return res;
 }
 
 
@@ -2782,453 +1603,6 @@ BLUEIMPORT int BlueCrtAllocHook( int allocType, void *userData, size_t size, int
 	inThere = false;
 	return result;
 }
-
-
-PyObject *Py_CrtSetAllocHook(PyObject *self, PyObject *args)
-{
-	PyObject *callable = Py_None;
-	PyObject *allowDenyO = Py_False;
-	if (!PyArg_ParseTuple(args, "|OiO:_CrtSetAllocHook", &callable, &sizeLimit, &allowDenyO))
-		return 0;
-	
-	PyObject *old = PyAllocHook;
-	if (!old) {
-		old = Py_None;
-		Py_INCREF(old);
-	}
-	PyAllocHook = 0;
-	if (callable != Py_None) {
-		PyAllocHook = callable;
-		allowDeny = !!PyObject_IsTrue(allowDenyO);
-		Py_INCREF(callable);
-		if (!oldHook)
-			oldHook = _CrtSetAllocHook(BlueCrtAllocHook);
-		threadID = GetCurrentThreadId();
-	} else {
-		if (oldHook) {
-			_CrtSetAllocHook(oldHook);
-			oldHook = 0;
-		}
-	}
-	return old;
-}
-
-
-PyObject *PySHGetFolderPath(PyObject *self, PyObject *args)
-{
-	int csidl;
-	if (!PyArg_ParseTuple(args, "i:SHGetFolderPath", &csidl))
-		return 0;
-
-	wchar_t path[MAX_PATH];
-	HRESULT hr = SHGetFolderPathW(NULL, csidl, NULL, SHGFP_TYPE_CURRENT, path);
-	if (SUCCEEDED(hr))
-		return PyUnicode_FromWideChar(path, wcslen(path));
-	if (hr == E_FAIL) {
-		Py_INCREF(Py_None);
-		return Py_None; //folder doesn't exist;
-	}
-	if (hr == E_INVALIDARG)
-		return PyErr_SetString(PyExc_ValueError, "invalid CSIDL value"), 0;
-	if (HRESULT_FACILITY(hr) == FACILITY_WIN32) {
-		SetLastError(HRESULT_CODE(hr));
-	return PyWin32Error("SHGetFolderPath");
-}
-	PyErr_Format(PyExc_RuntimeError, "unexpected return from SHGetFolderPath: %x", hr);
-	return 0;
-}
-
-PyObject *PyInitializeCom(PyObject *self, PyObject *args)
-{
-	HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED  | COINIT_DISABLE_OLE1DDE );
-	if ( SUCCEEDED(hr) )
-	{
-		Py_RETURN_TRUE;
-	}
-	Py_RETURN_FALSE;
-}
-
-PyObject *PyUnInitializeCom(PyObject *self, PyObject *args)
-{
-	CoUninitialize();
-	Py_RETURN_NONE;
-}
-
-PyObject *PyBitsQueueDownload(PyObject *self, PyObject *args)
-{
-	LPWSTR name;
-	LPWSTR url;
-	LPWSTR destination;
-
-	if (!PyArg_ParseTuple(args, "uuu:QueueDownload", &name, &url, &destination))
-		return NULL;
-
-	CComPtr<IBackgroundCopyManager> XferManager;  
-	HRESULT hr = CoCreateInstance(__uuidof(BackgroundCopyManager), NULL, CLSCTX_LOCAL_SERVER, __uuidof(IBackgroundCopyManager),(void**) &XferManager);	
-	if( FAILED(hr))
-	{	
-		return PyErr_SetString(PyExc_RuntimeError, "CoCreateInstance"), 0;	
-	}
-
-	GUID JobID;
-	CComPtr<IBackgroundCopyJob> job;
-	hr = XferManager->CreateJob( name, BG_JOB_TYPE_DOWNLOAD, &JobID, &job);	
-	if( FAILED(hr))
-	{
-		return PyErr_SetString(PyExc_RuntimeError, "IBackgroundCopyManager::CreateJob"), 0;
-	}
-
-	hr = job->SetPriority( BG_JOB_PRIORITY_FOREGROUND );
-	if( FAILED(hr))
-	{
-		return PyErr_SetString(PyExc_RuntimeError, "IBackgroundCopyJob::SetPriority"), 0;
-	}
-
-	hr =  job->AddFile( url, destination );
-	if (FAILED(hr))
-	{
-		return PyErr_SetString(PyExc_RuntimeError, "IBackgroundCopyJob::AddFile"), 0;
-	}
-
-	hr = job->Resume();
-	if ( FAILED(hr) )
-	{
-		return PyErr_SetString(PyExc_RuntimeError, "IBackgroundCopyJob::Resume"), 0;
-	}	
-
-	Py_RETURN_NONE;
-}
-
-PyObject *PyBitsGetDownloadStatus(PyObject *self, PyObject *args)
-{
-	LPWSTR jobname;
-
-	if (!PyArg_ParseTuple(args, "u:GetDownloadStatus", &jobname))
-		return NULL;
-
-	CComPtr<IBackgroundCopyManager> XferManager;
-	HRESULT hr = CoCreateInstance(__uuidof(BackgroundCopyManager), NULL, CLSCTX_LOCAL_SERVER, __uuidof(IBackgroundCopyManager),(void**) &XferManager);
-	if(FAILED(hr))
-	{
-		return PyErr_SetString(PyExc_RuntimeError, "CoCreateInstance"), 0;
-	}
-
-	CComPtr<IEnumBackgroundCopyJobs> jobs;
-	hr = XferManager->EnumJobs(0, &jobs);
-	if(FAILED(hr))
-	{
-		return PyErr_SetString(PyExc_RuntimeError, "EnumJobs"), 0;
-	}
-
-	ULONG jobCount = 0;
-	jobs->GetCount( &jobCount );
-	BluePy dict(PyDict_New());
-
-	for(ULONG i=0; i<jobCount; i++)
-	{
-		CComPtr<IBackgroundCopyJob> job;
-		hr = jobs->Next(1, &job, NULL);
-		if(FAILED(hr))
-		{
-			return PyErr_SetString(PyExc_RuntimeError, "IEnumBackgroundCopyJobs::Next"), 0;
-		}
-
-		CComHeapPtr<wchar_t> displayName;
-		job->GetDisplayName( &displayName );
-
-		if (  wcscmp( displayName, jobname ) == 0 )
-		{
-			BG_JOB_PROGRESS progress;			
-			hr = job->GetProgress( &progress );
-			if(FAILED(hr))
-			{
-				return PyErr_SetString(PyExc_RuntimeError, "IBackgroundCopyJob::GetProgress"), 0;
-			}
-
-			PyDict_SetItemString( dict,  "BytesTransfered", BluePy(PyLong_FromLongLong( progress.BytesTransferred)));
-			PyDict_SetItemString( dict,  "BytesTotal", BluePy(PyLong_FromLongLong( progress.BytesTotal)));
-			PyDict_SetItemString( dict,  "FilesTotal", BluePy(PyInt_FromLong( progress.FilesTotal)));
-			PyDict_SetItemString( dict,  "FilesTransferred", BluePy(PyInt_FromLong( progress.FilesTransferred)));
-
-			BG_JOB_STATE state;
-			hr = job->GetState( &state );
-
-			if(FAILED(hr))
-			{
-				return PyErr_SetString(PyExc_RuntimeError, "IBackgroundCopyJob::GetState"), 0;
-			}
-			PyDict_SetItemString( dict, "State", BluePy(PyInt_FromLong( state )));
-			
-			BG_JOB_PRIORITY priority;
-			hr = job->GetPriority( &priority );
-			if(FAILED(hr))
-			{
-				return PyErr_SetString(PyExc_RuntimeError, "IBackgroundCopyJob::GetPriority"), 0;
-			}
-			PyDict_SetItemString( dict, "Priority", BluePy(PyInt_FromLong( priority )));
-		}
-	}
-
-	return dict.Detach();
-}
-
-PyObject *PyBitsAction(PyObject *self, PyObject *args)
-{
-	LPWSTR jobname;
-	LPWSTR action;
-
-	if (!PyArg_ParseTuple(args, "uu:BitsAction", &jobname, &action))
-		return NULL;
-
-	CComPtr<IBackgroundCopyManager> XferManager;
-	HRESULT hr = CoCreateInstance(__uuidof(BackgroundCopyManager), NULL, CLSCTX_LOCAL_SERVER, __uuidof(IBackgroundCopyManager),(void**) &XferManager);
-	if(FAILED(hr))
-	{
-		return PyErr_SetString(PyExc_RuntimeError, "CoCreateInstance"), 0;	
-	}
-
-	CComPtr<IEnumBackgroundCopyJobs> jobs;
-
-	hr = XferManager->EnumJobs(0, &jobs);
-	if(FAILED(hr))
-	{
-		return PyErr_SetString(PyExc_RuntimeError, "IBackgroundCopyManager::EnumJobs"), 0;	
-	}
-
-	ULONG jobCount = 0;
-	jobs->GetCount( &jobCount );
-	long completed = 0;
-	
-	for(ULONG i=0; i<jobCount; i++)
-	{
-		CComPtr<IBackgroundCopyJob> job;
-		hr = jobs->Next(1, &job, NULL);
-		if(hr != S_OK)
-		{
-			return PyErr_SetString(PyExc_RuntimeError, "IEnumBackgroundCopyJobs::Next"), 0;	
-		}
-
-		CComHeapPtr<wchar_t> displayName;
-		job->GetDisplayName( &displayName );
-
-		if (  wcscmp( displayName, jobname ) == 0 )
-		{
-			// Start with checking the state
-			BG_JOB_STATE state;
-			hr = job->GetState( &state );
-
-			if(FAILED(hr))
-			{
-				return PyErr_SetString(PyExc_RuntimeError, "IBackgroundCopyJob::GetState"), 0;	
-			}
-
-			if ( wcscmp( action, L"complete" ) == 0)
-			{
-				if ( BG_JOB_STATE_TRANSFERRED == state )
-				{
-					hr = job->Complete();
-					if(FAILED(hr))
-					{
-						return PyErr_SetString(PyExc_RuntimeError, "IBackgroundCopyJob::Complete"), 0;	
-					}
-					if (hr == S_OK)
-						completed++;
-				}
-			}
-
-			if ( wcscmp( action, L"cancel" ) == 0)
-			{
-				if ( BG_JOB_STATE_CANCELLED != state )
-				{
-					hr = job->Cancel();
-					if(FAILED(hr))
-					{
-						return PyErr_SetString(PyExc_RuntimeError, "IBackgroundCopyJob::Cancel"), 0;	
-					}
-					completed++;
-				}
-			}
-
-			if ( wcscmp( action, L"suspend" ) == 0)
-			{
-				if ( BG_JOB_STATE_TRANSFERRING == state || BG_JOB_STATE_CONNECTING == state )
-				{
-					hr = job->Suspend();
-					if(FAILED(hr))
-					{
-						return PyErr_SetString(PyExc_RuntimeError, "IBackgroundCopyJob::Suspend"), 0;	
-					}
-					completed++;
-				}
-			}
-
-			if ( wcscmp( action, L"resume" ) == 0)
-			{
-				if ( BG_JOB_STATE_SUSPENDED == state)
-				{
-					hr = job->Resume();
-					if(FAILED(hr))
-					{
-						return PyErr_SetString(PyExc_RuntimeError, "IBackgroundCopyJob::Resume"), 0;	
-					}
-					completed++;
-				}
-			}
-
-			if ( wcscmp( action, L"foregroundPriority" ) == 0)
-			{
-				hr = job->SetPriority(BG_JOB_PRIORITY_FOREGROUND);
-				if(FAILED(hr))
-				{
-					return PyErr_SetString(PyExc_RuntimeError, "IBackgroundCopyJob::SetPriority"), 0;	
-				}
-				completed++;
-			}
-
-			if ( wcscmp( action, L"highPriority" ) == 0)
-			{
-				hr = job->SetPriority(BG_JOB_PRIORITY_HIGH);
-				if(FAILED(hr))
-				{
-					return PyErr_SetString(PyExc_RuntimeError, "IBackgroundCopyJob::SetPriority"), 0;	
-				}
-				completed++;
-			}
-
-			if ( wcscmp( action, L"mediumPriority" ) == 0)
-			{
-				hr = job->SetPriority(BG_JOB_PRIORITY_NORMAL);
-				if(FAILED(hr))
-				{
-					return PyErr_SetString(PyExc_RuntimeError, "IBackgroundCopyJob::SetPriority"), 0;	
-				}
-				completed++;
-			}
-
-			if ( wcscmp( action, L"lowPriority" ) == 0)
-			{
-				hr = job->SetPriority(BG_JOB_PRIORITY_LOW);
-				if(FAILED(hr))
-				{
-					return PyErr_SetString(PyExc_RuntimeError, "IBackgroundCopyJob::SetPriority"), 0;	
-				}
-				completed++;
-			}
-		}
-	}
-
-	return PyInt_FromLong(completed);
-}
-
-PyObject *PyGetWindowsServiceStatus(PyObject *self, PyObject *args)
-{
-	LPSTR servicename;
-	if (!PyArg_ParseTuple(args, "s:GetWindowsServiceStatus", &servicename))
-		return NULL;
-
-	SC_HANDLE SCManager = OpenSCManager( NULL, NULL, SERVICE_QUERY_CONFIG );
-	if (NULL==SCManager)
-	{
-		return PyWin32Error("OpenSCManager");	
-	}
-
-	SC_HANDLE service = OpenService( SCManager, servicename, SERVICE_QUERY_CONFIG); 
-	if (NULL==service)
-	{ 
-		if ( ERROR_SERVICE_DOES_NOT_EXIST == GetLastError() )
-		{
-			CloseServiceHandle(SCManager);
-			Py_RETURN_NONE;
-		}
-
-		CloseServiceHandle(SCManager);
-		return PyWin32Error("OpenService");	
-    }
-
-	DWORD dwBytesNeeded = 0;
-	DWORD cbBufSize = 0;
-	CHeapPtr<char> ptr;
-	LPQUERY_SERVICE_CONFIG config = 0; 
-	
-	if( !QueryServiceConfig( service, NULL,0, &dwBytesNeeded))
-    {
-        if( ERROR_INSUFFICIENT_BUFFER == GetLastError() )
-        {
-			cbBufSize = dwBytesNeeded;
-			if (!ptr.Allocate(cbBufSize)) {
-				CloseServiceHandle(service);
-				CloseServiceHandle(SCManager);
-				return PyErr_NoMemory();
-			}
-			config = (LPQUERY_SERVICE_CONFIG)(char*)ptr;
-        }
-        else
-        {
-			CloseServiceHandle(service);
-			CloseServiceHandle(SCManager);
-			return PyWin32Error("QueryServiceConfig");
-        }
-    }
-
-	if( !QueryServiceConfig(service,config,cbBufSize,&dwBytesNeeded) ) 
-    {
-		CloseServiceHandle(service);
-		CloseServiceHandle(SCManager);
-		return PyWin32Error("QueryServiceConfig");
-    }
-
-	CloseServiceHandle(service);
-	CloseServiceHandle(SCManager);
-
-	return PyInt_FromSize_t(config->dwStartType);
-}
-
-
-/*******************************************************************************
- * Minidump generation
- */
-PyObject *PyMiniDumpWriteDump(PyObject *self, PyObject *args)
-{
-	PyObject *fnO;
-	MINIDUMP_TYPE dt = MiniDumpNormal;
-	if (!PyArg_ParseTuple(args, "O|i:MiniDumpWriteDump", &fnO, &dt))
-		return 0;
-	HMODULE hm = LoadLibrary("DbgHelp.dll");
-	if (!hm)
-		return PyWin32Error("LoadLibrary");
-	PyObject *fnu = PyUnicode_FromObject(fnO);
-	if (!fnu) {
-		FreeLibrary(hm);
-		return 0;
-	}
-	typedef BOOL (WINAPI *MINIDUMPWRITEDUMP)(
-		HANDLE hProcess, DWORD dwPid, HANDLE hFile, MINIDUMP_TYPE DumpType,
-		CONST PMINIDUMP_EXCEPTION_INFORMATION ExceptionParam,
-		CONST PMINIDUMP_USER_STREAM_INFORMATION UserStreamParam,
-		CONST PMINIDUMP_CALLBACK_INFORMATION CallbackParam
-		);
-	MINIDUMPWRITEDUMP dump = (MINIDUMPWRITEDUMP)GetProcAddress(hm, "MiniDumpWriteDump" );
-	if (!dump) {
-		FreeLibrary(hm);
-		return PyWin32Error("GetProcAddress");
-	}
-
-	HANDLE file = CreateFileW(PyUnicode_AS_UNICODE(fnu), GENERIC_READ|GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-	if (file == INVALID_HANDLE_VALUE) {
-		FreeLibrary(hm);
-		return PyWin32Error("CreateFile");
-	}
-
-	BOOL ok = dump(GetCurrentProcess(), GetCurrentProcessId(), file, dt, 0, 0, 0);
-	FreeLibrary(hm);
-	CloseHandle(file);
-	if (!ok)
-		return PyWin32Error("MiniDumpWriteDump");
-	Py_INCREF(Py_None);
-	return Py_None;
-}
-
-
 
 /*******************************************************************************
  * Win32 Error handling
@@ -3362,25 +1736,6 @@ bool DefineConsts(PyObject *m) {
 	I(CSIDL_MYDOCUMENTS);
 	I(CSIDL_MYMUSIC);
 	I(CSIDL_MYVIDEO);
-
-	//processor features, see IsProcessorFeaturePresent()
-	I(PF_3DNOW_INSTRUCTIONS_AVAILABLE);
-	I(PF_COMPARE_EXCHANGE_DOUBLE);
-	I(PF_FLOATING_POINT_EMULATED);
-	I(PF_FLOATING_POINT_PRECISION_ERRATA);
-	I(PF_MMX_INSTRUCTIONS_AVAILABLE);
-	I(PF_PAE_ENABLED);
-	I(PF_RDTSC_INSTRUCTION_AVAILABLE);
-	I(PF_XMMI_INSTRUCTIONS_AVAILABLE);
-	I(PF_XMMI64_INSTRUCTIONS_AVAILABLE);
-
-#if _MSC_VER >= 1400 //following only supported in VC8
-	// I(PF_CHANNELS_ENABLED);
-	// I(PF_COMPARE_EXCHANGE128);
-	// I(PF_COMPARE64_EXCHANGE128);
-	I(PF_NX_ENABLED);
-	// I(PF_SSE3_INSTRUCTIONS_AVAILABLE);
-#endif
 	
 	//for GetVersionInfoEx
 	I(VER_SUITE_BACKOFFICE);
@@ -3429,7 +1784,6 @@ void
 {
 	loader = CCP_NEW("initwin32/loader") SoftLoader;
 	PyObject *win32 = Py_InitModule("blue.win32", methods);
-	Py_InitModule("blue.heapq", heapqmethods);
 	DefineErrors(win32);
 	DefineConsts(win32);
 }

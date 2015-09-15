@@ -17,7 +17,7 @@ Configurations:
       AdditionalDependencies:
       - blue_d.lib
 
-  Release|Win32,x64:
+  Release|Any:
     Link:
       AdditionalDependencies:
       - blue.lib

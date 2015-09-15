@@ -8,7 +8,6 @@
 #include "StdAfx.h"
 
 #include "BlueResFile2.h"
-#include "Stuffer.h"
 #include "BlueFileStream.h"
 #include "BlueRemoteStream.h"
 #include "include/IBlueOS.h"
@@ -21,8 +20,6 @@
 #endif
 #include "Include/BlueFileUtil.h"
 #include "RemoteFileCache.h"
-
-extern Stuffer* BeStuffer;
 
 bool ResFile::FileExists( const wchar_t* filename )
 {
@@ -66,8 +63,8 @@ bool ResFile::OpenW( const wchar_t* filename, bool readOnly )
 	fileStream.CreateInstance();
 	m_stream = fileStream;
 
-	BlueFileStream::OpenMode openMode = readOnly ? BlueFileStream::OM_READONLY : BlueFileStream::OM_READWRITE;
-	return fileStream->Open( filenameOnDisk.c_str(), openMode, BlueFileStream::SM_RWSHARING );
+	CcpOpenMode openMode = readOnly ? CCP_OM_READONLY : CCP_OM_READWRITE;
+	return fileStream->Open( filenameOnDisk.c_str(), openMode, CCP_SM_RWSHARING );
 }
 
 bool ResFile::CreateW( const wchar_t* filename )

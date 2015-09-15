@@ -12,7 +12,6 @@
 #include "include/IBluePaths.h"
 #include "BlueResFileSystemLocal.h"
 #include "BlueResFileSystemRemote.h"
-#include "BlueResFileSystemStuff.h"
 
 BLUE_DECLARE( BluePaths );
 

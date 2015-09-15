@@ -122,9 +122,9 @@ public:
 	};
 	inline PyObject* &Object(Py_ssize_t idx) const;
 	inline char *BitPtr(int &bit, Py_ssize_t bitoffset) const;
-	inline void SetBit(Py_ssize_t bitoffset, bool val=true);
+    void SetBit(Py_ssize_t bitoffset, bool val=true);
 	inline void ClrBit(Py_ssize_t bitoffset) {SetBit(bitoffset, false);}
-	inline bool GetBit(Py_ssize_t bitoffset) const;
+    bool GetBit(Py_ssize_t bitoffset) const;
 
 	//C API
 	//getting and setting integral values from C.  Doesn't support strings or python objects.
@@ -160,19 +160,15 @@ public:
 	//raw Access to the data
 	template<class T>
 	inline bool GetValue(datatypes type, Py_ssize_t dataOffset, T &v);
-	template<class T>
-	inline bool SetValue(datatypes type, Py_ssize_t dataOffset, const T &v);
 
 	
 	//combined access to the data
 	template<class T>
 	bool GetValue(size_t idx, T &val, bool &isNull) const;
-	template<class T>
-	bool SetValue(size_t idx, const T &val, bool isNull);
 
 public:
 	DBRowDescriptor *mRD;
-	__int64 mData[1];
+	int64_t mData[1];
 };
 
 
@@ -192,49 +188,22 @@ inline bool DBRow::GetValue(datatypes type, Py_ssize_t dataOffset, T &val)
 {
 	#define GETIT(TP) val = T(*(TP*)Data(dataOffset)); break;
 	switch (type) {
-	case SI1:	GETIT(signed char);
-	case UI1:	GETIT(unsigned char);
-	case SI2:	GETIT(signed short);
-	case UI2:	GETIT(unsigned short);
-	case SI4:	GETIT(signed long);
-	case UI4:	GETIT(unsigned long);
-	case SI8:	GETIT(signed __int64);
+	case SI1:	GETIT(int8_t);
+	case UI1:	GETIT(uint8_t);
+	case SI2:	GETIT(int16_t);
+	case UI2:	GETIT(uint16_t);
+	case SI4:	GETIT(int32_t);
+	case UI4:	GETIT(uint32_t);
+	case SI8:	GETIT(int64_t);
 	case FILETIME:
-	case UI8:	GETIT(unsigned __int64);
+	case UI8:	GETIT(uint64_t);
 	case R4:	GETIT(float);
 	case R8:	GETIT(double);
 #undef GETIT
 	case CY:
-		val = T(double(*(__int64*)mData) / 10000.0); break;
+		val = T(double(*(int64_t*)mData) / 10000.0); break;
 	case BOOL:
 		val = T(GetBit(dataOffset));
-	default:
-		return false;
-	}
-	return true;
-}
-
-template<class T>
-inline bool DBRow::SetValue(datatypes type, Py_ssize_t dataOffset, const T &val)
-{
-#define SETIT(_T) *(_T*)(Data(dataOffset)) = (T_)val; break;
-	switch (type) {
-	case SI1:	SETIT(signed char);		
-	case UI1:	SETIT(unsigned char);
-	case SI2:	SETIT(signed short);
-	case UI2:	SETIT(unsigned short);
-	case SI4:	SETIT(signed long);
-	case UI4:	SETIT(unsigned long);
-	case SI8:	SETIT(signed __int64);
-	case FILETIME:
-	case UI8:	SETIT(unsigned __int64);
-	case R4:	SETIT(float);
-	case R8:	SETIT(double);
-#undef SETIT
-	case CY:
-		*(_int64*)data = _int64(double(val) * 10000.0); break;
-	case BOOL:
-		SetBit(bitOffset, bool(val));
 	default:
 		return false;
 	}
@@ -253,30 +222,6 @@ bool DBRow::GetValue(size_t i, T &val, bool &isNull) const
 	if (isNull)
 		return true;
 	return GetValue(type, dataOffset, val);
-}
-
-
-template<class T>
-bool DBRow::SetValue(size_t i, const T &val, bool isNull)
-{
-	datatypes type;
-	Py_ssize_t nullOffset;
-	Py_ssize_t dataOffset = GetDataOffset(i, type, nullOffset);
-	if (!dataOffset) return false;
-	if (isNull) {
-		SetBit(nullOffset, false);
-		//clear data if it is a py object
-		switch(type)
-		{
-		case STR:
-		case WSTR:
-		case BYTES:
-			{PyObject **optr = Data(dataOffset);
-			Py_CLEAR(*optr);}
-		}
-		return true;
-	}
-	return SetValue(type, dataOffset, val);
 }
 
 #endif //PYROWSET_H

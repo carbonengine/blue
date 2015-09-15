@@ -175,10 +175,11 @@ PyObject *TaskletTimer::EnterTaskletEx(PyObject *newContext, TASKLETFLAGS flags)
 		}
 
 		Py_DECREF(strifiedName);
-
+#if CCP_TELEMETRY_ENABLED
 		if (canonicalName) {
 			tmTaskletEnter(g_telemetryContext, PyString_AsString(canonicalName));
 		}
+#endif
 	}
 
 	mFlags = flags; //temporary hack to support the IDLE flag
@@ -195,7 +196,11 @@ PyObject *TaskletTimer::EnterTaskletEx(PyObject *newContext, TASKLETFLAGS flags)
 	
 	//intern context (get a standard pointer)
 	if (!mInternator.InternInPlace(&newContext))
-		goto END;
+    {
+        Times now2(mTime);
+        mOverhead += now2-now; //accumulate overhead
+        return res;
+    }
 	mSimpleCtxt = BluePy(newContext, true);
 	
 	Stack *stack = CurrentStack();
@@ -224,8 +229,8 @@ PyObject *TaskletTimer::EnterTaskletEx(PyObject *newContext, TASKLETFLAGS flags)
 	
 	res = of?of->Key():Py_None;
 	Py_INCREF(res);
-END:
-	Times now2(mTime);
+
+    Times now2(mTime);
 	mOverhead += now2-now; //accumulate overhead
 	return res;
 }
@@ -233,11 +238,12 @@ END:
 		
 bool TaskletTimer::ReturnFromTasklet(PyObject *backContext)
 {
+#if CCP_TELEMETRY_ENABLED
 	if (mDoTelemetry)
 	{
 		tmTaskletLeave( g_telemetryContext );
 	}
-
+#endif
 	// Temporary hack to support IDLE
 	if (mFlags) {
 		TimesliceReset();
@@ -261,11 +267,19 @@ bool TaskletTimer::ReturnFromTasklet(PyObject *backContext)
 	Times elapsed = Mark(now);
 	Stack *stack = CurrentStack();
 	if (!stack)
-		goto END;
+    {
+        Times now2(mTime);
+        mOverhead += now2-now; //accumulate overhead
+        return true;
+    }
 
 	Frame *of = stack->CurrentFrame();
 	if (!of)
-		goto END; //no frame to return to
+    {
+        Times now2(mTime);
+        mOverhead += now2-now; //accumulate overhead
+        return true;
+    }
 		
 	of->mTimes += elapsed;
 	Be::Time realElapsed = now.mHires - stack->EntryTime();
@@ -280,14 +294,14 @@ bool TaskletTimer::ReturnFromTasklet(PyObject *backContext)
 	int id = stack->CurrentFrame() ? stack->CurrentFrame()->Id() : -1;
 	
 	PyCCP_MemSetContext(id);
-END:
-	Times now2(mTime);
+
+    Times now2(mTime);
 	mOverhead += now2-now; //accumulate overhead
 	return true;
 }
 
 
-PyObject * TaskletTimer::SwitchStack(INT_PTR contextID)
+PyObject * TaskletTimer::SwitchStack(intptr_t contextID)
 {
 	if (!mActive) {
 		//timer is not enabled.
@@ -500,12 +514,14 @@ bool TaskletTimer::Reset()
 	mMaxWarn.Clear();
 	
 	//Get the thread times.
+#if !PORTING_TO_LINUX
 	FILETIME dummy;
 	GetThreadTimes(GetCurrentThread(), &dummy, &dummy, (FILETIME*)&mResetKTime, (FILETIME*)&mResetUTime);
 	GetProcessTimes(GetCurrentProcess(), &dummy, &dummy, (FILETIME*)&mResetKTimeP, (FILETIME*)&mResetUTimeP);
 	ULARGE_INTEGER filetime;
 	GetSystemTimeAsFileTime((LPFILETIME)&filetime);
 	mResetTime = filetime.QuadPart;
+#endif
 	//And the timestamp for benchmarking
 	mLastTime = now;
 
@@ -611,13 +627,13 @@ PyObject *TaskletTimer::PyGetTasklets(PyObject* args)
 		return 0;
 
 	MarkCurrent(); //make current context's time up-to-date
-	stdext::hash_map<Frame *, BluePy> reuse;
+	std::unordered_map<Frame *, BluePy> reuse;
 	BluePyList res(0);
 	for(std::vector<Frame*>::iterator i = leaves.begin(); i != leaves.end(); ++i) {
 		BluePyList chain(0);
 		Frame *f = *i;
 		while(f) {
-			stdext::hash_map<Frame *, BluePy>::iterator where = reuse.find(f);
+			std::unordered_map<Frame *, BluePy>::iterator where = reuse.find(f);
 			if (where != reuse.end()) {
 				chain.Append(where->second);
 			} else {
@@ -636,6 +652,9 @@ PyObject *TaskletTimer::PyGetTasklets(PyObject* args)
 
 PyObject *TaskletTimer::PyGetThreadTimes(PyObject* args)
 {
+#if PORTING_TO_LINUX
+    return nullptr;
+#else
 	if (!PyArg_UnpackTuple(args, "GetThreadTimes", 0, 0))
 		return 0;
 	Be::Time creat, kernel, user;
@@ -652,11 +671,15 @@ PyObject *TaskletTimer::PyGetThreadTimes(PyObject* args)
 	r.Set("timerFreq", BluePy(PyLong_FromLongLong(mTime.GetUnitsPerSecond())));
 	r.Set("BlueOSTickCountAtStart", BluePy(PyLong_FromLong(m_BlueOSPumpCountAtStart)));
 	return r.Detach();
+#endif
 }
 
 
 PyObject *TaskletTimer::PyGetProcessTimes(PyObject* args)
 {
+#if PORTING_TO_LINUX
+    return nullptr;
+#else
 	if (!PyArg_UnpackTuple(args, "GetProcessTimes", 0, 0))
 		return 0;
 	Be::Time creat, kernel, user;
@@ -672,6 +695,7 @@ PyObject *TaskletTimer::PyGetProcessTimes(PyObject* args)
 	r.Set("cpu", BluePy(PyLong_FromLongLong(user-mResetUTimeP + kernel-mResetKTimeP)));
 	r.Set("timerFreq", BluePy(PyLong_FromLongLong(mTime.GetUnitsPerSecond())));
 	return r.Detach();
+#endif
 }
 
 PyObject *TaskletTimer::PyGetOverhead(PyObject *args)

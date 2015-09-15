@@ -48,6 +48,9 @@ bool VerifyManifestFile(int &failType, std::wstring &errmsg, bool pyerr, directi
 //special extra function to provide a workaround for cryptoapi deficiancy for win2000 and lower
 BOOL WINAPI CryptGenPrivateExponentOneKey(
 		HCRYPTPROV hProv, ALG_ID Algid, DWORD flags, HCRYPTKEY *phKey);
+#else
+
+typedef std::vector<std::wstring> directives_t;
 
 #endif // _WIN32
 

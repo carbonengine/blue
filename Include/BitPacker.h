@@ -942,7 +942,7 @@ bool BitPackerCore::Unpack( wchar_t *string, unsigned int *len, unsigned int max
 		*len = tlen;
 	}
 		
-	return (tlen != (size_t)-1) && Valid();
+	return (tlen != (unsigned int)-1) && Valid();
 }
 
 //------------------------------------------------------------------------------

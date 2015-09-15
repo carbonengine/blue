@@ -46,9 +46,9 @@ MemoryTracker::MemoryTracker( IRoot* lockobj /*= NULL */ ) :
 	m_customHeap1( NULL ),
 	m_customHeap2( NULL ),
 	m_customHeap3( NULL ),
+#endif
 	m_lastLoggedWorkingSet( 0 ),
 	m_lastLoggedPageFileUsage( 0 ),
-#endif
 #if CCP_STACKLESS
 	m_lastLoggedPython( 0 ),
 #endif
@@ -77,18 +77,9 @@ void MemoryTracker::Update()
 	auto mallocMemory = CCPMallocUsage();
 	CCP_STATS_SET( beMemory, mallocMemory );
 
-#ifdef _WIN32
 	size_t workingSetMemory = 0;
 	size_t pageFileMemory = 0;
-	PROCESS_MEMORY_COUNTERS mc;
-	if( GetProcessMemoryInfo( GetCurrentProcess(), &mc, sizeof(mc)) )
-	{
-		workingSetMemory = mc.WorkingSetSize;
-		pageFileMemory = mc.PagefileUsage;
-		CCP_STATS_SET( workingSetSize, mc.WorkingSetSize );
-		CCP_STATS_SET( pageFileUsage, mc.PagefileUsage );
-	}
-#endif
+    CcpGetProcessMemoryInfo( workingSetMemory, pageFileMemory );
 
 #if CCP_STACKLESS
 	auto pythonMemory = PySys_GetPyMalloced();
@@ -244,14 +235,15 @@ void MemoryTracker::SummaryReport( const char* filename )
 #endif
 	PrintFieldToFile( file, "CCP Malloc usage", CCPMallocUsage() );
 
+    size_t workingSetMemory = 0;
+    size_t pageFileMemory = 0;
+    if( CcpGetProcessMemoryInfo( workingSetMemory, pageFileMemory ) )
+    {
+        PrintFieldToFile( file, "Working set size", workingSetMemory );
+        PrintFieldToFile( file, "Page file usage", pageFileMemory );
+    }
+    
 #ifdef _WIN32
-	PROCESS_MEMORY_COUNTERS mc;
-	if( GetProcessMemoryInfo( GetCurrentProcess(), &mc, sizeof(mc)) )
-	{
-		PrintFieldToFile( file, "Working set size", mc.WorkingSetSize );
-		PrintFieldToFile( file, "Page file usage", mc.PagefileUsage );
-	}
-
 	if( g_isMemoryTrackingEnabled )
 	{
 		size_t processHeapSize = 0;

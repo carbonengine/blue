@@ -88,7 +88,7 @@ typedef uint32_t HTELEMETRY;
 #endif
 
 
-#if CCP_STACKLESS
+#if CCP_STACKLESS && CCP_TELEMETRY_ENABLED
 
 #include "CcpUtils/PyCpp.h"
 

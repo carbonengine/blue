@@ -35,6 +35,111 @@ bool MarshalInit(PyObject *module);
 
 struct ReadStream;
 
+//--------------------------------------------------------------------
+// Python builtin types
+//
+// Fundamental types:
+//		<type 'NoneType'>
+//		<type 'type'>
+//
+// Numerical types:
+//		<type 'int'>
+//		<type 'long'>
+//		<type 'float'>
+//		<type 'complex'>
+//
+// Sequence objects:
+//		<type 'str'>
+//		<type 'unicode'>
+//		<type 'buffer'>
+//		<type 'tuple'>
+//		<type 'list'>
+//
+// Mapping objects:
+//		<type 'dict'>
+//
+// Other objects:
+//		<type 'instance'>
+//		<type 'class'> ? need to support this, perhaps not
+enum PYTYPES
+{
+    TY_INVALID = 0,
+    TY_SIGNATURE = 126,	// marks beginning of marshal format
+    TY_SIGNATURE2 = 125,  // new marker, followed by a version char
+    
+    TY_NONE = 1,
+    TY_GLOBAL = 2,	//A global object by name
+    
+    TY_INT64 = 3,
+    TY_INT32 = 4,
+    TY_INT16 = 5,
+    TY_INT8 = 6,
+    TY_INT_N1 = 7,
+    TY_INT_0 = 8,
+    TY_INT_1 = 9,
+    
+    TY_FLOAT = 10,
+    TY_FLOAT_0 = 11,
+    
+    TY_COMPLEX = 12,
+    
+    TY_STR = 13,
+    TY_STR_EMPTY = 14,
+    TY_STR_CHAR = 15,
+    TY_STR_SHORT = 16,
+    TY_STR_TABLE = 17,
+    TY_UNICODE = 18,
+    
+    TY_BUFFER = 19,
+    TY_TUPLE = 20,
+    TY_LIST = 21,
+    
+    TY_DICT = 22,
+    
+    TY_INSTANCE = 23,
+    // TY_BLUEWRAPPER		= 24, // Deprecated
+    TY_CALLBACK = 25,	// callback method specific
+    
+    TY_PICKLE = 26,	// fallback.  Deprecated, backwards compatibility only.
+    
+    // reference pointers
+    TY_REFERENCE = 27,
+    
+    // packet format and flags
+    TY_CRC_CHECK = 28,
+    //TY_COMPRESSED  		= 29,   //unused
+    
+    TY_TRUE = 31,	//these two are so common, they deserve their own thing
+    TY_FALSE = 32,
+    
+    TY_PICKLER = 33,	//new style pickle, use a single pickler for the whole stream
+    TY_REDUCE = 34,	//__reduce__ protocol
+    TY_NEWOBJ = 35,	//the newobj special case of __reduce__ protocol 2
+    
+    TY_TUPLE0 = 36,	//an empty tuple
+    TY_TUPLE1 = 37,	//a tuple of one item
+    TY_LIST0 = 38,	//an empty list
+    TY_LIST1 = 39,	//a list of one item
+    
+    TY_UNICODE_0 = 40,	//empty unicode string
+    TY_UNICODE_1 = 41,	//single unicode char
+    
+    TY_DBROW = 42,	//a custom marshaled DBROW
+    TY_WSTREAM = 43,	//the marshallers own WriteStream
+    
+    TY_TUPLE2 = 44,	//a two-tuple, surprisingly common
+    TY_MARK = 45,	//a marker for dynamic lists and other dynamic forms
+    
+    TY_UTF8 = 46,	//unicode as utf-8
+    
+    TY_LONG = 47,	//a proper long
+    
+    // flags and masks
+    TY_SHAREDFLAG = 0x40, //64.  don't go above that
+    TY_TYPEMASK = 0x3F	// type id's are from 1 to 63
+};
+
+
 class Marshal :
 	public PyXObject<Marshal>
 {
@@ -288,7 +393,7 @@ public:
 	}
 
 	inline bool WriteType(PYTYPES type);
-	inline bool WriteBuff(const void* buff, size_t size);
+    bool WriteBuff(const void* buff, size_t size);
 	inline bool WriteBuffWoSize(const void* buff, size_t size);
 	inline bool WriteInteger(int i);
 	
@@ -393,7 +498,7 @@ struct ReadStream :
 		mPos -= s;
 	}
 
-	inline bool CheckSpace(int n, size_t esize);
+    bool CheckSpace(int n, size_t esize);
 	inline bool CheckSpace(int nbytes) { return CheckSpace(nbytes, 1);}
 	inline bool CheckSpace(size_t esize) {return CheckSpace(1, esize);}
 
@@ -423,7 +528,7 @@ struct ReadStream :
 
 	inline bool ReadType(PYTYPES &t);
 	inline bool PeekType(PYTYPES &t);
-	inline bool ReadInteger(int &r);
+    bool ReadInteger(int &r);
 	//corresponds to WriteStream::WriteBuffWoSize
 	inline bool GetBuffWoSize(const char * &b, int s) {return GetBuffer(b, s);}
 	inline bool ReadBuffWoSize(char *b, int s) {

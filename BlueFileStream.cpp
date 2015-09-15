@@ -12,17 +12,6 @@
 #include "BlueResManBackgroundCall.h"
 #include "include/IBlueOS.h"
 
-#ifdef _WIN32
-#include <io.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <share.h>
-#elif !defined( __ORBIS__ )
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#endif
-
 #if CCP_STACKLESS
 #include "CcpUtils/PyCpp.h"
 #define STACKLESS_ALLOWTHREADS() Ccp::PyAllowThreads allowThreads( true )
@@ -71,243 +60,6 @@ namespace
 	};
 #endif
 
-#ifdef _WIN32
-
-	int ConvertShareMode( BlueFileStream::ShareMode shareMode )
-	{
-		int shflag = 0;
-
-		switch( shareMode )
-		{
-		case BlueFileStream::SM_NOSHARING:
-			shflag = _SH_DENYRW;
-			break;
-
-		case BlueFileStream::SM_READSHARING:
-			shflag = _SH_DENYWR;
-			break;
-
-		case BlueFileStream::SM_RWSHARING:
-			shflag = _SH_DENYNO;
-			break;
-		}
-
-		return shflag;
-	}
-
-
-	int ConvertOpenMode( BlueFileStream::OpenMode mode )
-	{
-		int oflag = 0;
-
-		switch( mode )
-		{
-		case BlueFileStream::OM_READONLY:
-			oflag = _O_RDONLY;
-			break;
-
-		case BlueFileStream::OM_READWRITE:
-			oflag = _O_CREAT | _O_RDWR;
-			break;
-		}
-
-		return oflag;
-	}
-
-	int OpenFile( const wchar_t* filename, BlueFileStream::OpenMode mode, BlueFileStream::ShareMode shareMode  )
-	{
-		int oflag = ConvertOpenMode( mode );
-		int shflag = ConvertShareMode( shareMode );
-
-		int fd;
-		errno_t error = _wsopen_s( &fd, filename, oflag | _O_BINARY, shflag, _S_IREAD | _S_IWRITE );
-
-		return fd;
-	}
-
-	int CreateFile( const wchar_t* filename, BlueFileStream::ShareMode shareMode )
-	{
-		int fd;
-
-		int shflag = ConvertShareMode( shareMode );
-		errno_t error = _wsopen_s( &fd, filename, _O_CREAT| _O_TRUNC | O_RDWR | _O_BINARY, shflag, _S_IREAD | _S_IWRITE );
-
-		return fd;
-	}
-
-	void CloseFile( int fd )
-	{
-		_close( fd );
-	}
-
-	ssize_t ReadFromFile( int fd, void* buf, size_t numBytes )
-	{
-		return _read( fd, buf, (unsigned int)numBytes );
-	}
-
-	ssize_t WriteToFile( int fd, const void* buf, size_t numBytes )
-	{
-		return _write( fd, buf, (unsigned int)numBytes );
-	}
-
-	off_t Lseek( int fd, off_t offset, int whence )
-	{
-		return _lseek( fd, offset, whence );
-	}
-
-	off_t Tell( int fd )
-	{
-		return _tell( fd );
-	}
-
-#elif defined( __ORBIS__ )
-
-	int OpenFile( BlueFileStream::OpenMode mode, const wchar_t* filename )
-	{
-		int oflag;
-		if( mode == BlueFileStream::OM_READONLY )
-		{
-			oflag = SCE_KERNEL_O_RDONLY;
-		}
-		else
-		{
-			oflag = SCE_KERNEL_O_RDWR | SCE_KERNEL_O_CREAT | SCE_KERNEL_O_TRUNC;
-		}
-
-		std::string filenameA;
-		filenameA = CW2A( filename );
-		int fd = sceKernelOpen( filenameA.c_str(), oflag, SCE_KERNEL_S_IRWU );
-
-		return fd;
-	}
-
-	int CreateFile( const wchar_t* filename )
-	{
-		std::string filenameA;
-		filenameA = CW2A( filename );
-		int fd = sceKernelOpen( filenameA.c_str(), SCE_KERNEL_O_CREAT| SCE_KERNEL_O_TRUNC | SCE_KERNEL_O_RDWR, SCE_KERNEL_S_IRWU );
-
-		return fd;
-	}
-
-	void CloseFile( int fd )
-	{
-		sceKernelClose( fd );
-	}
-
-	ssize_t ReadFromFile( int fd, void* buf, size_t numBytes )
-	{
-		return sceKernelRead( fd, buf, numBytes );
-	}
-
-	ssize_t WriteToFile( int fd, const void* buf, size_t numBytes )
-	{
-		return sceKernelWrite( fd, buf, numBytes );
-	}
-
-	off_t Lseek( int fd, off_t offset, int whence )
-	{
-		return sceKernelLseek( fd, offset, whence );
-	}
-
-	off_t Tell( int fd )
-	{
-		return sceKernelLseek( fd, 0, SCE_KERNEL_SEEK_CUR );
-	}
-
-	int ConvertShareMode( BlueFileStream::ShareMode shareMode, int shflag );
-
-#else
-	int ConvertShareMode( BlueFileStream::ShareMode shareMode )
-	{
-		int shflag = 0;
-#ifndef __ANDROID__
-		switch( shareMode )
-		{
-		case BlueFileStream::SM_NOSHARING:
-			shflag = O_EXLOCK;
-			break;
-
-		case BlueFileStream::SM_READSHARING:
-			shflag = O_SHLOCK;
-			break;
-
-		case BlueFileStream::SM_RWSHARING:
-			shflag = 0;
-			break;
-		}
-#endif
-		return shflag;
-	}
-
-	int ConvertOpenMode( BlueFileStream::OpenMode mode )
-	{
-		int oflag = 0;
-
-		switch( mode )
-		{
-		case BlueFileStream::OM_READONLY:
-			oflag = O_RDONLY;
-			break;
-
-		case BlueFileStream::OM_READWRITE:
-			oflag = O_CREAT | O_RDWR;
-			break;
-		}
-
-		return oflag;
-	}
-
-
-	int OpenFile( const wchar_t* filename, BlueFileStream::OpenMode mode, BlueFileStream::ShareMode shareMode )
-	{
-		int oflag = ConvertOpenMode( mode );
-		int shflag = ConvertShareMode( shareMode );
-		int fd = open( CW2A( filename ), oflag | shflag, S_IRUSR | S_IWUSR );
-        
-		return fd;
-	}
-    
-	int CreateFile( const wchar_t* filename )
-	{
-		int fd = open( CW2A( filename ), O_CREAT| O_TRUNC | O_RDWR, S_IRUSR | S_IWUSR );
-        
-		return fd;
-	}
-    
-	int CreateFile( const wchar_t* filename, BlueFileStream::ShareMode shareMode )
-	{
-		int shflag = ConvertShareMode( shareMode );
-		int fd = open( CW2A( filename ), O_CREAT| O_TRUNC | O_RDWR | shflag, S_IRUSR | S_IWUSR );
-        
-		return fd;
-	}
-    
-	void CloseFile( int fd )
-	{
-		close( fd );
-	}
-    
-	ssize_t ReadFromFile( int fd, void* buf, size_t numBytes )
-	{
-		return read( fd, buf, (unsigned int)numBytes );
-	}
-    
-	ssize_t WriteToFile( int fd, const void* buf, size_t numBytes )
-	{
-		return write( fd, buf, (unsigned int)numBytes );
-	}
-    
-	off_t Lseek( int fd, off_t offset, int whence )
-	{
-		return lseek( fd, offset, whence );
-	}
-    
-	off_t Tell( int fd )
-	{
-		return lseek( fd, 0, SEEK_CUR );
-	}
-#endif
 }
 
 BlueFileStream::BlueFileStream() :
@@ -327,13 +79,13 @@ BlueFileStream::~BlueFileStream()
 	Close();
 }
 
-bool BlueFileStream::Open( const wchar_t* filename, OpenMode mode, ShareMode shareMode )
+bool BlueFileStream::Open( const wchar_t* filename, CcpOpenMode mode, CcpShareMode shareMode )
 {
 	STACKLESS_ALLOWTHREADS();
 
 	ScopedThreadStatus threadStatus( IBlueThreadMonitor::BTS_LOADING );
 
-	m_fileDescriptor = OpenFile( filename, mode, shareMode );
+	m_fileDescriptor = CcpOpenFile( filename, mode, shareMode );
 
 	if( m_fileDescriptor == INVALID_FILE )
 	{
@@ -347,7 +99,7 @@ bool BlueFileStream::Create( const wchar_t* filename )
 {
 	STACKLESS_ALLOWTHREADS();
 
-	m_fileDescriptor = CreateFile( filename, SM_NOSHARING );
+	m_fileDescriptor = CcpCreateFile( filename, CCP_SM_NOSHARING );
 
 	if( m_fileDescriptor == INVALID_FILE )
 	{
@@ -362,7 +114,7 @@ void BlueFileStream::Close()
 {
 	if( m_fileDescriptor != INVALID_FILE )
 	{
-		CloseFile( m_fileDescriptor );
+		CcpCloseFile( m_fileDescriptor );
 	}
 
 	m_fileDescriptor = INVALID_FILE;
@@ -383,7 +135,7 @@ ptrdiff_t BlueFileStream::Read( void* dest, ptrdiff_t count )
 	}
 
 	ssize_t bytesRead;
-	bytesRead = ReadFromFile( m_fileDescriptor, dest, count );
+	bytesRead = CcpReadFromFile( m_fileDescriptor, dest, count );
 
 	if( bytesRead == -1 )
 	{
@@ -409,7 +161,7 @@ ptrdiff_t BlueFileStream::Write( const void* source, size_t count )
 	STACKLESS_ALLOWTHREADS();
 
 	ssize_t wrote;
-	wrote = WriteToFile( m_fileDescriptor, source, count );
+	wrote = CcpWriteToFile( m_fileDescriptor, source, count );
 
 	if( wrote == -1 )
 	{
@@ -425,7 +177,7 @@ ptrdiff_t BlueFileStream::Seek( ptrdiff_t distance, SeekOrigin method )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	if( Lseek( m_fileDescriptor, (long)distance, method ) )
+	if( CcpLseek( m_fileDescriptor, (long)distance, method ) )
 	{
 		return false;
 	}
@@ -435,7 +187,7 @@ ptrdiff_t BlueFileStream::Seek( ptrdiff_t distance, SeekOrigin method )
 
 ptrdiff_t BlueFileStream::GetPosition()
 {
-	long pos = Tell( m_fileDescriptor );
+	long pos = CcpTell( m_fileDescriptor );
 	return pos;
 }
 
@@ -448,14 +200,14 @@ ptrdiff_t BlueFileStream::GetSize()
 		return -1;
 	}
 
-	long curPos = Tell( m_fileDescriptor );
-	if( Lseek( m_fileDescriptor, 0, SEEK_END ) == -1 )
+	long curPos = CcpTell( m_fileDescriptor );
+	if( CcpLseek( m_fileDescriptor, 0, SEEK_END ) == -1 )
 	{
 		BeOS->SetError( BEDEF, Clsid(), "Couldn't get file size" );
 		return -1;
 	}
-	long size = Tell( m_fileDescriptor );
-	if( Lseek( m_fileDescriptor, curPos, SEEK_SET ) == -1 )
+	long size = CcpTell( m_fileDescriptor );
+	if( CcpLseek( m_fileDescriptor, curPos, SEEK_SET ) == -1 )
 	{
 		BeOS->SetError( BEDEF, Clsid(), "Couldn't get file size" );
 		return -1;
@@ -524,7 +276,7 @@ Be::Result<std::string> BlueFileStream::ReadEntireFile( const wchar_t* filename,
 
 	STACKLESS_ALLOWTHREADS();
 
-	m_fileDescriptor = OpenFile( filename, OM_READONLY, SM_READSHARING );
+	m_fileDescriptor = CcpOpenFile( filename, CCP_OM_READONLY, CCP_SM_READSHARING );
 
 	if( m_fileDescriptor == INVALID_FILE )
 	{

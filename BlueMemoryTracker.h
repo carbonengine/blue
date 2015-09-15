@@ -39,10 +39,10 @@ private:
 	intptr_t m_customHeap1;
 	intptr_t m_customHeap2;
 	intptr_t m_customHeap3;
+#endif
 
 	int64_t m_lastLoggedWorkingSet;
 	int64_t m_lastLoggedPageFileUsage;
-#endif
 
 	bool m_isFullCapture;
 	int64_t m_loggingThreshold;
