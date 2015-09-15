@@ -26,6 +26,9 @@
     <ClInclude Include="BlueFileStream.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="BlueHeapq.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
     <ClInclude Include="bluekey.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -77,9 +80,6 @@
     <ClInclude Include="BlueResFileSystemRemote.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="BlueResFileSystemStuff.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="BlueResMan.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -89,7 +89,7 @@
     <ClInclude Include="BlueSocketLogger.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="BlueStuffFileStream.h">
+    <ClInclude Include="BlueSysInfo.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="BlueTestHelpers.h">
@@ -114,9 +114,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="DictReader.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="EmbedFs.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="FileLogger.h">
@@ -186,9 +183,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="StdAfx.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Stuffer.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Synchro.h">
@@ -371,6 +365,9 @@
     <ClCompile Include="BlueFileUtil.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="BlueHeapq.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="BlueLogInMemory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -464,12 +461,6 @@
     <ClCompile Include="BlueResFileSystemRemote_Blue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="BlueResFileSystemStuff.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BlueResFileSystemStuff_Blue.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="BlueResMan.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -491,10 +482,10 @@
     <ClCompile Include="BlueStreamMethods.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="BlueStuffFileStream.cpp">
+    <ClCompile Include="BlueSysInfo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="BlueStuffFileStream_Blue.cpp">
+    <ClCompile Include="BlueSysInfo_Blue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="BlueTestHelpers.cpp">
@@ -537,9 +528,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DictReader_Blue.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="EmbedFs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="FileLogger.cpp">
@@ -630,9 +618,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="StdAfx.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Stuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Synchro.cpp">
