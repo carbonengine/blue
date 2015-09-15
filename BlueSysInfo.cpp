@@ -76,7 +76,7 @@ std::wstring BlueSysInfo::GetSharedApplicationDataDirectory() const
 std::wstring BlueSysInfo::GetUserApplicationDataDirectory() const
 {
     wchar_t path[MAX_PATH];
-    if( SUCCEEDED( SHGetFolderPathW( NULL, CSIDL_APPDATA, NULL, SHGFP_TYPE_CURRENT, path ) ) )
+    if( SUCCEEDED( SHGetFolderPathW( NULL, CSIDL_LOCAL_APPDATA, NULL, SHGFP_TYPE_CURRENT, path ) ) )
     {
         return path;
     }
