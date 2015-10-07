@@ -365,18 +365,18 @@ void LogToSocketLogger( CcpLogChannel_t& logObject, CCP::LogType type, unsigned 
 #endif
 
 	auto length = strlen( message );
-	for( size_t i = 0; i < length; i += TextMessage::TEXT_SIZE )
+	for( size_t i = 0; i < length; i += TextMessage::TEXT_SIZE - 1 )
 	{
 		auto msg = s_logger->CreateMessage();
 
 		msg->text.timestamp = t;
 		if( i )
 		{
-			msg->type = i + TextMessage::TEXT_SIZE < length ? CONTINUATION : CONTINUATION_END;
+			msg->type = i + TextMessage::TEXT_SIZE - 1 < length ? CONTINUATION : CONTINUATION_END;
 		}
 		else
 		{
-			msg->type = length > TextMessage::TEXT_SIZE ? LARGE_MESSAGE : MESSAGE;
+			msg->type = length > TextMessage::TEXT_SIZE - 1 ? LARGE_MESSAGE : MESSAGE;
 		}
 		msg->text.severity = type;
 		strncpy_s( msg->text.module, logObject.facility, sizeof( msg->text.module ) - 1 );
