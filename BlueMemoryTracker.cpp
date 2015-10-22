@@ -80,6 +80,8 @@ void MemoryTracker::Update()
 	size_t workingSetMemory = 0;
 	size_t pageFileMemory = 0;
     CcpGetProcessMemoryInfo( workingSetMemory, pageFileMemory );
+	CCP_STATS_SET( workingSetSize, workingSetMemory );
+	CCP_STATS_SET( pageFileUsage, pageFileMemory );
 
 #if CCP_STACKLESS
 	auto pythonMemory = PySys_GetPyMalloced();
