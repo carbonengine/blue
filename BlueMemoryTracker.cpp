@@ -21,9 +21,9 @@ CCP_STATS_DECLARE( trackedAllocationsSize,		"Blue/Memory/trackedAllocationsSize"
 CCP_STATS_DECLARE( pyMemory,					"Blue/Memory/Python", false, CST_MEMORY, "The amount of memory allocated for Python" );
 #endif
 
-#ifdef _WIN32
 CCP_STATS_DECLARE( workingSetSize,				"Blue/Memory/WorkingSet", false, CST_MEMORY, "The working set size as reported by the OS" );
 CCP_STATS_DECLARE( pageFileUsage,				"Blue/Memory/PageFileUsage", false, CST_MEMORY, "Page file usage as reported by the OS" );
+#ifdef _WIN32
 CCP_STATS_DECLARE( processHeap,					"Blue/Memory/ProcessHeap", false, CST_MEMORY, "The amount of memory allocated in the process heap" );
 CCP_STATS_DECLARE( crtHeap,						"Blue/Memory/CrtHeap", false, CST_MEMORY, "The amount of memory allocated in the crt heap" );
 CCP_STATS_DECLARE( crtHeapUnaccounted,			"Blue/Memory/CrtHeapUnaccounted", false, CST_MEMORY, "The amount of memory allocated in the crt heap that is not accounted for" );
