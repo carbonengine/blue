@@ -543,8 +543,6 @@ void BlueModuleStartup()
 #endif
 }
 
-#if !CCP_STACKLESS
-
 #if BLUE_WITH_PYTHON
 
 namespace
@@ -673,6 +671,4 @@ extern "C" int DLLEXPORT luaopen_blue( lua_State* ls )
 
 	return 1;
 }
-#endif
-
 #endif
