@@ -202,9 +202,9 @@ namespace CCP
 		FileLogMessage* msg = s_fileLogMessageBuffer->Enque();
 
 		// copy into the file message
-		strcpy_s( msg->object, 32, logObject.object );
-		strcpy_s( msg->facility, 32, logObject.facility );
-		strcpy_s( msg->message, MAX_MESSAGE_SIZE, message );
+		strncpy_s( msg->object, 32, logObject.object, _TRUNCATE );
+		strncpy_s( msg->facility, 32, logObject.facility, _TRUNCATE );
+		strncpy_s( msg->message, MAX_MESSAGE_SIZE, message, _TRUNCATE ); 
 
 		#ifdef _WIN32
 		GetSystemTime(&msg->systemtime);
