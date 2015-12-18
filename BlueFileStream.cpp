@@ -318,7 +318,7 @@ Be::Result<std::string> BlueFileStream::ReadEntireFileWithYield( const wchar_t* 
 	{
 		result = reader->GetResult();
 
-		if( Be::IsSuccess( result ) )
+		if( BeIsSuccess( result ) )
 		{
 			contents = reader->GetContents();
 		}

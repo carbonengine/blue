@@ -22,10 +22,10 @@ public:
 	BlueNetworkStream();
 	~BlueNetworkStream();
 
-	Be::BlueStdResult Open( const char* url );
+	BlueStdResult Open( const char* url );
 	void Close();
-	Be::BlueStdResult ReadData( Be::Optional<size_t> size, std::string& contents );
-	Be::BlueStdResult Tell( ptrdiff_t& position );
+	BlueStdResult ReadData( Be::Optional<size_t> size, std::string& contents );
+	BlueStdResult Tell( ptrdiff_t& position );
 
 	/////////////////////////////////////////
 	// IBlueStream interface

@@ -36,7 +36,7 @@
 
 #undef _BLUE_H_INCLUDING
 
-void BlueModuleStartup();
+BLUEIMPORT void BlueModuleStartup();
 BLUEIMPORT void BlueInitializeSocketLogger();
 
 #endif

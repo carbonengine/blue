@@ -122,7 +122,7 @@ Be::Result<std::string> RemoteFileCache::GetStreamFromPathW( const wchar_t* resP
 			checksum = info.checksum;
 		}
 		auto result = CreateFileStreamForCachedFile( cachedName, checksum, stream );
-		if( Be::IsSuccess( result ) )
+		if( BeIsSuccess( result ) )
 		{
 			return result;
 		}

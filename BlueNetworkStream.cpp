@@ -32,7 +32,7 @@ BlueNetworkStream::~BlueNetworkStream()
 	Close();
 }
 
-Be::BlueStdResult BlueNetworkStream::Open( const char* url )
+BlueStdResult BlueNetworkStream::Open( const char* url )
 {
 	Close();
 	m_state = OPENED;
@@ -43,7 +43,7 @@ Be::BlueStdResult BlueNetworkStream::Open( const char* url )
 		this, 
 		0, 
 		&m_backgroundCallId );
-	return Be::BlueStdResult( Be::BLUE_STD_RESULT_OK );
+	return BlueStdResult( BLUE_STD_RESULT_OK );
 }
 
 void BlueNetworkStream::Close()
@@ -142,27 +142,27 @@ bool BlueNetworkStream::UnlockData()
 	return false;
 }
 
-Be::BlueStdResult BlueNetworkStream::ReadData( Be::Optional<size_t> size, std::string& contents )
+BlueStdResult BlueNetworkStream::ReadData( Be::Optional<size_t> size, std::string& contents )
 {
 	if( m_state == UNINITIALIZED )
 	{
-		return Be::BlueStdResult( Be::BLUE_STD_RESULT_VALUE_ERROR, "I/O operation on closed file" );
+		return BlueStdResult( BLUE_STD_RESULT_VALUE_ERROR, "I/O operation on closed file" );
 	}
 	if( size.IsAssigned() )
 	{
 		if( size == 0 )
 		{
 			contents.clear();
-			return Be::BlueStdResult( Be::BLUE_STD_RESULT_OK );
+			return BlueStdResult( BLUE_STD_RESULT_OK );
 		}
 		CcpMallocBuffer data( "BlueHttpStream::ReadData", size );
 		auto readSize = Read( data.get(), size );
 		if( m_transferResult != CURLE_OK )
 		{
-			return Be::BlueStdResult( Be::BLUE_STD_RESULT_IO_ERROR );
+			return BlueStdResult( BLUE_STD_RESULT_IO_ERROR );
 		}
 		contents.assign( data.get(), readSize );
-		return Be::BlueStdResult( Be::BLUE_STD_RESULT_OK );
+		return BlueStdResult( BLUE_STD_RESULT_OK );
 	}
 	else
 	{
@@ -179,20 +179,20 @@ Be::BlueStdResult BlueNetworkStream::ReadData( Be::Optional<size_t> size, std::s
 		}
 		if( m_transferResult != CURLE_OK )
 		{
-			return Be::BlueStdResult( Be::BLUE_STD_RESULT_IO_ERROR );
+			return BlueStdResult( BLUE_STD_RESULT_IO_ERROR );
 		}
-		return Be::BlueStdResult( Be::BLUE_STD_RESULT_OK );
+		return BlueStdResult( BLUE_STD_RESULT_OK );
 	}
 }
 
-Be::BlueStdResult BlueNetworkStream::Tell( ptrdiff_t& position )
+BlueStdResult BlueNetworkStream::Tell( ptrdiff_t& position )
 {
 	if( m_state == UNINITIALIZED )
 	{
-		return Be::BlueStdResult( Be::BLUE_STD_RESULT_VALUE_ERROR, "I/O operation on closed file" );
+		return BlueStdResult( BLUE_STD_RESULT_VALUE_ERROR, "I/O operation on closed file" );
 	}
 	position = GetPosition();
-	return Be::BlueStdResult( Be::BLUE_STD_RESULT_OK );
+	return BlueStdResult( BLUE_STD_RESULT_OK );
 }
 
 void BlueNetworkStream::PerformTransfer()

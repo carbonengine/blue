@@ -289,7 +289,7 @@ Be::Result<std::string> BluePaths::GetFileContentsWithYield( const std::wstring&
 	BackgroundReader* backgroundReader = CCP_NEW( "GetFileContents/reader" ) BackgroundReader( path );
 	if( BlueResManBackgroundCall::Issue( backgroundReader ) )
 	{
-		if( Be::IsSuccess( backgroundReader->GetResult() ) )
+		if( BeIsSuccess( backgroundReader->GetResult() ) )
 		{
 			backgroundReader->TakeContents( contents );
 		}

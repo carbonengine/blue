@@ -748,7 +748,7 @@ IRoot* BlueResMan::LoadObjectW( const wchar_t* unnormalizedName, Be::LOADOBJECT_
 		IBlueStreamPtr sourceStream;
 
 		auto result = GetFileContentsWithYield(filename, sourceStream);
-		if( !Be::IsSuccess( result ) )
+		if( !BeIsSuccess( result ) )
 		{
 			CCP_LOGERR_CH( s_ch, "%s", result.value.c_str() );
 			return nullptr;
@@ -912,7 +912,7 @@ bool BlueResMan::SaveObjectW( IRoot* obj, const wchar_t* name )
 	auto result = w->WriteObjectToFile( obj, name );
 
 	CCP_DELETE w;
-	return Be::IsSuccess( result );
+	return BeIsSuccess( result );
 }
 
 Be::Result<std::string> BlueResMan::GetResourceFromScript( const std::wstring& path, const std::wstring& ex, IRoot** resource )

@@ -29,7 +29,7 @@ void BlueResFileSystemRemote::GetDirectoryContents( const wchar_t* dir, std::set
 {
 	std::list<std::string> remoteFileCacheContents;
 	auto remoteFileCacheResult = BeRemoteFileCache->ListDir( dir, remoteFileCacheContents );
-	if( Be::IsSuccess( remoteFileCacheResult ) )
+	if( BeIsSuccess( remoteFileCacheResult ) )
 	{
 		for( auto it = remoteFileCacheContents.begin(); it != remoteFileCacheContents.end(); ++it )
 		{
@@ -43,7 +43,7 @@ bool BlueResFileSystemRemote::GetStreamFromPathW( const wchar_t* resPath, IBlueS
 {
 	std::wstring filename = SubstituteBlackForRedInFilename( resPath );
 	auto result = BeRemoteFileCache->GetStreamFromPathW( filename.c_str(), stream );
-	return Be::IsSuccess( result );
+	return BeIsSuccess( result );
 }
 
 bool BlueResFileSystemRemote::ResolvePathW( const std::wstring& path, std::wstring& resolvedPath )
