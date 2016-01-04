@@ -12,6 +12,7 @@
 #include <new>
 #include <unordered_map>
 #include <vector>
+#include <memory>
 
 #ifdef _WIN32
 //#define ATLTRACE2 __noop
@@ -144,6 +145,10 @@ struct ColumnDescriptor
 	char mSize;
 };
 
+bool operator == (const ColumnDescriptor &a, const ColumnDescriptor &b)
+{
+	return a.mName == b.mName && a.mOffset == b.mOffset && a.mType == b.mType && a.mSize == b.mSize;
+}
 
 //A row descriptor object that isn't python.  We can't always create python objects
 class RowDescriptor
@@ -172,6 +177,10 @@ public:
 	int mNRealCols; //number of non-virtual objects
 };
 
+bool operator == (const RowDescriptor &a, const RowDescriptor &b)
+{
+	return a.mColumnList == b.mColumnList;
+}
 
 //////////////////////////////////////////////////////////////////////////////
 // PyRowDescriptor
@@ -180,7 +189,6 @@ struct DBRowDescriptor :
 	public PyXObject2<DBRowDescriptor>,
 	public RowDescriptor
 {
-	
 	PYTHON_CLASS("blue.DBRowDescriptor");
 	PYTHON_METHODS_BEGIN()
 		METHOD_O(__reduce_ex__, "Pickling support")
@@ -209,8 +217,11 @@ struct DBRowDescriptor :
 		tp->tp_clear = (inquiry)GCClear;
 		tp->tp_repr = (reprfunc)(PyCFunction)PyCFuncArgs<&DBRowDescriptor::Repr>;
 		tp->tp_as_sequence = &sequenceMethods;
+		tp->tp_compare = Compare;
 		return true;
 	}
+
+	static int Compare(PyObject *a, PyObject *b);
 
 	static PyObject *_New(PyTypeObject*type, PyObject *args, PyObject *kw);
 	PyObject *Repr(PyObject *args);
@@ -228,7 +239,7 @@ struct DBRowDescriptor :
 	bool Set_virtual(PyObject *v);
 
 	//setting and getting virtual properties
-	PyObject *VirtualGet(int n, PyObject *row);
+	PyObject *VirtualGet(int n, const PyObject *row) const;
 	bool VirtualSet(int n, PyObject *row, PyObject *val);
 
 	//Garbage collection
@@ -277,7 +288,6 @@ bool RowDescriptor::Init(PyObject *a)
 	}
 	return InitFromTypedList();	
 }
-
 
 bool RowDescriptor::InitFromTypedList()
 {
@@ -397,7 +407,17 @@ PyObject *DBRowDescriptor::_New(PyTypeObject *subtype, PyObject *args, PyObject 
 	}
 	return obj;
 }
-	
+
+int DBRowDescriptor::Compare(PyObject *a, PyObject *b)
+{
+	auto lhs = static_cast<RowDescriptor *>(static_cast<DBRowDescriptor *>(a));
+	auto rhs = static_cast<RowDescriptor *>(static_cast<DBRowDescriptor *>(b));
+
+	if (*lhs == *rhs)
+		return 0;
+
+	return (lhs < rhs) ? -1 : 1;
+}
 
 PyObject *DBRowDescriptor::Repr(PyObject *args)
 {
@@ -454,7 +474,6 @@ PyObject *DBRowDescriptor::Size()
 {
 	return Py_BuildValue("(ii)", mDataLen, mNObjects);
 }
-
 
 PyObject *DBRowDescriptor::__reduce_ex__(PyObject *proto)
 {
@@ -621,7 +640,7 @@ ERR2:
 }
 
 
-PyObject *DBRowDescriptor::VirtualGet(int n, PyObject *row)
+PyObject *DBRowDescriptor::VirtualGet(int n, const PyObject *row) const
 {
 	if (!mVirtualGetSet)
         return PyErr_SetString(PyExc_RuntimeError, "Internal error in VirtualGet; no mVirtualGetSet."), nullptr;
@@ -674,6 +693,29 @@ PyObject *DBRowDescriptor::SequenceGet(DBRowDescriptor *row, Py_ssize_t i)
 // DBRow
 //
 
+bool operator == (const DBRow &a, const DBRow &b)
+{
+	if (!(*a.mRD == *b.mRD))
+		return false;
+
+	for (size_t i = 0; i < a.GetColumnCount(); ++i)
+	{
+		const auto &cd = a.mRD->mColumnList[i];
+		int result;
+		auto del = [](PyObject *p) {
+			Py_XDECREF(p);
+		};
+
+		auto lhs = std::unique_ptr<PyObject, decltype(del)>(a.Get(cd, i), del);
+		auto rhs = std::unique_ptr<PyObject, decltype(del)>(b.Get(cd, i), del);
+
+		if (PyObject_Cmp(lhs.get(), rhs.get(), &result) == -1 || result != 0)
+			return false;
+	}
+
+	return true;
+}
+
 bool DBRow::InitType(PyTypeObject *tp)
 {
 		static PySequenceMethods sequenceMethods = {
@@ -703,6 +745,7 @@ bool DBRow::InitType(PyTypeObject *tp)
 		tp->tp_repr = (reprfunc)(PyCFunction)PyCFuncArgs<&DBRow::Repr>;
 		tp->tp_getattro = (PyCFunction)PyCFuncArgs<&DBRow::GetAttr>;
 		tp->tp_setattro = SetAttr;
+		tp->tp_compare = Compare;
 		return true;
 }
 
@@ -896,6 +939,16 @@ bool DBRow::InitDB(PyObject *dataO, PyObject *reuse)
 	return true;
 }
 
+int DBRow::Compare(PyObject *a, PyObject *b)
+{
+	auto lhs = static_cast<DBRow *>(a);
+	auto rhs = static_cast<DBRow *>(b);
+
+	if (*lhs == *rhs)
+		return 0;
+
+	return (lhs < rhs) ? -1 : 1;
+}
 
 //store Reuse a python object being set into a row.  Look it up in a dict and replace, or insert it.
 bool DBRow::Reuse(PyObject *reuse, PyObject* &r)
@@ -939,7 +992,7 @@ PyObject *DBRow::Repr(PyObject *args)
 }
 
 
-PyObject *DBRow::Get(const ColumnDescriptor &c, Py_ssize_t i)
+PyObject *DBRow::Get(const ColumnDescriptor &c, Py_ssize_t i) const
 {
 	if (i<mRD->mNRealCols && GetBit(mRD->mSNull + i)) {
 		//field is null

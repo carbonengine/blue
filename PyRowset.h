@@ -61,6 +61,9 @@ public:
 	static PyObject *_New(PyTypeObject *type, PyObject *args, PyObject *kwds);
 	static PyObject * CreateFromRowDescriptor( PyObject *rowDescriptor );
 
+	//Comparison
+	static int Compare(PyObject *a, PyObject *b);
+
 	//Reduce to a tuple
 	PyObject *__reduce_ex__(PyObject *protocol);
 	PyObject *__getstate__();
@@ -104,7 +107,7 @@ public:
 
 	//Accessing the columns
 	const ColumnDescriptor *GetCD(int &idx, PyObject *key, PyObject *exc);
-	PyObject *Get(const ColumnDescriptor &c, Py_ssize_t idx);
+	PyObject *Get(const ColumnDescriptor &c, Py_ssize_t idx) const;
 	bool Set(const ColumnDescriptor &c, Py_ssize_t idx, PyObject *o);
 	bool SetNotNull(const ColumnDescriptor &c, PyObject *o);
 
@@ -170,7 +173,6 @@ public:
 	DBRowDescriptor *mRD;
 	int64_t mData[1];
 };
-
 
 //Template functions defined
 
