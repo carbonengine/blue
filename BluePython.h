@@ -96,11 +96,11 @@ public:
 
 	typedef TrackableStdVector<Thread> Threads;
 	Threads mThreads;
+#endif
 
 	void ProcessLibDirectives( const directives_t& directives, std::vector<std::wstring>& zips );
 	bool VerifyManifestAndGatherDirectives( directives_t& directives );
 	void ShowMessageBoxForVerificationFailure( int type, const std::wstring& errmsg );
-#endif
 	
 	// init funcs and corresponding fini functions
 	bool InitBasicModuleSupport();

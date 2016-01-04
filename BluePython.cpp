@@ -2287,8 +2287,6 @@ void BluePyOS::ProcessSpyHandles()
 #endif
 }
 
-#if CCP_STACKLESS
-
 void BluePyOS::ShowMessageBoxForVerificationFailure( int type, const std::wstring& errmsg )
 {
 #if !PORTING_TO_LINUX
@@ -2364,8 +2362,6 @@ void BluePyOS::ProcessLibDirectives( const directives_t& directives, std::vector
 		}
 	}
 }
-
-#endif
 
 void BluePyOS::BuildConcatenatedPathFromPathlist( const std::vector<std::wstring>& pathlist, std::wstring& path )
 {
