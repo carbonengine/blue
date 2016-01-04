@@ -13,6 +13,7 @@
 #include <unordered_map>
 #include <vector>
 #include <memory>
+#include <functional>
 
 #ifdef _WIN32
 //#define ATLTRACE2 __noop
@@ -218,10 +219,12 @@ struct DBRowDescriptor :
 		tp->tp_repr = (reprfunc)(PyCFunction)PyCFuncArgs<&DBRowDescriptor::Repr>;
 		tp->tp_as_sequence = &sequenceMethods;
 		tp->tp_compare = Compare;
+		tp->tp_hash = Hash;
 		return true;
 	}
 
 	static int Compare(PyObject *a, PyObject *b);
+	static long Hash(PyObject *obj);
 
 	static PyObject *_New(PyTypeObject*type, PyObject *args, PyObject *kw);
 	PyObject *Repr(PyObject *args);
@@ -417,6 +420,12 @@ int DBRowDescriptor::Compare(PyObject *a, PyObject *b)
 		return 0;
 
 	return (lhs < rhs) ? -1 : 1;
+}
+
+long DBRowDescriptor::Hash(PyObject *obj)
+{
+	std::hash<PyObject *> hash;
+	return static_cast<long>(hash(obj));
 }
 
 PyObject *DBRowDescriptor::Repr(PyObject *args)
@@ -746,6 +755,7 @@ bool DBRow::InitType(PyTypeObject *tp)
 		tp->tp_getattro = (PyCFunction)PyCFuncArgs<&DBRow::GetAttr>;
 		tp->tp_setattro = SetAttr;
 		tp->tp_compare = Compare;
+		tp->tp_hash = Hash;
 		return true;
 }
 
@@ -948,6 +958,12 @@ int DBRow::Compare(PyObject *a, PyObject *b)
 		return 0;
 
 	return (lhs < rhs) ? -1 : 1;
+}
+
+long DBRow::Hash(PyObject *obj)
+{
+	std::hash<PyObject *> hash;
+	return static_cast<long>(hash(obj));
 }
 
 //store Reuse a python object being set into a row.  Look it up in a dict and replace, or insert it.

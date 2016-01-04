@@ -63,6 +63,7 @@ public:
 
 	//Comparison
 	static int Compare(PyObject *a, PyObject *b);
+	static long Hash(PyObject *obj);
 
 	//Reduce to a tuple
 	PyObject *__reduce_ex__(PyObject *protocol);
