@@ -45,11 +45,6 @@ class BlueOS :
 	public BeInfo
 {
 public:
-
-
-	/////////////////////////////////////////
-	// members
-
 	BlueOS();
 	~BlueOS();
 	
@@ -67,6 +62,8 @@ public:
 	typedef TrackableStdVector<TerminationCallback*> TerminationCallbacks;
 	TerminationCallbacks mIndispensableTerminationSteps;
 	void RegisterIndispensableTerminationStep( TerminationCallback* callback );
+
+	ManifestVerification mManifestVerification;
 
 	// error stuff
 	typedef TrackableStdVector<IBlueOS::Error> ErrorLog;
@@ -134,21 +131,6 @@ public:
 	typedef TrackableStdList<Ticker> Tickers;
 	typedef Tickers::iterator TickIt;
 	Tickers mTickers;
-
-	// In future, if we remove CatchupTicks, I would expect to replace them with something like this...
-	/*
-	struct VariableTicker
-	{
-		VariableTicker(IVariableTicker *cb, void* cookie);
-		bool operator == (const VariableTicker &o) const {return mCb==o.mCb && mCookie==o.mCookie;}
-		IVariableTicker* mCb;
-		const char* mCookie;
-	};
-
-	typedef TrackableStdList<VariableTicker> VariableTickers;
-	typedef VariableTickers::iterator VariableTickIt;
-	VariableTickers mVariableTickers;
-	*/
 
 	struct CatchupTicker
 	{
@@ -315,14 +297,16 @@ public:
 
 	// Blue OS startup / termination
 	bool Startup(
-		short interfaceVersion,
-		int pyOptimizeVersion
+		int pyOptimizeVersion,
+		ManifestVerification manifestVerification
 		);
 
 	bool RunStackless();
 
 	void Terminate( int retCode );
 	
+	bool ShouldVerifyManifest() const override;
+
 	// Scheduling and such...
 	void RegisterForTicks(
 		IBlueEvents *cb,

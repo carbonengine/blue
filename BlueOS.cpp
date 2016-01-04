@@ -1128,8 +1128,10 @@ void BlueOS::PumpOS()
 //
 //////////////////////////////////////////////////////////////////////
 
-bool BlueOS::Startup( short interfaceVersion, int pyOptimizeFlag )
+bool BlueOS::Startup( int pyOptimizeFlag, ManifestVerification manifestVerification )
 {
+	mManifestVerification = manifestVerification;
+
 #if _WIN32
 #if BLUE_WITH_PYTHON
 	//start up crypto
@@ -1408,6 +1410,11 @@ void BlueOS::Terminate( int retCode )
 #else
     kill( getpid(), SIGKILL );
 #endif
+}
+
+bool BlueOS::ShouldVerifyManifest() const
+{
+	return mManifestVerification == VERIFY_MANIFEST;
 }
 
 void BlueOS::SetTime(Be::Time time)

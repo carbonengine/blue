@@ -54,6 +54,12 @@ enum BLUEERROR
 	BEFLUSH     = -3,			// flushes the error log out to the logger, and clears it
 };
 
+enum ManifestVerification
+{
+	VERIFY_MANIFEST,
+	IGNORE_MANIFEST,
+};
+
 struct BeInfo
 {
 	long mStructSize;			// size of this struct
@@ -101,8 +107,8 @@ BLUE_INTERFACE(IBlueOS) : public IRoot
 	
 	// the startup
 	virtual bool Startup(
-		short interfaceVersion,
-		int pyOptimizeFlag
+		int pyOptimizeFlag,
+		ManifestVerification manifestVerification
 		) = 0;
 	
 	// the way to end things (we always shutdown with a terminate).  For more info
@@ -117,6 +123,8 @@ BLUE_INTERFACE(IBlueOS) : public IRoot
 	// by calling this method. Most often a DLL can be terminated without any special
 	// handling; this method should therefore only be required for a few of our DLLs.
 	virtual void RegisterIndispensableTerminationStep( TerminationCallback* callback ) = 0;
+
+	virtual bool ShouldVerifyManifest() const = 0;
 
 	//--------------------------------------------------------------------
 	// Scheduling and such...

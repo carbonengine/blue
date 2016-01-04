@@ -341,17 +341,17 @@ bool BluePyOS::InitIncludePaths(std::wstring &path)
 {
 	std::vector<std::wstring> zips;
 
-#if CCP_STACKLESS
-	directives_t directives;
-
-	if( !VerifyManifestAndGatherDirectives( directives ) )
+	if (BeOS->ShouldVerifyManifest())
 	{
-		return false;
+		directives_t directives;
+
+		if (!VerifyManifestAndGatherDirectives(directives))
+		{
+			return false;
+		}
+
+		ProcessLibDirectives(directives, zips);
 	}
-
-	ProcessLibDirectives( directives, zips );
-#endif
-
 	
 	//build pathlist
 	std::vector<std::wstring> pathlist;
@@ -504,8 +504,7 @@ PyCCP_CustomAllocator_t s_pyBlockAllocator = { PyCCP_BlockMalloc, PyCCP_BlockRea
 #endif
 
 
-bool BluePyOS::Startup(
-	)
+bool BluePyOS::Startup()
 {
 	if (mInit)
 		return true;

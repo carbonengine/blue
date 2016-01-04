@@ -644,7 +644,7 @@ PyMODINIT_FUNC
 	BlueInitializePaths();
 	BlueInitializeResourceLoading();
 
-	BeOS->Startup(13,0);
+	BeOS->Startup(0, IGNORE_MANIFEST);
 
 	PatchPythonExit();
 }
@@ -669,7 +669,7 @@ extern "C" int DLLEXPORT luaopen_blue( lua_State* ls )
 
 	BlueRegisterObjectsToModule( ls, g_moduleName, BlueRegistration::GetObjectRegs() );
 
-	BeOS->Startup(13,0);
+	BeOS->Startup(0, IGNORE_MANIFEST);
 
 	return 1;
 }
