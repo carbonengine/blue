@@ -24,6 +24,19 @@ static HINSTANCE s_instance = NULL;
 #include <fcntl.h>
 #endif
 
+// CCP Stackless Python has shenaniganistic support for loading jumbled, or
+// rather "obfuscated" bytecode (see get_code_from_data in zipimport.c).
+//
+// During initialization (BluePyOS::Startup) we initalize Python. That
+// initalization will attempt to import blue.crypto to decode obfuscated
+// bytecode if one is encountered.
+//
+// That import of blue.crypto causes a recursive initialization of blue,
+// via initblue.
+//
+// We guard against this by enabling this boolean during initalization of
+// Python, and no-op initblue if set.
+bool gNoRecursiveInitBlue = false;
 
 // The templated container classes need special treatment here. Generally
 // each exposed class gets its own Python type object, but the templated
@@ -536,14 +549,10 @@ void BlueModuleStartup()
             memset( p, 0, memSize );
         }
     }
-    
-#if CCP_STACKLESS
+
     BeClasses->RegisterClasses( BlueRegistration::GetClassRegs() );
     BlueInitializePaths();
-#endif
 }
-
-#if !CCP_STACKLESS
 
 #if BLUE_WITH_PYTHON
 
@@ -630,18 +639,18 @@ void PatchPythonExit()
 PyMODINIT_FUNC
 	initblue(void)
 {
+	if (gNoRecursiveInitBlue)
+		return;
+
 #ifndef _WIN32
     BlueModuleStartup();
 #endif
+
 	BlueInitializeSocketLogger();
 
 	// Inform the logging system of the main thread
 	CCP::SetLogMainThreadId();
 
-	// Register classes as early as possible - otherwise CreateInstance won't work
-	BeClasses->RegisterClasses( BlueRegistration::GetClassRegs() );
-
-	BlueInitializePaths();
 	BlueInitializeResourceLoading();
 
 	BeOS->Startup(0, IGNORE_MANIFEST);
@@ -659,12 +668,10 @@ extern "C" int DLLEXPORT luaopen_blue( lua_State* ls )
 	// Instruct the CCP logging system to echo to the debugger output window.
 	CCP::RegisterLogEcho( &CCP::LogToDebugger, CCP::LOGTYPE_LOWEST, true );
 
-	BeClasses->RegisterClasses( BlueRegistration::GetClassRegs() );
 	BlueRegisterClasses( ls, g_moduleName, BlueRegistration::GetClassRegs() );
 	BlueRegisterFunctions( ls, g_moduleName, BlueRegistration::GetFuncRegs() );
 	BlueRegisterInterfaceMethods( ls, BlueRegistration::GetThunkerRegs() );
 
-	BlueInitializePaths();
 	BlueInitializeResourceLoading();
 
 	BlueRegisterObjectsToModule( ls, g_moduleName, BlueRegistration::GetObjectRegs() );
@@ -673,6 +680,4 @@ extern "C" int DLLEXPORT luaopen_blue( lua_State* ls )
 
 	return 1;
 }
-#endif
-
 #endif

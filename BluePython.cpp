@@ -44,6 +44,9 @@
 
 #include "Include/ScopedBlockTrap.h"
 
+// defined in blue.cpp
+extern bool gNoRecursiveInitBlue;
+
 IBluePyOS* PyOS = nullptr;
 
 IPythonEventsPtr sPyEventHandler;
@@ -569,7 +572,9 @@ bool BluePyOS::Startup()
 #else
     Py_SetPath( CW2A( path.c_str() ) );
 #endif
+	gNoRecursiveInitBlue = true;
 	Py_Initialize();
+	gNoRecursiveInitBlue = false;
 
 	if (!Py_IsInitialized())
 	{
