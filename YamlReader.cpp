@@ -1303,6 +1303,32 @@ void YamlReader::ReadDict( IBlueDict* dict )
 	}
 }
 
+namespace
+{
+
+bool CompareStructureListDefinitions( const std::vector<BlueStructureDefinition>& def1, const BlueStructureDefinition* def2 )
+{
+	for( auto it = begin( def1 ); it != end( def1 ); ++it )
+	{
+		if( !def2->m_name )
+		{
+			return false;
+		}
+		if( strcmp( it->m_name, def2->m_name ) )
+		{
+			return false;
+		}
+		if( it->m_dataType != def2->m_dataType || it->m_offset != def2->m_offset )
+		{
+			return false;
+		}
+		++def2;
+	}
+	return def2->m_name == nullptr;
+}
+
+}
+
 void YamlReader::ReadStructureList( IBlueStructureList* structureList )
 {
 	GetNextEvent();
@@ -1359,9 +1385,6 @@ void YamlReader::ReadStructureList( IBlueStructureList* structureList )
 		ReportError( "Error reading structure list" );
 	}
 
-	// TODO: validate structureDef against the one from structureList
-	BlueStructureDefinition* sdFromList = structureList->GetStructureDefinition();
-
 	if( !ReadMemberName( memberName ) )
 	{
 		ReportError( "Error reading structure list" );
@@ -1374,88 +1397,56 @@ void YamlReader::ReadStructureList( IBlueStructureList* structureList )
 		ReportError( msg );
 	}
 
-
-	auto structureSize = structureList->GetStructureSize();
-	CcpMallocBuffer item( "item", structureSize );
+	BlueStructureDefinition* sdFromList = structureList->GetStructureDefinition();
 
 	if( ReadVectorBegin() )
 	{
-		while( ReadVectorNext() )
+		if( !CompareStructureListDefinitions( structureDef, sdFromList ) )
 		{
-			ReadVectorBegin();
-			ReadVectorNext();
+			CCP_LOGWARN( "Structure list definition in the .red file does not match run-time definition. Skipping structure list." );
 
-			// Make sure any padding in the structure doesn't retain random contents.
-			memset( item.get(), 0, structureSize );
-
-			BlueStructureDefinition* memberDef = sdFromList;
-			while( memberDef->m_name )
+			// Largest structure list element is Vector4 * 4
+			float itemStorage[16];
+			// Reset offsets so that we can store entrire item in a single element
+			for( auto it = begin( structureDef ); it != end( structureDef ); ++it )
 			{
-				int type = memberDef->m_dataType & Be::DT_TYPE_MASK;
-
-				switch( type )
-				{
-					// TODO: Support more types
-					case Be::DT_INT8:
-						if( memberDef->m_dataType & Be::DT_UNSIGNED_BIT )
-						{
-							ReadStructureListItemMember<uint8_t>( memberDef, item.get(), &YamlReader::ReadValue );
-						}
-						else
-						{
-							ReadStructureListItemMember<int8_t>( memberDef, item.get(), &YamlReader::ReadValue );
-						}
-						break;
-					case Be::DT_INT16:
-						if( memberDef->m_dataType & Be::DT_UNSIGNED_BIT )
-						{
-							ReadStructureListItemMember<uint16_t>( memberDef, item.get(), &YamlReader::ReadValue );
-						}
-						else
-						{
-							ReadStructureListItemMember<int16_t>( memberDef, item.get(), &YamlReader::ReadValue );
-						}
-						break;
-					case Be::DT_INT32:
-						if( memberDef->m_dataType & Be::DT_UNSIGNED_BIT )
-						{
-							ReadStructureListItemMember<uint32_t>( memberDef, item.get(), &YamlReader::ReadValue );
-						}
-						else
-						{
-							ReadStructureListItemMember<int32_t>( memberDef, item.get(), &YamlReader::ReadValue );
-						}
-						break;
-					case Be::DT_FLOAT32:
-						ReadStructureListItemMember<float>( memberDef, item.get(), &YamlReader::ReadValue );
-						break;
-					case Be::DT_FLOAT16:
-						ReadStructureListItemMember<uint16_t>( memberDef, item.get(), &YamlReader::ReadFloat16 );
-						break;
-					case Be::DT_FLOAT32x4:
-						ReadStructureListItemMember<Vector4>( memberDef, item.get(), &YamlReader::ReadValue );
-						break;
-					case Be::DT_BOOL8:
-						ReadStructureListItemMember<bool>( memberDef, item.get(), &YamlReader::ReadValue );
-						break;
-					case Be::DT_SHAREDSTRING:
-						ReadStructureListItemMember<BlueSharedString>( memberDef, item.get(), &YamlReader::ReadValue );
-						break;
-
-					default:
-						{
-							ReportError( "Unsupported type for structured lists" );
-						}
-
-				}
-
-				++memberDef;
+				it->m_offset = 0;
 			}
+			BlueStructureDefinition tail;
+			memset( &tail, 0, sizeof( tail ) );
+			structureDef.push_back( tail );
 
-			structureList->Append( item.get() );
+			while( ReadVectorNext() )
+			{
+				ReadVectorBegin();
+				ReadVectorNext();
+
+				ReadStructureListItem( &structureDef.front(), itemStorage );
 			
-			ReadVectorNext();
-			ReadVectorEnd();
+				ReadVectorNext();
+				ReadVectorEnd();
+			}
+		}
+		else
+		{
+			auto structureSize = structureList->GetStructureSize();
+			CcpMallocBuffer item( "item", structureSize );
+
+			while( ReadVectorNext() )
+			{
+				ReadVectorBegin();
+				ReadVectorNext();
+
+				// Make sure any padding in the structure doesn't retain random contents.
+				memset( item.get(), 0, structureSize );
+
+				ReadStructureListItem( sdFromList, item.get() );
+
+				structureList->Append( item.get() );
+			
+				ReadVectorNext();
+				ReadVectorEnd();
+			}
 		}
 		ReadVectorEnd();
 	}
@@ -1469,6 +1460,72 @@ void YamlReader::ReadStructureList( IBlueStructureList* structureList )
 	if( m_event->type != YAML_MAPPING_END_EVENT )
 	{
 		ReportError( "Expected a mapping end event while reading a structure list" );
+	}
+}
+
+void YamlReader::ReadStructureListItem( const BlueStructureDefinition* memberDef, void* item )
+{
+	while( memberDef->m_name )
+	{
+		int type = memberDef->m_dataType & Be::DT_TYPE_MASK;
+
+		switch( type )
+		{
+			// TODO: Support more types
+			case Be::DT_INT8:
+				if( memberDef->m_dataType & Be::DT_UNSIGNED_BIT )
+				{
+					ReadStructureListItemMember<uint8_t>( memberDef, item, &YamlReader::ReadValue );
+				}
+				else
+				{
+					ReadStructureListItemMember<int8_t>( memberDef, item, &YamlReader::ReadValue );
+				}
+				break;
+			case Be::DT_INT16:
+				if( memberDef->m_dataType & Be::DT_UNSIGNED_BIT )
+				{
+					ReadStructureListItemMember<uint16_t>( memberDef, item, &YamlReader::ReadValue );
+				}
+				else
+				{
+					ReadStructureListItemMember<int16_t>( memberDef, item, &YamlReader::ReadValue );
+				}
+				break;
+			case Be::DT_INT32:
+				if( memberDef->m_dataType & Be::DT_UNSIGNED_BIT )
+				{
+					ReadStructureListItemMember<uint32_t>( memberDef, item, &YamlReader::ReadValue );
+				}
+				else
+				{
+					ReadStructureListItemMember<int32_t>( memberDef, item, &YamlReader::ReadValue );
+				}
+				break;
+			case Be::DT_FLOAT32:
+				ReadStructureListItemMember<float>( memberDef, item, &YamlReader::ReadValue );
+				break;
+			case Be::DT_FLOAT16:
+				ReadStructureListItemMember<uint16_t>( memberDef, item, &YamlReader::ReadFloat16 );
+				break;
+			case Be::DT_FLOAT32x4:
+				ReadStructureListItemMember<Vector4>( memberDef, item, &YamlReader::ReadValue );
+				break;
+			case Be::DT_BOOL8:
+				ReadStructureListItemMember<bool>( memberDef, item, &YamlReader::ReadValue );
+				break;
+			case Be::DT_SHAREDSTRING:
+				ReadStructureListItemMember<BlueSharedString>( memberDef, item, &YamlReader::ReadValue );
+				break;
+
+			default:
+				{
+					ReportError( "Unsupported type for structured lists" );
+				}
+
+		}
+
+		++memberDef;
 	}
 }
 

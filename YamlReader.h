@@ -139,9 +139,10 @@ private:
 	void ReadValue( BlueSharedString& dst );
 	void ReadValue( Vector4& dst );
 	void ReadFloat16( uint16_t& dst );
+	void ReadStructureListItem( const BlueStructureDefinition* memberDef, void* item );
 
 	template <typename T>
-	void ReadStructureListItemMember( BlueStructureDefinition* memberDef, void* item, void ( YamlReader::*conversionFunc )( T& ) )
+	void ReadStructureListItemMember( const BlueStructureDefinition* memberDef, void* item, void ( YamlReader::*conversionFunc )( T& ) )
 	{
 		int size = ( ( memberDef->m_dataType & Be::DT_SIZE_MASK ) >> Be::DT_SIZE_OFFSET ) + 1;
 		uint8_t* member = static_cast<uint8_t*>( item ) + memberDef->m_offset;
