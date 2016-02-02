@@ -1,5 +1,8 @@
 #include "StdAfx.h"
 #include "BlueSocketLogger.h"
+#ifndef _WIN32
+#include <sys/time.h>
+#endif
 #ifdef __APPLE__
 #include <sys/sysctl.h>
 #include <mach-o/dyld.h>
@@ -21,7 +24,7 @@ const int ShutdownAll = SHUT_RDWR;
 #define closesocket close
 #endif
 
-const uint32_t CURRENT_VERSION = 1;
+const uint32_t CURRENT_VERSION = 2;
     
 enum MessageType
 {
@@ -357,11 +360,13 @@ void LogToSocketLogger( CcpLogChannel_t& logObject, CCP::LogType type, unsigned 
 	}
 
 #ifdef _WIN32
-	__time64_t t;
-	_time64( &t );
+	FILETIME ft;
+	GetSystemTimeAsFileTime( &ft );
+	uint64_t t = uint64_t( ft.dwLowDateTime ) + ( uint64_t( ft.dwHighDateTime ) << 32 ) + 116444736000000000LL;
 #else
-	time_t t;
-	time( &t );
+	struct timeval tp;
+	gettimeofday(&tp, NULL);
+	uint64_t t = uint64_t( tp.tv_sec ) * 1000 + uint64_t( tp.tv_usec ) / 1000;
 #endif
 
 	auto length = strlen( message );
