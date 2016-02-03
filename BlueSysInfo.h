@@ -101,6 +101,7 @@ public:
 
 	bool IsTransgaming() const;
 	bool IsWine() const;
+	std::wstring GetWineHostOs() const;
 
 	std::string GetMachineUuid() const;
 private:

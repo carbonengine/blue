@@ -178,6 +178,36 @@ std::string BlueSysInfo::GetMachineUuid() const
 	return guid;
 }
 
+std::wstring BlueSysInfo::GetWineHostOs() const
+{
+	typedef void (CDECL *wine_get_host_version_t)(const char **sysname, const char **release);
+
+	static bool hasCached = false;
+	static std::wstring hostOs = L"";
+	if( !hasCached )
+	{
+		HMODULE hMod = GetModuleHandle( "ntdll" );
+		wine_get_host_version_t wine_get_host_version = (wine_get_host_version_t)GetProcAddress( hMod, "wine_get_host_version" );
+
+		if( wine_get_host_version )
+		{
+			const char* sys_name = NULL;
+			const char* release_name = NULL;
+			wine_get_host_version( &sys_name, &release_name );
+
+			std::string hostOsA = sys_name;
+			hostOsA += " ";
+			hostOsA += release_name;
+
+			hostOs = CA2W( hostOsA.c_str() );
+		}
+
+		hasCached = true;
+	}
+
+	return hostOs;
+}
+
 
 
 BlueSysInfoCpu::BlueSysInfoCpu()
