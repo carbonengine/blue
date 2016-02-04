@@ -362,7 +362,7 @@ void LogToSocketLogger( CcpLogChannel_t& logObject, CCP::LogType type, unsigned 
 #ifdef _WIN32
 	FILETIME ft;
 	GetSystemTimeAsFileTime( &ft );
-	uint64_t t = uint64_t( ft.dwLowDateTime ) + ( uint64_t( ft.dwHighDateTime ) << 32 ) + 116444736000000000LL;
+	uint64_t t = ( uint64_t( ft.dwLowDateTime ) + ( uint64_t( ft.dwHighDateTime ) << 32 ) - 116444736000000000LL ) / 10000;
 #else
 	struct timeval tp;
 	gettimeofday(&tp, NULL);
