@@ -104,6 +104,11 @@ bool BlueSysInfo::IsWine() const
     return false;
 }
 
+std::wstring BlueSysInfo::GetWineHostOs() const
+{
+    return L"";
+}
+
 std::string BlueSysInfo::GetMachineUuid() const
 {
     char buffer[128];
