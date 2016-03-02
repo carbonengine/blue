@@ -1417,6 +1417,11 @@ bool BlueOS::ShouldVerifyManifest() const
 	return mManifestVerification == VERIFY_MANIFEST;
 }
 
+bool BlueOS::IsOnMainThread()
+{
+	return BeResMan->IsOnMainThread();
+}
+
 void BlueOS::SetTime(Be::Time time)
 {
 	if( !time )
