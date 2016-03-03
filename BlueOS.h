@@ -52,7 +52,7 @@ public:
 	Be::Time GetActualTime();
 	Be::Time GetCurrentFrameTime() const { return mSimTime; }
 
-	bool IsOnMainThread();
+	bool IsOnMainTasklet();
 
 #if BLUE_WITH_PYTHON
 	PyObject *mFrameClock;

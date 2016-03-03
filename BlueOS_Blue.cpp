@@ -568,9 +568,9 @@ const Be::ClassInfo* BlueOS::ExposeToBlue()
 
 		MAP_PROPERTY_READONLY	
 		(
-			"isOnMainThread",
-			IsOnMainThread,
-			"Returns true if the code is run on the main thread, false otherwise"
+			"isOnMainTasklet",
+			IsOnMainTasklet,
+			"Returns true if the code is run on the main tasklet, false otherwise"
 		)
 
 	EXPOSURE_END()

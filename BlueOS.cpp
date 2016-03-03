@@ -1417,7 +1417,7 @@ bool BlueOS::ShouldVerifyManifest() const
 	return mManifestVerification == VERIFY_MANIFEST;
 }
 
-bool BlueOS::IsOnMainThread()
+bool BlueOS::IsOnMainTasklet()
 {
 	return BeResMan->IsOnMainThread();
 }
