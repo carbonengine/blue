@@ -229,7 +229,6 @@ public:
 	PyObject* PyBeNice( PyObject* args );
 	PyObject* PyXUtil_Index( PyObject* args );
 	PyObject* PyXUtil_Filter( PyObject* args );
-	PyObject* PyXUtil_SwapLists( PyObject* args );
 	PyObject* PyGetMaxRunTime( PyObject* args );
 	PyObject* PySetMaxRunTime( PyObject* args );
 	

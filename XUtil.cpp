@@ -218,33 +218,4 @@ PyObject *BluePyOS::PyXUtil_Index(PyObject *args)
 #endif
 }
 
-
-PyObject *BluePyOS::PyXUtil_SwapLists(PyObject *args)
-{
-	PyListObject *a, *b;
-	if (!PyArg_ParseTuple(args, "OO:XUtil_SwapLists", &a, &b))
-		return NULL;
-
-	if (!PyList_Check(a) || !PyList_Check(b))
-	{
-		PyErr_SetString(PyExc_TypeError, "both arguments must be lists");
-		return 0;
-	}
-
-	PyListObject tmp;
-	tmp.ob_size = a->ob_size;
-	tmp.ob_item = a->ob_item;
-	tmp.allocated = a->allocated;
-
-	a->ob_size = b->ob_size;
-	a->ob_item = b->ob_item;
-	a->allocated = b->allocated;
-
-	b->ob_size = tmp.ob_size;
-	b->ob_item = tmp.ob_item;
-	b->allocated = tmp.allocated;
-
-	Py_RETURN_NONE;
-}
-
 #endif

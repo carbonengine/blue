@@ -182,12 +182,6 @@ const Be::ClassInfo* BluePyOS::ExposeToBlue()
 		)
 		MAP_METHOD_AS_METHOD
 		(
-			"XUtil_SwapLists",
-			PyXUtil_SwapLists,	
-			"Swap the contents of two lists" 
-		)
-		MAP_METHOD_AS_METHOD
-		(
 			"GetMaxRunTime",
 			PyGetMaxRunTime, 
 			"Get maximum watchdog runtime" 
