@@ -13,6 +13,7 @@
 #include "BlueExposure/BlueLuaThunkers.h"
 #include "BlueSocketLogger.h"
 #include "CcpUtils/PyCpp.h"
+#include "BlueExposure/Find.h"
 
 const char* g_moduleName = "blue";
 std::wstring s_logDeviceName( L"EVE" );
@@ -365,6 +366,19 @@ MAP_FUNCTION(
 	"filename - path to file\n"
 	"contents - buffer containing file contents to write" );
 
+
+MAP_FUNCTION_AND_WRAP( 
+	"FindRoute", 
+	FindRoute, 
+	"Searches for all routes from one object to another. A route is a sequence of getattr or index operations.\n"
+	"This function is relatively heavy and should not be used in production code, but rather is indended for\n"
+	"in-house tools.\n"
+	"Function returns a list of all paths from one object to another, where each path is a list of tuples\n"
+	"(parent, type, index) where parent is a parent blue object, type is 0 for getattr call and 1 for index call,\n"
+	"index is either an attribute name or a list/dict key."
+	"Arguments:\n"
+	"from - blue object that is the start of the path\n"
+	"to - blue object that is the end of the path" );
 
 
 #ifdef _WIN32
