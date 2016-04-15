@@ -40,7 +40,7 @@ private:
 	PyObject* m_callback;
 
 private:
-	void PyInit( IRoot* obj );
+	BlueStdResult PyInit( IRoot* obj );
 };
 
 

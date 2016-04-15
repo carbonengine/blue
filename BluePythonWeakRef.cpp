@@ -40,22 +40,22 @@ void BluePythonWeakRef::WeakRefNotify( IWeakObject* ptr )
 	}
 }
 
-void BluePythonWeakRef::PyInit( IRoot* obj )
+BlueStdResult BluePythonWeakRef::PyInit( IRoot* obj )
 {
 	if( !obj )
 	{
-		return;
+		return BLUE_STD_RESULT_OK;
 	}
 
-	if( !obj->QueryInterface( GetIWeakObjectIID(), (void**)&m_object ) )
+	if( !obj->QueryInterface( GetIWeakObjectIID(), (void**)&m_object, BEQI_SILENT ) )
 	{
-		CCP_LOGERR( "BluePythonWeakRef expects IWeakObject support" );
 		m_object = NULL;
-		return;
+		return BlueStdResult( BLUE_STD_RESULT_TYPE_ERROR, "BluePythonWeakRef expects IWeakObject support" );
 	}
 
 	m_object->WeakRefRegister( this );
 	obj->Unlock();
+	return BLUE_STD_RESULT_OK;
 }
 
 IRoot* BluePythonWeakRef::GetObject()
