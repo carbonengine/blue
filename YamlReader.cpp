@@ -1575,6 +1575,10 @@ Be::Result<std::string> YamlReader::CreateObjectFromStream( IBlueStream* stream,
 	{
 		std::string msg;
 		GetErrorMessage( msg );
+		if( msg.empty() )
+		{
+			msg = "Failed to create an object from YAML";
+		}
 		return Be::Result<std::string>( msg );
 	}
 }
