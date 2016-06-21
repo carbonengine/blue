@@ -59,7 +59,13 @@ void BlueNetworkStream::Close()
 	m_url = "";
 	m_blockReadPosition = 0;
 	m_blockWritePosition = 0;
+
+	for( auto it = m_data.begin(); it != m_data.end(); ++it )
+	{
+		CCP_DELETE[] it->data;
+	}
 	m_data.clear();
+
 	m_readPosition = 0;
 	m_size = 0;
 	m_receivedSize = 0;
@@ -74,13 +80,14 @@ ptrdiff_t BlueNetworkStream::Read( void* dest, ptrdiff_t count )
 	while( count > 0 )
 	{
 		m_dataMutex.Acquire();
-		while( m_state == OPENED && ( m_data.empty() || ( m_data.size() == 1 && m_blockWritePosition == m_blockReadPosition ) ) )
+		size_t block = size_t( m_readPosition / BLOCK_SIZE );
+		while( m_state == OPENED && ( m_data.size() <= block || ( m_data.size() == block + 1 && m_blockWritePosition == m_blockReadPosition ) ) )
 		{
 			m_dataMutex.Release();
 			m_dataAvailable.Wait();
 			m_dataMutex.Acquire();
 		}
-		ptrdiff_t availableSize = ( m_data.size() > 1 ? BLOCK_SIZE : m_blockWritePosition ) - m_blockReadPosition;
+		ptrdiff_t availableSize = ( m_data.size() > block + 1 ? BLOCK_SIZE : m_blockWritePosition ) - m_blockReadPosition;
 		if( m_data.empty() )
 		{
 			count = 0;
@@ -88,7 +95,7 @@ ptrdiff_t BlueNetworkStream::Read( void* dest, ptrdiff_t count )
 		else if( availableSize )
 		{
 			auto copySize = std::min( availableSize, count );
-			memcpy( data, m_data.front().data + m_blockReadPosition, copySize );
+			memcpy( data, m_data[block].data + m_blockReadPosition, copySize );
 			count -= copySize;
 			data += copySize;
 			read += copySize;
@@ -96,8 +103,6 @@ ptrdiff_t BlueNetworkStream::Read( void* dest, ptrdiff_t count )
 			m_readPosition += copySize;
 			if( m_blockReadPosition >= BLOCK_SIZE )
 			{
-				CCP_DELETE[] m_data.front().data;
-				m_data.erase( m_data.begin() );
 				m_blockReadPosition = 0;
 			}
 		}
@@ -118,7 +123,36 @@ ptrdiff_t BlueNetworkStream::Write( const void* source, size_t count )
 
 ptrdiff_t BlueNetworkStream::Seek( ptrdiff_t distance, SeekOrigin method )
 {
-	return -1;
+	switch( method )
+	{
+	case SO_CURRENT:
+		distance = m_readPosition + distance;
+	case SO_BEGIN:
+		if( distance < m_readPosition )
+		{
+			m_dataMutex.Acquire();
+			m_readPosition = distance;
+			m_blockReadPosition = m_readPosition % BLOCK_SIZE;
+			m_dataMutex.Release();
+		}
+		else
+		{
+			m_dataMutex.Acquire();
+			while( ptrdiff_t( m_receivedSize ) < distance )
+			{
+				m_dataMutex.Release();
+				m_dataAvailable.Wait();
+				m_dataMutex.Acquire();
+			}
+			m_readPosition = distance;
+			m_blockReadPosition = m_readPosition % BLOCK_SIZE;
+			m_dataMutex.Release();
+		}
+		m_dataAvailable.Signal();
+		return m_readPosition;
+	default:
+		return -1;
+	}
 }
 
 ptrdiff_t BlueNetworkStream::GetPosition()
