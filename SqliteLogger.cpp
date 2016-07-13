@@ -59,7 +59,7 @@ namespace CCP
 		bool ret = s_sqliteLogger->Init(dbName);
 
 		// Instruct the CCP logging system to echo to the debugger output window.
-		CCP::RegisterLogEcho( &CCP::ForwardToSqlite, threshold, true );
+		CCP::RegisterLogEcho( &CCP::ForwardToSqlite, threshold, true, CCP::LOG_ECHO_REQUIRES_PRIVILEGE_CHECK );
 
 		return ret;
 	}

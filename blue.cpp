@@ -76,7 +76,7 @@ PyObject* PyAttachToLogServer( PyObject* self, PyObject* args )
 {
 	if( StartSocketLogger() )
 	{
-		CCP::RegisterLogEcho( &LogToSocketLogger, CCP::LOGTYPE_INFO, true );
+		CCP::RegisterLogEcho( &LogToSocketLogger, CCP::LOGTYPE_INFO, true, CCP::LOG_ECHO_REQUIRES_PRIVILEGE_CHECK );
 		CCP_LOG( "Socket logger has been attached" );
 	}
 	else
@@ -94,7 +94,7 @@ PyObject* PyAttachToLogServer( PyObject* self, PyObject* args )
 	if( Log__IsLogging() )
 	{
 		// Instruct the CCP logging system to echo to the LogServer as well
-		CCP::RegisterLogEcho( &LogToLogServer, CCP::LOGTYPE_INFO, true );
+		CCP::RegisterLogEcho( &LogToLogServer, CCP::LOGTYPE_INFO, true, CCP::LOG_ECHO_REQUIRES_PRIVILEGE_CHECK );
 		CCP_LOG( "LogServer has been attached" );
 	}
 	else
@@ -460,7 +460,7 @@ void BlueInitializeSocketLogger()
     
 	if( StartSocketLogger() )
 	{
-		CCP::RegisterLogEcho( &LogToSocketLogger, CCP::LOGTYPE_INFO, true );
+		CCP::RegisterLogEcho( &LogToSocketLogger, CCP::LOGTYPE_INFO, true, CCP::LOG_ECHO_REQUIRES_PRIVILEGE_CHECK );
 		CCP_LOG( "Socket logger has been attached" );
 	}
 	else
@@ -513,7 +513,7 @@ void BlueModuleStartup()
     if( Log__IsLogging() )
     {
         // Instruct the CCP logging system to echo to the LogServer as well
-        CCP::RegisterLogEcho( &LogToLogServer, CCP::LOGTYPE_INFO, true );
+        CCP::RegisterLogEcho( &LogToLogServer, CCP::LOGTYPE_INFO, true, CCP::LOG_ECHO_REQUIRES_PRIVILEGE_CHECK );
 		CCP_LOG( "Shared memory logger has been attached" );
     }
 #endif

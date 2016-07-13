@@ -191,7 +191,7 @@ namespace CCP
 		}
 
 		// Instruct the CCP logging system to echo to the debugger output window.
-		CCP::RegisterLogEcho( &CCP::LogToNetwork, threshold, true );
+		CCP::RegisterLogEcho( &CCP::LogToNetwork, threshold, true, CCP::LOG_ECHO_REQUIRES_PRIVILEGE_CHECK );
 
 		return true;
 	}

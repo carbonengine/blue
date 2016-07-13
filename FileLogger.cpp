@@ -135,8 +135,7 @@ namespace CCP
 			CCP::s_fileLoggingThreadHandle = CcpCreateThread( CCP::FileLoggingThreadFunc, nullptr, CCP_THREAD_PRIORITY_NORMAL );
 		}
 
-		// Instruct the CCP logging system to echo to the debugger output window.
-		CCP::RegisterLogEcho( &CCP::LogToFile, threshold, true );
+		CCP::RegisterLogEcho( &CCP::LogToFile, threshold, true, CCP::LOG_ECHO_REQUIRES_PRIVILEGE_CHECK );
 
 		return true;
 	}
