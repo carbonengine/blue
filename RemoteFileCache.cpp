@@ -219,7 +219,7 @@ Be::Result<std::string> RemoteFileCache::CreateFileStreamForCachedFile( const st
 	
 	for( int retries = 0; retries < 5; ++retries )
 	{
-		if( fileStream->Open( cachedNameOnDisk.c_str(), CCP_OM_READONLY, CCP_SM_READSHARING ) )
+		if( fileStream->Open( cachedNameOnDisk.c_str(), CCP_OM_READONLY, CCP_SM_RWSHARING ) )
 		{
 			if( checksum.empty() || VerifyChecksum( fileStream, checksum ) )
 			{

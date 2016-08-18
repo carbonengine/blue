@@ -276,7 +276,7 @@ Be::Result<std::string> BlueFileStream::ReadEntireFile( const wchar_t* filename,
 
 	STACKLESS_ALLOWTHREADS();
 
-	m_fileDescriptor = CcpOpenFile( filename, CCP_OM_READONLY, CCP_SM_READSHARING );
+	m_fileDescriptor = CcpOpenFile( filename, CCP_OM_READONLY, CCP_SM_RWSHARING );
 
 	if( m_fileDescriptor == INVALID_FILE )
 	{
