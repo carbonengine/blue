@@ -2295,7 +2295,7 @@ void BluePyOS::ProcessSpyHandles()
 void BluePyOS::ShowMessageBoxForVerificationFailure( int type, const std::wstring& errmsg )
 {
 #if !PORTING_TO_LINUX
-	const wchar_t *text = L"Your EVE client installation may have modified, damaged or corrupt files. Please run repair.exe located in the EVE game directory or re-install the game client.";
+	const wchar_t *text = L"Your EVE client installation may have modified, damaged or corrupt files.";
 	const wchar_t *text1 = L"Your EVE client installation appears to have some extra files.  Make sure to reboot after patching.";
 	const wchar_t *caption = L"Verification Failure";
 	if (type == 1)
