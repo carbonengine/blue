@@ -203,6 +203,9 @@ private:
 	// Track current tasklet so we can catch self-referencing files.
 	PyTaskletObject* m_currentTasklet;
 #endif
+
+	// Keep track of strings we allocated to delete them with the reader
+	std::vector<void*> m_allocatedStrings;
 };
 
 TYPEDEF_BLUECLASS_WR( YamlReader );

@@ -58,6 +58,14 @@ YamlReader::~YamlReader()
 		yaml_event_delete( m_event );
 		delete m_event;
 	}
+
+	for( auto it = m_allocatedStrings.begin(); it != m_allocatedStrings.end(); ++it )
+	{
+		if( *it )
+		{
+			CCP_FREE( *it );
+		}
+	}
 }
 
 int YamlReader::YamlReadFromStreamStatic( void *data, unsigned char *buffer, size_t size, size_t *size_read )
@@ -746,6 +754,7 @@ const wchar_t* YamlReader::ReadWString()
 #else
 	wchar_t* ret = nullptr;
 #endif
+	m_allocatedStrings.push_back( ret );
 
 	return ret;
 }
@@ -771,6 +780,7 @@ const char* YamlReader::ReadString()
 	size_t len = strlen( string );
 	char* ret = (char*)CCP_MALLOC( (const char*)m_event->data.scalar.tag, len + 1 );
 	memcpy( ret, string, len + 1 );
+	m_allocatedStrings.push_back( ret );
 	return ret;
 }
 	
@@ -1196,7 +1206,17 @@ void YamlReader::ClearCachedEvents()
 		yaml_event_delete( *it );
 		delete *it;
 	}
-	m_eventList.clear();
+
+	if( !m_eventList.empty() )
+	{
+		size_t used, allocated;
+		CachedAllocator<PoolAllocatedYamlEvent>::GetInstance()->GetMemoryUsage( used, allocated );
+		if( used < allocated / 10 )
+		{
+			CachedAllocator<PoolAllocatedYamlEvent>::GetInstance()->Compact();
+		}
+		m_eventList.clear();
+	}
 }
 
 void YamlReader::ReadMembers( IRoot* instance )
