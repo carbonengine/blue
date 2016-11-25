@@ -346,3 +346,28 @@ Be::Result<std::string> BluePaths::RegisterFileSystem( std::string fs, BeforeOrA
 
 	return Be::Result<std::string>();
 }
+
+BlueStdResult BluePaths::UnregisterFileSystem( std::string fs )
+{
+	fs = "BlueResFileSystem" + fs;
+	auto found = std::find_if( 
+		m_resFileSystems.begin(), 
+		m_resFileSystems.end(), 
+		[&]( IBlueResFileSystem* x ) { return fs == x->ClassType()->mClassId->GetName(); } );
+	if( found == m_resFileSystems.end() )
+	{
+		return BlueStdResult( BLUE_STD_RESULT_INDEX_ERROR, "File system not found" );
+	}
+	m_resFileSystems.erase( found );
+	return BlueStdResult( BLUE_STD_RESULT_OK );
+}
+
+bool BluePaths::IsFileSystemRegistered( std::string fs ) const
+{
+	fs = "BlueResFileSystem" + fs;
+	auto found = std::find_if( 
+		m_resFileSystems.begin(), 
+		m_resFileSystems.end(), 
+		[&]( IBlueResFileSystem* x ) { return fs == x->ClassType()->mClassId->GetName(); } );
+	return found != m_resFileSystems.end();
+}

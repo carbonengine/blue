@@ -175,5 +175,25 @@ const Be::ClassInfo* BluePaths::ExposeToBlue()
 			"are 'Remote' (case sensitive)"
 		)
 
+		MAP_METHOD_AND_WRAP
+		(
+			"UnregisterFileSystem",
+			UnregisterFileSystem,
+			"Unregisters a previously registered file system. Currently available values are 'Remote' (case sensitive).\n"
+			":param name: file system name\n"
+			":type name: str\n"
+			":raises IndexError: if file system is not registered"
+		)
+
+		MAP_METHOD_AND_WRAP
+		(
+			"IsFileSystemRegistered",
+			IsFileSystemRegistered,
+			"Check if the file system is registered\n"
+			":param name: file system name\n"
+			":type name: str\n"
+			":rtype: bool"
+		)
+
 	EXPOSURE_END()
 }

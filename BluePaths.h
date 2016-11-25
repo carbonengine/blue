@@ -35,6 +35,8 @@ public:
 	Be::Result<std::string> RegisterFileSystem( std::string fs, BeforeOrAfter beforeOrAfter );
 	Be::Result<std::string> RegisterFileSystemBeforeLocal( std::string fs );
 	Be::Result<std::string> RegisterFileSystemAfterLocal( std::string fs );
+	BlueStdResult UnregisterFileSystem( std::string fs );
+	bool IsFileSystemRegistered( std::string fs ) const;
 
 	//////////////////////////////////////////////////////////////////////////
 	// IBluePaths
