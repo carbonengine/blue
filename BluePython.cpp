@@ -258,7 +258,7 @@ bool BluePyOS::InitBasicModuleSupport()
 	for (int i = 0; i <= _PYPORTLAST; i++)
 	{
 		mPyPorts[i].mPort = (PYPORT)i;
-		BluePythonObject* obj = WrapBlueObject(&mPyPorts[i]);
+		BluePythonObject* obj = WrapBlueObject(mPyPorts[i].GetRawRoot());
 		PyObject_SetAttrString(sysmodule, (char*)PORTNAMES[i], obj);
 		Py_DECREF(obj);
 	}
