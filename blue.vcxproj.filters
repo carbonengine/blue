@@ -515,9 +515,6 @@
     <ClCompile Include="BlueTimeoutHandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="BreakInDebugger.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="CallbackMan.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

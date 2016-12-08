@@ -702,7 +702,6 @@
     <ClCompile Include="BlueThreadMonitor_Blue.cpp"/>
     <ClCompile Include="BlueTime.cpp"/>
     <ClCompile Include="BlueTimeoutHandler.cpp"/>
-    <ClCompile Include="BreakInDebugger.cpp"/>
     <ClCompile Include="CallbackMan.cpp"/>
     <ClCompile Include="CallbackMan_Blue.cpp"/>
     <ClCompile Include="crypto.cpp"/>
