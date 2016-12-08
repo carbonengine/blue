@@ -41,21 +41,18 @@ const Be::ClassInfo* BluePaths::ExposeToBlue()
 		(
 			"SetSearchPath",
 			SetSearchPathW,
-			"Sets a search path for resolving file paths to the underlying file system"
-			"\nArguments:"
-			"\n   key - "
-			"\n   value - "
+			"Sets a search path for resolving file paths to the underlying file system\n"
+			":param key: \n"
+			":param value: "
 		)
 		
 		MAP_METHOD_AND_WRAP
 		(
 			"GetSearchPath",
 			GetSearchPathW,
-			"Gets a search path for resolving file paths to the underlying file system"
-			"\nArguments:"
-			"\n   key -"
-			"\nReturns:"
-			"\n   Value associated with key"
+			"Gets a search path for resolving file paths to the underlying file system\n"
+			":param key: \n"
+			":returns: Value associated with key"
 		)
 		
 		MAP_METHOD_AND_WRAP
@@ -69,11 +66,9 @@ const Be::ClassInfo* BluePaths::ExposeToBlue()
 		(
 			"ResolvePath",
 			ResolvePathW,
-			"Resolves a path to an underlying file path using registered search paths"
-			"\nArguments:"
-			"\n   path - res path"
-			"\nReturns:"
-			"\n   Path usable for the underlying file system that corresponds to the given path."
+			"Resolves a path to an underlying file path using registered search paths\n"
+			":param path: res path"
+			":returns: Path usable for the underlying file system that corresponds to the given path."
 		)
 
 		MAP_METHOD_AND_WRAP
@@ -83,21 +78,18 @@ const Be::ClassInfo* BluePaths::ExposeToBlue()
 			"Resolves a path to an underlying file path using registered search paths."
 			"\nThe difference between this function and ResolvePath is that this one"
 			"\nreturns the first possible path, rather than testing for the existence"
-			"\nof a file."
-			"\nArguments:"
-			"\n   path - "
-			"\nReturns:"
-			"\n   Path usable for the underlying file system that corresponds to the given path."
+			"\nof a file.\n"
+			":param  path: res path\n"
+			":returns: Path usable for the underlying file system that corresponds to the given path."
 		)
 
 		MAP_METHOD_AND_WRAP
 		(
 			"ResolvePathToRoot",
 			ResolvePathToRootW,
-			"Resolves a file system path back to a Blue path with the given root"
-			"\nArguments:"
-			"\n   root - "
-			"\n   path - "
+			"Resolves a file system path back to a Blue path with the given root\n"
+			":param root: \n"
+			":param path: \n"
 			"\nReturns:"
 			"\n   A Blue path based on the given root if a match was found. Otherwise an empty string."
 		)

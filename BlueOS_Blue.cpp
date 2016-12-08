@@ -46,151 +46,118 @@ static PyObject *PyCarbonIoManualWakeup( PyObject* self, PyObject* args)
 	return res;
 }
 
-PyObject* PySetCrashKeyValues( PyObject* self, PyObject* args )
+void SetCrashKeyValues( const std::wstring& k, const std::wstring& v )
 {
 	if( !BeCrashes )
 	{
-		Py_RETURN_NONE;
+		return;
 	}
-
-	PyUnicodeObject* k = NULL;
-	PyUnicodeObject* v = NULL;
-
-	if( PyArg_ParseTuple( args, "UU", &k, &v ) )
-	{
-		wchar_t key[128];
-		wchar_t val[256];
-		PyUnicode_AsWideChar(k,&key[0],127);
-		key[127] = 0;
-		PyUnicode_AsWideChar(v,&val[0],255);
-		val[255] = 0;
-		BeCrashes->SetCrashKeyValueW(key, val);
-
-		Py_RETURN_NONE;
-	}
-	return NULL;
+	wchar_t key[128];
+	wchar_t val[256];
+	wcsncpy_s( key, k.c_str(), 127 );
+	wcsncpy_s( val, v.c_str(), 255 );
+	BeCrashes->SetCrashKeyValueW(key, val);
 }
 
-MAP_FUNCTION( "SetCrashKeyValues", PySetCrashKeyValues, "Sets arbitrary key values for Breakpad uploads" );
+MAP_FUNCTION_AND_WRAP( 
+	"SetCrashKeyValues", 
+	SetCrashKeyValues, 
+	"Sets arbitrary key values for Breakpad uploads\n"
+	":param key: key string\n"
+	":param value: value string" );
 
-PyObject* PySetCrashSessionFileDescriptor( PyObject* self, PyObject* args )
+void SetCrashSessionFileDescriptor( int fd )
 {
 	if( !BeCrashes )
 	{
-		Py_RETURN_NONE;
+		return;
 	}
 
-	int fd;
-	if( PyArg_ParseTuple( args, "i", &fd ) )
-	{
-		BeCrashes->SetSessionFileDescriptor(fd);
-
-		Py_RETURN_NONE;
-	}
-	return NULL;
+	BeCrashes->SetSessionFileDescriptor(fd);
 }
 
-MAP_FUNCTION( "SetCrashSessionFileDescriptor", PySetCrashSessionFileDescriptor, "Sets a session file descriptor, for writing log info in case of a crash" );
+MAP_FUNCTION_AND_WRAP( 
+	"SetCrashSessionFileDescriptor", 
+	SetCrashSessionFileDescriptor, 
+	"Sets a session file descriptor, for writing log info in case of a crash\n"
+	":param fd: file descriptor"
+	);
 
-PyObject* PySetCrashUserId( PyObject* self, PyObject* args )
+void SetCrashUserId( int id )
 {
 	if( !BeCrashes )
 	{
-		Py_RETURN_NONE;
+		return;
 	}
 
-	int id;
-	if( PyArg_ParseTuple( args, "i", &id ) )
-	{
-		BeCrashes->SetUserId(id);
-
-		Py_RETURN_NONE;
-	}
-	return NULL;
+	BeCrashes->SetUserId(id);
 }
 
-MAP_FUNCTION( "SetCrashUserId", PySetCrashUserId, "Sets a user id, for writing to session file in case of a crash" );
+MAP_FUNCTION_AND_WRAP( 
+	"SetCrashUserId", 
+	SetCrashUserId, 
+	"Sets a user id, for writing to session file in case of a crash\n"
+	":param userId: user id" );
 
-PyObject* PySetCrashSessionId( PyObject* self, PyObject* args )
+void SetCrashSessionId( int64_t id )
 {
 	if( !BeCrashes )
 	{
-		Py_RETURN_NONE;
+		return;
 	}
 
-	int64_t id;
-	if( PyArg_ParseTuple( args, "L", &id ) )
-	{
-		BeCrashes->SetSessionId(id);
-
-		Py_RETURN_NONE;
-	}
-	return NULL;
+	BeCrashes->SetSessionId(id);
 }
 
-MAP_FUNCTION( "SetCrashSessionId", PySetCrashSessionId, "Sets a session id, for writing to session file in case of a crash" );
+MAP_FUNCTION_AND_WRAP( 
+	"SetCrashSessionId", 
+	SetCrashSessionId, 
+	"Sets a session id, for writing to session file in case of a crash\n"
+	":param sessionId: session id" );
 
-PyObject* PyEnableBreakpad( PyObject* self, PyObject* args )
+void EnableBreakpad( bool enable )
 {
 	if( !BeCrashes )
 	{
-		Py_RETURN_NONE;
+		return;
 	}
 
-	unsigned char enableBreakpad;
-
-	if( PyArg_ParseTuple( args, "b", &enableBreakpad ) )
-	{
-		BeCrashes->EnableCrashReporting(enableBreakpad != 0);
-		Py_RETURN_NONE;
-	}
-
-	return NULL;
+	BeCrashes->EnableCrashReporting( enable );
 }
 
-MAP_FUNCTION( "EnableBreakpad", PyEnableBreakpad, "Enable or disable breakpad" );
+MAP_FUNCTION_AND_WRAP( 
+	"EnableBreakpad", 
+	EnableBreakpad, 
+	"Enable or disable breakpad\n"
+	":param enable: True to enable and False to disable" );
 
-PyObject* PyIsBreakpadEnabled( PyObject* self, PyObject* args )
+bool IsBreakpadEnabled()
 {
 	if( !BeCrashes )
 	{
-		Py_RETURN_FALSE;
+		return false;
 	}
 
-	if( BeCrashes->IsCrashReportingEnabled() )
-	{
-		Py_RETURN_TRUE;
-	}
-	else
-	{
-		Py_RETURN_FALSE;
-	}
+	return BeCrashes->IsCrashReportingEnabled();
 }
 
-MAP_FUNCTION( "IsBreakpadEnabled", PyIsBreakpadEnabled, "Check if Breakpad upload is currently enabled" );
+MAP_FUNCTION_AND_WRAP( "IsBreakpadEnabled", IsBreakpadEnabled, "Check if Breakpad upload is currently enabled" );
 
-PyObject* PySetBuildNumber( PyObject* self, PyObject* args )
+void SetBuildNumber( int buildNo )
 {
 	if( !BeCrashes )
 	{
-		Py_RETURN_NONE;
+		return;
 	}
 
-	int buildNo = 999999;
-	
-	if( PyArg_ParseTuple( args, "i", &buildNo ) )
-	{
-		BeCrashes->SetBuildNumber( buildNo );
-		Py_RETURN_NONE;
-	}
-	else
-	{
-		// Error set by ParseTuple
-		return NULL;
-	}
+	BeCrashes->SetBuildNumber( buildNo );
 }
 
-MAP_FUNCTION( "SetBreakpadBuildNumber", PySetBuildNumber, "Set the build number for breakpad" );
+MAP_FUNCTION_AND_WRAP( 
+	"SetBreakpadBuildNumber", 
+	SetBuildNumber, 
+	"Set the build number for breakpad\n"
+	":param buildNo: build number" );
 
 #ifdef _WIN32
 static PyObject *PyGetExeFilePids( PyObject* self, PyObject* args)
@@ -563,9 +530,8 @@ const Be::ClassInfo* BlueOS::ExposeToBlue()
             "ShowErrorMessageBox",
             ShowErrorMessageBox,
             "Shows a modal message box indicating an error.\n"
-            "Arguments:\n"
-            "title - message box title\n"
-            "message - text message to show in the box"
+			":param title: message box title\n"
+			":param message: text message to show in the box"
         )
 
 

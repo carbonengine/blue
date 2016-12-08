@@ -360,20 +360,25 @@ PyObject* PyEnableFileLogging( PyObject* self, PyObject* args )
 
 	}
 
-	Py_RETURN_NONE;
+	Py_RETURN_FALSE;
 }
 
-MAP_FUNCTION( "EnableFileLogging", PyEnableFileLogging, "Enables echoing of log to the file" );
+MAP_FUNCTION( 
+	"EnableFileLogging", 
+	PyEnableFileLogging, 
+	"Enables echoing of log to the file\n"
+	":param dirPath: log directory path\n"
+	":param role: role name\n"
+	":param threshold: Optional[int]\n"
+	":rtype: bool" );
 
 
-PyObject* PyDisableFileLogging( PyObject* self, PyObject* args )
+void DisableFileLogging()
 {
 	CCP::DisableFileLogging( );
-
-	Py_RETURN_NONE;
 }
 
-MAP_FUNCTION( "DisableFileLogging", PyDisableFileLogging, "Disabled file logging" );
+MAP_FUNCTION_AND_WRAP( "DisableFileLogging", DisableFileLogging, "Disabled file logging" );
 
 PyObject* PyGetFileLoggingState( PyObject* self, PyObject* args )
 {
@@ -396,7 +401,11 @@ PyObject* PyGetFileLoggingState( PyObject* self, PyObject* args )
 
 }
 
-MAP_FUNCTION( "GetFileLoggingState", PyGetFileLoggingState, "Tell you where the server is logging to" );
+MAP_FUNCTION( 
+	"GetFileLoggingState", 
+	PyGetFileLoggingState, 
+	"Tell you where the server is logging to\n"
+	":rtype: bool | (str, int, bool)" );
 #endif
 
 #ifdef OptimizeOff

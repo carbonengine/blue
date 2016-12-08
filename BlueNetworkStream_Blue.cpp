@@ -19,8 +19,7 @@ const Be::ClassInfo* BlueNetworkStream::ExposeToBlue()
 			"__init__", 
 			Open, 
 			"Creates a network stream. Starts streaming in data from provided URL into memory immediately.\n"
-			"Arguments:\n"
-			"url - well-formed network url to a resourse" )
+			":param url: well-formed network url to a resourse" )
 		MAP_PROPERTY_READONLY( 
 			"size", 
 			GetSize, 
@@ -30,8 +29,7 @@ const Be::ClassInfo* BlueNetworkStream::ExposeToBlue()
 			ReadData, 
 			1, 
 			"Reads data from the stream and returns it as a string. Blocks until the data is downloaded.\n"
-			"Arguments:\n"
-			"size - (optional) size of the data to read in bytes; if no size is provided the function reads entire file" );
+			":param size: size of the data to read in bytes; if no size is provided the function reads entire file" );
 		MAP_METHOD_AND_WRAP( 
 			"close", 
 			Close, 

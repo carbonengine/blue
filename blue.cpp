@@ -71,8 +71,7 @@ namespace
 
 #endif
 
-#if BLUE_WITH_PYTHON
-PyObject* PyAttachToLogServer( PyObject* self, PyObject* args )
+void AttachToLogServer()
 {
 	if( StartSocketLogger() )
 	{
@@ -87,7 +86,7 @@ PyObject* PyAttachToLogServer( PyObject* self, PyObject* args )
 	if( Log__IsLogging() )
 	{
 		CCP_LOG( "LogServer can't reattach" );
-		Py_RETURN_NONE;
+		return;
 	}
 
 	Log__InitLibrary( (LONG_PTR)s_instance, CW2A( s_logDeviceName.c_str()));
@@ -102,11 +101,11 @@ PyObject* PyAttachToLogServer( PyObject* self, PyObject* args )
 		CCP_LOG( "Failed to attach to LogServer" );
 	}
 #endif
-	Py_RETURN_NONE;
 }
 
-MAP_FUNCTION( "AttachToLogServer", PyAttachToLogServer, "Attaches to the log server" );
+MAP_FUNCTION_AND_WRAP( "AttachToLogServer", AttachToLogServer, "Attaches to the log server" );
 
+#if BLUE_WITH_PYTHON
 
 //--------------------------------------------------------------------
 // AtomicFileRead and Write
@@ -354,17 +353,20 @@ MAP_FUNCTION(
 	"AtomicFileRead",
 	PyAtomicFileRead,
 	"Reads an entire file atomically. Returns the contents of the file as a string.\n"
-	"Raises OSError, IOError.\n"
-	"Arguments:\n"
-	"filename - path to file" );
+	":raises: OSError, IOError\n"
+	":param filename: path to file\n"
+	":type filename: basestring\n"
+	":rtype: str" );
 
 MAP_FUNCTION( 
 	"AtomicFileWrite",
 	PyAtomicFileWrite,
 	"Writes an entire file atomically. Raises OSError, IOError.\n"
-	"Arguments:\n"
-	"filename - path to file\n"
-	"contents - buffer containing file contents to write" );
+	":param filename: path to file\n"
+	":type filename: basestring\n"
+	":param contents: buffer containing file contents to write\n"
+	":type contents: buffer\n"
+	":rtype: None" );
 
 
 MAP_FUNCTION_AND_WRAP( 
@@ -376,9 +378,8 @@ MAP_FUNCTION_AND_WRAP(
 	"Function returns a list of all paths from one object to another, where each path is a list of tuples\n"
 	"(parent, type, index) where parent is a parent blue object, type is 0 for getattr call and 1 for index call,\n"
 	"index is either an attribute name or a list/dict key."
-	"Arguments:\n"
-	"fromObj - blue object that is the start of the path\n"
-	"toObj - blue object that is the end of the path" );
+	":param fromObj: blue object that is the start of the path\n"
+	":param toObj: blue object that is the end of the path" );
 
 
 #ifdef _WIN32
@@ -405,7 +406,13 @@ PyObject* PyEnableDebuggerLogging( PyObject* self, PyObject* args )
 	Py_RETURN_NONE;
 }
 
-MAP_FUNCTION( "EnableDebuggerLogging", PyEnableDebuggerLogging, "Enables echoing of log to debugger output window" );
+MAP_FUNCTION( 
+	"EnableDebuggerLogging", 
+	PyEnableDebuggerLogging, 
+	"Enables echoing of log to debugger output window\n"
+	":param threshold: minimum severity level required for the message to be output\n"
+	":type threshold: Optional[int]\n"
+	":rtype: None" );
 #endif
 #endif
 

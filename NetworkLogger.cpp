@@ -642,20 +642,31 @@ PyObject* PyEnableNetworkLogging( PyObject* self, PyObject* args )
 
 	}
 
-	Py_RETURN_NONE;
+	Py_RETURN_FALSE;
 }
 
-MAP_FUNCTION( "EnableNetworkLogging", PyEnableNetworkLogging, "Enables echoing of log to the network" );
+MAP_FUNCTION( 
+	"EnableNetworkLogging", 
+	PyEnableNetworkLogging, 
+	"Enables echoing of log to the network\n"
+	":param serverName: server name\n"
+	":type serverName: str\n"
+	":param port: server port number\n"
+	":type port: int\n"
+	":param role: role name\n"
+	":type role: str\n"
+	":param threshold: minimal severity level of the message to be logged\n"
+	":type threshold: int\n"
+	":rtype: bool"
+	);
 
 
-PyObject* PyDisableNetworkLogging( PyObject* self, PyObject* args )
+void DisableNetworkLogging()
 {
 	CCP::DisableNetworkLogging( );
-
-	Py_RETURN_NONE;
 }
 
-MAP_FUNCTION( "DisableNetworkLogging", PyDisableNetworkLogging, "Disabled network logging" );
+MAP_FUNCTION_AND_WRAP( "DisableNetworkLogging", DisableNetworkLogging, "Disable network logging" );
 
 PyObject* PyGetNetworkLoggingState( PyObject* self, PyObject* args )
 {
@@ -680,7 +691,11 @@ PyObject* PyGetNetworkLoggingState( PyObject* self, PyObject* args )
 
 }
 
-MAP_FUNCTION( "GetNetworkLoggingState", PyGetNetworkLoggingState, "Tell you where the server is logging to" );
+MAP_FUNCTION( 
+	"GetNetworkLoggingState", 
+	PyGetNetworkLoggingState, 
+	"Tell you where the server is logging to\n"
+	":rtype: bool | (str, long, bool)" );
 
 #ifdef OptimizeOff
 #pragma optimize("", on)

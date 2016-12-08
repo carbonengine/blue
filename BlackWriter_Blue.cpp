@@ -15,20 +15,16 @@ const Be::ClassInfo* BlackWriter::ExposeToBlue()
 			"WriteObjectToStream",
 			WriteObjectToStream,
 			"Writes a binary representation of an object to the given stream.\n"
-			"\n"
-			"Arguments:\n"
-			"  obj - The object to write\n"
-			"  stream - An IBlueStream object\n"
+			":param obj: The object to write\n"
+			":param stream: An IBlueStream object\n"
 		)
 		MAP_METHOD_AND_WRAP
 		(
 			"WriteObjectToFile",
 			WriteObjectToFile,
 			"Writes a binary representation of an object to the given file.\n"
-			"\n"
-			"Arguments:\n"
-			"  obj - The object to write\n"
-			"  filename - The name of the file\n"
+			":param obj: The object to write\n"
+			":param filename: The name of the file\n"
 
 		)
 

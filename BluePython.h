@@ -370,25 +370,21 @@ public:
 TYPEDEF_BLUECLASS_WR(BluePyOS); //need weakref support for the singleton factory
 
 // For testing crashdumps
-static PyObject* PyCrashHorribly( PyObject* module, PyObject* args )
+static void CrashHorribly( bool reallyCrash )
 {
-
-	bool reallyCrash = false;
-	if( !PyArg_ParseTuple( args, "b", &reallyCrash ) )
+	if( !reallyCrash )
 	{
-		return NULL;
-	}
-	else if( !reallyCrash )
-	{
-		Py_RETURN_NONE;
+		return;
 	}
 	
 	BeOS->SetError( BEFLUSH, 0, "" );
 	CcpCrashOnPurpose();
-
-	Py_RETURN_NONE;
 }
-MAP_FUNCTION( "CrashHorribly", PyCrashHorribly, "CrashHorribly( bool reallyCrash )\nCrashes Blue. Pass in True if you really want to crash.\n Intended for testing crashdumps etc." );
+MAP_FUNCTION_AND_WRAP( 
+	"CrashHorribly", 
+	CrashHorribly, 
+	"Crashes Blue. Intended for testing crashdumps etc.\n"
+	":param reallyCrash: Pass in True if you really want to crash" );
 
 namespace
 {
@@ -419,14 +415,13 @@ protected:
 }
 
 // For testing crashdumps
-static PyObject* PyPureVirtualCall( PyObject* module, PyObject* args )
+static void PureVirtualCall()
 {
 	CCP_LOGERR( "About to make a pure virtual call." );
 
 	PureVirtualCallHelper pureVirtualCallHelper;
-	Py_RETURN_NONE;
 }
-MAP_FUNCTION( "PureVirtualCall", PyPureVirtualCall, "PureVirtualCall()\nInduces a C++ pure virtual call that is supposed to crash the process." );
+MAP_FUNCTION_AND_WRAP( "PureVirtualCall", PureVirtualCall, "Induces a C++ pure virtual call that is supposed to crash the process." );
 
 
 // Callbacks for python to call when it starts and stops GC
