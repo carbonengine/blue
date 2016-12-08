@@ -193,7 +193,8 @@ bool BluePyOS::InitBasicModuleSupport()
 									   BlueRegistration::GetFuncRegs(),
 									   BlueRegistration::GetEnumRegs(),
 									   BlueRegistration::GetTestRegs(),
-									   BlueRegistration::GetThunkerRegs());
+									   BlueRegistration::GetThunkerRegs(),
+									   BlueRegistration::GetFuncSignatures() );
 
 	BlueRegisterObjectsToModule( mBlueModule, BlueRegistration::GetObjectRegs() );
 	BlueRegisterExceptionsToModule( mBlueModule, BlueRegistration::GetExceptionRegs() );
