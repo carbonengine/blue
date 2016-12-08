@@ -72,13 +72,15 @@ const Be::ClassInfo* CcpStatisticsEntry::ExposeToBlue()
 		(
 			"Add",
 			Add,
-			"Add the given value to the statistic"
+			"Add the given value to the statistic\n"
+			":param value: increment value"
 		)
 		MAP_METHOD_AND_WRAP
 		(
 			"Set",
 			Set,
-			"Set the statistic to the given value"
+			"Set the statistic to the given value\n"
+			":param value: new value"
 		)
 		MAP_METHOD_AND_WRAP
 		(
@@ -586,14 +588,17 @@ const Be::ClassInfo* BlueStatistics::ExposeToBlue()
 		( 
 			"SetAccumulator", 
 			SetAccumulator, 
-			"Sets an accumulator (such as a line graph) for the given statistic"
+			"Sets an accumulator (such as a line graph) for the given statistic\n"
+			":param name: stat name\n"
+			":param accumulator: new accumulator"
 		)
 
 		MAP_METHOD_AND_WRAP
 		( 
 			"GetAccumulator", 
 			GetAccumulator, 
-			"Gets an accumulator (such as a line graph) for the given statistic"
+			"Gets an accumulator (such as a line graph) for the given statistic\n"
+			":param name: stat name"
 		)
 
 #if CCP_TELEMETRY_ENABLED
@@ -721,7 +726,8 @@ const Be::ClassInfo* BlueStatistics::ExposeToBlue()
 		(
 			"SetTimelineSectionName",
 			SetTimelineSectionName,
-			"Changes the name of the global state. This helps identifying regions in the Telemetry timeline view."
+			"Changes the name of the global state. This helps identifying regions in the Telemetry timeline view.\n"
+			":param name: section name"
 		)
 
 		MAP_METHOD

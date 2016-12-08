@@ -124,7 +124,8 @@ const Be::ClassInfo* BlueObjectRecycler::ExposeToBlue()
 		(
 			"Update",
 			Update,
-			"TODO"
+			"Perform housekeeping, potentially releasing instances held onto for recycling purposes.\n"
+			":param time: current time"
 		)
 
 		MAP_METHOD_AND_WRAP

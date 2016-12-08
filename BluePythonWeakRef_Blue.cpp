@@ -22,7 +22,8 @@ const Be::ClassInfo* BluePythonWeakRef::ExposeToBlue()
 		(
 			"__init__",
 			PyInit,
-			"Construct a BluePythonWeakRef to the given object."
+			"Construct a BluePythonWeakRef to the given object.\n"
+			":param obj: object to create reference to"
 		)
 		
 		MAP_PROPERTY_READONLY

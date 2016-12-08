@@ -122,14 +122,16 @@ const Be::ClassInfo* RemoteFileCache::ExposeToBlue()
 			"DownloadFileIndex",
 			DownloadFileIndex,
 			"Download a file index from the given url.\n"
-			"Returns True/False on success/failure."
+			"Returns True/False on success/failure.\n"
+			":param url: URL for the file index"
 		)
 
 		MAP_METHOD_AND_WRAP
 		(
 			"AddFileIndex",
 			AddFileIndex,
-			"Load the file index directly from the given string."
+			"Load the file index directly from the given string.\n"
+			":param fileIndex: string containing file index"
 		)
 
 		MAP_METHOD_AND_WRAP
@@ -137,7 +139,8 @@ const Be::ClassInfo* RemoteFileCache::ExposeToBlue()
 			"FileExists",
 			FileExists,
 			"Returns True if the file exists (either cached locally or available\n"
-			"on the remote server."
+			"on the remote server.\n"
+			":param path: res path"
 		)
 
 		MAP_METHOD_AND_WRAP
@@ -145,21 +148,24 @@ const Be::ClassInfo* RemoteFileCache::ExposeToBlue()
 			"GetStreamFromPath",
 			GetStreamFromPathW,
 			"Get a stream from the given path. This may trigger a download\n"
-			"of a file from the currently set server."
+			"of a file from the currently set server.\n"
+			":param path: res path"
 		)
 
 		MAP_METHOD_AND_WRAP
 		(
 			"ListDir",
 			ListDir,
-			""
+			"Returns a list of files in the directory\n"
+			":param path: res path to a directory"
 		)
 
 		MAP_METHOD_AND_WRAP
 		(
 			"isdir",
 			IsDirectory,
-			""
+			"Checks if the given path is a directory or a file\n"
+			":param path: res path"
 		)
 
 		MAP_PROPERTY

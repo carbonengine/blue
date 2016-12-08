@@ -262,7 +262,8 @@ const Be::ClassInfo* ResFile::ExposeToBlue()
 		(
 			"FileExists",
 			FileExists,
-			"Deprecated: Use blue.paths.FileExists"
+			"Deprecated: Use blue.paths.FileExists\n"
+			":param fileName:"
 		)
 
 		MAP_PROPERTY_READONLY

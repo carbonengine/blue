@@ -18,22 +18,18 @@ const Be::ClassInfo* BlackReader::ExposeToBlue()
 			"CreateObjectFromStream",
 			CreateObjectFromStream,
 			"Creates an object from a binary representation read from the given stream.\n"
-			"\n"
-			"Arguments:\n"
-			"  stream\n"
-			"Returns:\n"
-			"  The object corresponding to the binary representation."
+			":param stream: blue stream\n"
+			":returns: the object corresponding to the binary representation\n"
+			":raises RuntimeError: on error"
 		)
 		MAP_METHOD_AND_WRAP
 		(
 			"CreateObjectFromFile",
 			CreateObjectFromFile,
 			"Creates an object from a binary representation read from the given file.\n"
-			"\n"
-			"Arguments:\n"
-			"  filename\n"
-			"Returns:\n"
-			"  The object corresponding to the binary representation."
+			":param filename: res path to binary file\n"
+			":returns: the object corresponding to the binary representation\n"
+			":raises RuntimeError: on error"
 		)
 
 		MAP_METHOD_AND_WRAP

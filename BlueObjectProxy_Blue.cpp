@@ -61,6 +61,11 @@ const Be::ClassInfo* BlueObjectProxy::ExposeToBlue()
 
 
 		MAP_METHOD_AND_WRAP( "Freeze", Freeze, "Prevents unloading of the object")
-		MAP_METHOD_AND_WRAP( "SetObjectFromBuilder", SetObjectFromBuilder, "Replaces the object inside the proxy without any further notifications, nor will it unlink the builder.")
+		MAP_METHOD_AND_WRAP( 
+			"SetObjectFromBuilder", 
+			SetObjectFromBuilder, 
+			"Replaces the object inside the proxy without any further notifications, nor will it unlink the builder.\n"
+			":param obj: new object"
+			)
 	EXPOSURE_END()
 }

@@ -377,8 +377,8 @@ MAP_FUNCTION_AND_WRAP(
 	"(parent, type, index) where parent is a parent blue object, type is 0 for getattr call and 1 for index call,\n"
 	"index is either an attribute name or a list/dict key."
 	"Arguments:\n"
-	"from - blue object that is the start of the path\n"
-	"to - blue object that is the end of the path" );
+	"fromObj - blue object that is the start of the path\n"
+	"toObj - blue object that is the end of the path" );
 
 
 #ifdef _WIN32

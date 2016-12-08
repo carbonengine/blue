@@ -329,7 +329,9 @@ const Be::ClassInfo* BlueResMan::ExposeToBlue()
 			"GetResource", 
 			GetResourceFromScript,
 			1,
-			"Get a resource associated with the given path name"
+			"Get a resource associated with the given path name\n"
+			":param path: res path to resource file\n"
+			":param ex: additional extension"
 		)
 		
 		// TODO: Remove this - string parameters are now automatically promoted
@@ -337,7 +339,9 @@ const Be::ClassInfo* BlueResMan::ExposeToBlue()
 		( 
 			"GetResourceW", 
 			GetResourceFromScript, 
-			"Get a resource associated with the given path name"
+			"Get a resource associated with the given path name\n"
+			":param path: res path to resource file\n"
+			":param ex: additional extension"
 		)
 
 		MAP_METHOD_AND_WRAP
@@ -347,7 +351,7 @@ const Be::ClassInfo* BlueResMan::ExposeToBlue()
 			"Loads object from a file (.blue or .red based on extension)."
 			"\nThis function may yield the calling tasklet while disk io takes place"
 			"\n\nArguments:"
-			"\n - filename - path to the file to load"
+			"\n filename - path to the file to load"
 		)
 
 		MAP_METHOD
@@ -356,8 +360,8 @@ const Be::ClassInfo* BlueResMan::ExposeToBlue()
 			PySaveObject,
 			"Saves an object to a file (.red or .blue based on extension)."
 			"\n\nArguments:"
-			"\n - object - object to save"
-			"\n - filename - path to the file to save to"
+			"\n obj - object to save"
+			"\n filename - path to the file to save to"
 		)
 		
 		MAP_METHOD
@@ -368,7 +372,7 @@ const Be::ClassInfo* BlueResMan::ExposeToBlue()
 			"\nis equivalent to the contents of a red file saved with"
 			"\nSaveObject."
 			"\n\nArguments:"
-			"\n - object - object to save"
+			"\n obj - object to save"
 		)
 		
 		MAP_METHOD_AND_WRAP
@@ -381,7 +385,7 @@ const Be::ClassInfo* BlueResMan::ExposeToBlue()
 			"\nof the object without using it in any way."
 			"\nThis function may yield the calling tasklet while disk io takes place"
 			"\n\nArguments:"
-			"\n - filename - path to the file to load"
+			"\n filename - path to the file to load"
 		)
 
 		MAP_METHOD
@@ -405,7 +409,11 @@ const Be::ClassInfo* BlueResMan::ExposeToBlue()
 			"Waits for currently scheduled urgent resource loads to finish"
 		)
 
-		MAP_METHOD_AND_WRAP( "SetUrgentResourceLoads", SetUrgentResourceLoads, "Enables (or disables) urgent resource loads" )
+		MAP_METHOD_AND_WRAP( 
+			"SetUrgentResourceLoads", 
+			SetUrgentResourceLoads, 
+			"Enables (or disables) urgent resource loads\n"
+			":param enable: " )
 		MAP_METHOD_AND_WRAP( "ResetQueueStats", ResetQueueStats, "Resets stats for load and prep queues" )
 
 		MAP_METHOD_AND_WRAP

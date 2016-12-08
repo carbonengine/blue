@@ -533,4 +533,8 @@ std::string md5_checksum( std::string input )
 	return checkSum.hex_digest();
 }
 
-MAP_FUNCTION_AND_WRAP( "md5_checksum", md5_checksum, "" );
+MAP_FUNCTION_AND_WRAP( 
+	"md5_checksum", 
+	md5_checksum, 
+	"Returns MD5 checksum for the given data\n"
+	":param data: any data as a string" );

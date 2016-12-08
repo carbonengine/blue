@@ -39,7 +39,7 @@ const Be::ClassInfo* YamlReader::ExposeToBlue()
 			"Creates an object from the given yaml representation.\n"
 			"\n"
 			"Arguments:\n"
-			"  yamlString\n"
+			"  yamlString - string containing YAML\n"
 			"Returns:\n"
 			"  The object corresponding to the yaml representation."
 		)
@@ -50,7 +50,7 @@ const Be::ClassInfo* YamlReader::ExposeToBlue()
 			"Creates an object from a yaml representation read from the given stream.\n"
 			"\n"
 			"Arguments:\n"
-			"  stream\n"
+			"  stream - blue stream\n"
 			"Returns:\n"
 			"  The object corresponding to the yaml representation."
 		)
@@ -61,7 +61,7 @@ const Be::ClassInfo* YamlReader::ExposeToBlue()
 			"Creates an object from a yaml representation read from the given file.\n"
 			"\n"
 			"Arguments:\n"
-			"  filename\n"
+			"  filename - res path\n"
 			"Returns:\n"
 			"  The object corresponding to the yaml representation."
 		)

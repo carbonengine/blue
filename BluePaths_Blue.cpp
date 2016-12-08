@@ -43,8 +43,8 @@ const Be::ClassInfo* BluePaths::ExposeToBlue()
 			SetSearchPathW,
 			"Sets a search path for resolving file paths to the underlying file system"
 			"\nArguments:"
-			"\n   key"
-			"\n   value"
+			"\n   key - "
+			"\n   value - "
 		)
 		
 		MAP_METHOD_AND_WRAP
@@ -53,7 +53,7 @@ const Be::ClassInfo* BluePaths::ExposeToBlue()
 			GetSearchPathW,
 			"Gets a search path for resolving file paths to the underlying file system"
 			"\nArguments:"
-			"\n   key"
+			"\n   key -"
 			"\nReturns:"
 			"\n   Value associated with key"
 		)
@@ -71,7 +71,7 @@ const Be::ClassInfo* BluePaths::ExposeToBlue()
 			ResolvePathW,
 			"Resolves a path to an underlying file path using registered search paths"
 			"\nArguments:"
-			"\n   path"
+			"\n   path - res path"
 			"\nReturns:"
 			"\n   Path usable for the underlying file system that corresponds to the given path."
 		)
@@ -85,7 +85,7 @@ const Be::ClassInfo* BluePaths::ExposeToBlue()
 			"\nreturns the first possible path, rather than testing for the existence"
 			"\nof a file."
 			"\nArguments:"
-			"\n   path"
+			"\n   path - "
 			"\nReturns:"
 			"\n   Path usable for the underlying file system that corresponds to the given path."
 		)
@@ -96,8 +96,8 @@ const Be::ClassInfo* BluePaths::ExposeToBlue()
 			ResolvePathToRootW,
 			"Resolves a file system path back to a Blue path with the given root"
 			"\nArguments:"
-			"\n   root"
-			"\n   path"
+			"\n   root - "
+			"\n   path - "
 			"\nReturns:"
 			"\n   A Blue path based on the given root if a match was found. Otherwise an empty string."
 		)
@@ -120,21 +120,24 @@ const Be::ClassInfo* BluePaths::ExposeToBlue()
 		(
 			"listdir",
 			ListDirFromScript,
-			"Returns a list containing the names of the entries in the directory given."
+			"Returns a list containing the names of the entries in the directory given.\n"
+			":param path: directory res path"
 		)
 
 		MAP_METHOD_AND_WRAP
 		(
 			"isdir",
 			IsDirectory,
-			"Returns True if the given path is a directory, otherwise False."
+			"Returns True if the given path is a directory, otherwise False.\n"
+			":param path: res path"
 		)
 
 		MAP_METHOD_AND_WRAP
 		(
 			"exists",
 			FileExists,
-			"Returns True if the given path exists as a file, otherwise False."
+			"Returns True if the given path exists as a file, otherwise False.\n"
+			":param filename: res path"
 		)
 
 		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS
@@ -142,21 +145,25 @@ const Be::ClassInfo* BluePaths::ExposeToBlue()
 			"open",
 			Open,
 			1,
-			"Opens the given file. Raises a RuntimeError if it fails to open."
+			"Opens the given file. Raises a RuntimeError if it fails to open.\n"
+			":param filename: res path to the file\n"
+			":param openMode: open mode string"
 		)
 
 		MAP_METHOD_AND_WRAP
 		(
 			"GetFileContentsWithYield",
 			GetFileContentsWithYield,
-			""
+			"Returns a stream for reading a file\n"
+			":param path: res path to the file"
 		)
 
 		MAP_METHOD_AND_WRAP
 		(
 			"FileExistsLocally",
 			FileExistsLocally,
-			"Returns True if the given path exists as a file, cached locally in the case of remote files."
+			"Returns True if the given path exists as a file, cached locally in the case of remote files.\n"
+			":param filename: res path"
 		)
 
 		MAP_METHOD_AND_WRAP
@@ -164,7 +171,8 @@ const Be::ClassInfo* BluePaths::ExposeToBlue()
 			"RegisterFileSystemBeforeLocal",
 			RegisterFileSystemBeforeLocal,
 			"Registers a file system that is searched before the local file system. Currently available values\n"
-			"are 'Remote' (case sensitive)"
+			"are 'Remote' (case sensitive)\n"
+			":param systemName: file system name"
 		)
 
 		MAP_METHOD_AND_WRAP
@@ -172,7 +180,8 @@ const Be::ClassInfo* BluePaths::ExposeToBlue()
 			"RegisterFileSystemAfterLocal",
 			RegisterFileSystemAfterLocal,
 			"Registers a file system that is searched after the local file system. Currently available values\n"
-			"are 'Remote' (case sensitive)"
+			"are 'Remote' (case sensitive)\n"
+			":param systemName: file system name"
 		)
 
 		MAP_METHOD_AND_WRAP
@@ -181,7 +190,6 @@ const Be::ClassInfo* BluePaths::ExposeToBlue()
 			UnregisterFileSystem,
 			"Unregisters a previously registered file system. Currently available values are 'Remote' (case sensitive).\n"
 			":param name: file system name\n"
-			":type name: str\n"
 			":raises IndexError: if file system is not registered"
 		)
 
@@ -190,9 +198,7 @@ const Be::ClassInfo* BluePaths::ExposeToBlue()
 			"IsFileSystemRegistered",
 			IsFileSystemRegistered,
 			"Check if the file system is registered\n"
-			":param name: file system name\n"
-			":type name: str\n"
-			":rtype: bool"
+			":param name: file system name"
 		)
 
 	EXPOSURE_END()

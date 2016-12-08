@@ -424,7 +424,8 @@ const Be::ClassInfo* MemoryTracker::ExposeToBlue()
 		(
 			"SummaryReport",
 			SummaryReport,
-			"Generates a summary report and outputs it to the given filename"
+			"Generates a summary report and outputs it to the given filename\n"
+			":param filename: path to the file"
 		)
 
 		MAP_METHOD( "DumpReportAsText", PyMemoryTrackerDumpReportAsText, "" );

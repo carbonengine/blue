@@ -167,7 +167,13 @@ bool IsLogglyEnabled()
 	return LogglyForwarder::GetInstance()->IsActive();
 }
 
-MAP_FUNCTION_AND_WRAP( "EnableLogglyLogging", EnableLogglyLogging, "Enable Loggly logging" );
+MAP_FUNCTION_AND_WRAP( 
+	"EnableLogglyLogging", 
+	EnableLogglyLogging, 
+	"Enable Loggly logging\n"
+	":param url: Loggly URL\n"
+	":param sessionId: Loggly session id"
+	);
 MAP_FUNCTION_AND_WRAP("DisableLogglyLogging", DisableLogglyLogging, "Disable Loggly logging");
 MAP_FUNCTION_AND_WRAP( "IsLogglyEnabled", IsLogglyEnabled, "Returns true if Loggly logging is enabled" );
 
