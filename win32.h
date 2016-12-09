@@ -3,7 +3,9 @@
 #define _WIN32_H_
 
 void initwin32(void);
+#if BLUE_WITH_PYTHON
 PyObject *PyWin32Error(const char *msg = 0, DWORD code = 0);
+#endif
 
 void GetWindowsVersion( OSVERSIONINFO &info );
 void GetWindowsVersion( OSVERSIONINFOEX &info );

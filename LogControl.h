@@ -2,6 +2,8 @@
 #ifndef LOG_CONTROL_H
 #define LOG_CONTROL_H
 
+#if BLUE_WITH_PYTHON
+
 #include "Python.h"
 #include "BlueExposure/include/BlueExposureMacros.h"
 
@@ -25,5 +27,7 @@ public:
 };
 
 TYPEDEF_BLUECLASS( LogControl )
+
+#endif
 
 #endif

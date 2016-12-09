@@ -5,6 +5,8 @@
 	
 #include "StdAfx.h"
 
+#if BLUE_WITH_PYTHON
+
 #include "PyRowset.h"
 
 #include "PyTemplates.h"
@@ -1827,3 +1829,5 @@ bool DBRowsetInit(PyObject *module)
 
 	return true;
 }
+
+#endif

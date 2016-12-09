@@ -1,6 +1,9 @@
 #include "StdAfx.h"
 #include "BlueHeapq.h"
 
+
+#if BLUE_WITH_PYTHON
+
 namespace
 {
 
@@ -277,3 +280,5 @@ void InitHeapq()
 {
 	Py_InitModule( "blue.heapq", heapqmethods );
 }
+
+#endif

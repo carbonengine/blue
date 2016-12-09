@@ -12,8 +12,10 @@
 #include "ResourceLoading.h"
 #include "BlueExposure/BlueLuaThunkers.h"
 #include "BlueSocketLogger.h"
+#if BLUE_WITH_PYTHON
 #include "CcpUtils/PyCpp.h"
 #include "BlueExposure/Find.h"
+#endif
 
 const char* g_moduleName = "blue";
 std::wstring s_logDeviceName( L"EVE" );

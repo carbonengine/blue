@@ -2,6 +2,8 @@
 #include "LogControl.h"
 #include <CcpCore/include/CCPLog.h>
 
+#if BLUE_WITH_PYTHON
+
 static CLogControl logControl;
 static LogControl *pLogControl = &logControl;
 BLUE_REGISTER_GLOBAL_AS_MODULE_OBJECT( "LogControl", pLogControl );
@@ -108,3 +110,5 @@ bool LogControl::Set_LogtypeErrIsPrivilegedOnly(PyObject *v)
 
 	return true;
 }
+
+#endif
