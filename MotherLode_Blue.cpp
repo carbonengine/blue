@@ -59,7 +59,8 @@ const Be::ClassInfo* MotherLode::ExposeToBlue()
 		(
 			"items",
 			Pyitems, 
-			"return all items"
+			"return all items\n"
+			":rtype: list[(unicode, IRoot)]"
 		)
 		
 		MAP_METHOD_AND_WRAP
@@ -73,7 +74,8 @@ const Be::ClassInfo* MotherLode::ExposeToBlue()
 		(
 			"nWeak",
 			PynWeak, 
-			"get number of weak objects"
+			"get number of weak objects\n"
+			":rtype: int"
 		)
 		
 		MAP_METHOD_AND_WRAP
@@ -81,9 +83,8 @@ const Be::ClassInfo* MotherLode::ExposeToBlue()
 			"Insert",
 			InsertFromScript, 
 			"Insert a Blue object.\n"
-			"Arguments:\n"
-			"  key - a (unicode) string\n"
-			"  obj - the object stored under the key\n"
+			":param key: a (unicode) string\n"
+			":param obj: the object stored under the key\n"
 		)
 		
 		MAP_METHOD_AND_WRAP
@@ -91,17 +92,18 @@ const Be::ClassInfo* MotherLode::ExposeToBlue()
 			"Lookup",
 			LookupFromScript, 
 			"Look up an object.\n"
-			"Arguments:\n"
-			"  key - a (unicode) string to look up\n"
-			"Return value:\n"
-			"  Object stored under 'key', or None"
+			":param key: a string to look up\n"
+			":returns: Object stored under 'key', or None\n"
 		)
 		
 		MAP_METHOD_AS_METHOD
 		(
 			"LookupAsWeakRef",
 			PyLookupAsWeakRef, 
-			"look up an object, returning a weak reference to it if found"
+			"look up an object, returning a weak reference to it if found\n"
+			":param key: a string to look up\n"
+			":type key: basestr\n"
+			":rtype: BluePythonWeakRef"
 		)
 		
 		MAP_METHOD_AND_WRAP
@@ -123,10 +125,8 @@ const Be::ClassInfo* MotherLode::ExposeToBlue()
 			"Delete",
 			DeleteFromScript, 
 			"Delete a specific key.\n"
-			"Arguments:\n"
-			"  key - a (unicode) string, the key to delete"
-			"Return value:\n"
-			"  True if the key was found (and deleted), otherwise False"
+			":param key: a string, the key to delete"
+			":returns: True if the key was found (and deleted), otherwise False"
 		)
 		
 		MAP_METHOD_AS_METHOD
@@ -136,6 +136,7 @@ const Be::ClassInfo* MotherLode::ExposeToBlue()
 			"Returns a list of keys that are cached. The objects behind those"
 			"\nare owned by the cache - no one outside the cache itself references"
 			"\nthem."
+			"\n:rtype: list[unicode]"
 		)
 		MAP_METHOD_AS_METHOD
 		( 
@@ -143,6 +144,7 @@ const Be::ClassInfo* MotherLode::ExposeToBlue()
 			PyGetNonCachedKeys, 
 			"Returns a list of registered keys that are not cached, that is other"
 			"\nobjects hold a reference to them."
+			"\n:rtype: list[unicode]"
 		)
 	EXPOSURE_END()
 }

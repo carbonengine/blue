@@ -80,7 +80,10 @@ const Be::ClassInfo* DictReader::ExposeToBlue()
 		(
 			"CreateObject",
 			PyCreateObject,
-			"Creates a Blue object from a description in the given dict."
+			"Creates a Blue object from a description in the given dict.\n"
+			":param desc: object description\n"
+			":type desc: dict\n"
+			":rtype: IRoot"
 		)
 	EXPOSURE_END()
 }

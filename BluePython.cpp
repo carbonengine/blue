@@ -1792,23 +1792,6 @@ PyObject* BluePyOS::PyDumpState(PyObject* args)
 }
 
 //--------------------------------------------------------------------
-// _DumpLockCount
-//--------------------------------------------------------------------
-PyObject* BluePyOS::Py_DumpLockCount(PyObject* args)
-{
-	if (!PyArg_ParseTuple(args, ""))
-		return NULL;
-
-#ifdef _DEBUG
-	return PyList_New(0);
-#else
-	BeOS->SetError(
-		BEDEF, Clsid(), "This method is only available in debug builds.");
-	return nullptr;
-#endif
-}
-
-//--------------------------------------------------------------------
 // write
 //--------------------------------------------------------------------
 PyObject* BluePyOS::Pywrite(PyObject* args)

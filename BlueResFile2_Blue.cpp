@@ -187,38 +187,47 @@ const Be::ClassInfo* ResFile::ExposeToBlue()
 		(
 			"Open",
 			PyOpen,
-			"Opens the file object to the given path."
-			"\n"
-			"\nArguments:"
-			"\n filename"
-			"\nReturns:"
-			"\n  True on success, False on failure"
+			"Opens the file object to the given path.\n"
+			":param filename: path to file\n"
+			":type filename: basestring\n"
+			":param readonly: open for reading or read/write\n"
+			":type readonly: Optional[int]\n"
+			":rtype: bool"
 		)
 
 		MAP_METHOD
 		(
 			"OpenAlways",
 			PyOpenAlways,
-			""
+			"Opens the file object to the given path.\n"
+			":param filename: path to file\n"
+			":type filename: basestring\n"
+			":param readonly: open for reading or read/write\n"
+			":type readonly: Optional[int]\n"
+			":rtype: ResFile"
 		)
 
 		MAP_METHOD
 		(
 			"open",
 			PyOpenAlways,
-			""
+			"Opens the file object to the given path.\n"
+			":param filename: path to file\n"
+			":type filename: basestring\n"
+			":param readonly: open for reading or read/write\n"
+			":type readonly: Optional[int]\n"
+			":rtype: ResFile"
 		)
 
 		MAP_METHOD
 		(
 			"Create",
 			PyCreate,
-			"Creates a file on disk with the given filename."
-			"\n"
-			"\nArguments:"
-			"\n filename"
-			"\nReturns:"
-			"\n  True on success, False on failure"
+			"Creates a file on disk with the given filename.\n"
+			":param filename: path to file\n"
+			":type filename: basestring\n"
+			":returns: 1 on success, 0 on failure\n"
+			":rtype: int"
 		)
 
 		MAP_METHOD
@@ -232,30 +241,32 @@ const Be::ClassInfo* ResFile::ExposeToBlue()
 		(
 			"Close",
 			PyClose,
-			"Closes the file."
+			"Closes the file.\n"
+			":returns: 1 on success, 0 on failure\n"
+			":rtype: int"
 		)
 
 		MAP_METHOD
 		(
 			"read",
 			PyRead,
-			"Reads the contents of the file, or the next given number of bytes."
-			"\n"
-			"\nArguments:"
-			"\n size (optional) - how many bytes to read"
-			"\nReturns:"
-			"\n A string with the bytes read"
+			"Reads the contents of the file, or the next given number of bytes.\n"
+			":param size: (optional) how many bytes to read\n"
+			":type size: Optional[int]\n"
+			":returns: A string with the bytes read\n"
+			":rtype: str"
 		)
 
 		MAP_METHOD
 		(
 			"seek",
 			PySeek,
-			"Set the file current position. See Python file object docs for details."
-			"\n"
-			"\nArguments:"
-			"\n offset - where to seek to"
-			"\n whence (optional) - where to seek from. Defaults to 0 for absolute position."
+			"Set the file current position. See Python file object docs for details.\n"
+			":param offset: where to seek to\n"
+			":type param: int\n"
+			":param whence: (optional) where to seek from. Defaults to 0 for absolute position.\n"
+			":type whence: int\n"
+			":rtype: None"
 		)
 
 		MAP_METHOD_AND_WRAP

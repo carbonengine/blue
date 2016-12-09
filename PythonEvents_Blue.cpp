@@ -22,14 +22,18 @@ const Be::ClassInfo* PythonEvents::ExposeToBlue()
 		(
 			"write",
 			Pywrite, 
-			"Write text to port" 
+			"Write text to port\n" 
+			":param text: text to write\n"
+			":type text: str\n"
+			":rtype: None"
 		)
 		
 		MAP_METHOD_AS_METHOD
 		(
 			"flush",
 			Pyflush, 
-			"Flush the buffer" 
+			"Flush the buffer\n" 
+			":rtype: None"
 		)
 
 

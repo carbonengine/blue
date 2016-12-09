@@ -75,57 +75,77 @@ const Be::ClassInfo* BluePyOS::ExposeToBlue()
 		(
 			"AddExitProc",
 			PyAddExitProc, 
-			"Add exit procedure" 
+			"Add exit procedure\n" 
+			":param proc: function that is called before the process terminates\n"
+			":type proc: ()->None\n"
+			":rtype: None"
 		)
 		MAP_METHOD_AS_METHOD
 		(
 			"GetArg",
 			PyGetArg, 
-			"Returns list of command line arguments." 
+			"Returns list of command line arguments.\n" 
+			":rtype: list[unicode]"
 		)
 		MAP_METHOD_AS_METHOD
 		(
 			"GetEnv",
 			PyGetEnv, 
-			"Returns dictionary of environment variables." 
+			"Returns dictionary of environment variables.\n" 
+			":param name: optional environment variable name; if passed the function returns its value, otherwise returns all variables\n"
+			":type name: basestring\n"
+			":rtype: unicode | dict[basestring, basestring]"
 		)
 		MAP_METHOD_AS_METHOD
 		(
 			"DumpState",
 			PyDumpState, 
-			"Dumps state, or something." 
-		)
-		MAP_METHOD_AS_METHOD
-		(
-			"_DumpLockCount",
-			Py_DumpLockCount, 
-			"Show lock count on class instances"
+			"Dumps state, or something.\n" 
+			":rtype: None"
 		)
 		MAP_METHOD_AS_METHOD
 		(
 			"write",
 			Pywrite, 
-			"For file io redirection"
+			"For file io redirection\n"
+			":param s:\n"
+			":type s: str\n"
+			":rtype: None"
 		)
 		MAP_METHOD_AS_METHOD
 		(
 			"CreateTasklet",
 			PyCreateTasklet,	
-			"The good ol' uthread.new" 
+			"The good ol' uthread.new\n" 
+			":param func: function\n"
+			":type func: callable\n"
+			":param args: function arguments\n"
+			":type args: tuple\n"
+			":param kwargs: function keyword arguments\n"
+			":type kwargs: dict\n"
+			":rtype: stackless.tasklet"
 		)
 #ifdef _WIN32
 		MAP_METHOD_AS_METHOD
 		(
 			"SpyDirectory",
 			PySpyDirectory,	
-			"SpyDirectory" 
+			"SpyDirectory\n" 
+			":param path: directory path\n"
+			":type path: basestring\n"
+			":param callback: function to call on directory changes\n"
+			":type callback: ()->None\n"
+			":rtype: None"
 		)
 #endif
 		MAP_METHOD_AS_METHOD
 		(
 			"NextScheduledEvent",
 			PyNextScheduledEvent,	
-			"NextScheduledEvent" 
+			"NextScheduledEvent\n" 
+			":param ms: milliseconds\n"
+			":type ms: int\n"
+			":rtype: None"
 		)
 
 #ifdef _WIN32
@@ -133,32 +153,43 @@ const Be::ClassInfo* BluePyOS::ExposeToBlue()
 		(
 			"GetClipboardData",
 			PyGetClipboardData,	
-			"GetClipboardData" 
+			"GetClipboardData\n" 
+			":param dataFormat:\n"
+			":type dataFormat: Optional[int]\n"
+			":rtype: str"
 		)
 		MAP_METHOD_AS_METHOD
 		(
 			"SetClipboardData",
 			PySetClipboardData,	
-			"SetClipboardData" 
+			"SetClipboardData\n" 
+			":param data:\n"
+			":type data: basestring\n"
+			":param dataFormat:\n"
+			":type dataFormat: Optional[int]\n"
+			":rtype: None"
 		)
 		MAP_METHOD_AS_METHOD
 		(
 			"GetThreadTimes",
 			PyGetThreadTimes,	
-			"GetThreadTimes" 
+			"GetThreadTimes\n" 
+			":rtype: (list[str], list[long])"
 		)
 		MAP_METHOD_AS_METHOD
 		(
 			"ProbeStuff",
 			PyProbeStuff,	
-			"ProbeStuff" 
+			"ProbeStuff\n" 
+			":rtype: ((str, str, str, str, str, str, str, str, str), list)"
 		)
 #if CCP_STACKLESS
 		MAP_METHOD_AS_METHOD
 		(
 			"GetTimeSinceSwitch",
 			PyGetTimeSinceSwitch, 
-			"time since last tasklet switch"
+			"time since last tasklet switch\n"
+			":rtype: float"
 		)
 #endif
 #endif
@@ -166,31 +197,54 @@ const Be::ClassInfo* BluePyOS::ExposeToBlue()
 		(
 			"BeNice",
 			PyBeNice,		
-			"BeNice" 
+			"BeNice\n" 
+			":param timeslice:\n"
+			":type timeslice: Optional[float]\n"
+			":rtype: None"
 		)
 		MAP_METHOD_AS_METHOD
 		(
 			"XUtil_Index",
 			PyXUtil_Index,			
-			"dbutil.Index substitue" 
+			"dbutil.Index substitue\n" 
+			":param rows:\n"
+			":type rows: list[DBRow]\n"
+			":param keyName:\n"
+			":type keyName: str\n"
+			":param result:\n"
+			":type result: dict[Any, DBRow]\n"
+			":rtype: dict[Any, DBRow]"
 		)
 		MAP_METHOD_AS_METHOD
 		(
 			"XUtil_Filter",
 			PyXUtil_Filter,		
-			"Filtering of DBRows" 
+			"Filtering of DBRows\n" 
+			":param rows:\n"
+			":type rows: set[DBRow]\n"
+			":param indices:\n"
+			":type indices: list[None | int]\n"
+			":param condvalues:\n"
+			":type condvalues: list[None | int]\n"
+			":param retset:\n"
+			":type retset: set[DBRow]\n"
+			":rtype: set[DBRow]"
 		)
 		MAP_METHOD_AS_METHOD
 		(
 			"GetMaxRunTime",
 			PyGetMaxRunTime, 
-			"Get maximum watchdog runtime" 
+			"Get maximum watchdog runtime\n" 
+			":rtype: float"
 		)
 		MAP_METHOD_AS_METHOD
 		(
 			"SetMaxRunTime",
 			PySetMaxRunTime, 
-			"Set maximum watchdog runtime" 
+			"Set maximum watchdog runtime\n" 
+			":param time:\n"
+			":type time: float\n"
+			":rtype: None"
 		)
 
 		MAP_METHOD
@@ -198,13 +252,18 @@ const Be::ClassInfo* BluePyOS::ExposeToBlue()
 			"SetLogEchoFunction", 
 			PySetLogEchoFunction, 
 			"Sets the function to echo log messages to.\n\n"
-			"The function passed in must take two arguments (int,string)"
+			"The function passed in must take two arguments (int,string)\n"
+			":param threshold: minimal severity level for the message to be logged\n"
+			":type threshold: int\n"
+			":param callback: function that is called for each log message\n"
+			":type callback: (int, str)->None"
 		)
 		MAP_METHOD
 		(
 			"GetLogEchoFunction",
 			PyGetLogEchoFunction,
-			"Gets the log echo threshold and function currently used to echo log messages as a tuple."
+			"Gets the log echo threshold and function currently used to echo log messages as a tuple.\n"
+			":rtype: (int, (int, str)->None)"
 		)
 		
 	EXPOSURE_END()

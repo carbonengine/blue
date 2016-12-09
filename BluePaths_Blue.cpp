@@ -90,8 +90,7 @@ const Be::ClassInfo* BluePaths::ExposeToBlue()
 			"Resolves a file system path back to a Blue path with the given root\n"
 			":param root: \n"
 			":param path: \n"
-			"\nReturns:"
-			"\n   A Blue path based on the given root if a match was found. Otherwise an empty string."
+			":returns: A Blue path based on the given root if a match was found. Otherwise an empty string."
 		)
 
 		MAP_METHOD_AND_WRAP

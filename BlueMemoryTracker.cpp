@@ -13,6 +13,8 @@
 #include <Psapi.h>
 #endif
 
+extern bool g_isCallstackCaptureEnabled;
+
 CCP_STATS_DECLARE( beMemory,					"Blue/Memory/Malloc", false, CST_MEMORY, "The amount of memory allocated via CCP_MALLOC" );
 CCP_STATS_DECLARE( trackedAllocationsCount,		"Blue/Memory/trackedAllocationsCount", false, CST_COUNTER_HIGH, "Number of tracked allocations live in the system" );
 CCP_STATS_DECLARE( trackedAllocationsSize,		"Blue/Memory/trackedAllocationsSize", false, CST_MEMORY, "Combined size of tracked allocations live in the system" );
@@ -213,6 +215,78 @@ void MemoryTracker::SetCustomHeapsToLargestHeaps()
 	largestIx = FindLargestHeapIx( heaps, sizes, count );
 	m_customHeap3 = (intptr_t)heaps[largestIx];
 }
+
+void MemoryTracker::DumpModulesAsText( const char* filename )
+{
+	HMODULE modules[1024];
+	DWORD spaceNeeded = 0;
+
+	HANDLE curProcess = GetCurrentProcess();
+
+	if( EnumProcessModules( curProcess, modules, sizeof( modules ), &spaceNeeded ) )
+	{
+		int numModules = spaceNeeded / sizeof( HMODULE );
+		long totalSize = 0;
+
+		FILE* file;
+		fopen_s( &file, filename, "w" );
+		fprintf( file, "Module, Size, Full name\n" );
+
+		for( int i = 0; i < numModules; ++i )
+		{
+			MODULEINFO moduleInfo;
+			char baseName[256];
+			char fullName[256];
+
+			if( !GetModuleBaseName( curProcess, modules[i], baseName, _countof( baseName )))
+			{
+				CCP_LOGWARN( "DumpModulesAsText: Failed to get module base name - skipping it" );
+				continue;
+			}
+
+			if( !GetModuleInformation( curProcess, modules[i], &moduleInfo, sizeof( MODULEINFO )) )
+			{
+				CCP_LOGWARN( "DumpModulesAsText: Failed to get module information for %s - skipping it", baseName );
+				continue;
+			}
+
+			if( !GetModuleFileName( modules[i], fullName, _countof( fullName )) )
+			{
+				CCP_LOGWARN( "DumpModulesAsText: Failed to get module file name for %s - skipping it", baseName );
+				continue;
+			}
+
+			totalSize += moduleInfo.SizeOfImage;
+
+			fprintf( file, "%s, %d, %s\n", baseName, moduleInfo.SizeOfImage, fullName );
+		}
+
+		fprintf( file, "\n\n%d modules\n%ld bytes", numModules, totalSize );
+		fclose( file );
+	}
+}
+
+uint32_t MemoryTracker::GetProcessHeapsCount()
+{
+	return uint32_t( ::GetProcessHeaps( 0, NULL ) );
+}
+
+size_t MemoryTracker::GetHeapSize( size_t heap )
+{
+	return GetHeapSizeWithHeapWalk( reinterpret_cast<HANDLE>( heap ) );
+}
+
+size_t MemoryTracker::GetMainProcessHeap()
+{
+	return reinterpret_cast<size_t>( ::GetProcessHeap() );
+}
+
+size_t MemoryTracker::GetBlueHeap()
+{
+	extern HANDLE s_heap;
+	return reinterpret_cast<size_t>( s_heap );
+}
+
 #endif
 
 void MemoryTracker::SetFullCapture( bool b )
@@ -318,6 +392,35 @@ void MemoryTracker::SummaryReport( const char* filename )
 #endif
 	fclose( file );
 
+}
+
+void MemoryTracker::DumpReportAsText( const char* filename )
+{
+	MemoryTrackerDumpReportAsText( filename );
+}
+
+void MemoryTracker::DumpReportAsBinary( const char* filename )
+{
+	MemoryTrackerDumpReportAsBinary( filename );
+}
+
+size_t MemoryTracker::GetCount()
+{
+	size_t count;
+	MemoryTrackerGetCount( count );
+	return count;
+}
+
+size_t MemoryTracker::GetSize()
+{
+	size_t size;
+	MemoryTrackerGetSize( size );
+	return size;
+}
+
+void MemoryTracker::CallstackCaptureEnable( bool enable )
+{
+	g_isCallstackCaptureEnabled = enable;
 }
 
 void MemoryTracker::UpdateDetailedTracking()

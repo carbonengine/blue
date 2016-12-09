@@ -507,70 +507,90 @@ const Be::ClassInfo* BlueStatistics::ExposeToBlue()
 		(
 			"Register",
 			PyRegister,
-			"Register the given statistic"
+			"Register the given statistic\n"
+			":param entry: statistic entry\n"
+			":type entry: CcpStatisticsEntry\n"
+			":rtype: None"
 		)
 
 		MAP_METHOD
 		(
 			"Unregister",
 			PyUnregister,
-			"Unregister the given statistic"
+			"Unregister the given statistic\n"
+			":param entry: statistic entry\n"
+			":type entry: CcpStatisticsEntry\n"
+			":rtype: None"
 		)
 		
 		MAP_METHOD
 		(
 			"RegisterDerived",
 			PyRegisterDerived,
-			"Register the given derived statistic"
+			"Register the given derived statistic\n"
+			":param entry: derived statistic entry\n"
+			":type entry: CcpDerivedStatisticsEntry\n"
+			":rtype: None"
 		)
 
 		MAP_METHOD
 		(
 			"UnregisterDerived",
 			PyUnregisterDerived,
-			"Unregister the given derived statistic"
+			"Unregister the given derived statistic\n"
+			":param entry: derived statistic entry\n"
+			":type entry: CcpDerivedStatisticsEntry\n"
+			":rtype: None"
 		)
 		
 		MAP_METHOD
 		(
 			"Find",
 			PyFind,
-			"Find the CcpStatisticsEntry for the given name"
+			"Find the CcpStatisticsEntry for the given name\n"
+			":param name: statistic name\n"
+			":type name: str\n"
+			":rtype: CcpStatisticsEntry"
 		)
 
 		MAP_METHOD
 		(
 			"GetDescriptions", 
 			PyGetDescriptions, 
-			"Get description and type of stats"
+			"Get description and type of stats\n"
+			":rtype: dict[str, CcpStatisticsEntry]"
 		)
 
 		MAP_METHOD
 		( 
 			"GetStats", 
 			PyGetStats, 
-			"Get current stats"
+			"Get current stats\n"
+			":rtype: list[(str, float, float)]"
 		)
 
 		MAP_METHOD
 		( 
 			"GetValues", 
 			PyGetValues, 
-			"Get current stats values. Returns a dict with tuples (value,peak)"
+			"Get current stats values. Returns a dict with tuples (value,peak)\n"
+			":rtype: dict[str, (float, float)]"
 		)
 
 		MAP_METHOD
 		( 
 			"ResetPeaks", 
 			PyResetPeaks, 
-			"Resets all stats peak values." 
+			"Resets all stats peak values.\n" 
+			":rtype: None"
 		)
 
 		MAP_METHOD
 		( 
 			"ResetDerived", 
 			PyResetDerived, 
-			"Resets all derived stats (including peak values)." 
+			"Resets all derived stats (including peak values).\n" 
+			":rtype: None"
 		)
 
 		MAP_METHOD
@@ -578,10 +598,10 @@ const Be::ClassInfo* BlueStatistics::ExposeToBlue()
 			"GetSingleStat", 
 			PyGetSingleStat, 
 					
-			"Get the current value of a single stat." 
-			"\n"
-			"\nArguments:"
-			"\nstat - a string, the name of the statistic."
+			"Get the current value of a single stat.\n" 
+			":param stat: the name of the statistic.\n"
+			":type stat: str\n"
+			":rtype: CcpStatisticsEntry | None"
 		)
 
 		MAP_METHOD_AND_WRAP
@@ -607,10 +627,8 @@ const Be::ClassInfo* BlueStatistics::ExposeToBlue()
 		(
 			"SetTelemetryBufferSize", 
 			SetTelemetryBufferSize, 
-			"Sets Telemetry Arena workspace size."
-			"\n"
-			"\nArguments:"
-			"\nbufferSize - The size of the memory buffer allocated for telemetry data, in megabytes."
+			"Sets Telemetry Arena workspace size.\n"
+			":param bufferSize: The size of the memory buffer allocated for telemetry data, in megabytes."
 		)
 
 		MAP_METHOD_AND_WRAP
@@ -625,22 +643,18 @@ const Be::ClassInfo* BlueStatistics::ExposeToBlue()
 		(
 			"StartTelemetry", 
 			StartTelemetry, 
-			"Connects to a Telemetry server and starts gathering data."
-			"\n"
-			"\nArguments:"
-			"\nserver - a string, the network address of the server to connect to."
+			"Connects to a Telemetry server and starts gathering data.\n"
+			":param server: the network address of the server to connect to."
 		)
 
 		MAP_METHOD_AND_WRAP
 		(
 			"StartTimedTelemetry", 
 			StartTimedTelemetry, 
-			"Connects to a Telemetry server and starts gathering data."
-			"\n"
-			"\nArguments:"
-			"\nserver - a string, the network address of the server to connect to."
-			"\n  Use 'localhost' to connect to a Visualizer on the local machine."
-			"\nsamplePeriod -  Time to sample for (in seconds) default of 0 means infinite sampling."
+			"Connects to a Telemetry server and starts gathering data.\n"
+			":param server: the network address of the server to connect to.\n"
+			"  Use 'localhost' to connect to a Visualizer on the local machine.\n"
+			":param samplePeriod: Time to sample for (in seconds) default of 0 means infinite sampling."
 		)
 
 		MAP_METHOD_AND_WRAP
@@ -653,9 +667,8 @@ const Be::ClassInfo* BlueStatistics::ExposeToBlue()
 			"\nCannot run alongside a regular TCP based Telemetry session."
 			"\nStopped using StopTelemetry."
 			"\n"
-			"\nArguments:"
-			"\ndumpFolder - a string, the path to dump intermediate data to."
-			"\nsamplePeriod - Time to sample for (in seconds). 0 means infinite sampling."
+			":param dumpFolder: a string, the path to dump intermediate data to.\n"
+			":param samplePeriod: Time to sample for (in seconds). 0 means infinite sampling."
 		)
 
 		MAP_METHOD_AND_WRAP
@@ -734,20 +747,20 @@ const Be::ClassInfo* BlueStatistics::ExposeToBlue()
 		(
 			"EnterZone", 
 			PyEnterZone, 
-			"Enter a Telemetry zone. There must be a corresponding call to LeaveZone"
-			"\n"
-			"\nArguments:"
-			"\nname - must be static string, such as the name of a function."
+			"Enter a Telemetry zone. There must be a corresponding call to LeaveZone\n"
+			":param name: must be static string, such as the name of a function.\n"
+			":type name: str\n"
+			":rtype: None"
 		)
 		
 		MAP_METHOD
 		(
 			"LeaveZone", 
 			PyLeaveZone, 
-			"Leave a Telemetry zone. This must match an EnterZone call."
-			"\n"
-			"\nArguments:"
-			"\nname - must be static string, such as the name of a function."
+			"Leave a Telemetry zone. This must match an EnterZone call.\n"
+			":param name: must be static string, such as the name of a function.\n"
+			":type name: str\n"
+			":rtype: None"
 		)
 		
 		MAP_METHOD
@@ -765,12 +778,10 @@ const Be::ClassInfo* BlueStatistics::ExposeToBlue()
 			"BeginTimeSpan",
 			PyBeginTimeSpan,
 			"Adds a time span to Telemetry.\n"
-			"\n"
-			"Arguments:\n"
-			"  label - The label to give the time span\n"
-			"\n"
-			"Returns:\n"
-			"  id - an id to use with EndTimeSpan"
+			":param label: The label to give the time span\n"
+			":type label: long\n"
+			":returns: an id to use with EndTimeSpan\n"
+			":rtype: long"
 		)
 
 		MAP_METHOD
@@ -778,12 +789,12 @@ const Be::ClassInfo* BlueStatistics::ExposeToBlue()
 			"EndTimeSpan",
 			PyEndTimeSpan,
 			"Ends a time span started with BeginTimeSpan.\n"
-			"\n"
-			"Arguments:\n"
-			"  id - the id returned from BeginTimeSpan\n"
-			"  label - The closing label for the time span - can be used to\n"
-			"          indicate success or failure, for example"
-			"\n"
+			":param id: the id returned from BeginTimeSpan\n"
+			":type id: long\n"
+			":param label: The closing label for the time span - can be used to\n"
+			"          indicate success or failure, for example\n"
+			":type label: str\n"
+			":rtype: None"
 		)
 
 	EXPOSURE_END()

@@ -28,163 +28,7 @@ BLUE_REGISTER_GLOBAL_AS_MODULE_OBJECT( "memoryTracker", BeMemoryTracker );
 
 #if BLUE_WITH_PYTHON
 
-static PyObject* PyMemoryTrackerDumpReportAsText( PyObject* self, PyObject* args )
-{	
-	const char* name = 0;
-
-	if( !PyArg_ParseTuple( args, "s", &name ))
-	{
-		return NULL;
-	}
-
-	MemoryTrackerDumpReportAsText( name );
-	Py_RETURN_NONE;
-}
-
-static PyObject* PyMemoryTrackerDumpReportAsBinary( PyObject* self, PyObject* args )
-{	
-	const char* name = 0;
-
-	if( !PyArg_ParseTuple( args, "s", &name ))
-	{
-		return NULL;
-	}
-
-	MemoryTrackerDumpReportAsBinary( name );
-	Py_RETURN_NONE;
-}
-
 #ifdef _WIN32
-static PyObject* PyDumpModulesAsText( PyObject* self, PyObject* args )
-{
-	const char* filename = 0;
-
-	if( !PyArg_ParseTuple( args, "s", &filename ))
-	{
-		return NULL;
-	}
-
-	HMODULE modules[1024];
-	DWORD spaceNeeded = 0;
-
-	HANDLE curProcess = GetCurrentProcess();
-
-	if( EnumProcessModules( curProcess, modules, sizeof( modules ), &spaceNeeded ) )
-	{
-		int numModules = spaceNeeded / sizeof( HMODULE );
-		long totalSize = 0;
-
-		FILE* file;
-		fopen_s( &file, filename, "w" );
-		fprintf( file, "Module, Size, Full name\n" );
-
-		for( int i = 0; i < numModules; ++i )
-		{
-			MODULEINFO moduleInfo;
-			char baseName[256];
-			char fullName[256];
-
-			if( !GetModuleBaseName( curProcess, modules[i], baseName, _countof( baseName )))
-			{
-				CCP_LOGWARN( "DumpModulesAsText: Failed to get module base name - skipping it" );
-				continue;
-			}
-
-			if( !GetModuleInformation( curProcess, modules[i], &moduleInfo, sizeof( MODULEINFO )) )
-			{
-				CCP_LOGWARN( "DumpModulesAsText: Failed to get module information for %s - skipping it", baseName );
-				continue;
-			}
-
-			if( !GetModuleFileName( modules[i], fullName, _countof( fullName )) )
-			{
-				CCP_LOGWARN( "DumpModulesAsText: Failed to get module file name for %s - skipping it", baseName );
-				continue;
-			}
-
-			totalSize += moduleInfo.SizeOfImage;
-
-			fprintf( file, "%s, %d, %s\n", baseName, moduleInfo.SizeOfImage, fullName );
-		}
-
-		fprintf( file, "\n\n%d modules\n%ld bytes", numModules, totalSize );
-		fclose( file );
-	}
-	
-	Py_RETURN_NONE;
-}
-#endif
-
-static PyObject* PyMemoryTrackerGetCount( PyObject* self, PyObject* args )
-{	
-	if( !PyArg_ParseTuple( args, "" ))
-	{
-		return NULL;
-	}
-
-	size_t count;
-	MemoryTrackerGetCount( count );
-
-	return PyInt_FromSize_t( count );
-}
-
-static PyObject* PyMemoryTrackerGetSize( PyObject* self, PyObject* args )
-{	
-	if( !PyArg_ParseTuple( args, "" ))
-	{
-		return NULL;
-	}
-
-	size_t size;
-	MemoryTrackerGetSize( size );
-
-	return PyInt_FromSize_t( size );
-}
-
-static PyObject* PyMemoryTrackerCallstackCaptureEnable( PyObject* self, PyObject* args )
-{	
-	bool isEnabled = false;
-	if( !PyArg_ParseTuple( args, "b", &isEnabled ))
-	{
-		return NULL;
-	}
-
-	g_isCallstackCaptureEnabled = isEnabled;
-	Py_RETURN_NONE;
-}
-
-#ifdef _WIN32
-static PyObject* PyMemoryTrackerGetProcessHeapsCount( PyObject* self, PyObject* args )
-{	
-	if( !PyArg_ParseTuple( args, "" ))
-	{
-		return NULL;
-	}
-
-	DWORD count = ::GetProcessHeaps( 0, NULL );
-
-	return PyInt_FromLong( count );
-}
-
-static PyObject* PyMemoryTrackerGetHeapSize( PyObject* self, PyObject* args )
-{	
-	HANDLE heap = NULL;
-	if( !PyArg_ParseTuple( args, "l", &heap ))
-	{
-		return NULL;
-	}
-
-	size_t size = GetHeapSizeWithHeapWalk( heap );
-	if( size >= 0 )
-	{
-		return PyLong_FromUnsignedLong( (unsigned int)size );
-	}
-	else
-	{
-		PyErr_SetString( PyExc_RuntimeError, "Couldn't get heap size" );
-		return NULL;
-	}
-}
 
 static PyObject* PyMemoryTrackerGetAllHeaps( PyObject* self, PyObject* args )
 {	
@@ -263,29 +107,6 @@ static PyObject* PyMemoryTrackerGetUnknownHeaps( PyObject* self, PyObject* args 
 	return result;
 }
 
-static PyObject* PyMemoryTrackerGetMainProcessHeap( PyObject* self, PyObject* args )
-{	
-	if( !PyArg_ParseTuple( args, "" ))
-	{
-		return NULL;
-	}
-
-	HANDLE heap = ::GetProcessHeap();
-
-	return PyInt_FromSize_t( (size_t)heap );
-}
-
-static PyObject* PyMemoryTrackerGetBlueHeap( PyObject* self, PyObject* args )
-{	
-	if( !PyArg_ParseTuple( args, "" ))
-	{
-		return NULL;
-	}
-
-	extern HANDLE s_heap;
-	return PyInt_FromSize_t( (size_t)s_heap );
-}
-
 static PyObject* PyMemoryTrackerGetCrtHeap( PyObject* self, PyObject* args )
 {	
 	if( !PyArg_ParseTuple( args, "" ))
@@ -296,7 +117,11 @@ static PyObject* PyMemoryTrackerGetCrtHeap( PyObject* self, PyObject* args )
 	return PyInt_FromSize_t( (size_t)_get_heap_handle() );
 }
 
-MAP_FUNCTION( "MemoryTrackerGetCrtHeap", PyMemoryTrackerGetCrtHeap, "" );
+MAP_FUNCTION( 
+	"MemoryTrackerGetCrtHeap", 
+	PyMemoryTrackerGetCrtHeap, 
+	"Returns CRT heap handle\n"
+	":rtype: int" );
 
 #if _DEBUG
 static const char* kUnknown = "<Unknown>";
@@ -428,78 +253,96 @@ const Be::ClassInfo* MemoryTracker::ExposeToBlue()
 			":param filename: path to the file"
 		)
 
-		MAP_METHOD( "DumpReportAsText", PyMemoryTrackerDumpReportAsText, "" );
-		MAP_METHOD( "DumpReportAsBinary", PyMemoryTrackerDumpReportAsBinary, "" );
+		MAP_METHOD_AND_WRAP( 
+			"DumpReportAsText", 
+			DumpReportAsText, 
+			"Write text report into a file\n"
+			":param filename: path to file" );
+		MAP_METHOD_AND_WRAP( 
+			"DumpReportAsBinary", 
+			DumpReportAsBinary, 
+			"Write binary report into a file\n"
+			":param filename: path to file" );
 #ifdef _WIN32
-		MAP_METHOD( "DumpModulesAsText", PyDumpModulesAsText, "" );
+		MAP_METHOD_AND_WRAP( 
+			"DumpModulesAsText", 
+			DumpModulesAsText, 
+			"Write a list of loaded modules into a file\n"
+			":param filename: path to file" );
 #endif
 
-		MAP_METHOD
+		MAP_METHOD_AND_WRAP
 		( 
 			"GetCount", 
-			PyMemoryTrackerGetCount,
+			GetCount,
 			"Get the count of all tracked allocations, i.e. any allocations\n"
 			"from the Blue heap with memory tracking enabled."
 		)
-		MAP_METHOD
+		MAP_METHOD_AND_WRAP
 		( 
 			"GetSize", 
-			PyMemoryTrackerGetSize,
+			GetSize,
 			"Get the total size of all tracked allocations, i.e. any allocations\n"
 			"from the Blue heap with memory tracking enabled."
 		)
-		MAP_METHOD( "CallstackCaptureEnable", PyMemoryTrackerCallstackCaptureEnable, "" )
+		MAP_METHOD_AND_WRAP
+		( 
+			"CallstackCaptureEnable", 
+			CallstackCaptureEnable, 
+			"Enable/disable callstack capture for new allocations\n"
+			":param enable: True to enable callstack capture" 
+			)
 
 #ifdef _WIN32
-		MAP_METHOD
+		MAP_METHOD_AND_WRAP
 		( 
 			"GetHeapCount", 
-			PyMemoryTrackerGetProcessHeapsCount, 
+			GetProcessHeapsCount, 
 			"Returns the number of heaps owned by the process."
 		)
-		MAP_METHOD
+		MAP_METHOD_AND_WRAP
 		( 
 			"GetHeapSize", 
-			PyMemoryTrackerGetHeapSize, 
-			"Get the size of the given heap\n\n"
-			"Arguments:\n"
-			"  heap - handle to a heap\n"
-			"Return value:\n"
-			"  The size of the given heap, obtained with a heap walk.\n"
-			"\n"
+			GetHeapSize, 
+			"Get the size of the given heap\n"
 			"Handles for different heaps are obtained with the Get<name>Heap functions\n"
 			"of the memory tracker. Trinity also provides a GetD3DCreatedHeap function\n"
-			"that returns a heap handle."
+			"that returns a heap handle.\n"
+			":param heap: handle to a heap\n"
+			":returns: The size of the given heap, obtained with a heap walk.\n"
 		)
 		MAP_METHOD
 		( 
 			"GetAllHeaps", 
 			PyMemoryTrackerGetAllHeaps, 
-			"Returns a dict with info on all heaps owned by the process." 
+			"Returns a dict with info on all heaps owned by the process.\n" 
+			":rtype: dict[long, long]"
 		)
 		MAP_METHOD
 		( 
 			"GetUnknownHeaps", 
 			PyMemoryTrackerGetUnknownHeaps, 
-			"Returns a dict with info on all unknown heaps owned by the process." 
+			"Returns a dict with info on all unknown heaps owned by the process.\n" 
+			":rtype: dict[long, long]"
 		)
-		MAP_METHOD
+		MAP_METHOD_AND_WRAP
 		( 
 			"GetMainProcessHeap", 
-			PyMemoryTrackerGetMainProcessHeap, 
+			GetMainProcessHeap, 
 			"Returns the handle of the main process heap."
 		)
-		MAP_METHOD
+		MAP_METHOD_AND_WRAP
 		( 
 			"GetBlueHeap", 
-			PyMemoryTrackerGetBlueHeap, 
+			GetBlueHeap, 
 			"Returns the handle of the Blue heap."
 		)
 		MAP_METHOD
 		( 
 			"GetCrtHeap", 
 			PyMemoryTrackerGetCrtHeap, 
-			"Returns the handle of the crt heap - this is likely the same as the Blue heap."
+			"Returns the handle of the crt heap - this is likely the same as the Blue heap.\n"
+			":rtype: long"
 		)
 		MAP_METHOD_AND_WRAP
 		(

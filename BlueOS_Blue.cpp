@@ -221,7 +221,14 @@ const Be::ClassInfo* BlueOS::ExposeToBlue()
 		MAP_ATTRIBUTE( "lockFramerate", mLockFramerate, "FPS lock value.", Be::READWRITE )
 
 		// Simulation clock management
-		MAP_METHOD_AS_METHOD( "EnableSimDilation", PyEnableSimDilation, "Call this to make this node responsible for running its own simulation clock.  What is done cannot be undone.")
+		MAP_METHOD_AS_METHOD( 
+			"EnableSimDilation", 
+			PyEnableSimDilation, 
+			"Call this to make this node responsible for running its own simulation clock.  What is done cannot be undone.\n"
+			":param offset: sim clock offset\n"
+			":type offset: long\n"
+			":rtype: None"
+			)
 		MAP_ATTRIBUTE("minSimDilation", mMinSimDilation, "The minimum dilation factor allowed.  For instance, setting this to .25 will allow the sim clock to run at quarter-time and no slower.  Useless unless EnableSimDilation has been called.", Be::READWRITE )
 		MAP_ATTRIBUTE("maxSimDilation", mMaxSimDilation, "The maximum dilation factor allowed.  For instance, setting this to 4 will allow the sim clock to run at quadruple time but no faster.  The default of 1 is almost surely what you want here.  Useless unless EnableSimDilation has been called.", Be::READWRITE )
 		MAP_ATTRIBUTE("simDilation", mSimDilation, "The current sim time dilation factor.", Be::READ )
@@ -235,12 +242,18 @@ const Be::ClassInfo* BlueOS::ExposeToBlue()
 		(
 			"RegisterClientIDForSimTimeUpdates",
 			PyRegisterClientIDForSimTimeUpdates,
-			"Given a single clientID, this function will register them for updates of our sim clock, assuming we are the master of it."
+			"Given a single clientID, this function will register them for updates of our sim clock, assuming we are the master of it.\n"
+			":param clientID: client ID\n"
+			":type clientID: long\n"
+			":rtype: None"
 		)
 		MAP_METHOD_AS_METHOD(
 			"UnregisterClientIDForSimTimeUpdates",
 			PyUnregisterClientIDForSimTimeUpdates,
-			"Given a single clientID, this function will unregister them for updates of our sim clock."
+			"Given a single clientID, this function will unregister them for updates of our sim clock.\n"
+			":param clientID: client ID\n"
+			":type clientID: long\n"
+			":rtype: None"
 		)
 
 		// "slug" stuff
@@ -268,14 +281,22 @@ const Be::ClassInfo* BlueOS::ExposeToBlue()
 		(
 			"CarbonIoFastWakeup",
 			PyCarbonIoFastWakeup,
-			"When True, wakeup blue as fast as possible from CarbonIo"
+			"When True, wakeup blue as fast as possible from CarbonIo\n"
+			":param wakeup: turn fast wake up on/off (evaluated as bool)\n"
+			":type wakeup: bool\n"
+			":returns: previous fast wake up state\n"
+			":rtype: bool"
 		)
 
 		MAP_METHOD
 		(
 			"CarbonIoManualWakeup",
 			PyCarbonIoManualWakeup,
-			"When True, cause a manual 'tick' of CarbonIO (for it to wake up tasklets) whenever Blue wakes up."
+			"When True, cause a manual 'tick' of CarbonIO (for it to wake up tasklets) whenever Blue wakes up.\n"
+			":param manual: turn manual wake up on/off (evaluated as bool)\n"
+			":type manual: bool\n"
+			":returns: previous manual wake up state\n"
+			":rtype: bool"
 		)
 
 		// other stuff
@@ -315,48 +336,69 @@ const Be::ClassInfo* BlueOS::ExposeToBlue()
 		(
 			"GetTime",
 			PyGetTime,
-			"Returns world time" )  // TDTODO - Depricate me!
+			"DEPRECATED!\nReturns world time\n" 
+			":param timeType: zero for \"wallclock\" time and non-zero for \"wallclock\" time now\n"
+			":type timeType: Optional[int]\n"
+			":rtype: long"
+			)  // TDTODO - Depricate me!
 		MAP_METHOD_AS_METHOD
 		(
 			"GetWallclockTime",
 			PyGetWallclockTime,
-			"Returns real world time, as you would see on a clock on a wall, from the beginning of the frame" 
+			"Returns real world time, as you would see on a clock on a wall, from the beginning of the frame\n" 
+			":rtype: long"
 		)
 		MAP_METHOD_AS_METHOD
 		(
 			"GetWallclockTimeNow",
 			PyGetWallclockTimeNow,
-			"Returns real world time, as you would see on a clock on a wall, right now" 
+			"Returns real world time, as you would see on a clock on a wall, right now\n" 
+			":rtype: long"
 		)
 		MAP_METHOD_AS_METHOD
 		(
 			"GetSimTime",
 			PyGetSimTime,
-			"Returns the current simulation time" 
+			"Returns the current simulation time\n" 
+			":rtype: long"
 		)
 		MAP_METHOD_AS_METHOD
 		(
 			"GetCycles",
 			PyGetCycles,
-			"Returns a tuple of number of cpu cycles and cpu frequency." 
+			"Returns a tuple of number of cpu cycles and cpu frequency.\n" 
+			":rtype: (long, long)"
 		)
 		MAP_METHOD_AS_METHOD
 		(
 			"SetTime",
 			PySetTime,
-			"Sets world time" 
+			"Sets world time\n" 
+			":param time: new time\n"
+			":type time: long\n"
+			":rtype: None"
 		)
 		MAP_METHOD_AS_METHOD
 		(
 			"TimeDiffInMs",
 			PyTimeDiffInMs,
-			"Returns time diff in ms." 
+			"Returns time diff in ms.\n" 
+			":param t1: first time\n"
+			":type t1: long\n"
+			":param t2: second time\n"
+			":type t2: long\n"
+			":rtype: int | long"
 		)
 		MAP_METHOD_AS_METHOD
 		(
 			"TimeDiffInUs",
 			PyTimeDiffInUs,
-			"Returns time diff in microsecs." 
+			"Returns time diff in microsecs.\n" 
+			":param t1: first time\n"
+			":type t1: long\n"
+			":param t2: second time\n"
+			":type t2: long\n"
+			":rtype: int | long"
 		)
 #if CCP_STACKLESS
         MAP_ATTRIBUTE( "timeSyncAdjust", mTimeSyncAdjust, "Our current time sync nudge, used to maintain the sync over time",  Be::READWRITE )
@@ -367,51 +409,91 @@ const Be::ClassInfo* BlueOS::ExposeToBlue()
 		(
 			"TimeFromDouble",
 			PyTimeFromDouble,
-			"Converts double time to UTC time." 
+			"Converts double time to UTC time.\n" 
+			":param time: double time\n"
+			":type time: float\n"
+			":rtype: long"
 		)
 		MAP_METHOD_AS_METHOD
 		(
 			"TimeAsDouble",
 			PyTimeAsDouble,
-			"Converts UTC time to double time." 
+			"Converts UTC time to double time.\n" 
+			":param time: UTC time\n"
+			":type time: long\n"
+			":rtype: double"
 		)
 		MAP_METHOD_AS_METHOD
 		(
 			"TimeAddSec",
 			PyTimeAddSec,
-			"Returns UTC time plus double secs." 
+			"Returns UTC time plus double secs.\n" 
+			":param time: UTC time\n"
+			":type time: long\n"
+			":param secs: seconds\n"
+			":type secs: float\n"
+			":rtype: long"
 		)
 		
 		MAP_METHOD_AS_METHOD
 		(
 			"GetTimeParts",
 			PyGetTimeParts,
-			"Returns list of time parts" 
+			"Returns list of time parts\n" 
+			":param time: UTC time\n"
+			":type time: long\n"
+			":rtype: (int, int, int, int, int, int, int)"
 		)
 		MAP_METHOD_AS_METHOD
 		(
 			"GetTimeFromParts",
 			PyGetTimeFromParts,
-			"Returns UTC time from parts" 
+			"Returns UTC time from parts\n" 
+			":param year:\n"
+			":type year: int\n"
+			":param month:\n"
+			":type month: int\n"
+			":param day:\n"
+			":type day: int\n"
+			":param hour:\n"
+			":type hour: int\n"
+			":param minute:\n"
+			":type minute: int\n"
+			":param second:\n"
+			":type second: int\n"
+			":param milliseconds:\n"
+			":type milliseconds: int\n"
+			":rtype: long\n"
 		)
 		MAP_METHOD_AS_METHOD
 		(
 			"TimeDiffAsParts",
 			PyTimeDiffAsParts,
-			"Takes in two times and returns a list specifying the number of years, months, days, hours, minutes, seconds, ms" 
+			"Takes in two times and returns a list specifying the number of years, months, days, hours, minutes, seconds, ms\n" 
+			":param t1: first time\n"
+			":type t1: long\n"
+			":param t2: second time\n"
+			":type t2: long\n"
+			":rtype: (int, int, int, int, int, int, int)"
 		)
 		MAP_METHOD_AS_METHOD
 		(
 			"FormatUTC",
 			PyFormatUTC,
-			"Returns UTC time as string" 
+			"Returns UTC time as string\n" 
+			":param time: UTC time\n"
+			":type time: long\n"
+			":param localtime: use local or UTC time\n"
+			":param localtime: Optional[int]\n"
+			":rtype: list[str]"
 		)
 
 		MAP_METHOD_AS_METHOD
 		(
 			"GetCpuTime",
 			PyGetCpuTime,
-			"Returns CPU clock values" 
+			"DEPRECATED!\nReturns CPU clock values\n" 
+			":raises RuntimeError: always!"
 		)
 
 #ifdef _WIN32
@@ -419,7 +501,8 @@ const Be::ClassInfo* BlueOS::ExposeToBlue()
 		(
 			"HeapCompact",
 			PyHeapCompact,
-			"Attempt to compact the system heap." 
+			"Attempt to compact the system heap.\n" 
+			":rtype: None"
 		)
 		
 		MAP_METHOD_AS_METHOD
@@ -427,7 +510,8 @@ const Be::ClassInfo* BlueOS::ExposeToBlue()
 			"GlobalMemoryStatus",
 			PyGlobalMemoryStatus,
 			"Obtains information about the system's current usage of both"
-			"physical and virtual memory." 
+			"physical and virtual memory.\n" 
+			":rtype: (list, list)"
 		)
 #endif
 
@@ -435,13 +519,17 @@ const Be::ClassInfo* BlueOS::ExposeToBlue()
 		(
 			"SetAppTitle",
 			PySetAppTitle,
-			"Set text in titlebar." 
+			"Set text in titlebar.\n" 
+			":param title: app title\n"
+			":type title: str\n"
+			":rtype: None"
 		)
 		MAP_METHOD_AS_METHOD
 		(
 			"GetAppTitle",
 			PyGetAppTitle,
-			"Get text in titlebar." 
+			"Get text in titlebar.\n" 
+			":rtype: str"
 		)
 
 #ifdef _WIN32
@@ -449,13 +537,23 @@ const Be::ClassInfo* BlueOS::ExposeToBlue()
 		(
 			"ApplyPatch",
 			PyApplyPatch,
-			"Apply patch file and kill current process"
+			"Apply patch file and kill current process\n"
+			":param patchFile: path to patch executable\n"
+			":type patchFile: basestring\n"
+			":param parameter: program arguments for the patch executable\n"
+			":type parameter: basestring\n"
+			":rtype: None"
 		)
 		MAP_METHOD_AS_METHOD
 		(
 			"ShellExecute",
 			PyShellExecute,
-			"Win32 shell execute (with constraints)"
+			"Win32 shell execute (with constraints)\n"
+			":param path: res path to file or URL\n"
+			":type patchFile: basestring\n"
+			":param parameter: program arguments\n"
+			":type parameter: Optional[basestring]\n"
+			":rtype: None"
 		)
 #endif
 
@@ -470,10 +568,10 @@ const Be::ClassInfo* BlueOS::ExposeToBlue()
 		( 
 			"Terminate", 
 			PyTerminate, 
-			"Terminates the process forcefully."
-			"\n"
-			"\nArguments:"
-			"\nretCode - optional - integer value returned as the process return code. Default is 0."
+			"Terminates the process forcefully.\n"
+			":param retCode: integer value returned as the process return code. Default is 0."
+			":type retCode: Optional[int]\n"
+			":rtype: None"
 		)
 
 #if CCP_STACKLESS
@@ -489,7 +587,8 @@ const Be::ClassInfo* BlueOS::ExposeToBlue()
 		(
 			"GetExeFilePids",
 			PyGetExeFilePids,
-			"Returns a list of process ids for any ExeFile instances running"
+			"Returns a list of process ids for any ExeFile instances running\n"
+			":rtype: list[long]"
 		)
 #endif
 

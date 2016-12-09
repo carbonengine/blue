@@ -24,8 +24,18 @@ public:
 #ifdef _WIN32
 	bool IsKnownHeap( HANDLE heap );
 	void SetCustomHeapsToLargestHeaps();
+	void DumpModulesAsText( const char* filename );
+	uint32_t GetProcessHeapsCount();
+	size_t GetHeapSize( size_t heap );
+	size_t GetMainProcessHeap();
+	size_t GetBlueHeap();
 #endif
 	void SummaryReport( const char* filename );
+	void DumpReportAsText( const char* filename );
+	void DumpReportAsBinary( const char* filename );
+	size_t GetCount();
+	size_t GetSize();
+	void CallstackCaptureEnable( bool enable );
 
 private:
 	void UpdateDetailedTracking();

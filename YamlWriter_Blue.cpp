@@ -23,11 +23,8 @@ const Be::ClassInfo* YamlWriter::ExposeToBlue()
 			"WriteObjectToString",
 			WriteObjectToString,
 			"Returns a string representation of an object in yaml format.\n"
-			"\n"
-			"Arguments:\n"
-			"  obj - The object to write\n"
-			"Returns:\n"
-			"A string in yaml format."
+			":param obj: The object to write\n"
+			":returns: A string in yaml format."
 		)
 
 		MAP_METHOD_AND_WRAP
@@ -35,10 +32,8 @@ const Be::ClassInfo* YamlWriter::ExposeToBlue()
 			"WriteObjectToStream",
 			WriteObjectToStream,
 			"Writes a string representation of an object in yaml format to the given stream.\n"
-			"\n"
-			"Arguments:\n"
-			"  obj - The object to write\n"
-			"  stream - An IBlueStream object\n"
+			":param obj: The object to write\n"
+			":param stream: An IBlueStream object\n"
 		)
 
 		MAP_METHOD_AND_WRAP
@@ -46,10 +41,8 @@ const Be::ClassInfo* YamlWriter::ExposeToBlue()
 			"WriteObjectToFile",
 			WriteObjectToFile,
 			"Writes a string representation of an object in yaml format to the given file.\n"
-			"\n"
-			"Arguments:\n"
-			"  obj - The object to write\n"
-			"  filename - The name of the file\n"
+			":param obj: The object to write\n"
+			":param filename: The name of the file\n"
 
 		)
 	EXPOSURE_END()

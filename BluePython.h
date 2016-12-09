@@ -212,7 +212,6 @@ public:
 	PyObject* PyGetArg( PyObject* args );
 	PyObject* PyGetEnv( PyObject* args );
 	PyObject* PyDumpState( PyObject* args );
-	PyObject* Py_DumpLockCount( PyObject* args );
 	PyObject* Py_EnableTrace( PyObject* args );
 	PyObject* Py_GetWrapperList( PyObject* args );
 	PyObject* Py_GetObjectState( PyObject* args );

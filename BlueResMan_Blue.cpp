@@ -348,51 +348,54 @@ const Be::ClassInfo* BlueResMan::ExposeToBlue()
 		(
 			"LoadObject",
 			LoadObjectFromScript,
-			"Loads object from a file (.blue or .red based on extension)."
-			"\nThis function may yield the calling tasklet while disk io takes place"
-			"\n\nArguments:"
-			"\n filename - path to the file to load"
+			"Loads object from a file (.blue or .red based on extension).\n"
+			"This function may yield the calling tasklet while disk io takes place\n"
+			":param filename: path to the file to load"
 		)
 
 		MAP_METHOD
 		(
 			"SaveObject",
 			PySaveObject,
-			"Saves an object to a file (.red or .blue based on extension)."
-			"\n\nArguments:"
-			"\n obj - object to save"
-			"\n filename - path to the file to save to"
+			"Saves an object to a file (.red or .blue based on extension). Returns the success of operation.\n"
+			":param obj: object to save\n"
+			":type obj: IRoot\n"
+			":param filename: path to the file to save to\n"
+			":type filename: basestring\n"
+			":rtype: bool"
 		)
 		
 		MAP_METHOD
 		(
 			"SaveObjectToYamlString",
 			PySaveObjectToYamlString,
-			"Saves an object to yaml representation in a string. The string"
-			"\nis equivalent to the contents of a red file saved with"
-			"\nSaveObject."
-			"\n\nArguments:"
-			"\n obj - object to save"
+			"Saves an object to yaml representation in a string. The string\n"
+			"is equivalent to the contents of a red file saved with SaveObject.\n"
+			":param obj: object to save\n"
+			":type obj: IRoot\n"
+			":rtype: str"
 		)
 		
 		MAP_METHOD_AND_WRAP
 		(
 			"LoadObjectWithoutInitialize",
 			LoadObjectWithoutInitializeFromScript,
-			"Loads object from a file (.blue or .red based on extension)."
-			"\nThe object is not initialized - see LoadObject for regular loading."
-			"\nThis can be useful when all that is needed is to inspect the structure"
-			"\nof the object without using it in any way."
-			"\nThis function may yield the calling tasklet while disk io takes place"
-			"\n\nArguments:"
-			"\n filename - path to the file to load"
+			"Loads object from a file (.blue or .red based on extension).\n"
+			"The object is not initialized - see LoadObject for regular loading.\n"
+			"This can be useful when all that is needed is to inspect the structure\n"
+			"of the object without using it in any way.\n"
+			"This function may yield the calling tasklet while disk io takes place\n"
+			":param filename: path to the file to load\n"
 		)
 
 		MAP_METHOD
 		(
 			"LoadObjectFromYamlString",
 			PyLoadObjectFromYamlString, 
-			"Loads object from a string that has yaml contents"
+			"Loads object from a string that has yaml contents\n"
+			":param yaml: YAML\n"
+			":type yaml: str\n"
+			":rtype: None | IRoot"
 		)
 
 		MAP_METHOD_AND_WRAP
@@ -420,64 +423,61 @@ const Be::ClassInfo* BlueResMan::ExposeToBlue()
 		(
 			"SetLoadingThreadPriority",
 			SetLoadingThreadPriority,
-			"Sets the priority of the loading thread(s)."
-			"\n"
-			"\nArguments:"
-			"\nprio - Integer value - positive for higher than normal, negative for lower priority"
+			"Sets the priority of the loading thread(s).\n"
+			":param prio: positive for higher than normal, negative for lower priority\n"
 		)
 		MAP_METHOD_AND_WRAP
 		(
 			"SetLoadingThreadCount",
 			SetLoadingThreadCount,
-			"Sets the count of loading threads."
-			"\n"
-			"\nArguments:"
-			"\ncount - Integer value - usually lower or equal to number of cores available,"
-			"\n        not lower than 1."
+			"Sets the count of loading threads.\n"
+			":param count: usually lower or equal to number of cores available, not lower than 1."
 		)
 
 		MAP_METHOD( 
 			"RegisterResourceConstructor", 
 			PyRegisterResourceConstructor, 
-			"Registers a new dynamic resource constructor function. This function is called " 
-			"for resources with paths like \"dynamic:/name\". If the constructor with the "
-			"same name is already registered, the new function will override the old one."
-			"\n"
-			"\nArguments:"
-			"\nname - Name to associate with the constructor in resource paths"
-			"\nfunction - A callable object that is used to construct dynamic resources"
+			"Registers a new dynamic resource constructor function. This function is called \n" 
+			"for resources with paths like \"dynamic:/name\". If the constructor with the \n"
+			"same name is already registered, the new function will override the old one.\n"
+			":param name: Name to associate with the constructor in resource paths\n"
+			":type name: str\n"
+			":param function: A callable object that is used to construct dynamic resources\n"
+			":type function: (unicode)->IRoot\n"
+			":rtype: None"
 			)
 
 		MAP_METHOD( 
 			"RegisterResourceConstructorW", 
 			PyRegisterResourceConstructorW, 
-			"Registers a new dynamic resource constructor function. This function is called " 
-			"for resources with paths like \"dynamic:/name\". If the constructor with the "
-			"same name is already registered, the new function will override the old one."
-			"\n"
-			"\nArguments:"
-			"\nname - Name to associate with the constructor in resource paths"
-			"\nfunction - A callable object that is used to construct dynamic resources"
+			"Registers a new dynamic resource constructor function. This function is called \n" 
+			"for resources with paths like \"dynamic:/name\". If the constructor with the \n"
+			"same name is already registered, the new function will override the old one.\n"
+			":param name: Name to associate with the constructor in resource paths\n"
+			":type name: unicode\n"
+			":param function: A callable object that is used to construct dynamic resources\n"
+			":type function: (unicode)->IRoot\n"
+			":rtype: None"
 			)
 
 		MAP_METHOD( 
 			"UnregisterResourceConstructor", 
 			PyUnregisterResourceConstructor, 
 			"Unregisters dynamic resource constructor function previously registered with a " 
-			"call to RegisterResourceConstructor."
-			"\n"
-			"\nArguments:"
-			"\nname - Name associated with the constructor function to unregister"
+			"call to RegisterResourceConstructor.\n"
+			":param name: Name associated with the constructor function to unregister\n"
+			":type name: str\n"
+			":rtype: None"
 			)
 
 		MAP_METHOD( 
 			"UnregisterResourceConstructorW", 
 			PyUnregisterResourceConstructorW, 
 			"Unregisters dynamic resource constructor function previously registered with a " 
-			"call to RegisterResourceConstructor."
-			"\n"
-			"\nArguments:"
-			"\nname - Name associated with the constructor function to unregister"
+			"call to RegisterResourceConstructor.\n"
+			":param name: Name associated with the constructor function to unregister\n"
+			":type name: unicode\n"
+			":rtype: None"
 			)
 
 		EXPOSURE_END()

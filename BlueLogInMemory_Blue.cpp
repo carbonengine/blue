@@ -37,7 +37,8 @@ const Be::ClassInfo* BlueLogInMemory::ExposeToBlue()
 		(
 			"GetEntries",
 			GetEntries,
-			"Gets a list of log entries captured."
+			"Gets a list of log entries captured.\n"
+			":rtype: (str, str, int, long, str)"
 		)
 #endif
 		MAP_METHOD_AND_WRAP

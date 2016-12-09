@@ -106,8 +106,9 @@ const Be::ClassInfo* BlueObjectRecycler::ExposeToBlue()
 			"is called for any given path, the object is simply loaded. Once that instance\n"
 			"is no longer in use, the recycler may decide to hang on to it for recycling\n"
 			"for later calls to RecycleOrLoad with the same path.\n\n"
-			"Arguments:\n"
-			"  resPath\n"
+			":param resPath: res path to load\n"
+			":type resPath: basestring\n"
+			":rtype: IRoot"
 		)
 
 		MAP_METHOD
@@ -117,7 +118,12 @@ const Be::ClassInfo* BlueObjectRecycler::ExposeToBlue()
 			"Recycles an object if possible, or makes a copy of the srcObj if no recyclable\n"
 			"instance exists. When instances copied are no longer in use, the recycler may\n"
 			"decide to hang on to them for recycling in later calls to this function with\n"
-			"the same key."""
+			"the same key.\n"
+			":param resPath: res path\n"
+			":type resPath: basestring\n"
+			":param srcObj: example object\n"
+			":type srcObj: IRoot\n"
+			":rtype: IRoot"
 		)
 
 		MAP_METHOD_AND_WRAP

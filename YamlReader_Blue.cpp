@@ -37,33 +37,24 @@ const Be::ClassInfo* YamlReader::ExposeToBlue()
 			"CreateObjectFromString",
 			CreateObjectFromString,
 			"Creates an object from the given yaml representation.\n"
-			"\n"
-			"Arguments:\n"
-			"  yamlString - string containing YAML\n"
-			"Returns:\n"
-			"  The object corresponding to the yaml representation."
+			":param yamlString: string containing YAML\n"
+			":returns: The object corresponding to the yaml representation."
 		)
 		MAP_METHOD_AND_WRAP
 		(
 			"CreateObjectFromStream",
 			CreateObjectFromStream,
 			"Creates an object from a yaml representation read from the given stream.\n"
-			"\n"
-			"Arguments:\n"
-			"  stream - blue stream\n"
-			"Returns:\n"
-			"  The object corresponding to the yaml representation."
+			":param stream: blue stream\n"
+			":returns:  The object corresponding to the yaml representation."
 		)
 		MAP_METHOD_AND_WRAP
 		(
 			"CreateObjectFromFile",
 			CreateObjectFromFile,
 			"Creates an object from a yaml representation read from the given file.\n"
-			"\n"
-			"Arguments:\n"
-			"  filename - res path\n"
-			"Returns:\n"
-			"  The object corresponding to the yaml representation."
+			":param filename: res path\n"
+			":returns: The object corresponding to the yaml representation."
 		)
 	EXPOSURE_END()
 }
