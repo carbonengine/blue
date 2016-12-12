@@ -19,7 +19,7 @@ const Be::ClassInfo* BlueNetworkStream::ExposeToBlue()
 			"__init__", 
 			Open, 
 			"Creates a network stream. Starts streaming in data from provided URL into memory immediately.\n"
-			":param url: well-formed network url to a resourse" )
+			":param url: well-formed network url to a resource" )
 		MAP_PROPERTY_READONLY( 
 			"size", 
 			GetSize, 
