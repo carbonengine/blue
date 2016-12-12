@@ -550,7 +550,7 @@ const Be::ClassInfo* BlueOS::ExposeToBlue()
 			PyShellExecute,
 			"Win32 shell execute (with constraints)\n"
 			":param path: res path to file or URL\n"
-			":type patchFile: basestring\n"
+			":type path: basestring\n"
 			":param parameter: program arguments\n"
 			":type parameter: Optional[basestring]\n"
 			":rtype: None"
