@@ -484,7 +484,7 @@ const Be::ClassInfo* BlueOS::ExposeToBlue()
 			":param time: UTC time\n"
 			":type time: long\n"
 			":param localtime: use local or UTC time\n"
-			":param localtime: Optional[int]\n"
+			":type localtime: Optional[int]\n"
 			":rtype: list[str]"
 		)
 

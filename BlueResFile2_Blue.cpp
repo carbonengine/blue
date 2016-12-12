@@ -263,7 +263,7 @@ const Be::ClassInfo* ResFile::ExposeToBlue()
 			PySeek,
 			"Set the file current position. See Python file object docs for details.\n"
 			":param offset: where to seek to\n"
-			":type param: int\n"
+			":type offset: int\n"
 			":param whence: (optional) where to seek from. Defaults to 0 for absolute position.\n"
 			":type whence: int\n"
 			":rtype: None"
