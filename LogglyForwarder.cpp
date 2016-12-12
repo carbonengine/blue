@@ -171,6 +171,7 @@ MAP_FUNCTION_AND_WRAP(
 	"EnableLogglyLogging", 
 	EnableLogglyLogging, 
 	"Enable Loggly logging\n"
+	":param threshold: minimum severity level required for the message to be output\n"
 	":param url: Loggly URL\n"
 	":param sessionId: Loggly session id"
 	);
