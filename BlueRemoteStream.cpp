@@ -616,7 +616,8 @@ bool BlueRemoteStream::VerifyContents( const char* expectedChecksum )
 	MD5 checkSum;
 	checkSum.update( reinterpret_cast<unsigned char*>( m_data ), (unsigned int)m_dataSize );
 	checkSum.finalize();
-	const char* checkSumAsHex = checkSum.hex_digest();
+	char buffer[33];
+	const char* checkSumAsHex = checkSum.hex_digest( buffer );
 	if( strcmp( expectedChecksum, checkSumAsHex ) != 0 )
 	{
 		return false;

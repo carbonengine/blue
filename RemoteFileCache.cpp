@@ -95,6 +95,16 @@ void RemoteFileCache::SetCacheFolder( const wchar_t* folderName )
 	m_cacheFolder = folderName;
 }
 
+void RemoteFileCache::SetServer( const char* url )
+{
+	m_server = url;
+}
+
+void RemoteFileCache::SetPrefix( const char* prefix )
+{
+	m_prefix = prefix;
+}
+
 Be::Result<std::string> RemoteFileCache::GetStreamFromPathW( const wchar_t* resPath, IBlueStream** stream )
 {
 	CCP_STATS_SCOPED_TIME( remoteFileCacheGetStream );
@@ -199,7 +209,8 @@ bool VerifyChecksum( IBlueStream* stream, const std::string& expectedChecksum )
 	checkSum.update( reinterpret_cast<unsigned char*>(data.get()), (unsigned int)data.size() );
 	checkSum.finalize();
 
-	const char* checkSumAsHex = checkSum.hex_digest();
+	char buffer[33];
+	const char* checkSumAsHex = checkSum.hex_digest( buffer );
 	if( strcmp( expectedChecksum.c_str(), checkSumAsHex ) != 0 )
 	{
 		return false;
