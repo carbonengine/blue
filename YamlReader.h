@@ -141,7 +141,7 @@ private:
 	void ReadFloat16( uint16_t& dst );
 	void ReadStructureListItem( const BlueStructureDefinition* memberDef, void* item );
 
-	template <typename T>
+	template <typename T, size_t TypeSize>
 	void ReadStructureListItemMember( const BlueStructureDefinition* memberDef, void* item, void ( YamlReader::*conversionFunc )( T& ) )
 	{
 		int size = ( ( memberDef->m_dataType & Be::DT_SIZE_MASK ) >> Be::DT_SIZE_OFFSET ) + 1;
@@ -154,7 +154,7 @@ private:
 		for( int compIx = 0; compIx < size; ++compIx )
 		{
 			( this->*conversionFunc )( *reinterpret_cast<T*>( member ) );
-			member += sizeof( T );
+			member += TypeSize;
 		}
 		if( size > 1 )
 		{

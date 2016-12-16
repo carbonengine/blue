@@ -599,7 +599,7 @@ void YamlReader::ReadValue( BlueSharedString& dst )
 
 void YamlReader::ReadValue( Vector4& dst )
 {
-	ReadFloatArray( &dst.x, 4 );
+	ReadFloatArray( reinterpret_cast<float*>( &dst ), 4 );
 }
 
 void YamlReader::ReadFloat16( uint16_t& dst )
@@ -1495,47 +1495,47 @@ void YamlReader::ReadStructureListItem( const BlueStructureDefinition* memberDef
 			case Be::DT_INT8:
 				if( memberDef->m_dataType & Be::DT_UNSIGNED_BIT )
 				{
-					ReadStructureListItemMember<uint8_t>( memberDef, item, &YamlReader::ReadValue );
+					ReadStructureListItemMember<uint8_t, sizeof( uint8_t )>( memberDef, item, &YamlReader::ReadValue );
 				}
 				else
 				{
-					ReadStructureListItemMember<int8_t>( memberDef, item, &YamlReader::ReadValue );
+					ReadStructureListItemMember<int8_t, sizeof( int8_t )>( memberDef, item, &YamlReader::ReadValue );
 				}
 				break;
 			case Be::DT_INT16:
 				if( memberDef->m_dataType & Be::DT_UNSIGNED_BIT )
 				{
-					ReadStructureListItemMember<uint16_t>( memberDef, item, &YamlReader::ReadValue );
+					ReadStructureListItemMember<uint16_t, sizeof( uint16_t )>( memberDef, item, &YamlReader::ReadValue );
 				}
 				else
 				{
-					ReadStructureListItemMember<int16_t>( memberDef, item, &YamlReader::ReadValue );
+					ReadStructureListItemMember<int16_t, sizeof( int16_t )>( memberDef, item, &YamlReader::ReadValue );
 				}
 				break;
 			case Be::DT_INT32:
 				if( memberDef->m_dataType & Be::DT_UNSIGNED_BIT )
 				{
-					ReadStructureListItemMember<uint32_t>( memberDef, item, &YamlReader::ReadValue );
+					ReadStructureListItemMember<uint32_t, sizeof( uint32_t )>( memberDef, item, &YamlReader::ReadValue );
 				}
 				else
 				{
-					ReadStructureListItemMember<int32_t>( memberDef, item, &YamlReader::ReadValue );
+					ReadStructureListItemMember<int32_t, sizeof( int32_t )>( memberDef, item, &YamlReader::ReadValue );
 				}
 				break;
 			case Be::DT_FLOAT32:
-				ReadStructureListItemMember<float>( memberDef, item, &YamlReader::ReadValue );
+				ReadStructureListItemMember<float, sizeof( float )>( memberDef, item, &YamlReader::ReadValue );
 				break;
 			case Be::DT_FLOAT16:
-				ReadStructureListItemMember<uint16_t>( memberDef, item, &YamlReader::ReadFloat16 );
+				ReadStructureListItemMember<uint16_t, sizeof( uint16_t )>( memberDef, item, &YamlReader::ReadFloat16 );
 				break;
 			case Be::DT_FLOAT32x4:
-				ReadStructureListItemMember<Vector4>( memberDef, item, &YamlReader::ReadValue );
+				ReadStructureListItemMember<Vector4, sizeof( float ) * 4>( memberDef, item, &YamlReader::ReadValue );
 				break;
 			case Be::DT_BOOL8:
-				ReadStructureListItemMember<bool>( memberDef, item, &YamlReader::ReadValue );
+				ReadStructureListItemMember<bool, sizeof( bool )>( memberDef, item, &YamlReader::ReadValue );
 				break;
 			case Be::DT_SHAREDSTRING:
-				ReadStructureListItemMember<BlueSharedString>( memberDef, item, &YamlReader::ReadValue );
+				ReadStructureListItemMember<BlueSharedString, sizeof( BlueSharedString )>( memberDef, item, &YamlReader::ReadValue );
 				break;
 
 			default:

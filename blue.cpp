@@ -421,6 +421,7 @@ MAP_FUNCTION(
 
 #ifdef _WIN32
 
+#ifdef _WINDLL
 BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID)
 {
 	s_instance = instance;
@@ -456,6 +457,8 @@ BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID)
 
 	return TRUE;
 }
+#endif
+
 #elif defined( __ORBIS__ )
 extern "C" int DLLEXPORT module_start( size_t, const void* )
 {

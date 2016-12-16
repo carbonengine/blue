@@ -543,7 +543,7 @@ void YamlWriter::WriteStructureList( IBlueStructureList* structureList )
 					for( int compIx = 0; compIx < size; ++compIx )
 					{
 						WriteFloatSequence( (float*)member, 4 );
-						member += sizeof( Vector4 );
+						member += sizeof( float ) * 4;
 					}
 					break;
 				case Be::DT_BOOL8:

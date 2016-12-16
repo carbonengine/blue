@@ -3,17 +3,11 @@
 
 #include "StdAfx.h"
 
-#if BLUE_WITH_PYTHON
 #ifdef _WIN32
 
 #include <winsock2.h>
 #include <ntverp.h>
 #include <Iphlpapi.h>
-#include "win32.h"
-
-#include "include/blue.h"
-#include "include/IBluePython.h"
-#include "include/TransGaming.h"
 
 #include <shellapi.h>
 
@@ -27,6 +21,98 @@
 
 #include <DbgHelp.h>
 #include <bits.h>
+
+
+
+bool GetWindowsVersionFromFile( OSVERSIONINFOEX& info )
+{
+	wchar_t folder[MAX_PATH];
+	if( FAILED( SHGetFolderPathW( nullptr, CSIDL_SYSTEM, nullptr, SHGFP_TYPE_CURRENT, folder ) ) )
+	{
+		return false;
+	}
+	std::wstring path( folder );
+	path += L"\\kernel32.dll";
+	DWORD handle = 0;
+	auto size = GetFileVersionInfoSizeW( path.c_str(), &handle );
+	if( !size )
+	{
+		return false;
+	}
+	std::unique_ptr<char[]> versionInfo( new char[size] );
+	if( !GetFileVersionInfoW( path.c_str(), handle, size, versionInfo.get() ) )
+	{
+		return false;
+	}
+
+
+	struct LANGANDCODEPAGE 
+	{
+		  WORD language;
+		  WORD codePage;
+	} *translate;
+	UINT translateSize;
+
+	if( !VerQueryValueW( versionInfo.get(), L"\\VarFileInfo\\Translation", reinterpret_cast<LPVOID*>( &translate ), &translateSize ) )
+	{
+		return false;
+	}
+
+	for( UINT i = 0; i < translateSize / sizeof( LANGANDCODEPAGE ); ++i )
+	{
+		wchar_t subBlock[512];
+		swprintf_s( subBlock, L"\\StringFileInfo\\%04x%04x\\ProductVersion", translate[i].language, translate[i].codePage );
+		wchar_t *version;
+		UINT size;
+		if( VerQueryValueW( versionInfo.get(), subBlock, reinterpret_cast<LPVOID*>( &version ), &size ) )
+		{
+			unsigned major, minor, build;
+			if( swscanf_s( version, L"%u.%u.%u", &major, &minor, &build ) != 3 )
+			{
+				return false;
+			}
+			info.dwMajorVersion = major;
+			info.dwMinorVersion = minor;
+			info.dwBuildNumber = build;
+			info.dwPlatformId = VER_PLATFORM_WIN32_NT;
+			info.szCSDVersion[0] = 0;
+			info.wServicePackMajor = 0;
+			info.wServicePackMinor = 0;
+			info.wSuiteMask = 0;
+			info.wProductType = VER_NT_WORKSTATION;
+			return true;
+		}
+	}
+	return false;
+}
+
+void GetWindowsVersionFromApi( OSVERSIONINFOEX &info )
+{
+	memset( &info, 0, sizeof( info ) );
+	info.dwOSVersionInfoSize = sizeof( info );
+	if( !GetVersionEx( reinterpret_cast<OSVERSIONINFO*>( &info ) ) )
+	{
+		info.dwOSVersionInfoSize = sizeof( OSVERSIONINFO );
+		if( !GetVersionEx( reinterpret_cast<OSVERSIONINFO*>( &info ) ) )
+		{
+			auto ver = GetVersion();
+			info.dwMajorVersion = LOBYTE( LOWORD( ver ) );
+			info.dwMinorVersion = HIBYTE( LOWORD( ver ) );
+			if( ver < 0x80000000 )
+			{
+				info.dwBuildNumber = HIWORD( ver );
+			}
+		}
+	}
+}
+
+#if BLUE_WITH_PYTHON
+
+#include "win32.h"
+
+#include "include/blue.h"
+#include "include/IBluePython.h"
+#include "include/TransGaming.h"
 
 
 // Need some structure definitions for the extended TCP functionality.  Normally defined in Iphlpapi.h,
@@ -343,90 +429,6 @@ DEF(WTSUnRegisterSessionNotification)
 #undef DEF
 {0}
 };
-
-
-
-bool GetWindowsVersionFromFile( OSVERSIONINFOEX& info )
-{
-	wchar_t folder[MAX_PATH];
-	if( FAILED( SHGetFolderPathW( nullptr, CSIDL_SYSTEM, nullptr, SHGFP_TYPE_CURRENT, folder ) ) )
-	{
-		return false;
-	}
-	std::wstring path( folder );
-	path += L"\\kernel32.dll";
-	DWORD handle = 0;
-	auto size = GetFileVersionInfoSizeW( path.c_str(), &handle );
-	if( !size )
-	{
-		return false;
-	}
-	std::unique_ptr<char[]> versionInfo( new char[size] );
-	if( !GetFileVersionInfoW( path.c_str(), handle, size, versionInfo.get() ) )
-	{
-		return false;
-	}
-
-
-	struct LANGANDCODEPAGE 
-	{
-		  WORD language;
-		  WORD codePage;
-	} *translate;
-	UINT translateSize;
-
-	if( !VerQueryValueW( versionInfo.get(), L"\\VarFileInfo\\Translation", reinterpret_cast<LPVOID*>( &translate ), &translateSize ) )
-	{
-		return false;
-	}
-
-	for( UINT i = 0; i < translateSize / sizeof( LANGANDCODEPAGE ); ++i )
-	{
-		wchar_t subBlock[512];
-		swprintf_s( subBlock, L"\\StringFileInfo\\%04x%04x\\ProductVersion", translate[i].language, translate[i].codePage );
-		wchar_t *version;
-		UINT size;
-		if( VerQueryValueW( versionInfo.get(), subBlock, reinterpret_cast<LPVOID*>( &version ), &size ) )
-		{
-			unsigned major, minor, build;
-			if( swscanf_s( version, L"%u.%u.%u", &major, &minor, &build ) != 3 )
-			{
-				return false;
-			}
-			info.dwMajorVersion = major;
-			info.dwMinorVersion = minor;
-			info.dwBuildNumber = build;
-			info.dwPlatformId = VER_PLATFORM_WIN32_NT;
-			info.szCSDVersion[0] = 0;
-			info.wServicePackMajor = 0;
-			info.wServicePackMinor = 0;
-			info.wSuiteMask = 0;
-			info.wProductType = VER_NT_WORKSTATION;
-			return true;
-		}
-	}
-	return false;
-}
-
-void GetWindowsVersionFromApi( OSVERSIONINFOEX &info )
-{
-	memset( &info, 0, sizeof( info ) );
-	info.dwOSVersionInfoSize = sizeof( info );
-	if( !GetVersionEx( reinterpret_cast<OSVERSIONINFO*>( &info ) ) )
-	{
-		info.dwOSVersionInfoSize = sizeof( OSVERSIONINFO );
-		if( !GetVersionEx( reinterpret_cast<OSVERSIONINFO*>( &info ) ) )
-		{
-			auto ver = GetVersion();
-			info.dwMajorVersion = LOBYTE( LOWORD( ver ) );
-			info.dwMinorVersion = HIBYTE( LOWORD( ver ) );
-			if( ver < 0x80000000 )
-			{
-				info.dwBuildNumber = HIWORD( ver );
-			}
-		}
-	}
-}
 
 
 PyObject *PyGetFileVersionInfo(PyObject *self, PyObject *args)
@@ -1789,6 +1791,8 @@ void
 }
 
 
+#endif
+
 void GetWindowsVersion( OSVERSIONINFOEX &info )
 {
 	OSVERSIONINFOEX fileInfo;
@@ -1820,6 +1824,4 @@ void GetWindowsVersion( OSVERSIONINFO &info )
 		memcpy( &info, &fileInfo, sizeof( info ) );
 	}
 }
-
-#endif
 #endif

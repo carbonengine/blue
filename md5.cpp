@@ -265,37 +265,25 @@ unsigned char *MD5::raw_digest(){
 
 
 
-char *MD5::hex_digest(){
+char *MD5::hex_digest( char buffer[33] )
+{
+	int i;
 
-  int i;
-  char *s= new char[33];
+	if( !finalized )
+	{
+		buffer[0] = 0;
+		return buffer;
+	}
 
-  if (!finalized){
-//    cerr << "MD5::hex_digest:  Can't get digest if you haven't "<<
-//      "finalized the digest!" <<endl;
-      s[0] = 0;
-    return s;
-  }
+	for( i = 0; i < 16; i++)
+	{
+		sprintf_s( buffer + i * 2, 33 - i * 2, "%02x", digest[i] );
+	}
+	buffer[32] = '\0';
 
-  for (i=0; i<16; i++)
-    sprintf(s+i*2, "%02x", digest[i]);
-
-  s[32]='\0';
-
-  return s;
+	return buffer;
 }
 
-
-
-
-
-#if 0
-ostream& operator<<(ostream &stream, MD5 context){
-
-  stream << context.hex_digest();
-  return stream;
-}
-#endif
 
 
 
@@ -530,7 +518,8 @@ std::string md5_checksum( std::string input )
 	checkSum.update( (unsigned char*)input.c_str(), (unsigned int)input.size() );
 	checkSum.finalize();
 
-	return checkSum.hex_digest();
+	char buffer[33];
+	return checkSum.hex_digest( buffer );
 }
 
 MAP_FUNCTION_AND_WRAP( 

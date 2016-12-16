@@ -261,7 +261,7 @@ LogglyForwarder::WritePackage::WritePackage( LogPackage* lp )
 	}
 	else
 	{
-		strcpy( datatype, "message" );
+		strcpy_s( datatype, "message" );
 
 		s_sanitizedMessage[writeIndex++] = '"';
 		for( int i = 0; writeIndex < sizeof( s_sanitizedMessage ) - 3; ++i )
