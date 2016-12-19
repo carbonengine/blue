@@ -90,6 +90,22 @@ BLUE_INTERFACE( IBlueResMan ) : public IRoot
 	// This function may yield the calling tasklet while loading the file.
 	virtual IRoot* LoadObject( const char* name, Be::LOADOBJECT_INIT_FLAG init = Be::LDOBJ_INITIALIZE ) = 0;
 	virtual IRoot* LoadObjectW( const wchar_t* name, Be::LOADOBJECT_INIT_FLAG init = Be::LDOBJ_INITIALIZE ) = 0;
+
+	template <typename T>
+	BluePtr<T> LoadObject( const char* name, Be::LOADOBJECT_INIT_FLAG init = Be::LDOBJ_INITIALIZE )
+	{
+		IRootPtr obj;
+		obj.Attach( this->LoadObject( name, init ) );
+		return BluePtr<T>( BlueCastPtr( obj ) );
+	}
+
+	template <typename T>
+	BluePtr<T> LoadObject( const wchar_t* name, Be::LOADOBJECT_INIT_FLAG init = Be::LDOBJ_INITIALIZE )
+	{
+		IRootPtr obj;
+		obj.Attach( this->LoadObject( name, init ) );
+		return BluePtr<T>( BlueCastPtr( obj ) );
+	}
     
     // Saves the given object to either a blue file or a red file, based on the extension.
 	virtual bool SaveObject( IRoot* obj, const char* name ) = 0;
