@@ -103,7 +103,7 @@ BLUE_INTERFACE( IBlueResMan ) : public IRoot
 	BluePtr<T> LoadObject( const wchar_t* name, Be::LOADOBJECT_INIT_FLAG init = Be::LDOBJ_INITIALIZE )
 	{
 		IRootPtr obj;
-		obj.Attach( this->LoadObject( name, init ) );
+		obj.Attach( this->LoadObjectW( name, init ) );
 		return BluePtr<T>( BlueCastPtr( obj ) );
 	}
     
