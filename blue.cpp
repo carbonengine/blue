@@ -384,6 +384,14 @@ MAP_FUNCTION_AND_WRAP(
 	":param toObj: blue object that is the end of the path" );
 
 
+MAP_FUNCTION_AND_WRAP(
+	"FindInterface",
+	FindInterface,
+	"Searches though hierarhy of object for all objects implementing the given interface.\n"
+	":param root: root object\n"
+	":param iid: interface name\n"
+	":returns: list of objects that implements the given interface" );
+
 #ifdef _WIN32
 
 PyObject* PyEnableDebuggerLogging( PyObject* self, PyObject* args )
