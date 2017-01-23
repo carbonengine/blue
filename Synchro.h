@@ -77,12 +77,14 @@ private:
 	{
 		int64_t due;		// 64 bit objects first (alignment)
 		PyChannelObject* channel;
+		PyTaskletObject* tasklet;
 		//copy constructor, to copy exactly our data
 		Sleeper() {}
-		Sleeper(const Sleeper &other) : due(other.due), channel(other.channel) {}
+		Sleeper(const Sleeper &other) : due(other.due), channel(other.channel), tasklet(other.tasklet) {}
 		Sleeper &operator= (const Sleeper &other) {
 			due = other.due;
 			channel = other.channel;
+			tasklet = other.tasklet;
 			return *this;
 		}
 	};

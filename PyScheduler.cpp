@@ -76,9 +76,21 @@ bool PyScheduler::RunTicks(long ticks)
 	tick2 = PySys_GetTickCount();
 	mInQueue2 = PyStackless_GetRunCount()-1;
 	
-	if (!r)
+	if(!r)
+	{
 		return false;
-	CCP_ASSERT(r == Py_None);
+	}
+
+	if( PyTasklet_Check(r) )
+	{
+		CCP_LOGWARN("RunWatchdog returned a tasklet - rescheduling it");
+		PyTasklet_Insert((PyTaskletObject*)r);
+	}
+	else if( r != Py_None )
+	{
+		CCP_LOGWARN("RunWatchdog returned an unexpected value");
+	}
+
 	Py_DECREF(r);
 
 	//update ticks per second estimate if we have enough ticks or if we are here

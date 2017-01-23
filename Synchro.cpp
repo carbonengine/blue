@@ -117,7 +117,6 @@ void Synchro::Shutdown()
 			if (fail)
 				PyOS->PyError();
 		}
-		Py_DECREF(it->channel);
 	}
 
 	for(SleeperIt it = mSimSleepers.begin(); it!= mSimSleepers.end(); ++it) {
@@ -128,7 +127,6 @@ void Synchro::Shutdown()
 			if (fail)
 				PyOS->PyError();
 		}
-		Py_DECREF(it->channel);
 	}
 	
 	Py_XDECREF(value);
@@ -186,7 +184,9 @@ bool Synchro::Tick()
 				Be::Time nnow = BeOS->GetActualTime();
 				for(unsigned int i = 0; i<sleepers.size(); i++) {
 					Sleeper &s = sleepers[i];
-					if (PyChannel_GetBalance(s.channel)) {
+					int balance = PyChannel_GetBalance(s.channel);
+					if( balance < 0 )
+					{
 						if (nnow-s.due > 50*10*1000*1000) { //50s
 							PyObject *head = PyChannel_GetQueue(s.channel);
 							if (head) {
@@ -198,10 +198,16 @@ bool Synchro::Tick()
 							}
 						}
 						int res = PyChannel_Send(s.channel, Py_None);
-						if (res)
+						if( res )
+						{
+							CCP_LOGWARN( "Send failed" );
 							PyOS->PyError();
+						}
 					}
-					Py_DECREF(s.channel);
+					else
+					{
+						CCP_LOGWARN( "Sleeper balance is %d", balance );
+					}
 				}
 			}
 		}
@@ -222,7 +228,6 @@ bool Synchro::Tick()
 						if (res)
 							PyOS->PyError();
 					}
-					Py_DECREF(s.channel);
 				}
 			}
 		}
@@ -449,23 +454,30 @@ PyObject* Synchro::SleepWallclock(int ms, const int64_t &due)
 		return NULL;
 	}
 
+	PyTaskletObject* me = reinterpret_cast<PyTaskletObject*>(PyStackless_GetCurrent());
+
 	Sleeper sl;
 	sl.channel = PyChannel_New(NULL);
 	if (!sl.channel)
 		return 0;
 	PyChannel_SetPreference(sl.channel, 0); //just make runnable on wakeup
 	sl.due = due;
+	sl.tasklet = me;
 
 	mWallclockSleepers.Insert(sl);
 	BeOS->NextScheduledEvent(ms);
 	
-	// Go to sleep and wake up! *(the sender releases the channel)
+	// Go to sleep and wake up!
 	PyObject *ret = PyChannel_Receive(sl.channel);
 
-	if (!ret) {
+	if( !ret ) {
 		//we were killed, so lets try and find us in the queue, to release resources.
-		RemoveSleeper( mWallclockSleepers, sl );
+		RemoveSleeper(mWallclockSleepers, sl);
 	}
+
+	Py_DECREF(me);
+	Py_DECREF(sl.channel);
+
 	return ret;
 }
 
@@ -481,23 +493,30 @@ PyObject* Synchro::SleepSim(int ms, const int64_t &due)
 		return NULL;
 	}
 
+	PyTaskletObject* me = reinterpret_cast<PyTaskletObject*>(PyStackless_GetCurrent());
+
 	Sleeper sl;
 	sl.channel = PyChannel_New(NULL);
 	if (!sl.channel)
 		return 0;
 	PyChannel_SetPreference(sl.channel, 0); //just make runnable on wakeup
 	sl.due = due;
+	sl.tasklet = me;
 
 	mSimSleepers.Insert(sl);
 	BeOS->NextScheduledEvent(int(ms / BeOS->GetInfo()->mSimDilation));
 	
-	// Go to sleep and wake up! *(the sender releases the channel)
+	// Go to sleep and wake up!
 	PyObject *ret = PyChannel_Receive(sl.channel);
 
 	if (!ret) {
 		//we were killed, so lets try and find us in the queue, to release resources.
 		RemoveSleeper( mSimSleepers, sl );
 	}
+
+	Py_DECREF(sl.channel);
+	Py_DECREF(me);
+
 	return ret;
 }
 
@@ -549,7 +568,6 @@ PyObject* Synchro::Wakeup(PyObject *args)
 		if (res)
 			PyOS->PyError();
 	}
-	Py_DECREF(s.channel);
 
 	Py_RETURN_NONE;
 }
@@ -591,7 +609,6 @@ PyObject *Synchro::WakeupAtWallclock(PyObject *args)
 			if (res)
 				PyOS->PyError();
 		}
-		Py_DECREF(s.channel);
 	}
 	Py_INCREF(Py_None);
 	return Py_None;
@@ -634,7 +651,6 @@ PyObject *Synchro::WakeupAtSim(PyObject *args)
 			if (res)
 				PyOS->PyError();
 		}
-		Py_DECREF(s.channel);
 	}
 	Py_INCREF(Py_None);
 	return Py_None;
@@ -714,6 +730,25 @@ void Synchro::RemoveSleeper( Heap<Sleeper> &sleepers, Sleeper &sl )
 	{
 		if( it->channel == sl.channel )
 		{
+			if( it->tasklet != sl.tasklet )
+			{
+				CCP_LOGWARN("Sleeper found based on channel but tasklet doesn't match");
+
+				PyObject *head = PyChannel_GetQueue(sl.channel);
+				if( head ) {
+					BluePy str(PyObject_Str(head));
+					if( str )
+					{
+						CCP_LOGWARN_CH(s_ch, "On channel queue: %s", PyString_AsString(str));
+					}
+					Py_DECREF(head);
+				}
+				BluePy str(PyObject_Str((PyObject*)it->tasklet));
+				if( str )
+				{
+					CCP_LOGWARN_CH(s_ch, "Tasklet: %s", PyString_AsString(str));
+				}
+			}
 			break;
 		}
 	}
@@ -722,7 +757,6 @@ void Synchro::RemoveSleeper( Heap<Sleeper> &sleepers, Sleeper &sl )
 	{
 		//Ok found us.  Let's delete us.
 		sleepers.Remove( it );
-		Py_DECREF( sl.channel );
 	}
 }
 
