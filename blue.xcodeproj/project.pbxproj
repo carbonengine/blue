@@ -3145,6 +3145,7 @@
 					);
 				SYMROOT = "../../autobuild/blue/exefile/MacOsX$(ARCHS)/clang4.2";
 				OBJROOT = "../temp/blue/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
+				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				LD_DYLIB_INSTALL_NAME = "@rpath/$(PRODUCT_NAME).so";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				CONFIGURATION_TEMP_DIR = "../temp/blue/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
@@ -3424,6 +3425,7 @@
 					);
 				SYMROOT = "../../autobuild/blue/python_27/MacOsX$(ARCHS)/clang4.2";
 				OBJROOT = "../temp/blue/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
+				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				LD_DYLIB_INSTALL_NAME = "@rpath/$(PRODUCT_NAME).so";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				CONFIGURATION_TEMP_DIR = "../temp/blue/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
