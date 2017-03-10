@@ -303,6 +303,12 @@ const Be::ClassInfo* BlueOS::ExposeToBlue()
 		MAP_ATTRIBUTE( "sleeptime",		mSleepTime,	"Sleep in ms. for pumping", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "overridefg",		mOverrideFG, "Override foreground mode", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "debuglevel",		mDebugLevel, "Level of debug checks", Be::READWRITE )
+		MAP_ATTRIBUTE(
+			"languageID",
+			mLanguageID,
+			"Language ID for resource loading",
+			Be::READWRITE
+		)
 
 		// BeInfo
 		MAP_ATTRIBUTE( "miniDump", mMiniDump, "Have ExeFile generate minidumps", Be::READWRITE )

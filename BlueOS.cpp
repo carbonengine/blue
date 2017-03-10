@@ -351,15 +351,12 @@ BlueOS::BlueOS() :
 	m_frameTimeWatchdog( "FrameTime" ),
 	m_frameTimeTimeout( 0 ),
 	mAdvanceTimeInPump( true ),
-	mTimeStampIdx( -1 )
+	mTimeStampIdx( -1 ),
+	mLanguageID(L"EN")
 {
 	mPID = CcpGetCurrentProcessId();
 
 	BeOS = this;  //Set global IBlueOS pointer to this static object
-
-	mLastKeyValue = NULL;
-	strcpy_s(mLanguageID, sizeof(mLanguageID), "EN");
-	m_cachedLanguageId = CA2W( mLanguageID );
 
 	// init BeInfo struct
 	mStructSize = sizeof (BeInfo);
@@ -434,7 +431,6 @@ BlueOS::~BlueOS()
 #if BLUE_WITH_PYTHON
 	Py_XDECREF(mFrameClock);
 #endif
-	CCP_FREE(mLastKeyValue);
 #if !PORTING_TO_LINUX
 	CloseHandle(gBreakSleep);
 #endif
@@ -1002,11 +998,6 @@ void BlueOS::PumpOS()
 	{
 		CCP_LOGERR_CH( s_chOS, "Heap corrupt - I'm at the top of the blue pump");
 	}
-
-	// Get value for languageID for ResFile worker threads
-	// TODO: remove this clunky hack
-	strcpy_s(mLanguageID, sizeof(mLanguageID), KeyVal("languageID", "_cachercalling", false));
-	m_cachedLanguageId = CA2W( mLanguageID );
 
 #if CCP_STACKLESS
 
@@ -1735,78 +1726,6 @@ void BlueOS::FormatError( char** errorstring )
 //--------------------------------------------------------------------
 // Config file
 //--------------------------------------------------------------------
-
-
-//--------------------------------------------------------------------
-// Config.ini access function.
-//--------------------------------------------------------------------
-const char* BlueOS::KeyVal( const char* key, const char* value, bool setValue )
-{
-#if BLUE_WITH_PYTHON
-	bool isLanguageID = strcmp(key, "languageID") == 0;
-	bool isCacherCalling = strcmp(value, "_cachercalling") == 0;
-	if( isLanguageID && !isCacherCalling )
-	{
-		// Use "cached" copy.
-		return mLanguageID;
-	}
-
-	//Delegate all this to the python builtin "prefs"
-	PyObject* prefs = PyDict_GetItemString(PyEval_GetBuiltins(), "prefs");
-	if( !prefs )
-	{
-		return "";
-	}
-
-	if( setValue )
-	{
-		PyObject* pyvalue = PyString_FromString(value);
-
-		if( PyObject_SetAttrString(prefs, (char*)key, pyvalue) == -1 )
-		{
-			PyOS->PyError();
-		}
-
-		Py_DECREF(pyvalue);
-		return value;
-	}
-	else
-	{
-		BluePy pyvalue(PyObject_GetAttrString(prefs, (char*)key));
-		if( pyvalue )
-		{
-			BluePy string(PyObject_Str(pyvalue));
-			CCP_FREE(mLastKeyValue);
-			if( string )
-			{
-				mLastKeyValue = CCP_STRDUP( "BlueOS::KeyVal", PyString_AS_STRING(string.o));
-			}
-			else
-			{
-				PyErr_Clear();
-				mLastKeyValue = CCP_STRDUP( "BlueOS::KeyVal empty", "");
-			}
-			return mLastKeyValue;
-		}
-		else
-		{
-			PyErr_Clear();
-			if( isLanguageID && isCacherCalling )
-			{
-				return "";
-			}
-			else
-			{
-				return value;
-			}
-		}
-
-	}
-#else
-	return "";
-#endif
-}
-
 
 
 BeInfo* BlueOS::GetInfo()
@@ -2946,7 +2865,7 @@ std::wstring BlueOS::GetStartupArgValue( const std::wstring& arg ) const
 
 const wchar_t* BlueOS::GetLanguageId()
 {
-	return m_cachedLanguageId.c_str();
+	return mLanguageID.c_str();
 }
 
 uint32_t BlueOS::GetFrameTimeTimeout() const

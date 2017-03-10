@@ -192,17 +192,6 @@ BLUE_INTERFACE(IBlueOS) : public IRoot
 		char** errorstring
 		) = 0;
 
-	//--------------------------------------------------------------------
-	// Config file
-	//--------------------------------------------------------------------
-	
-	// prefs.ini access function.
-	virtual const char* KeyVal(
-		const char* key,
-		const char* defValue,
-		bool setValue = false
-		) = 0;
-
 	virtual const wchar_t* GetLanguageId() = 0;
 
 	//--------------------------------------------------------------------

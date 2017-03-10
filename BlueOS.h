@@ -92,12 +92,8 @@ public:
 	//  Debugging
 	long mDebugLevel;
 
-	// BootInfo (or the old KeyVal)
-	char* mLastKeyValue; //used to temporary keep the string copy.
-
-	// Remember languageID for ResFile worker threads.
-	char mLanguageID[3];
-	std::wstring m_cachedLanguageId;
+	// languageID for ResFile worker threads.
+	std::wstring mLanguageID;
 	
 	// "Slug" Support
 	float mSlugTimeMinMs;
@@ -351,13 +347,6 @@ public:
 
 	void FormatError(
 		char** errorstring
-		);
-
-	// Config.ini access function.
-	const char* KeyVal(
-		const char* key,
-		const char* defValue,
-		bool setValue
 		);
 
 	const wchar_t* GetLanguageId();
