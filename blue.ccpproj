@@ -70,33 +70,6 @@ BaseConfigurations:
       DelayLoadDLLs:
       - psapi.dll
 
-  Orbis:
-    Imports:
-    - ../../../../../../sdk/libyaml/yaml-0.1.2/yaml_0.1.2.yaml
-    ClCompile:
-      GenerateDebugInformation: true
-      CppExceptions: true
-      RuntimeTypeInfo: true
-      AdditionalOptions:
-      # We get a lot of warnings of unused functions from the exposure code
-      - -Wno-unused-function
-
-  Lua:
-    Imports:
-    - ../../src/lua/uses_Lua.yaml
-    General:
-      OutDir: ../../autobuild/blue/lua/$(Platform)/$(PlatformToolset)/
-
-  Android:
-    General: 
-      TargetExt: .so
-      AndroidTargetAPI: android-14
-    ClCompile:
-      CppExceptions: true
-      RuntimeTypeInfo: true
-    Imports:
-    - ../../../../../../sdk/libyaml/yaml-0.1.2/yaml_0.1.2.yaml
-
 Configurations:
   Debug|Win32,x64:
     BaseConfigurations:
@@ -122,64 +95,6 @@ Configurations:
       - msvcrtd.lib
       - msvcprtd.lib
       - atlsd.lib
-
-  DebugLua|Win32,x64:
-    BaseConfigurations:
-    - Windows
-    - Lua
-    General: 
-      TargetName: blue
-      TargetExt: .dll
-      LinkIncremental: true
-      # The config type is used for selecting the manifest file - usually the same as the configuration
-      CcpConfigType: Debug
-    ClCompile:
-      PreprocessorDefinitions:
-      - _DEBUG
-      - _CRT_SECURE_NO_WARNINGS
-      Optimization: Disabled
-      RuntimeLibrary: MultiThreadedDebugDLL
-      DebugInformationFormat: EditAndContinue
-    Link:
-      AdditionalDependencies:
-      - msvcrtd.lib
-      - msvcprtd.lib
-      - atlsd.lib
-
-  DebugLua|ORBIS:
-    BaseConfigurations:
-    - Orbis
-    - Lua
-    General: 
-      TargetName: blue
-      TargetExt: .prx
-      LinkIncremental: true
-      # The config type is used for selecting the manifest file - usually the same as the configuration
-      CcpConfigType: Debug
-    ClCompile:
-      PreprocessorDefinitions:
-      - _DEBUG
-      Optimization: Disabled
-      RuntimeLibrary: MultiThreadedDebugDLL
-      DebugInformationFormat: EditAndContinue
-
-  DebugLua|Tegra-Android:
-    BaseConfigurations:
-    - Lua
-    - Android
-    Imports:
-    - ../../../../../../sdk/libcurl/7.32.0/libcurl_7.32.0.yaml
-    General: 
-      TargetName: libblue
-      LinkIncremental: true
-      # The config type is used for selecting the manifest file - usually the same as the configuration
-      CcpConfigType: Debug
-    ClCompile:
-      PreprocessorDefinitions:
-      - _DEBUG
-      Optimization: Disabled
-      RuntimeLibrary: MultiThreadedDebugDLL
-      DebugInformationFormat: EditAndContinue
 
   Release|Win32,x64:
     BaseConfigurations:
