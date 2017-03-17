@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
-    <ProjectConfiguration Include="DebugLua|x64">
-      <Configuration>DebugLua</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
@@ -20,10 +16,6 @@
     <ProjectConfiguration Include="Release_27|x64">
       <Configuration>Release_27</Configuration>
       <Platform>x64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="DebugLua|Win32">
-      <Configuration>DebugLua</Configuration>
-      <Platform>Win32</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release_26|Win32">
       <Configuration>Release_26</Configuration>
@@ -45,9 +37,6 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{8CE8EA0A-B9E5-4D95-A0CD-06DC6BC5C5C5}</ProjectGuid>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugLua|x64'" Label="Configuration">
-    <PlatformToolset>v100</PlatformToolset>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <PlatformToolset>v100</PlatformToolset>
   </PropertyGroup>
@@ -58,9 +47,6 @@
     <PlatformToolset>v100</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_27|x64'" Label="Configuration">
-    <PlatformToolset>v100</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugLua|Win32'" Label="Configuration">
     <PlatformToolset>v100</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_26|Win32'" Label="Configuration">
@@ -76,11 +62,6 @@
     <PlatformToolset>v100</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)/Microsoft.Cpp.Default.props"/>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugLua|x64'">
-    <UseOfMfc>False</UseOfMfc>
-    <IntDir>../temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <UseOfMfc>False</UseOfMfc>
     <IntDir>../temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
@@ -97,11 +78,6 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_27|x64'">
-    <UseOfMfc>False</UseOfMfc>
-    <IntDir>../temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugLua|Win32'">
     <UseOfMfc>False</UseOfMfc>
     <IntDir>../temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -144,22 +120,15 @@
     </BuildMacro>
   </ItemGroup>
   <ImportGroup Label="ExtensionSettings"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DebugLua|x64'" Label="PropertySheets"/>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets"/>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_27|Win32'" Label="PropertySheets"/>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets"/>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_27|x64'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DebugLua|Win32'" Label="PropertySheets"/>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_26|Win32'" Label="PropertySheets"/>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets"/>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_26|x64'" Label="PropertySheets"/>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets"/>
   <PropertyGroup>
-    <TargetExt Condition="'$(Configuration)|$(Platform)'=='DebugLua|x64'">.dll</TargetExt>
-    <CcpConfigType Condition="'$(Configuration)|$(Platform)'=='DebugLua|x64'">Debug</CcpConfigType>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='DebugLua|x64'">../../autobuild/blue/lua/$(Platform)/$(PlatformToolset)/</OutDir>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='DebugLua|x64'">blue</TargetName>
-    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='DebugLua|x64'">True</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.dll</TargetExt>
     <CcpConfigType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Debug</CcpConfigType>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">True</LinkIncremental>
@@ -178,11 +147,6 @@
     <CcpConfigType Condition="'$(Configuration)|$(Platform)'=='Release_27|x64'">Release</CcpConfigType>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release_27|x64'">blue</TargetName>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release_27|x64'">../../autobuild/blue/python_27/$(Platform)/$(PlatformToolset)/</OutDir>
-    <TargetExt Condition="'$(Configuration)|$(Platform)'=='DebugLua|Win32'">.dll</TargetExt>
-    <CcpConfigType Condition="'$(Configuration)|$(Platform)'=='DebugLua|Win32'">Debug</CcpConfigType>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='DebugLua|Win32'">../../autobuild/blue/lua/$(Platform)/$(PlatformToolset)/</OutDir>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='DebugLua|Win32'">blue</TargetName>
-    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='DebugLua|Win32'">True</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release_26|Win32'">.pyd</TargetExt>
     <CcpConfigType Condition="'$(Configuration)|$(Platform)'=='Release_26|Win32'">Release</CcpConfigType>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release_26|Win32'">blue</TargetName>
@@ -200,39 +164,6 @@
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">blue</TargetName>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../../autobuild/blue/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
   </PropertyGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugLua|x64'">
-    <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>_DEBUG;_CRT_SECURE_NO_WARNINGS;YAML_DECLARE_STATIC;WIN32;CURL_STATICLIB;BLUE_WITH_LUA;YAML_DECLARE_STATIC;CURL_STATICLIB;BLUE_WITH_LUA;BLUEPROJECT;_SCL_SECURE_NO_WARNINGS;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;../../../carbon/src/lua/src;$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;../../../carbon/src/lua/src;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\zlib\1.2.3\include;$(CcpSdkPath)\telemetry\2.1A3\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <MultiProcessorCompilation>True</MultiProcessorCompilation>
-      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <TreatWarningAsError>True</TreatWarningAsError>
-      <PrecompiledHeaderOutputFile>$(IntDir)blue.pch</PrecompiledHeaderOutputFile>
-      <BufferSecurityCheck>False</BufferSecurityCheck>
-      <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
-      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <Optimization>Disabled</Optimization>
-      <WarningLevel>Level3</WarningLevel>
-    </ClCompile>
-    <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/x64;../../autobuild/lua/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/x64;../../autobuild/lua/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\zlib\1.2.3\lib\vc100.sp1\$(Platform);../../autobuild/BlueExposure/lua/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\telemetry\2.1A3\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <GenerateDebugInformation>True</GenerateDebugInformation>
-      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
-      <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <DelayLoadDLLs>psapi.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
-      <AdditionalDependencies>msvcrtd.lib;msvcprtd.lib;atlsd.lib;ws2_32.lib;version.lib;crypt32.lib;iphlpapi.lib;psapi.lib;winhttp.lib;yaml_d.lib;libcurl_a_debug.lib;lua52_d.lib;yaml_d.lib;libcurl_a_debug.lib;lua52_d.lib;zlib_d.lib;BlueExposure_d.lib;CcpCore_d.lib;psapi.lib;telemetry64.link.lib;%(AdditionalDependencies)</AdditionalDependencies>
-    </Link>
-    <ResourceCompile>
-      <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
-  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -355,39 +286,6 @@
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
       <DelayLoadDLLs>psapi.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
       <AdditionalDependencies>ws2_32.lib;version.lib;crypt32.lib;iphlpapi.lib;psapi.lib;winhttp.lib;yaml.lib;libcurl_a.lib;python27.lib;msvcrt.lib;msvcprt.lib;atls.lib;yaml.lib;libcurl_a.lib;zlib.lib;BlueExposure.lib;CcpCore.lib;psapi.lib;telemetry64.link.lib;%(AdditionalDependencies)</AdditionalDependencies>
-    </Link>
-    <ResourceCompile>
-      <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugLua|Win32'">
-    <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>_DEBUG;_CRT_SECURE_NO_WARNINGS;YAML_DECLARE_STATIC;WIN32;CURL_STATICLIB;BLUE_WITH_LUA;YAML_DECLARE_STATIC;CURL_STATICLIB;BLUE_WITH_LUA;BLUEPROJECT;_SCL_SECURE_NO_WARNINGS;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;../../../carbon/src/lua/src;$(CcpSdkPath)/libyaml/yaml-0.1.2/include;$(CcpSdkPath)/libcurl/7.34.0/include;../../../carbon/src/lua/src;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\zlib\1.2.3\include;$(CcpSdkPath)\telemetry\2.1A3\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <MultiProcessorCompilation>True</MultiProcessorCompilation>
-      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <TreatWarningAsError>True</TreatWarningAsError>
-      <PrecompiledHeaderOutputFile>$(IntDir)blue.pch</PrecompiledHeaderOutputFile>
-      <BufferSecurityCheck>False</BufferSecurityCheck>
-      <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
-      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <Optimization>Disabled</Optimization>
-      <WarningLevel>Level3</WarningLevel>
-    </ClCompile>
-    <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/win32;../../autobuild/lua/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\libyaml\yaml-0.1.2\lib\VC80.SP1\$(Platform);$(CcpSdkPath)/libcurl/7.34.0/lib/win32;../../autobuild/lua/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\zlib\1.2.3\lib\vc100.sp1\$(Platform);../../autobuild/BlueExposure/lua/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\telemetry\2.1A3\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <GenerateDebugInformation>True</GenerateDebugInformation>
-      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
-      <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <DelayLoadDLLs>psapi.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
-      <AdditionalDependencies>msvcrtd.lib;msvcprtd.lib;atlsd.lib;ws2_32.lib;version.lib;crypt32.lib;iphlpapi.lib;psapi.lib;winhttp.lib;yaml_d.lib;libcurl_a_debug.lib;lua52_d.lib;yaml_d.lib;libcurl_a_debug.lib;lua52_d.lib;zlib_d.lib;BlueExposure_d.lib;CcpCore_d.lib;psapi.lib;telemetry32.link.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
