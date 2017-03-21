@@ -55,7 +55,7 @@ BaseConfigurations:
       PreprocessorDefinitions: 
       - WIN32
     Imports:
-    - ../../../../../../sdk/libyaml/yaml-0.1.2/yaml_0.1.2.yaml
+    - ../../../../../../sdk/libyaml/0.1.7/libyaml_0.1.7.yaml
     - ../../../../../../sdk/libcurl/7.34.0/libcurl_7.34.0.yaml
 
     Link:
