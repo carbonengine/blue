@@ -7,7 +7,7 @@ ProjectGuid: 8CE8EA0A-B9E5-4D95-A0CD-06DC6BC5C5C5
 # These are the SDKs that are used by all configurations
 Imports:
 - ../core_project.yaml
-- ../../../../../../sdk/zlib/1.2.3/zlib_1.2.3.yaml
+- ../../../../../../sdk/zlib/1.2.11/zlib_1.2.11.yaml
 - ../BlueExposure/uses_BlueExposure.yaml
 #- ../manifests/manifests.props
 
@@ -56,7 +56,7 @@ BaseConfigurations:
       - WIN32
     Imports:
     - ../../../../../../sdk/libyaml/0.1.7/libyaml_0.1.7.yaml
-    - ../../../../../../sdk/libcurl/7.34.0/libcurl_7.34.0.yaml
+    - ../../../../../../sdk/libcurl/7.53.1/libcurl_7.53.1.yaml
 
     Link:
       AdditionalDependencies:
