@@ -577,7 +577,7 @@ bool BitPackerCore::Pack( const unsigned long long value )
 	{
 		for( ; j<7 ; j++ )
 		{
-			if ( value < (unsigned long long)(0x1 << (j*5)) )
+			if ( value < (unsigned long long)(0x1LL << (j*5)) )
 			{
 				QueueBits( (char*)&j, 3 );
 				QueueBits( (char*)&value, (int)(j*5) );

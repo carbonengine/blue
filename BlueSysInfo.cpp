@@ -4,6 +4,7 @@
 #include "Include/TransGaming.h"
 #include "win32.h"
 #include <ShlObj.h>
+#include <intrin.h>
 #endif
 
 BlueSysInfoTaskTimesPtr BlueSysInfo::GetProcessTimes() const

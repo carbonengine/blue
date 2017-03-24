@@ -37,9 +37,6 @@
 
 #include <crypto.h>
 
-#if _MSC_VER
-#include <hash_map>
-#endif
 #include <vector>
 #include <map>
 
