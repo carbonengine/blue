@@ -9,7 +9,6 @@ Imports:
 - ../core_project.yaml
 - ../../../../../../sdk/zlib/1.2.11/zlib_1.2.11.yaml
 - ../BlueExposure/uses_BlueExposure.yaml
-#- ../manifests/manifests.props
 
 # Settings from the General section, for all configurations
 General:
