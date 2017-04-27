@@ -299,7 +299,7 @@ void YamlWriter::WriteIRoot( const IRoot& instance, IRoot* defaultInstance )
 	AddScalarEvent( "type" );
 	AddScalarEvent( instance.ClassType()->mClassId->GetName() );
 
-	if( IWeakObjectPtr weak = BlueCastPtr( &instance ) )
+	if( IWeakObjectPtr weak = BlueCastPtr( const_cast<IRoot*>( &instance ) ) )
 	{
 		if( auto metadata = BeObjectMetadata->GetMetadata( weak ) )
 		{
