@@ -47,6 +47,9 @@
     <ClInclude Include="BlueObjectBuilderPython.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="BlueObjectMetadata.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
     <ClInclude Include="BlueObjectProxy.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -260,6 +263,9 @@
     <ClInclude Include="Include\IBlueObjectBuilder.h">
       <Filter>Source Files\Include</Filter>
     </ClInclude>
+    <ClInclude Include="Include\IBlueObjectMetadata.h">
+      <Filter>Source Files\Include</Filter>
+    </ClInclude>
     <ClInclude Include="Include\IBlueObjectProxy.h">
       <Filter>Source Files\Include</Filter>
     </ClInclude>
@@ -402,6 +408,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="BlueObjectBuilderPython_Blue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BlueObjectMetadata.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BlueObjectMetadata_Blue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="BlueObjectProxy.cpp">

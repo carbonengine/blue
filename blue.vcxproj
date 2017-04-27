@@ -442,6 +442,7 @@
     <ClInclude Include="BlueMemStream.h"/>
     <ClInclude Include="BlueNetworkStream.h"/>
     <ClInclude Include="BlueObjectBuilderPython.h"/>
+    <ClInclude Include="BlueObjectMetadata.h"/>
     <ClInclude Include="BlueObjectProxy.h"/>
     <ClInclude Include="BlueObjectRecycler.h"/>
     <ClInclude Include="BlueOS.h"/>
@@ -513,6 +514,7 @@
     <ClInclude Include="Include\IBlueCallbackMan.h"/>
     <ClInclude Include="Include\IBlueEventListener.h"/>
     <ClInclude Include="Include\IBlueObjectBuilder.h"/>
+    <ClInclude Include="Include\IBlueObjectMetadata.h"/>
     <ClInclude Include="Include\IBlueObjectProxy.h"/>
     <ClInclude Include="Include\IBlueObjectRecycler.h"/>
     <ClInclude Include="Include\IBlueOS.h"/>
@@ -563,6 +565,8 @@
     <ClCompile Include="BlueNetworkStream_Blue.cpp"/>
     <ClCompile Include="BlueObjectBuilderPython.cpp"/>
     <ClCompile Include="BlueObjectBuilderPython_Blue.cpp"/>
+    <ClCompile Include="BlueObjectMetadata.cpp"/>
+    <ClCompile Include="BlueObjectMetadata_Blue.cpp"/>
     <ClCompile Include="BlueObjectProxy.cpp"/>
     <ClCompile Include="BlueObjectProxy_Blue.cpp"/>
     <ClCompile Include="BlueObjectRecycler.cpp"/>
