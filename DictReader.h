@@ -74,6 +74,7 @@ private:
 	void ReadValue( BlueSharedString& dst );
 	void ReadValue( Vector4& dst );
 	void ReadFloat16( uint16_t& dst );
+	void ReadMetadata( IRoot* owner, PyObject* metadata );
 
 	template <typename T>
 	void ReadStructureListItemMember( BlueStructureDefinition* memberDef, PyObject* memberObj, void* item, void ( DictReader::*conversionFunc )( T& ) )

@@ -10,6 +10,8 @@
 #if BLUE_WITH_PYTHON
 
 #include "DictReader.h"
+#include "Include/IBlueObjectMetadata.h"
+
 
 DictReader::DictReader( IRoot* lockobj /*= nullptr */ ) :
 	m_doInitialize( true ),
@@ -183,14 +185,46 @@ void DictReader::ReadMembers( IRoot* instance )
 			continue;
 		}
 
-		m_currentSource = value;
-		m_contextStack.push_front( name );
+		if( strcmp( name, BLUE_OBJECT_METADATA_KEY ) == 0 )
+		{
+			ReadMetadata( instance, value );
+		}
+		else
+		{
+			m_currentSource = value;
+			m_contextStack.push_front( name );
 
-		HandleAttribute( name, instance, notify );
-		m_contextStack.pop_front();
+			HandleAttribute( name, instance, notify );
+			m_contextStack.pop_front();
+		}
 	}
 
 	m_currentSource = sourceDict;
+}
+
+void DictReader::ReadMetadata( IRoot* owner, PyObject* metadata )
+{
+	IWeakObjectPtr weak( BlueCastPtr( owner ) );
+	if( !weak )
+	{
+		ThrowError( "Metadata for a non weakref enabled object" );
+	}
+	if( !PyDict_Check( metadata ) )
+	{
+		ThrowError( "Expected a dictionary" );
+	}
+	PyObject* key;
+	PyObject* value;
+	Py_ssize_t pos = 0;
+
+	while( PyDict_Next( metadata, &pos, &key, &value ) )
+	{
+		if( !PyString_Check( key ) || !PyString_Check( value ) )
+		{
+			ThrowError( "Expected strings in metadata" );
+		}
+		BeObjectMetadata->Set( weak, PyString_AsString( key ), PyString_AsString( value ) );
+	}
 }
 
 void DictReader::ReadValue( int64_t& dst )

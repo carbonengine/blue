@@ -140,6 +140,7 @@ private:
 	void ReadValue( Vector4& dst );
 	void ReadFloat16( uint16_t& dst );
 	void ReadStructureListItem( const BlueStructureDefinition* memberDef, void* item );
+	void ReadMetadata( IRoot* instance );
 
 	template <typename T, size_t TypeSize>
 	void ReadStructureListItemMember( const BlueStructureDefinition* memberDef, void* item, void ( YamlReader::*conversionFunc )( T& ) )

@@ -14,6 +14,7 @@
 #include "RemoteFileCache.h"
 #include "BluePaths.h"
 #include "BlueThreadMonitor.h"
+#include "BlueObjectMetadata.h"
 
 #include "curl/curl.h"
 
@@ -32,6 +33,7 @@ IBlueThreadMonitor* BeThreadMonitor = nullptr;
 BLUE_REGISTER_GLOBAL_AS_MODULE_OBJECT( "resMan", BeResMan );
 BLUE_REGISTER_GLOBAL_AS_MODULE_OBJECT( "recycler", BeRecycler );
 BLUE_REGISTER_GLOBAL_AS_MODULE_OBJECT( "threadMonitor", BeThreadMonitor );
+BLUE_REGISTER_GLOBAL_AS_MODULE_OBJECT( "objectMetadata", BeObjectMetadata );
 
 namespace
 {
@@ -108,6 +110,8 @@ BLUEIMPORT bool BlueInitializeResourceLoading()
 	BeMotherLode->Startup();
 
 	BeClasses->CreateInstance( GetBlueObjectRecyclerClsid(), GetBlueObjectRecyclerIID(), (void**)&BeRecycler );
+
+	BeClasses->CreateInstance( GetBlueObjectMetadataClsid(), GetBlueObjectMetadataIID(), (void**)&BeObjectMetadata );
 
 	// Initialize the resource manager
 	s_resourceManagerInstance.Initialize();

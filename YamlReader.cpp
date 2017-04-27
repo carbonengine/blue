@@ -7,6 +7,7 @@
 #include "include/Base64.h"
 #include "BlueMemStream.h"
 #include "include/IBluePaths.h"
+#include "Include/IBlueObjectMetadata.h"
 
 
 namespace 
@@ -1219,6 +1220,43 @@ void YamlReader::ClearCachedEvents()
 	}
 }
 
+void YamlReader::ReadMetadata( IRoot* instance )
+{
+	IWeakObjectPtr weak( BlueCastPtr( instance ) );
+
+	GetNextEvent();
+	if( VerifyEvent( YAML_MAPPING_START_EVENT ) )
+	{
+		GetNextEvent();
+		while( m_event->type != YAML_MAPPING_END_EVENT )
+		{
+			std::string key;
+			if( VerifyEvent( YAML_SCALAR_EVENT ) )
+			{
+				key = (const char*)m_event->data.scalar.value;
+			}
+			else
+			{
+				ParseUntilMatchingMappingEnd();
+				break;
+			}
+
+			const char* value;
+			ReadScalar( value );
+			if( !value )
+			{
+				ParseUntilMatchingMappingEnd();
+				break;
+			}
+			if( weak )
+			{
+				BeObjectMetadata->Set( weak, key.c_str(), value );
+			}
+			GetNextEvent();
+		}
+	}
+}
+
 void YamlReader::ReadMembers( IRoot* instance )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
@@ -1233,8 +1271,18 @@ void YamlReader::ReadMembers( IRoot* instance )
 		notify = (INotify*)nullptr;
 	}
 
+	bool first = true;
+
 	while( ReadMemberName( name ) )
 	{
+		if( first && name == BLUE_OBJECT_METADATA_KEY )
+		{
+			ReadMetadata( instance );
+			first = false;
+			continue;
+		}
+		first = false;
+
 		try
 		{
 			HandleAttribute( name.c_str(), instance, notify );

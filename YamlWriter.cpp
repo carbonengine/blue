@@ -2,6 +2,7 @@
 #include "YamlWriter.h"
 #include "include/IBluePersist.h"
 #include "include/Base64.h"
+#include "Include/IBlueObjectMetadata.h"
 #include "BlueMemStream.h"
 #include <yaml.h>
 
@@ -298,6 +299,20 @@ void YamlWriter::WriteIRoot( const IRoot& instance, IRoot* defaultInstance )
 	AddScalarEvent( "type" );
 	AddScalarEvent( instance.ClassType()->mClassId->GetName() );
 
+	if( IWeakObjectPtr weak = BlueCastPtr( &instance ) )
+	{
+		if( auto metadata = BeObjectMetadata->GetMetadata( weak ) )
+		{
+			AddScalarEvent( BLUE_OBJECT_METADATA_KEY );
+			AddMappingStartEvent();
+			for( auto it = metadata->begin(); it != metadata->end(); ++it )
+			{
+				AddScalarEvent( it->first.c_str() );
+				AddScalarEvent( it->second.c_str() );
+			}
+			AddMappingEndEvent();
+		}
+	}
     WriteMembers( instance, defaultInstance );
 
     AddMappingEndEvent();
