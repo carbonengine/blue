@@ -41,7 +41,7 @@ static TaskletZoneStackMap_t s_taskletZoneStackMap( "s_taskletZoneStackMap" );
 // returns NULL on failure.
 const char *Immortalize( PyObject *s )
 {
-    if ( !g_telemetryContext || s == NULL || s == Py_None )
+    if ( s == NULL || s == Py_None )
     {
         return "";
     }
@@ -61,14 +61,14 @@ const char *Immortalize( PyObject *s )
 static void LogToTelemetry( CcpLogChannel_t& logObject, CCP::LogType type, unsigned long userData, const char* message )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
-	TmMessageFlag flag;
+	tm_message_flags flag;
 	switch( type )
 	{
 	case CCP::LOGTYPE_INFO:
 		flag = TMMF_SEVERITY_LOG;
 		break;
 	case CCP::LOGTYPE_NOTICE:
-		flag = (TmMessageFlag)(TMMF_SEVERITY_LOG | TMMF_ICON_EXCLAMATION);
+		flag = (tm_message_flags)(TMMF_SEVERITY_LOG | TMMF_ICON_EXCLAMATION);
 		break;
 	case CCP::LOGTYPE_WARN:
 		flag = TMMF_SEVERITY_WARNING;
@@ -78,7 +78,7 @@ static void LogToTelemetry( CcpLogChannel_t& logObject, CCP::LogType type, unsig
 		break;
 	}
 
-	tmMessage( g_telemetryContext, flag, "%s/%s: %s", logObject.facility, logObject.object, tmDynamicString( g_telemetryContext, message ) );
+	tmMessage( TMCM_GENERAL, flag, "%s/%s: %s", logObject.facility, logObject.object, tmDynamicString( TMCM_GENERAL, message ) );
 }
 
 #else
@@ -149,19 +149,16 @@ static ZoneStack_t& GetStackForTasklet( intptr_t taskletId )
 
 static void SwitchZoneContext( intptr_t from, intptr_t to )
 {
-	if( g_telemetryContext )
+	ZoneStack_t& stackFrom = GetStackForTasklet( from );
+	for( ZoneStack_t::const_reverse_iterator it = stackFrom.rbegin(); it != stackFrom.rend(); ++it )
 	{
-		ZoneStack_t& stackFrom = GetStackForTasklet( from );
-		for( ZoneStack_t::const_reverse_iterator it = stackFrom.rbegin(); it != stackFrom.rend(); ++it )
-		{
-			tmLeave( g_telemetryContext );
-		}
+		tmLeave( TMCM_GENERAL );
+	}
 
-		ZoneStack_t& stackTo = GetStackForTasklet( to );
-		for( ZoneStack_t::const_iterator it = stackTo.begin(); it != stackTo.end(); ++it )
-		{
-			tmEnter( g_telemetryContext, TMZF_NONE, "%s", *it );
-		}
+	ZoneStack_t& stackTo = GetStackForTasklet( to );
+	for( ZoneStack_t::const_iterator it = stackTo.begin(); it != stackTo.end(); ++it )
+	{
+		tmEnter( TMCM_GENERAL, TMZF_NONE, "%s", *it );
 	}
 }
 
@@ -237,7 +234,7 @@ void BlueStatistics::StartTelemetryDump( const std::string& dumpFolder, float sa
 void BlueStatistics::PauseTelemetry()
 {
 #if CCP_TELEMETRY_ENABLED
-	tmPause( g_telemetryContext, 1 );
+	tmPause( TMCM_GENERAL, 1 );
 	s_isTelemetryPaused = true;
 #endif
 }
@@ -245,7 +242,7 @@ void BlueStatistics::PauseTelemetry()
 void BlueStatistics::ResumeTelemetry()
 {
 #if CCP_TELEMETRY_ENABLED
-	tmPause( g_telemetryContext, 0 );
+	tmPause( TMCM_GENERAL, 0 );
 	s_isTelemetryPaused = false;
 #endif
 }
@@ -264,7 +261,7 @@ void BlueStatistics::StopTelemetry()
 		s_isTelemetryConnected = false;
 		s_isTelemetryShuttingDown = true;
 
-		tmPause( g_telemetryContext, 1 );
+		tmPause( TMCM_GENERAL, 1 );
 	}
 #endif
 }
@@ -300,30 +297,27 @@ void BlueStatistics::UpdateTelemetry()
 		return;
 	}
 
-	if( g_telemetryContext )
+	CcpTelemetryTick();
+
+	if( s_isTelemetryShuttingDown )
 	{
-		CcpTelemetryTick();
+		CcpStopTelemetry();
 
-		if( s_isTelemetryShuttingDown )
+		s_isTelemetryShuttingDown = false;
+
+		s_taskletZoneStackMap.clear();
+	}
+	else if(s_telemetrySamplePeriod > 0.0f ) // Check if we have passed our timed sample time
+	{
+		Be::Time newTime = BeOS->GetActualTime();
+		Be::Time delta = newTime - s_telemetryLastCheckTime;
+		s_telemetryLastCheckTime = newTime;
+		s_telemetrySamplePeriod -= ((float)delta / Be::Time(1e7));
+
+		if(s_telemetrySamplePeriod < 0.0f)
 		{
-			CcpStopTelemetry();
-
-			s_isTelemetryShuttingDown = false;
-
-			s_taskletZoneStackMap.clear();
-		}
-		else if(s_telemetrySamplePeriod > 0.0f ) // Check if we have passed our timed sample time
-		{
-			Be::Time newTime = BeOS->GetActualTime();
-			Be::Time delta = newTime - s_telemetryLastCheckTime;
-			s_telemetryLastCheckTime = newTime;
-			s_telemetrySamplePeriod -= ((float)delta / Be::Time(1e7));
-
-			if(s_telemetrySamplePeriod < 0.0f)
-			{
-				CCP_LOG( "Finalising timed Telemetry run." );
-				StopTelemetry();
-			}
+			CCP_LOG( "Finalising timed Telemetry run." );
+			StopTelemetry();
 		}
 	}
 #endif
@@ -401,7 +395,7 @@ ICcpStatisticsAccumulator* BlueStatistics::GetAccumulator( const std::string& na
 void BlueStatistics::SetTimelineSectionName( const char* name )
 {
 #if CCP_TELEMETRY_ENABLED
-	tmSetTimelineSectionName( g_telemetryContext, name );
+	tmSetTimelineSectionName( TMCM_GENERAL, name );
 #endif
 }
 
@@ -409,14 +403,12 @@ void BlueStatistics::SetCppCaptureEnabled( bool b )
 {
 #if CCP_TELEMETRY_ENABLED
 	s_isTelemetryCppCaptureEnabled = b;
-	if( s_isTelemetryCppCaptureEnabled )
+	tm_uint32 mask = TMCM_GENERAL;
+	if (s_isTelemetryCppCaptureEnabled)
 	{
-		g_telemetryContextCpp = g_telemetryContext;
+		mask |= TMCM_CPP;
 	}
-	else
-	{
-		g_telemetryContextCpp = NULL;
-	}
+	tmSetCaptureMask(mask);
 #endif
 }
 
@@ -617,64 +609,55 @@ void CcpStatisticsEntry::SetResetPerFrame( bool val )
 #if CCP_TELEMETRY_ENABLED
 
 // Enter a zone in Python
-void tmTaskletEnter( HTELEMETRY ctx, const char* name )
+void tmTaskletEnter( uint32_t ctx, const char* name )
 {
-	if( ctx )
-	{
 #if CCP_STACKLESS
-		intptr_t lastTasklet = (intptr_t)TlsGetValue( s_telemetryTaskletTlsIx );
-		intptr_t curTasklet = PyStackless_GetCurrentId();
+	intptr_t lastTasklet = (intptr_t)TlsGetValue( s_telemetryTaskletTlsIx );
+	intptr_t curTasklet = PyStackless_GetCurrentId();
 
-		if( curTasklet != lastTasklet )
-		{
-			SwitchZoneContext( lastTasklet, curTasklet );
-			TlsSetValue( s_telemetryTaskletTlsIx, (void*)curTasklet );
-		}
+	if( curTasklet != lastTasklet )
+	{
+		SwitchZoneContext( lastTasklet, curTasklet );
+		TlsSetValue( s_telemetryTaskletTlsIx, (void*)curTasklet );
+	}
 
-		ZoneStack_t& stack = GetStackForTasklet( curTasklet );
-		stack.push_back( name );
+	ZoneStack_t& stack = GetStackForTasklet( curTasklet );
+	stack.push_back( name );
 #endif
 
-		tmEnter( ctx, TMZF_NONE, "%s", name );
-	}
+	tmEnter( ctx, TMZF_NONE, "%s", name );
 }
 
 // Leave a zone in Python
-void tmTaskletLeave( HTELEMETRY ctx )
+void tmTaskletLeave( uint32_t ctx)
 {
-	// ctx in all cases I have observed is a copy of g_telemetryContext.
-	// However, it kicks around after *g_telemetryContext context has been torn down,
-	// and occasionally after a new one has been created... SRN 13/Feb/2014
-	if( g_telemetryContext && (ctx == g_telemetryContext) )
-	{
-		tmLeave( ctx );
+	tmLeave( ctx );
 
 #if CCP_STACKLESS
-		intptr_t lastTasklet = (intptr_t)TlsGetValue( s_telemetryTaskletTlsIx );
-		intptr_t curTasklet = PyStackless_GetCurrentId();
+	intptr_t lastTasklet = (intptr_t)TlsGetValue( s_telemetryTaskletTlsIx );
+	intptr_t curTasklet = PyStackless_GetCurrentId();
 
-		ZoneStack_t& stack = GetStackForTasklet( curTasklet );
+	ZoneStack_t& stack = GetStackForTasklet( curTasklet );
 
-		if( !stack.empty() )
-		{
-			stack.pop_back();
-		}
-
-		if( curTasklet != lastTasklet )
-		{
-			SwitchZoneContext( lastTasklet, curTasklet );
-			TlsSetValue( s_telemetryTaskletTlsIx, (void*)curTasklet );
-		}
-#endif
+	if( !stack.empty() )
+	{
+		stack.pop_back();
 	}
+
+	if( curTasklet != lastTasklet )
+	{
+		SwitchZoneContext( lastTasklet, curTasklet );
+		TlsSetValue( s_telemetryTaskletTlsIx, (void*)curTasklet );
+	}
+#endif
 }
 
-void tmTaskletAppendText( HTELEMETRY ctx, const char* appendText )
+void tmTaskletAppendText( uint32_t ctx, const char* appendText )
 {
-	tmMessage( ctx, TMMF_ZONE_SUBLABEL, "%s", tmDynamicString( g_telemetryContext, appendText ) );
+	tmMessage( ctx, TMMF_ZONE_SUBLABEL, "%s", tmDynamicString( TMCM_GENERAL, appendText ) );
 }
 
-tmTaskletZone::tmTaskletZone( HTELEMETRY ctx, const char* name ) : m_telemetryContext( ctx )
+tmTaskletZone::tmTaskletZone( uint32_t ctx, const char* name ) : m_telemetryContext( ctx )
 {
 	tmTaskletEnter( ctx, name );
 }

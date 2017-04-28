@@ -37,7 +37,7 @@ public:
 		CCP_ASSERT( m_reloadNotifyTargetsCount == 0 );
 
 	#if CCP_TELEMETRY_ENABLED
-		tmFree( g_telemetryContext, this );
+		tmFree( TMCM_GENERAL, this );
 	#endif
 	}
 

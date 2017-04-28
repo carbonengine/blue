@@ -293,7 +293,7 @@ PyObject* PyEnterZone( PyObject* self, PyObject* args )
 		return nullptr;
 	}
 
-	tmTaskletEnter( g_telemetryContext, zone );
+	tmTaskletEnter( TMCM_GENERAL, zone );
 #endif
 	Py_RETURN_NONE;
 }
@@ -301,7 +301,7 @@ PyObject* PyEnterZone( PyObject* self, PyObject* args )
 PyObject* PyLeaveZone( PyObject* self, PyObject* args )
 {
 #if CCP_TELEMETRY_ENABLED
-	tmTaskletLeave( g_telemetryContext );
+	tmTaskletLeave( TMCM_GENERAL );
 #endif
 	Py_RETURN_NONE;
 }
@@ -322,7 +322,7 @@ PyObject* PyAppendToZone( PyObject* self, PyObject* args )
 		return nullptr;
 	}
 
-	tmTaskletAppendText( g_telemetryContext, appendText );
+	tmTaskletAppendText( TMCM_GENERAL, appendText );
 #endif
 	Py_RETURN_NONE;
 }
@@ -348,7 +348,7 @@ PyObject* PyBeginTimeSpan( PyObject* self, PyObject* args )
 	}
 
 	++s_timespanId;
-	tmBeginTimeSpan( g_telemetryContext, s_timespanId, TMTSF_NONE, label );
+	tmBeginTimeSpan( TMCM_GENERAL, s_timespanId, TMTSF_NONE, label );
 
 	return PyLong_FromLongLong( s_timespanId );
 #else
@@ -373,7 +373,7 @@ PyObject* PyEndTimeSpan( PyObject* self, PyObject* args )
 		return nullptr;
 	}
 
-	tmEndTimeSpan( g_telemetryContext, id, TMTSF_NONE, label );
+	tmEndTimeSpan( TMCM_GENERAL, id, TMTSF_NONE, label );
 #endif
 	Py_RETURN_NONE;
 }

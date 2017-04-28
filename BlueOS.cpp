@@ -1008,7 +1008,7 @@ void BlueOS::PumpOS()
 		//CCP_STATS_ZONE( "BlueOS/PumpOS/DoSleep" );
 		// Defining this directly to be able to mark this as an "idle" telemetry zone
 #if CCP_TELEMETRY_ENABLED
-		tmZone( g_telemetryContext, TMZF_IDLE, "BlueOS/PumpOS/DoSleep" );
+		tmZone( TMCM_GENERAL, TMZF_IDLE, "BlueOS/PumpOS/DoSleep" );
 #endif
 		DoSleep();
 		mNextScheduledEvent = int( mSleepTime );

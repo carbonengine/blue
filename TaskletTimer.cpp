@@ -177,7 +177,7 @@ PyObject *TaskletTimer::EnterTaskletEx(PyObject *newContext, TASKLETFLAGS flags)
 		Py_DECREF(strifiedName);
 #if CCP_TELEMETRY_ENABLED
 		if (canonicalName) {
-			tmTaskletEnter(g_telemetryContext, PyString_AsString(canonicalName));
+			tmTaskletEnter(TMCM_GENERAL, PyString_AsString(canonicalName));
 		}
 #endif
 	}
@@ -241,7 +241,7 @@ bool TaskletTimer::ReturnFromTasklet(PyObject *backContext)
 #if CCP_TELEMETRY_ENABLED
 	if (mDoTelemetry)
 	{
-		tmTaskletLeave( g_telemetryContext );
+		tmTaskletLeave( TMCM_GENERAL );
 	}
 #endif
 	// Temporary hack to support IDLE

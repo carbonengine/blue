@@ -121,24 +121,24 @@ extern BlueStatistics* g_statistics;
 class BLUEIMPORT tmTaskletZone
 {
 public:
-	tmTaskletZone( HTELEMETRY ctx, const char* name );
+	tmTaskletZone( uint32_t ctx, const char* name );
 	~tmTaskletZone();
 
 private:
-	HTELEMETRY m_telemetryContext;
+	uint32_t m_telemetryContext;
 };
 
-void tmTaskletEnter( HTELEMETRY ctx, const char* name );
-void tmTaskletLeave( HTELEMETRY ctx );
-void tmTaskletAppendText( HTELEMETRY ctx, const char* appendText );
+void tmTaskletEnter( uint32_t ctx, const char* name );
+void tmTaskletLeave( uint32_t ctx );
+void tmTaskletAppendText( uint32_t ctx, const char* appendText );
 
 #define CCP_STATS_SCOPED_TIME( identifier ) \
-	tmTaskletZone zone_##_COUNTER_( g_telemetryContextCpp, g_ccpStatistics_##identifier.GetName().c_str() );\
+	tmTaskletZone zone_##_COUNTER_( TMCM_CPP, g_ccpStatistics_##identifier.GetName().c_str() );\
 	CcpStatisticsStopwatch ccpStatsStopwatch_##identifier( g_ccpStatistics_##identifier )
 
 #undef CCP_STATS_ZONE
 #define CCP_STATS_ZONE( name ) \
-	tmTaskletZone zone_##_COUNTER_( g_telemetryContextCpp, name )
+	tmTaskletZone zone_##_COUNTER_( TMCM_CPP, name )
 #else
 
 #define CCP_STATS_SCOPED_TIME( identifier )

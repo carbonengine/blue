@@ -195,7 +195,7 @@ void BlueAsyncRes::InitializeImpl( const wchar_t* name, const wchar_t* ext )
 	CW2A asciiName( name );
 	CCP_LOG( "BlueAsyncRes::Initialize: %s", (const char*)asciiName );
 #if CCP_TELEMETRY_ENABLED
-	tmAlloc( g_telemetryContext, this, 1111111, "%s", tmDynamicString( g_telemetryContext, (char*)asciiName ) );
+	tmAlloc( TMCM_GENERAL, this, 1111111, "%s", tmDynamicString( TMCM_GENERAL, (char*)asciiName ) );
 #endif
 
 	m_ext = ext;
