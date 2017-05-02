@@ -24,7 +24,6 @@ static int s_telemetryConnectionType = 0;
 static std::string s_telemetryServerOrFileSystemDumpPath;
 static Be::Time s_telemetryStartTime;
 static Be::Time s_telemetryLastCheckTime;
-static int s_telemetryBufferSize = 8 * 1024 * 1024;
 static CcpThreadId_t s_telemetryThread = NULL;
 static uint32_t s_telemetryTaskletTlsIx = NULL;
 static uint32_t s_telemetryTaskletStackTlsIx = NULL;
@@ -176,17 +175,7 @@ BlueStatistics::BlueStatistics(IRoot* lockobj) :
 
 void BlueStatistics::SetTelemetryBufferSize( int bufferSize )
 {
-#if CCP_TELEMETRY_ENABLED
-	if( s_isTelemetryConnected )
-	{
-		CCP_LOGERR( "Telemetry is already running!" );
-		return;
-	}
-
-	s_telemetryBufferSize = bufferSize*1024*1024;;
-
-#else
-#endif
+	CCP_LOGWARN("SetTelemetryBufferSize is deprecated");
 }
 
 // Buffer size and sampling period hard coded in here as this
@@ -194,7 +183,6 @@ void BlueStatistics::SetTelemetryBufferSize( int bufferSize )
 // Use StartTimedTelemetry or StartTelemetryDump otherwise.
 void BlueStatistics::StartTelemetry( const std::string& server )
 {
-	SetTelemetryBufferSize( 8 );
 	StartTimedTelemetry( server, 0 );
 }
 
@@ -291,7 +279,7 @@ void BlueStatistics::UpdateTelemetry()
 #if CCP_TELEMETRY_ENABLED
 	if( s_isTelemetryConnectionRequested && !s_isTelemetryShuttingDown )
 	{
-		s_isTelemetryConnected = CcpStartTelemetry( s_telemetryServerOrFileSystemDumpPath.c_str(), s_telemetryBufferSize, s_telemetryConnectionType );
+		s_isTelemetryConnected = CcpStartTelemetry( s_telemetryServerOrFileSystemDumpPath.c_str(), s_telemetryConnectionType );
 		s_isTelemetryConnectionRequested = false;
 		s_telemetryLastCheckTime = s_telemetryStartTime = BeOS->GetActualTime();
 		return;
