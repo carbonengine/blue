@@ -569,58 +569,58 @@ static PyObject* PySetUrgentResourceLoads( PyObject* self, PyObject* args )
 		return NULL;
 	}
 
-	BeResMan->SetUrgentResourceLoads( isUrgent );
+	BeResMan->SetUrgentResourceLoads(isUrgent);
 
-	Py_INCREF( Py_None );
+	Py_INCREF(Py_None);
 	return Py_None;
 }
 #endif
 
-IRoot* BlueResMan::LoadObject(const char *name, Be::LOADOBJECT_INIT_FLAG init /* = LDOBJ_INITIALIZE */ )
+IRoot* BlueResMan::LoadObject(const char *name, Be::LOADOBJECT_INIT_FLAG init /* = LDOBJ_INITIALIZE */)
 {
 	CA2W wn(name);
-	return LoadObjectW( wn, init );
+	return LoadObjectW(wn, init);
 }
 
 class RecursionLimiter
 {
 public:
-	RecursionLimiter( const wchar_t* msg, int maxDepth ) : 
-	  m_name( msg ),
-		  m_maxDepth( maxDepth ), 
-		  m_depth( 0 )
-	  {
-	  }
+	RecursionLimiter(const wchar_t* msg, int maxDepth) :
+		m_name(msg),
+		m_maxDepth(maxDepth),
+		m_depth(0)
+	{
+	}
 
-	  void Enter( const wchar_t* name )
-	  {
-		  ++m_depth;
-		  if( m_depth >= m_maxDepth )
-		  {
-			  CCP_LOGERR_CH( s_ch, "%S: maximum recursion limit reached for '%S'", m_name, name );
-		  }
-	  }
+	void Enter(const wchar_t* name)
+	{
+		++m_depth;
+		if(m_depth >= m_maxDepth)
+		{
+			CCP_LOGERR_CH(s_ch, "%S: maximum recursion limit reached for '%S'", m_name, name);
+		}
+	}
 
-	  void Leave()
-	  {
-		  CCP_ASSERT( m_depth > 0 );
-		  --m_depth;
-	  }
+	void Leave()
+	{
+		CCP_ASSERT(m_depth > 0);
+		--m_depth;
+	}
 
-	  bool IsOK()
-	  {
-		  return m_depth < m_maxDepth;
-	  }
+	bool IsOK()
+	{
+		return m_depth < m_maxDepth;
+	}
 
-	  void Reset()
-	  {
-		  m_depth = 0;
-	  }
+	void Reset()
+	{
+		m_depth = 0;
+	}
 
-	  unsigned int GetDepth()
-	  {
-		  return m_depth;
-	  }
+	unsigned int GetDepth()
+	{
+		return m_depth;
+	}
 
 private:
 	const wchar_t* m_name;
@@ -629,24 +629,24 @@ private:
 };
 
 #if BLUE_WITH_PYTHON
-typedef TrackableStdMap<PyObject*,RecursionLimiter> RecursionLimiterMap_t;
-static RecursionLimiterMap_t s_limiterPerTasklet( "BlueResMan/s_limiterPerTasklet" );
+typedef TrackableStdMap<PyObject*, RecursionLimiter> RecursionLimiterMap_t;
+static RecursionLimiterMap_t s_limiterPerTasklet("BlueResMan/s_limiterPerTasklet");
 
 class RecursionLimiterHelper
 {
 public:
-	RecursionLimiterHelper( RecursionLimiter& rl, PyObject* key ) 
-		: m_recursionLimiter( rl ),
-		m_key( key )
+	RecursionLimiterHelper(RecursionLimiter& rl, PyObject* key)
+		: m_recursionLimiter(rl),
+		m_key(key)
 	{
 	}
 
 	~RecursionLimiterHelper()
 	{
 		m_recursionLimiter.Leave();
-		if( m_recursionLimiter.GetDepth() == 0 )
+		if(m_recursionLimiter.GetDepth() == 0)
 		{
-			s_limiterPerTasklet.erase( m_key );
+			s_limiterPerTasklet.erase(m_key);
 		}
 	}
 
@@ -658,13 +658,20 @@ private:
 #endif
 
 
-IRoot* BlueResMan::LoadObjectW( const wchar_t* unnormalizedName, Be::LOADOBJECT_INIT_FLAG init /* = LDOBJ_INITIALIZE */ )
+IRoot* BlueResMan::LoadObjectW(const wchar_t* unnormalizedName, Be::LOADOBJECT_INIT_FLAG init /* = LDOBJ_INITIALIZE */)
 {
-	CCP_STATS_SCOPED_TIME( resManLoadObject );
-	CCP_STATS_INC( resManLoadObjectCalls );
+	CCP_STATS_SCOPED_TIME(resManLoadObject);
+	CCP_STATS_INC(resManLoadObjectCalls);
 
 	std::wstring nameString;
-	NormalizeResPath( unnormalizedName, nameString );
+	NormalizeResPath(unnormalizedName, nameString);
+
+	if(nameString.empty())
+	{
+		CCP_LOGERR_CH(s_ch, "LoadObject called with an empty path");
+		return nullptr;
+	}
+
 	const wchar_t* name = nameString.c_str();
 
 #if CCP_STACKLESS
