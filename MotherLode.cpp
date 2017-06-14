@@ -246,6 +246,14 @@ void MotherLode::Housekeeping()
 			list_t::iterator ii = i++;
 			map_t::iterator j = mMap.find( *ii );
 
+			if(j == mMap.end())
+			{
+				// This shouldn't be happening, but we're seeing crashes in the erase
+				// call below - https://jira.ccpgames.com/browse/TQ-127089
+				CCP_LOGWARN_CH(s_ml, "MotherLode: Iterator not found in map");
+				continue;
+			}
+
 			CCP_ASSERT(j->second.IsStrong() && !j->second.IsPending());
 			if( mVerbose )
 			{
