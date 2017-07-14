@@ -247,12 +247,12 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)\libyaml\0.1.7\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\libcurl\7.53.1\lib\$(Platform)\$(PlatformToolset);..\..\..\carbon\autobuild\stackless\$(Platform);..\..\..\carbon\autobuild\stackless\$(Platform);$(CcpSdkPath)\libyaml\0.1.7\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\libcurl\7.53.1\lib\$(Platform)\$(PlatformToolset);../../autobuild/BlueExposure/exefile/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)\libyaml\0.1.7\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\libcurl\7.53.1\lib\$(Platform)\$(PlatformToolset);..\..\..\carbon\autobuild\stackless\$(Platform);..\..\..\carbon\autobuild\stackless\$(Platform);$(CcpSdkPath)\libyaml\0.1.7\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\libcurl\7.53.1\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);../../autobuild/BlueExposure/exefile/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
       <DelayLoadDLLs>psapi.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
-      <AdditionalDependencies>msvcrtd.lib;msvcprtd.lib;atlsd.lib;ws2_32.lib;version.lib;crypt32.lib;iphlpapi.lib;psapi.lib;winhttp.lib;yaml_d.lib;libcurl_d.lib;python27_d.lib;yaml_d.lib;libcurl_d.lib;BlueExposure_d.lib;CcpCore_d.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>msvcrtd.lib;msvcprtd.lib;atlsd.lib;ws2_32.lib;version.lib;crypt32.lib;iphlpapi.lib;psapi.lib;winhttp.lib;yaml_d.lib;libcurl_d.lib;python27_d.lib;yaml_d.lib;libcurl_d.lib;zlib_d.lib;BlueExposure_d.lib;CcpCore_d.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -280,12 +280,12 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)\libyaml\0.1.7\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\libcurl\7.53.1\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\Python\27_64\libs;$(CcpSdkPath)\libyaml\0.1.7\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\libcurl\7.53.1\lib\$(Platform)\$(PlatformToolset);../../../carbon/autobuild/BlueExposure/python_27/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)\libyaml\0.1.7\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\libcurl\7.53.1\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\Python\27_64\libs;$(CcpSdkPath)\libyaml\0.1.7\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\libcurl\7.53.1\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);../../../carbon/autobuild/BlueExposure/python_27/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
       <DelayLoadDLLs>psapi.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
-      <AdditionalDependencies>ws2_32.lib;version.lib;crypt32.lib;iphlpapi.lib;psapi.lib;winhttp.lib;yaml.lib;libcurl.lib;python27.lib;msvcrt.lib;msvcprt.lib;atls.lib;yaml.lib;libcurl.lib;BlueExposure.lib;CcpCore.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;version.lib;crypt32.lib;iphlpapi.lib;psapi.lib;winhttp.lib;yaml.lib;libcurl.lib;python27.lib;msvcrt.lib;msvcprt.lib;atls.lib;yaml.lib;libcurl.lib;zlib.lib;BlueExposure.lib;CcpCore.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -346,12 +346,12 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)\libyaml\0.1.7\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\libcurl\7.53.1\lib\$(Platform)\$(PlatformToolset);..\..\..\carbon\autobuild\stackless\$(Platform);..\..\..\carbon\autobuild\stackless\$(Platform);$(CcpSdkPath)\libyaml\0.1.7\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\libcurl\7.53.1\lib\$(Platform)\$(PlatformToolset);../../autobuild/BlueExposure/exefile/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)\libyaml\0.1.7\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\libcurl\7.53.1\lib\$(Platform)\$(PlatformToolset);..\..\..\carbon\autobuild\stackless\$(Platform);..\..\..\carbon\autobuild\stackless\$(Platform);$(CcpSdkPath)\libyaml\0.1.7\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\libcurl\7.53.1\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);../../autobuild/BlueExposure/exefile/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
       <DelayLoadDLLs>psapi.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
-      <AdditionalDependencies>ws2_32.lib;version.lib;crypt32.lib;iphlpapi.lib;psapi.lib;winhttp.lib;yaml.lib;libcurl.lib;python27.lib;msvcrt.lib;msvcprt.lib;atls.lib;yaml.lib;libcurl.lib;BlueExposure.lib;CcpCore.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;version.lib;crypt32.lib;iphlpapi.lib;psapi.lib;winhttp.lib;yaml.lib;libcurl.lib;python27.lib;msvcrt.lib;msvcprt.lib;atls.lib;yaml.lib;libcurl.lib;zlib.lib;BlueExposure.lib;CcpCore.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -379,12 +379,12 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)\libyaml\0.1.7\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\libcurl\7.53.1\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\Python\26_64\libs;$(CcpSdkPath)\libyaml\0.1.7\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\libcurl\7.53.1\lib\$(Platform)\$(PlatformToolset);../../autobuild/BlueExposure/python_26/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)\libyaml\0.1.7\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\libcurl\7.53.1\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\Python\26_64\libs;$(CcpSdkPath)\libyaml\0.1.7\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\libcurl\7.53.1\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);../../autobuild/BlueExposure/python_26/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
       <DelayLoadDLLs>psapi.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
-      <AdditionalDependencies>ws2_32.lib;version.lib;crypt32.lib;iphlpapi.lib;psapi.lib;winhttp.lib;yaml.lib;libcurl.lib;python26.lib;msvcrt.lib;msvcprt.lib;atls.lib;yaml.lib;libcurl.lib;BlueExposure.lib;CcpCore.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;version.lib;crypt32.lib;iphlpapi.lib;psapi.lib;winhttp.lib;yaml.lib;libcurl.lib;python26.lib;msvcrt.lib;msvcprt.lib;atls.lib;yaml.lib;libcurl.lib;zlib.lib;BlueExposure.lib;CcpCore.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
