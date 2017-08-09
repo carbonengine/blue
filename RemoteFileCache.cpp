@@ -472,7 +472,12 @@ void RemoteFileCache::CacheContentsOfRemoteStream( BlueRemoteStream* stream, con
 
 	if( CcpIsPathExistingFile( tempNameOnDisk ) )
 	{
-		return;
+		// Other clients (or the launcher) may have downloaded this file and are
+		// about to save it to the cache, but either they failed somehow and
+		// left the temp file behind, or we simply got here first. In any case,
+		// we'll attempt to delete the file and replace it with our own copy.
+		// See https://jira.ccpgames.com/browse/TQ-127440
+		CcpRemoveFile(tempNameOnDisk);
 	}
 
 	void* data = nullptr;
