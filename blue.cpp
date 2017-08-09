@@ -15,6 +15,7 @@
 #if BLUE_WITH_PYTHON
 #include "CcpUtils/PyCpp.h"
 #include "BlueExposure/Find.h"
+#include "version.h"
 #endif
 
 const char* g_moduleName = "blue";
@@ -108,6 +109,19 @@ void AttachToLogServer()
 MAP_FUNCTION_AND_WRAP( "AttachToLogServer", AttachToLogServer, "Attaches to the log server" );
 
 #if BLUE_WITH_PYTHON
+
+PyObject* PyGetVersionChangelist(PyObject *self, PyObject* args)
+{
+	return PyString_FromString(EVECHANGELIST);
+}
+
+PyObject* PyGetVersionBranch(PyObject *self, PyObject* args)
+{
+	return PyString_FromString(EVEBRANCH);
+}
+
+MAP_FUNCTION("GetChangelist", PyGetVersionChangelist, "Reports the changelist of the blue library");
+MAP_FUNCTION("GetBranch", PyGetVersionBranch, "Reports the branch of the blue library");
 
 //--------------------------------------------------------------------
 // AtomicFileRead and Write

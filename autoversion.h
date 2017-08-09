@@ -12,4 +12,6 @@
 #define EVECOMPANY "CCP hf.\0"
 #define EVECOPYRIGHT "© 2009 CCP hf. All rights reserved.\0"
 #define EVEPRODUCTVER "9.9\0"
+#define EVEBRANCH "local\0"
+#define EVECHANGELIST "0-perforce\0"
 /* end */
