@@ -93,6 +93,9 @@ public:
 	void SetCppCaptureEnabled( bool b );
 	bool IsCppCaptureEnabled();
 
+	void BeginCapture();
+	std::map<std::string, std::vector<double>> EndCapture();
+
 	void SetAccumulator( const std::string& name, ICcpStatisticsAccumulator* lg );
 	ICcpStatisticsAccumulator* GetAccumulator( const std::string& name );
 
@@ -110,6 +113,8 @@ protected:
 		CcpStaticStatisticsEntry* stat;
 	};
 	TrackableStdHashMap<std::string, AccumulatorEntry> m_accumulators;
+	TrackableStdHashMap<std::string, std::vector<double>> m_capture;
+	bool m_isCapturing;
 };
 
 TYPEDEF_BLUECLASS( BlueStatistics );

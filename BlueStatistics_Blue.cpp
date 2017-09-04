@@ -797,6 +797,21 @@ const Be::ClassInfo* BlueStatistics::ExposeToBlue()
 			":rtype: None"
 		)
 
+		MAP_METHOD_AND_WRAP
+		(
+			"BeginCapture",
+			BeginCapture,
+			"Begins capturing per-frame data for all statistics entries"
+		)
+
+		MAP_METHOD_AND_WRAP
+		(
+			"EndCapture",
+			EndCapture,
+			"Ends capturing per-frame data started with BeginCapture. Returns a dict with\n"
+			"per-frame statistic entries values"
+		)
+
 	EXPOSURE_END()
 }
 

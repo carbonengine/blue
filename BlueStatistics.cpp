@@ -165,7 +165,9 @@ static void SwitchZoneContext( intptr_t from, intptr_t to )
 
 
 BlueStatistics::BlueStatistics(IRoot* lockobj) :
-	m_accumulators( "m_accumulators" )
+	m_accumulators( "m_accumulators" ),
+	m_capture( "BlueStatistics::m_capture" ),
+	m_isCapturing( false )
 {
 #if CCP_TELEMETRY_ENABLED
 	s_telemetryTaskletTlsIx = TlsAlloc();
@@ -311,6 +313,23 @@ void BlueStatistics::UpdateTelemetry()
 #endif
 }
 
+void BlueStatistics::BeginCapture()
+{
+	m_isCapturing = true;
+	m_capture.clear();
+}
+
+std::map<std::string, std::vector<double>> BlueStatistics::EndCapture()
+{
+	m_isCapturing = false;
+	std::map<std::string, std::vector<double>> result;
+	for( auto it = m_capture.begin(); it != m_capture.end(); ++it )
+	{
+		result.insert( *it );
+	}
+	return result;
+}
+
 void BlueStatistics::Update()
 {
 	CcpStatistics::Update();
@@ -325,6 +344,15 @@ void BlueStatistics::Update()
 	}
 
 	UpdateTelemetry();
+
+	if( m_isCapturing )
+	{
+		auto& entries = CcpStatistics::GetEntryArray();
+		for( auto it = entries.begin(); it != entries.end(); ++it )
+		{
+			m_capture[( *it )->GetName()].push_back( ( *it )->GetValue() );
+		}
+	}
 }
 
 
