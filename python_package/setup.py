@@ -16,10 +16,9 @@ class BinaryDistribution(Distribution):
 os.chdir(os.path.dirname(__file__))
 shutil.copyfile(lib_path, os.path.join(os.getcwd(), 'blue', 'blue.pyd'))
 
-
 setup(
-    name="blue-{0}".format(blue.GetBranch()),
-    version=blue.GetChangelist(),
+    name="blue",
+    version="{}+{}".format(blue.GetChangelist(), blue.GetBranch()),
     description='Blue Library',
     packages=['blue'],
     package_data={
