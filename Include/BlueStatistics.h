@@ -99,6 +99,8 @@ public:
 	void SetAccumulator( const std::string& name, ICcpStatisticsAccumulator* lg );
 	ICcpStatisticsAccumulator* GetAccumulator( const std::string& name );
 
+	static BLUEIMPORT CcpStaticStatisticsEntry* CreateDynamicEntry( const char* name, bool reset, CcpStatisticsType_t type, const char* desc );
+
 #if BLUE_WITH_PYTHON
 	static PyObject* PyGetDescriptions( PyObject* self, PyObject* args );
 	static PyObject* PyGetStats( PyObject* self, PyObject* args );

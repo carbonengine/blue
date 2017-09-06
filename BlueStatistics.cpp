@@ -175,6 +175,11 @@ BlueStatistics::BlueStatistics(IRoot* lockobj) :
 #endif
 }
 
+CcpStaticStatisticsEntry* BlueStatistics::CreateDynamicEntry( const char* name, bool reset, CcpStatisticsType_t type, const char* desc )
+{
+	return CCP_NEW( "CcpStaticStatisticsEntry" ) CcpStaticStatisticsEntry( name, reset, type, desc );
+}
+
 void BlueStatistics::SetTelemetryBufferSize( int bufferSize )
 {
 	CCP_LOGWARN("SetTelemetryBufferSize is deprecated");
