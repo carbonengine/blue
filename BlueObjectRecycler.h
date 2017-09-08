@@ -73,6 +73,9 @@ private:
 		Be::Time timeOfLastRequest;
 	};
 
+	void Add( const std::wstring& key, IRoot* instance );
+	IRoot* Recycle( const std::wstring& key );
+
 	TrackableStdMap<std::wstring, ObjectInfo*> m_objectInfoByName;
 	TrackableStdMap<IWeakObject*, ObjectInfo*> m_objectInfoByObject;
 	TrackableStdSet<ObjectInfo*> m_objectInfosWithInstances;

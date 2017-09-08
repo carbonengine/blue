@@ -33,135 +33,16 @@ BlueObjectRecycler::~BlueObjectRecycler()
 	Clear();
 }
 
-bool BlueObjectRecycler::RecycleOrLoad( const wchar_t* resPath, IRoot** obj )
+void BlueObjectRecycler::Add( const std::wstring& key, IRoot* instance )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
-	CCP_STATS_INC( recyclerRequestCount );
-	CCP_STATS_INC( recyclerTotalRequestCount );
-
-	std::wstring normalizedPath;
-	NormalizeResPath( resPath, normalizedPath );
-	auto foundIt = m_objectInfoByName.find( normalizedPath );
-
-	if( foundIt == m_objectInfoByName.end() )
-	{
-		// We haven't seen this path before - load the object and create
-		// an entry for it. 
-		IRoot* result = BeResMan->LoadObjectW( normalizedPath.c_str() );
-		if( !result )
-		{
-			*obj = nullptr;
-			return false;
-		}
-
-		foundIt = m_objectInfoByName.find( normalizedPath );
-		if( foundIt != m_objectInfoByName.end() )
-		{
-			// Another tasklet added this name while we were loading. We take the
-			// easy way out and don't try to recycle this particular instance.
-			*obj = result;
-			return true;
-		}
-
-		// We need a notification when the instance we just created is about to
-		// die. We may decide to keep it alive for recycling.
-		IWeakObjectPtr weakResult( BlueCastPtr( result ) );
-		if( !weakResult )
-		{
-			CCP_LOGWARN_CH( s_ch, "%s: Can't recycle %S", __FUNCTION__, resPath );
-
-			// Object doesn't support weak refs - can't recycle it.
-			*obj = result;
-			return true;
-		}
-
-		weakResult->WeakRefRegister( this );
-
-		ObjectInfo* entry = CCP_NEW( "ObjectRecycler/entry" ) ObjectInfo;
-		entry->resPath = normalizedPath;
-		entry->totalRequests = 1;
-		entry->liveCount = 1;
-		entry->maxLiveCount = 1;
-		entry->recycledCount = 0;
-		entry->timeOfLastRequest = BeOS->GetCurrentFrameTime();
-
-		m_objectInfoByName[normalizedPath] = entry;
-		m_objectInfoByObject[weakResult] = entry;
-		*obj = result;
-		return true;
-	}
-
-	IRoot* result = nullptr;
-
-	ObjectInfo* entry = foundIt->second;
-	entry->totalRequests += 1;
-	entry->timeOfLastRequest = BeOS->GetCurrentFrameTime();
-
-	if( !entry->instances.empty() )
-	{
-		CCP_STATS_INC( recyclerRecycledCount );
-		CCP_STATS_INC( recyclerTotalRecycledCount );
-
-		CCP_LOG_CH( s_ch, "Recycling %S", resPath );
-
-		// We have an instance we can recycle
-		result = entry->instances.back();
-		entry->instances.pop_back();
-		entry->recycledCount += 1;
-	}
-	else
-	{
-		// Need to load a new one
-		result = BeResMan->LoadObjectW( normalizedPath.c_str() );
-		if( !result )
-		{
-			*obj = nullptr;
-			return false;
-		}
-	}
-
-	entry->liveCount += 1;
-	if( entry->liveCount > entry->maxLiveCount )
-	{
-		entry->maxLiveCount = entry->liveCount;
-	}
-
-	IWeakObjectPtr weakResult( BlueCastPtr( result ) );
-	weakResult->WeakRefRegister( this );
-
-	m_objectInfoByObject[weakResult] = entry;
-
-	*obj = result;
-	return true;
-}
-
-
-bool BlueObjectRecycler::RecycleOrCopy( const wchar_t* key, IRoot* srcObj, IRoot** obj )
-{
-	CCP_STATS_ZONE( __FUNCTION__ );
-	CCP_STATS_INC( recyclerRequestCount );
-	CCP_STATS_INC( recyclerTotalRequestCount );
-
 	auto foundIt = m_objectInfoByName.find( key );
-
 	if( foundIt == m_objectInfoByName.end() )
 	{
-		// We haven't seen this key before - create an entry for it and copy the source object
-		if( !BeClasses->CopyTo( srcObj, obj ) )
-		{
-			*obj = nullptr;
-			return false;
-		}
-
-		// We need a notification when the instance we just created is about to
-		// die. We may decide to keep it alive for recycling.
-		IWeakObjectPtr weakResult( BlueCastPtr( *obj ) );
+		IWeakObjectPtr weakResult( BlueCastPtr( instance ) );
 		if( !weakResult )
 		{
-			CCP_LOGWARN_CH( s_ch, "%s: Can't recycle %S", __FUNCTION__, key );
-
-			// Object doesn't support weak refs - can't recycle it.
-			return true;
+			CCP_LOGWARN_CH( s_ch, "%s: Can't recycle %S", __FUNCTION__, key.c_str() );
+			return;
 		}
 
 		weakResult->WeakRefRegister( this );
@@ -176,46 +57,93 @@ bool BlueObjectRecycler::RecycleOrCopy( const wchar_t* key, IRoot* srcObj, IRoot
 
 		m_objectInfoByName[key] = entry;
 		m_objectInfoByObject[weakResult] = entry;
-		return true;
-	}
-
-	ObjectInfo* entry = foundIt->second;
-	entry->totalRequests += 1;
-	entry->timeOfLastRequest = BeOS->GetCurrentFrameTime();
-
-	if( !entry->instances.empty() )
-	{
-		CCP_STATS_INC( recyclerRecycledCount );
-		CCP_STATS_INC( recyclerTotalRecycledCount );
-
-		CCP_LOG_CH( s_ch, "Recycling %S", key );
-
-		// We have an instance we can recycle
-		*obj = entry->instances.back();
-		entry->instances.pop_back();
-		entry->recycledCount += 1;
 	}
 	else
 	{
-		// Need to load a new one
-		if( !BeClasses->CopyTo( srcObj, obj ) )
+		ObjectInfo* entry = foundIt->second;
+		entry->totalRequests += 1;
+		entry->timeOfLastRequest = BeOS->GetCurrentFrameTime();
+		entry->liveCount += 1;
+		if( entry->liveCount > entry->maxLiveCount )
+		{
+			entry->maxLiveCount = entry->liveCount;
+		}
+
+		IWeakObjectPtr weakResult( BlueCastPtr( instance ) );
+		weakResult->WeakRefRegister( this );
+
+		m_objectInfoByObject[weakResult] = entry;
+	}
+}
+
+IRoot* BlueObjectRecycler::Recycle( const std::wstring& key )
+{
+	CCP_STATS_INC( recyclerRequestCount );
+	CCP_STATS_INC( recyclerTotalRequestCount );
+
+	auto foundIt = m_objectInfoByName.find( key );
+	if( foundIt == m_objectInfoByName.end() )
+	{
+		return nullptr;
+	}
+
+	ObjectInfo* entry = foundIt->second;
+
+	if( entry->instances.empty() )
+	{
+		return nullptr;
+	}
+
+	// We have an instance we can recycle
+	CCP_STATS_INC( recyclerRecycledCount );
+	CCP_STATS_INC( recyclerTotalRecycledCount );
+
+	CCP_LOG_CH( s_ch, "Recycling %S", key.c_str() );
+
+	auto result = entry->instances.back();
+	entry->instances.pop_back();
+	entry->recycledCount += 1;
+	return result;
+}
+
+bool BlueObjectRecycler::RecycleOrLoad( const wchar_t* resPath, IRoot** obj )
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+	std::wstring normalizedPath;
+	NormalizeResPath( resPath, normalizedPath );
+
+	auto result = Recycle( normalizedPath );
+	if( !result )
+	{
+		result = BeResMan->LoadObjectW( normalizedPath.c_str() );
+		if( !result )
 		{
 			*obj = nullptr;
 			return false;
 		}
 	}
+	Add( normalizedPath, result );
+	*obj = result;
+	return true;
+}
 
-	entry->liveCount += 1;
-	if( entry->liveCount > entry->maxLiveCount )
+
+bool BlueObjectRecycler::RecycleOrCopy( const wchar_t* key, IRoot* srcObj, IRoot** obj )
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+	auto result = Recycle( key );
+	if( !result )
 	{
-		entry->maxLiveCount = entry->liveCount;
+		if( !BeClasses->CopyTo( srcObj, &result ) )
+		{
+			*obj = nullptr;
+			return false;
+		}
 	}
-
-	IWeakObjectPtr weakResult( BlueCastPtr( *obj ) );
-	weakResult->WeakRefRegister( this );
-
-	m_objectInfoByObject[weakResult] = entry;
-
+	Add( key, result );
+	*obj = result;
 	return true;
 }
 
