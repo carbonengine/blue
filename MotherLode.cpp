@@ -334,7 +334,7 @@ void MotherLode::WeakRefNotify( Value* v )
 
 	//this object is dying
 	//is it cacheable?
-	CCP_ASSERT(!v.mCacheable);
+	CCP_ASSERT(!v->mCacheable);
 	if (v->mAllowCaching == CACHING_ALLOWED && mMaxMemUsage)
 		v->mWeak->QueryInterface(GetICacheableIID(), (void**)&v->mCacheable, BEQI_SILENT);
 
