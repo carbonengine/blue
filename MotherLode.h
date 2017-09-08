@@ -163,10 +163,10 @@ private:
 	friend Value;
 	
 	void AssertAll();
-	void WeakRefNotify( Value& value );
+	void WeakRefNotify( Value* value );
 	void Housekeeping();
 	
-	typedef TrackableStdHashMap<std::wstring, Value> map_t;
+	typedef TrackableStdHashMap<std::wstring, Value*> map_t;
 	typedef TrackableStdList<std::wstring> list_t;
 	
 	// key-value map. The value holds the actual object, either as a strong

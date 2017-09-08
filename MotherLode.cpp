@@ -81,26 +81,37 @@ bool MotherLode::Insert(
 	if (!wrp)
 		return false;
 
-	std::pair<map_t::iterator, bool> ins = mMap.insert(map_t::value_type(key, this));
-	if(!replace && !ins.second)
+	auto found = mMap.find( key );
+	if( !replace && found != mMap.end() )
+	{
 		//the object was already in the map, and we weren't asked to replace it.
 		return true;
-	
+	}
+
+	Value* value;
+	if( found == mMap.end() )
+	{
+		value = CCP_NEW( "MotherLode::Value" ) Value( this );
+		value->mKey = key;
+		if( inserted )
+		{
+			*inserted = true;
+		}
+		mMap[key] = value;
+	}
+	else
+	{
+		value = found->second;
+	}
+
 	if( mVerbose )
 	{
 		CCP_LOG_CH( s_ml, "Object %p, inserted at %S", wrp.p, key );
 	}
 	
-	if (ins.second)
-	{
-		//insert the iterator pointing to our place
-		ins.first->second.mKey = key;
-	}
-	ins.first->second.Setup(wrp);
-	ins.first->second.mAllowCaching = allowCaching;
-	if (inserted)
-		*inserted = true;
-	ins.first->second.Assert();
+	value->Setup(wrp);
+	value->mAllowCaching = allowCaching;
+	value->Assert();
 	return true;
 }
 
@@ -130,8 +141,10 @@ IMotherLode::LookupResult MotherLode::Lookup(
 		return LOOKUP_SUCCESS;
 	}
 
+	auto value = it->second;
+
 	//get the interface
-	if( !it->second.mWeak->QueryInterface(riid, ppv, options) )
+	if( !value->mWeak->QueryInterface(riid, ppv, options) )
 	{
 		return LOOKUP_FAILED; //yes, it was found, but QI failed.
 	}
@@ -139,15 +152,15 @@ IMotherLode::LookupResult MotherLode::Lookup(
 	//now, if we had a strong reference, throw it away and
 	//turn it into a weak reference.
 	bool fromCache = false;
-	if( it->second.IsStrong() )
+	if( value->IsStrong() )
 	{
-		it->second.Uncache();
-		it->second.Register();
+		value->Uncache();
+		value->Register();
 		fromCache = true;
 	}
 	if( mVerbose )
 	{
-		CCP_LOG_CH( s_ml, "Object %p, Lookup succeeded %sat %S", it->second.mWeak, fromCache ? "from cache " : "", key );
+		CCP_LOG_CH( s_ml, "Object %p, Lookup succeeded %s at %S", value->mWeak, fromCache ? "from cache " : "", key );
 	}
 
 	return fromCache ? LOOKUP_CACHED : LOOKUP_SUCCESS;
@@ -159,7 +172,9 @@ bool MotherLode::Delete(const wchar_t *key)
 	map_t::iterator it = mMap.find(key);
 	if (it == mMap.end())
 		return false;
-	mMap.erase(it); //destructor will perform necessary cleanup
+	auto value = it->second;
+	mMap.erase(it);
+	CCP_DELETE value; //destructor will perform necessary cleanup
 	return true;
 }
 
@@ -196,27 +211,29 @@ void MotherLode::Housekeeping()
 	for(list_t::iterator i = mPending.begin(); i!=mPending.end(); ) {
 		list_t::iterator ii = i++;
 		map_t::iterator j = mMap.find( *ii );
-		j->second.Assert();
-		CCP_ASSERT(j->second.IsStrong() && j->second.IsPending());
-		if (j->second.mCacheable->IsMemoryUsageKnown()) {
-			size_t s = j->second.mCacheable->GetMemoryUsage();
-			j->second.Unlink();
+		auto value = j->second;
+		value->Assert();
+		CCP_ASSERT( value->IsStrong() && value->IsPending() );
+		if ( value->mCacheable->IsMemoryUsageKnown() ) 
+		{
+			size_t s = value->mCacheable->GetMemoryUsage();
+			value->Unlink();
 			if( mVerbose )
 			{
-				CCP_LOG_CH( s_ml, "Object %p, size=%Iu", j->second.mWeak, s);
+				CCP_LOG_CH( s_ml, "Object %p, size=%Iu", value->mWeak, s);
 			}
 
 			ssize_t newsize = mMemUsage + s;
 			if (newsize < mMemUsage) {
 				CCP_LOGWARN_CH( s_ml, "Object %p, MemUsage overflow, mMemUsage=%Id, size=%Iu", 
-					j->second.mWeak, mMemUsage, s);
+					value->mWeak, mMemUsage, s);
 				CCP_LOGWARN_CH( s_ml, "key = %S", j->first.c_str());
 				s = 0;
 			} else if (mMaxMemUsage && s > (size_t)mMaxMemUsage) {
 				if( mVerbose )
 				{
 					CCP_LOG_CH( s_ml, "Object %p, size %Iu larger than MaxMemUsage of %Id",
-						j->second.mWeak, s, mMaxMemUsage);
+						value->mWeak, s, mMaxMemUsage);
 					CCP_LOG_CH( s_ml, "key = %S", j->first.c_str());
 				}
 
@@ -224,11 +241,12 @@ void MotherLode::Housekeeping()
 			}
 			if (s && mMaxMemUsage) {
 				mMemUsage = newsize;
-				j->second.mMemUsage = s;
-				j->second.Link(); //link into the proper LRU list
+				value->mMemUsage = s;
+				value->Link(); //link into the proper LRU list
 			} else {
 				//oh well, it doesn't have anything we need
 				mMap.erase(j);
+				CCP_DELETE value;
 			}
 		}
 	}
@@ -254,13 +272,17 @@ void MotherLode::Housekeeping()
 				continue;
 			}
 
-			CCP_ASSERT(j->second.IsStrong() && !j->second.IsPending());
+			auto value = j->second;
+
+			CCP_ASSERT( value->IsStrong() && !value->IsPending());
 			if( mVerbose )
 			{
-				CCP_LOG_CH( s_ml, "Object %p, clearing object with mem %Iu", j->second.mWeak, j->second.mMemUsage);
+				CCP_LOG_CH( s_ml, "Object %p, clearing object with mem %Iu", value->mWeak, value->mMemUsage);
 			}
 
 			mMap.erase(j); //destructor calls Uncache, which modifies mMemUsage
+			CCP_DELETE value;
+
 			if (mMemUsage <= mMaxMemUsage) {
 				if( mVerbose )
 				{
@@ -303,82 +325,84 @@ void MotherLode::OnTick(Be::Time realTime, Be::Time simTime, void *cookie)
 //cache it.
 //Note that we must not unregister it.  An implicit unregistering has already
 //been done by the caller (the WeakObject)
-void MotherLode::WeakRefNotify( Value& v )
+void MotherLode::WeakRefNotify( Value* v )
 {
 	if( mVerbose )
 	{
-		CCP_LOG_CH( s_ml, "Object %p at %S, attempting to cache", v.mWeak, v.mKey.c_str() );
+		CCP_LOG_CH( s_ml, "Object %p at %S, attempting to cache", v->mWeak, v->mKey.c_str() );
 	}
 
 	//this object is dying
 	//is it cacheable?
 	CCP_ASSERT(!v.mCacheable);
-	if (v.mAllowCaching == CACHING_ALLOWED && mMaxMemUsage)
-		v.mWeak->QueryInterface(GetICacheableIID(), (void**)&v.mCacheable, BEQI_SILENT);
+	if (v->mAllowCaching == CACHING_ALLOWED && mMaxMemUsage)
+		v->mWeak->QueryInterface(GetICacheableIID(), (void**)&v->mCacheable, BEQI_SILENT);
 
-	if (!v.mCacheable) {
+	if (!v->mCacheable) {
 		//Not caching, or caching not supported
 		if( mVerbose )
 		{
 			if (mMaxMemUsage)
-				CCP_LOG_CH( s_ml, "Object %p, not cacheable", v.mWeak);
+				CCP_LOG_CH( s_ml, "Object %p, not cacheable", v->mWeak);
 			else
 				CCP_LOG_CH( s_ml, "Caching disabled");
 		}
 
-		v.mWeak = 0; //to disable an implicit Unregister call
-		mMap.erase( v.mKey );
+		v->mWeak = 0; //to disable an implicit Unregister call
+		mMap.erase( v->mKey );
+		CCP_DELETE v;
 		return;
 	}
 
 	//find out its size, if it knows it.
-	if (v.mCacheable->IsMemoryUsageKnown()) {
-		size_t s = v.mCacheable->GetMemoryUsage();
+	if (v->mCacheable->IsMemoryUsageKnown()) {
+		size_t s = v->mCacheable->GetMemoryUsage();
 		if( mVerbose )
 		{
-			CCP_LOG_CH( s_ml, "Object %p, size = %Iu", v.mWeak, s);
+			CCP_LOG_CH( s_ml, "Object %p, size = %Iu", v->mWeak, s);
 		}
 
 		ssize_t newsize = mMemUsage + s;
 		if (newsize < mMemUsage) {
-			CCP_LOGWARN_CH( s_ml, "Object %p, MemUsage overflow, mMemUsage=%Id, size=%Iu", v.mWeak, mMemUsage, s);
-			CCP_LOGWARN_CH( s_ml, "key = %S", v.mKey.c_str());
+			CCP_LOGWARN_CH( s_ml, "Object %p, MemUsage overflow, mMemUsage=%Id, size=%Iu", v->mWeak, mMemUsage, s);
+			CCP_LOGWARN_CH( s_ml, "key = %S", v->mKey.c_str());
 			s = 0;
 		} else if (s > (size_t)mMaxMemUsage) {
 			if( mVerbose )
 			{
 				CCP_LOG_CH( s_ml, "Object %p, size %Iu larger than MaxMemUsage of %Id",
-					v.mWeak, s, mMaxMemUsage);
-				CCP_LOG_CH( s_ml, "key = %S", v.mKey.c_str());
+					v->mWeak, s, mMaxMemUsage);
+				CCP_LOG_CH( s_ml, "key = %S", v->mKey.c_str());
 			}
 
 			s = 0;
 		}
 		if (!s) {
 			//we are not interested in this, zero memory
-			v.mWeak = 0; //to disable an implicit Unregister call
-			mMap.erase( v.mKey );
+			v->mWeak = 0; //to disable an implicit Unregister call
+			mMap.erase( v->mKey );
+			CCP_DELETE v;
 			return;
 		}
 		mMemUsage = newsize;
-		v.mMemUsage = s;
+		v->mMemUsage = s;
 	} else {
 		if( mVerbose )
 		{
-			CCP_LOG_CH( s_ml, "Object %p size pending", v.mWeak);
+			CCP_LOG_CH( s_ml, "Object %p size pending", v->mWeak);
 		}
 
-		v.mMemUsage = 0; //pending
+		v->mMemUsage = 0; //pending
 	}
 	
 	//insert it at the end of the appropriate list
-	v.Link();
+	v->Link();
 }
 
 
 void MotherLode::AssertAll() {
 	for(map_t::iterator i = mMap.begin(); i!=mMap.end(); ++i)
-		i->second.Assert();
+		i->second->Assert();
 }
 
 
@@ -388,8 +412,16 @@ void MotherLode::Clear() {
 	//are twice mapped.
 	for(map_t::iterator i = mMap.begin(); i!=mMap.end(); ){
 		map_t::iterator ii = i++;
-		if (!ii->second.IsStrong())
-			mMap.erase(ii);
+		auto value = ii->second;
+		if( !value->IsStrong() )
+		{
+			mMap.erase( ii );
+			CCP_DELETE value;
+		}
+	}
+	for( auto it = mMap.begin(); it != mMap.end(); ++it )
+	{
+		CCP_DELETE it->second;
 	}
 	mMap.clear();
 	mLRU.clear();
@@ -402,9 +434,11 @@ void MotherLode::ClearCached()
 	for( map_t::iterator i = mMap.begin(); i!=mMap.end(); )
 	{
 		map_t::iterator ii = i++;
-		if( ii->second.IsStrong() )
+		auto value = ii->second;
+		if( value->IsStrong() )
 		{
 			mMap.erase(ii);
+			CCP_DELETE value;
 		}
 	}
 
@@ -429,7 +463,7 @@ PyObject *MotherLode::Pyitems(PyObject *args)
 	for(i=0, it=mMap.begin(); it!=mMap.end(); ++i, ++it) {
 		PyObject *v = Py_BuildValue("NN",
 			PyUnicode_FromUnicode((Py_UNICODE*)it->first.c_str(), it->first.size()),
-			BlueWrapObjectForPython(it->second.mWeak)
+			BlueWrapObjectForPython(it->second->mWeak)
 			);
 		if (!v)
 			return 0;
@@ -478,7 +512,7 @@ PyObject* MotherLode::PyLookupAsWeakRef(PyObject *args)
 		return nullptr;
 	}
 
-	wr->SetObject( it->second.mWeak );
+	wr->SetObject( it->second->mWeak );
 
 	return BlueWrapObjectForPython( wr );
 }
@@ -512,7 +546,7 @@ PyObject *MotherLode::PyGetNonCachedKeys(PyObject *args)
 	map_t::iterator it;
 	for( i = 0, it = mMap.begin(); it != mMap.end(); ++it )
 	{
-		if( !it->second.IsStrong() )
+		if( !it->second->IsStrong() )
 		{
 			// We want values that don't have a strong reference. Remember,
 			// strong reference implies it cached (we're keeping it alive).
@@ -586,7 +620,7 @@ std::list<IRoot*> MotherLode::GetValues()
 	std::list<IRoot*> returnValue;
 	for( auto it = mMap.begin(); it != mMap.end(); ++it )
 	{
-		returnValue.push_back( it->second.mWeak );
+		returnValue.push_back( it->second->mWeak );
 	}
 
 	return returnValue;
@@ -678,7 +712,7 @@ void MotherLode::Value::WeakRefNotify(IWeakObject *ptr)
 {
 	CCP_ASSERT(ptr == mWeak);
 	CCP_ASSERT(!mCacheable);
-	mMl->WeakRefNotify( *this );
+	mMl->WeakRefNotify( this );
 }
 
 
