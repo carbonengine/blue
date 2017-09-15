@@ -487,6 +487,7 @@
     <ClInclude Include="RemoteFileCache.h"/>
     <ClInclude Include="resource.h"/>
     <ClInclude Include="ResourceLoading.h"/>
+    <ClInclude Include="ResourceWatch.h"/>
     <ClInclude Include="SimpleJson.h"/>
     <ClInclude Include="SqliteLogger.h"/>
     <ClInclude Include="StdAfx.h"/>
@@ -636,6 +637,8 @@
     <ClCompile Include="RemoteFileCache.cpp"/>
     <ClCompile Include="RemoteFileCache_Blue.cpp"/>
     <ClCompile Include="ResourceLoading.cpp"/>
+    <ClCompile Include="ResourceWatch.cpp"/>
+    <ClCompile Include="ResourceWatch_Blue.cpp"/>
     <ClCompile Include="ScopedBlockTrap.cpp"/>
     <ClCompile Include="SimpleJson.cpp"/>
     <ClCompile Include="SqliteLogger.cpp"/>
