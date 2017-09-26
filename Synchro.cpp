@@ -448,9 +448,9 @@ PyObject* Synchro::SleepWallclock(int ms, const int64_t &due)
 	CCP_STATS_ZONE( __FUNCTION__ );
 
 	// Check millisec constraints
-	if (ms < 0 || ms > 86400000)
+	if (ms < 0 || ms > 172800000)
 	{
-		PyErr_Format(PyExc_RuntimeError, "Cannot sleep for more than 24 hours, 'delta' is %d ms",ms);
+		PyErr_Format(PyExc_RuntimeError, "Cannot sleep for more than 48 hours, 'delta' is %d ms",ms);
 		return NULL;
 	}
 
