@@ -252,48 +252,50 @@ void MotherLode::Housekeeping()
 	}
 
 	// then, trim from cache if necessary
-	while (mMemUsage > mMaxMemUsage && mLRU.size()) {
+	if( mVerbose && mMemUsage > mMaxMemUsage && !mLRU.empty() )
+	{
+		CCP_LOG_CH( s_ml, "Trimming memory usage from %Id to %Id", mMemUsage, mMaxMemUsage );
+	}
+
+	// then, trim from cache if necessary
+	while( mMemUsage > mMaxMemUsage && !mLRU.empty() )
+	{
 		//we may need multiple passes.  Removing a strong ref may cause
 		//a weak ref to the same object to become strong again!
-		if( mVerbose )
+		list_t::iterator front = mLRU.begin();
+		map_t::iterator j = mMap.find( *front );
+		if( j == mMap.end() )
 		{
-			CCP_LOG_CH( s_ml, "Trimming memory usage from %Id to %Id", mMemUsage, mMaxMemUsage);
+			// This shouldn't be happening, but we're seeing crashes in the erase
+			// call below - https://jira.ccpgames.com/browse/TQ-127089
+			CCP_LOGERR_CH( s_ml, "MotherLode: Iterator not found in map" );
+			mLRU.erase( front );
+			continue;
 		}
 
-		for(list_t::iterator i=mLRU.begin(); i!=mLRU.end(); ) {
-			list_t::iterator ii = i++;
-			map_t::iterator j = mMap.find( *ii );
+		auto value = j->second;
 
-			if(j == mMap.end())
-			{
-				// This shouldn't be happening, but we're seeing crashes in the erase
-				// call below - https://jira.ccpgames.com/browse/TQ-127089
-				CCP_LOGWARN_CH(s_ml, "MotherLode: Iterator not found in map");
-				continue;
-			}
+		CCP_ASSERT( value->IsStrong() && !value->IsPending() );
+		if( mVerbose )
+		{
+			CCP_LOG_CH( s_ml, "Object %p, clearing object with mem %Iu", value->mWeak, value->mMemUsage );
+		}
 
-			auto value = j->second;
+		mMap.erase( j );
+		CCP_DELETE value; //destructor calls Uncache, which modifies mMemUsage and removes the item from LRU list
 
-			CCP_ASSERT( value->IsStrong() && !value->IsPending());
+		if( mMemUsage <= mMaxMemUsage )
+		{
 			if( mVerbose )
 			{
-				CCP_LOG_CH( s_ml, "Object %p, clearing object with mem %Iu", value->mWeak, value->mMemUsage);
-			}
-
-			mMap.erase(j); //destructor calls Uncache, which modifies mMemUsage
-			CCP_DELETE value;
-
-			if (mMemUsage <= mMaxMemUsage) {
-				if( mVerbose )
-				{
-					CCP_LOG_CH( s_ml, "Done trimming at %Id bytes", mMemUsage);
-				}
-				break;
+				CCP_LOG_CH( s_ml, "Done trimming at %Id bytes", mMemUsage );
 			}
 		}
 	}
-	if (!mLRU.size())
+	if( mLRU.empty() )
+	{
 		mMemUsage = 0; //for sanity
+	}
 }
 
 
