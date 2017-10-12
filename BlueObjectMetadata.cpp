@@ -34,6 +34,10 @@ const BlueObjectMetadata::Metadata* BlueObjectMetadata::GetMetadata( IWeakObject
 
 void BlueObjectMetadata::Set( IWeakObject* owner, const char* key, const char* value )
 {
+	if( !owner )
+	{
+		return;
+	}
 	auto found = m_metadata.find( owner );
 	if( found == m_metadata.end() )
 	{
