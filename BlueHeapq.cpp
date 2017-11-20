@@ -36,7 +36,7 @@ PyMethodDef heapqmethods[] = {
 	},
 	{
 		"heapify", PyHeapify, METH_VARARGS, 
-		"put list inn heap order"
+		"put list inn heap order\n"
 		":param heap: heap list\n"
 		":type heap: list\n"
 		":param cmp: optional compare function\n"
@@ -44,7 +44,7 @@ PyMethodDef heapqmethods[] = {
 	},
 	{
 		"heapreplace", PyHeapReplace, METH_VARARGS, 
-		"pop and subsequently push an item"
+		"pop and subsequently push an item\n"
 		":param heap: heap list\n"
 		":type heap: list\n"
 		":param element: element to push\n"
@@ -54,7 +54,7 @@ PyMethodDef heapqmethods[] = {
 	},
 	{
 		"heapsort", PyHeapSort, METH_VARARGS, 
-		"sort a list in heap order (large to small)"
+		"sort a list in heap order (large to small)\n"
 		":param heap: heap list\n"
 		":type heap: list\n"
 		":param cmp: optional compare function\n"
@@ -62,7 +62,7 @@ PyMethodDef heapqmethods[] = {
 	},
 	{
 		"heapcheck", PyHeapCheck, METH_VARARGS, 
-		"Test the heap property"
+		"Test the heap property\n"
 		":param heap: heap list\n"
 		":type heap: list\n"
 		":param cmp: optional compare function\n"
