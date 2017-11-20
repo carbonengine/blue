@@ -16,12 +16,58 @@ PyObject *PyHeapSort(PyObject *self, PyObject *args);
 PyObject *PyHeapCheck(PyObject *self, PyObject *args);
 
 PyMethodDef heapqmethods[] = {
-	{"heappush", PyHeapPush, METH_VARARGS, "push an element onto heap"},
-	{"heappop", PyHeapPop, METH_VARARGS, "pop an element off heap"},
-	{"heapify", PyHeapify, METH_VARARGS, "put list inn heap order"},
-	{"heapreplace", PyHeapReplace, METH_VARARGS, "pop and subsequently push an item"},
-	{"heapsort", PyHeapSort, METH_VARARGS, "sort a list in heap order (large to small)"},
-	{"heapcheck", PyHeapCheck, METH_VARARGS, "Test the heap property"},
+	{
+		"heappush", PyHeapPush, METH_VARARGS, 
+		"push an element onto heap\n"
+		":param heap: heap list\n"
+		":type heap: list\n"
+		":param element: element to push\n"
+		":type element: any\n"
+		":param cmp: optional compare function\n"
+		":type cmp: Optional[(any, any)->int]"
+	},
+	{
+		"heappop", PyHeapPop, METH_VARARGS, 
+		"pop an element off heap\n"
+		":param heap: heap list\n"
+		":type heap: list\n"
+		":param cmp: optional compare function\n"
+		":type cmp: Optional[(any, any)->int]" 
+	},
+	{
+		"heapify", PyHeapify, METH_VARARGS, 
+		"put list inn heap order"
+		":param heap: heap list\n"
+		":type heap: list\n"
+		":param cmp: optional compare function\n"
+		":type cmp: Optional[(any, any)->int]" 
+	},
+	{
+		"heapreplace", PyHeapReplace, METH_VARARGS, 
+		"pop and subsequently push an item"
+		":param heap: heap list\n"
+		":type heap: list\n"
+		":param element: element to push\n"
+		":type element: any\n"
+		":param cmp: optional compare function\n"
+		":type cmp: Optional[(any, any)->int]" 
+	},
+	{
+		"heapsort", PyHeapSort, METH_VARARGS, 
+		"sort a list in heap order (large to small)"
+		":param heap: heap list\n"
+		":type heap: list\n"
+		":param cmp: optional compare function\n"
+		":type cmp: Optional[(any, any)->int]" 
+	},
+	{
+		"heapcheck", PyHeapCheck, METH_VARARGS, 
+		"Test the heap property"
+		":param heap: heap list\n"
+		":type heap: list\n"
+		":param cmp: optional compare function\n"
+		":type cmp: Optional[(any, any)->int]" 
+	},
 	{0}
 };
 
