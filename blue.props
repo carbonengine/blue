@@ -15,7 +15,7 @@
       <PreprocessorDefinitions>YAML_DECLARE_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>..\..\..\..\carbon\autobuild\blue\exefile\$(Platform)\$(PlatformToolset);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\..\carbon\autobuild\blue\exefile\$(Platform)\$(PlatformToolset);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
 </Project>
