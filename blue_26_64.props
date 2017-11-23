@@ -3,7 +3,7 @@
   <ImportGroup Label="PropertySheets">
     <Import Project="boost.props" />
     <Import Project="..\..\..\..\..\..\sdk\telemetry\3.0.1.1008\telemetry_3.0.1.1008.props" />
-    <Import Project="..\python_26_64.props" />
+    <Import Project="python_26_64.props" />
   </ImportGroup>
   <PropertyGroup>
     <_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>
