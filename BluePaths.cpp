@@ -225,8 +225,6 @@ bool BluePaths::GetStreamFromPathW( const wchar_t* path, IBlueStream** stream )
 		}
 	}
 
-	CCP_LOGERR_CH( s_ch, "No registered file system could open %S", path );
-
 	return false;
 }
 
