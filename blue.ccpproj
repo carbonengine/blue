@@ -6,7 +6,7 @@ ProjectGuid: 8CE8EA0A-B9E5-4D95-A0CD-06DC6BC5C5C5
 
 # These are the SDKs that are used by all configurations
 Imports:
-- ../core_project.yaml
+- ../core_project/core_project.yaml
 - ../../../../../../sdk/zlib/1.2.11/zlib_1.2.11.yaml
 - ../BlueExposure/uses_BlueExposure.yaml
 
