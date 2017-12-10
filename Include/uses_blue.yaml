@@ -1,6 +1,6 @@
 # This file defines settings for all modules that link against Blue with Stackless
 Imports:
-- ../../stackless/stackless.yaml
+- ../../stackless/Include/stackless.yaml
 - ../../../../../../../sdk/telemetry/3.0.1.1008/telemetry_3.0.1.1008.yaml
 
 General:

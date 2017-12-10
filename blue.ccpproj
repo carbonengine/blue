@@ -74,7 +74,7 @@ Configurations:
     BaseConfigurations:
     - Windows
     Imports:
-    - ../stackless/stackless.yaml
+    - ../stackless/Include/stackless.yaml
     General: 
       OutDir: ../../autobuild/blue/exefile/$(Platform)/$(PlatformToolset)/
       TargetName: blue_d
@@ -99,7 +99,7 @@ Configurations:
     BaseConfigurations:
     - Windows
     Imports:
-    - ../stackless/stackless.yaml
+    - ../stackless/Include/stackless.yaml
     - blue_release.yaml
     General:
       OutDir: ../../autobuild/blue/exefile/$(Platform)/$(PlatformToolset)/
@@ -155,7 +155,7 @@ Configurations:
 
   Release|Mac64:
     Imports:
-    - ../stackless/stackless.yaml
+    - ../stackless/Include/stackless.yaml
     - ../../../../../../sdk/libcurl/7.32.0/libcurl_7.32.0.yaml
     - ../../../../../../sdk/libyaml/yaml-0.1.2/yaml_0.1.2.yaml
     General:
