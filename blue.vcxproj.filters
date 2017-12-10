@@ -8,6 +8,15 @@
     <Filter Include="Source Files\Logger"/>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\Logger\Logger.h">
+      <Filter>Source Files\Logger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Logger\LoggerLib.h">
+      <Filter>Source Files\Logger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Logger\LogServer.h">
+      <Filter>Source Files\Logger</Filter>
+    </ClInclude>
     <ClInclude Include="autoversion.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -326,15 +335,12 @@
     <ClInclude Include="Include\TransGaming.h">
       <Filter>Source Files\Include</Filter>
     </ClInclude>
-    <ClInclude Include="..\Logger\Logger.h">
+    <ClCompile Include="..\Logger\Logger.cpp">
       <Filter>Source Files\Logger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Logger\LoggerLib.h">
+    </ClCompile>
+    <ClCompile Include="..\Logger\LogServer.cpp">
       <Filter>Source Files\Logger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Logger\LogServer.h">
-      <Filter>Source Files\Logger</Filter>
-    </ClInclude>
+    </ClCompile>
     <ClCompile Include="BackgroundReader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -682,12 +688,6 @@
     </ClCompile>
     <ClCompile Include="Accumulator\PercentileAccumulator_Blue.cpp">
       <Filter>Source Files\Accumulator</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Logger\Logger.cpp">
-      <Filter>Source Files\Logger</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Logger\LogServer.cpp">
-      <Filter>Source Files\Logger</Filter>
     </ClCompile>
     <ResourceCompile Include="blue.rc">
       <Filter>Resource Files</Filter>

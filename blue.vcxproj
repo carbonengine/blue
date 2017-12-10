@@ -429,6 +429,9 @@
     <PostBuildEvent/>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\Logger\Logger.h"/>
+    <ClInclude Include="..\Logger\LoggerLib.h"/>
+    <ClInclude Include="..\Logger\LogServer.h"/>
     <ClInclude Include="autoversion.h"/>
     <ClInclude Include="BackgroundReader.h"/>
     <ClInclude Include="BlackReader.h"/>
@@ -535,11 +538,10 @@
     <ClInclude Include="Include\ScopedBlockTrap.h"/>
     <ClInclude Include="Include\StructPacker.h"/>
     <ClInclude Include="Include\TransGaming.h"/>
-    <ClInclude Include="..\Logger\Logger.h"/>
-    <ClInclude Include="..\Logger\LoggerLib.h"/>
-    <ClInclude Include="..\Logger\LogServer.h"/>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\Logger\Logger.cpp"/>
+    <ClCompile Include="..\Logger\LogServer.cpp"/>
     <ClCompile Include="BackgroundReader.cpp"/>
     <ClCompile Include="Base64.cpp"/>
     <ClCompile Include="BlackReader.cpp"/>
@@ -658,8 +660,6 @@
     <ClCompile Include="YamlWriter_Blue.cpp"/>
     <ClCompile Include="Accumulator\PercentileAccumulator.cpp"/>
     <ClCompile Include="Accumulator\PercentileAccumulator_Blue.cpp"/>
-    <ClCompile Include="..\Logger\Logger.cpp"/>
-    <ClCompile Include="..\Logger\LogServer.cpp"/>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="blue.rc"/>
