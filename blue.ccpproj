@@ -110,7 +110,7 @@ Configurations:
     BaseConfigurations:
     - Windows
     Imports:
-    - ../../../../../../sdk/python/Python_2.6.yaml
+    - ../../../../../../sdk/python/ccpproj/Python_2.6.yaml
     - blue_release.yaml
     General:
       OutDir: ../../autobuild/blue/python_26/$(Platform)/$(PlatformToolset)/
@@ -121,7 +121,7 @@ Configurations:
     BaseConfigurations:
     - Windows
     Imports:
-    - ../../../../../../sdk/python/Python_2.7.yaml
+    - ../../../../../../sdk/python/ccpproj/Python_2.7.yaml
     - blue_release.yaml
     General:
       OutDir: ../../autobuild/blue/python_27/$(Platform)/$(PlatformToolset)/
@@ -130,7 +130,7 @@ Configurations:
 
   Release_27|Linux32,Linux64:
     Imports:
-    - ../../../../../../sdk/python/Python_2.7.yaml
+    - ../../../../../../sdk/python/ccpproj/Python_2.7.yaml
     General:
       # The config type is used for selecting the manifest file - usually the same as the configuration
       CcpConfigType: Release
@@ -181,7 +181,7 @@ Configurations:
 
   Release_27|Mac64:
     Imports:
-    - ../../../../../../sdk/python/Python_2.7.yaml
+    - ../../../../../../sdk/python/ccpproj/Python_2.7.yaml
     - ../../../../../../sdk/libcurl/7.32.0/libcurl_7.32.0.yaml
     - ../../../../../../sdk/libyaml/yaml-0.1.2/yaml_0.1.2.yaml
     General:

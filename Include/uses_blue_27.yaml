@@ -1,6 +1,6 @@
 # This file defines settings for all modules that link against Blue with Python 2.6
 Imports:
-- ../../../../../../../sdk/python/Python_2.7.yaml
+- ../../../../../../../sdk/python/ccpproj/Python_2.7.yaml
 - ../../../../../../../sdk/telemetry/3.0.1.1008/telemetry_3.0.1.1008.yaml
 
 General:
