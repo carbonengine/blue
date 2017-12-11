@@ -15,7 +15,7 @@ protected:
 	virtual void ReleaseCachedData( BlueAsyncRes* resource );
 	virtual void RebuildCachedData( BlueAsyncRes* resource );
 private:
-	BlueWeakRef<BlueAsyncRes> m_resource;
+	BlueAsyncResPtr m_resource;
 	BlueScriptCallback m_onLoaded;
 	BlueScriptCallback m_onUnloaded;
 };

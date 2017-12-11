@@ -7,7 +7,7 @@ ResourceWatch::ResourceWatch( IRoot* )
 
 ResourceWatch::~ResourceWatch()
 {
-	if( !!m_resource )
+	if( m_resource )
 	{
 		m_resource->RemoveNotifyTarget( this );
 	}
@@ -15,7 +15,7 @@ ResourceWatch::~ResourceWatch()
 
 void ResourceWatch::Watch( BlueAsyncRes* resource )
 {
-	if( !!m_resource )
+	if( m_resource )
 	{
 		m_resource->RemoveNotifyTarget( this );
 	}
