@@ -25,7 +25,7 @@
 #ifndef _PYTEMPLATES_H_
 #define _PYTEMPLATES_H_
 
-#include <python.h>
+#include <Python.h>
 #include <structmember.h>
 
 // -------------------------------------------------------------
