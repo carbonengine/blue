@@ -46,6 +46,6 @@
 #endif
 
 #include "BlueExposure/include/BlueExposure.h"
-#include "include/BlueStatistics.h"
+#include "Include/BlueStatistics.h"
 
 #endif
