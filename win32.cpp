@@ -110,9 +110,9 @@ void GetWindowsVersionFromApi( OSVERSIONINFOEX &info )
 
 #include "win32.h"
 
-#include "include/blue.h"
-#include "include/IBluePython.h"
-#include "include/TransGaming.h"
+#include "Include/Blue.h"
+#include "Include/IBluePython.h"
+#include "Include/TransGaming.h"
 
 
 // Need some structure definitions for the extended TCP functionality.  Normally defined in Iphlpapi.h,

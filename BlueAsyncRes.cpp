@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 
-#include "include/BlueAsyncRes.h"
-#include "include/IBlueResMan.h"
+#include "Include/BlueAsyncRes.h"
+#include "Include/IBlueResMan.h"
 #include "Include/IBluePaths.h"
 #include "Include/IBlueThreadMonitor.h"
 

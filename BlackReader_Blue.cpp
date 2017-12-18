@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 #include "BlackReader.h"
-#include "include/IBlueOS.h"
-#include "include/IBluePaths.h"
+#include "Include/IBlueOS.h"
+#include "Include/IBluePaths.h"
 
 BLUE_DEFINE( BlackReader );
 

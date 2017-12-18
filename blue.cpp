@@ -3,8 +3,8 @@
 
 #include "StdAfx.h"
 
-#include "include/Blue.h"
-#include "include/Blue.cxx"
+#include "Include/Blue.h"
+#include "Include/Blue.cxx"
 #include "BlueExposure/include/InterfaceDefinitions.cxx"
 #include "BluePaths.h"
 #include "BlueOS.h"

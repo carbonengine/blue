@@ -8,7 +8,7 @@
 #include "StdAfx.h"
 
 #include "BluePaths.h"
-#include "include/IBluePersist.h"
+#include "Include/IBluePersist.h"
 
 static bool GetBePaths( const Be::IID& riid, void** ppv )
 {

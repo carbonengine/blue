@@ -16,8 +16,8 @@
 #include <vector>
 #include <string>
 
-#include "include/IBlueOS.h"
-#include "include/IBluePersist.h"
+#include "Include/IBlueOS.h"
+#include "Include/IBluePersist.h"
 
 #include "resource.h"
 #include "zlib.h"

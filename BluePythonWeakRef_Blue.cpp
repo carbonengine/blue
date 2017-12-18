@@ -4,7 +4,7 @@
 
 #include "BluePythonWeakRef.h"
 
-#include "include/IBlueOS.h"
+#include "Include/IBlueOS.h"
 
 BLUE_DEFINE( BluePythonWeakRef );
 

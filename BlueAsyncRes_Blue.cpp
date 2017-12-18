@@ -1,5 +1,5 @@
 #include "StdAfx.h"
-#include "include/BlueAsyncRes.h"
+#include "Include/BlueAsyncRes.h"
 
 BLUE_DEFINE_ABSTRACT( BlueAsyncRes );
 

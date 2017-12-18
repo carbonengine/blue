@@ -7,7 +7,7 @@
 
 #include "StdAfx.h"
 #include "BlueLogInMemory.h"
-#include "include/IBlueOS.h"
+#include "Include/IBlueOS.h"
 
 static BlueLogInMemory* s_logInMemory = BlueLogInMemory::GetInstance();
 

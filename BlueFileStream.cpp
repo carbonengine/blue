@@ -10,7 +10,7 @@
 #include "BlueFileStream.h"
 #include "BlueMemStream.h"
 #include "BlueResManBackgroundCall.h"
-#include "include/IBlueOS.h"
+#include "Include/IBlueOS.h"
 
 #if CCP_STACKLESS
 #include "CcpUtils/PyCpp.h"

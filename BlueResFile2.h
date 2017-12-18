@@ -10,9 +10,9 @@
 #ifndef BlueResFile2_h
 #define BlueResFile2_h
 
-#include "include/Blue.h"
-#include "include/IBluePersist.h"
-#include "include/ICacheable.h"
+#include "Include/Blue.h"
+#include "Include/IBluePersist.h"
+#include "Include/ICacheable.h"
 
 BLUE_DECLARE( ResFile );
 

@@ -1,8 +1,8 @@
 #include "StdAfx.h"
-#include "include/IBlueOS.h"
+#include "Include/IBlueOS.h"
 #include "YamlReader.h"
 #include "BlueMemStream.h"
-#include "include/IBluePaths.h"
+#include "Include/IBluePaths.h"
 
 BLUE_DEFINE( YamlReader );
 

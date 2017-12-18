@@ -9,7 +9,7 @@
 #ifndef BluePythonWeakRef_h
 #define BluePythonWeakRef_h
 
-#include "include/Blue.h"
+#include "Include/Blue.h"
 
 BLUE_DECLARE( BluePythonWeakRef );
 

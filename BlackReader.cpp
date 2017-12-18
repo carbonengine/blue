@@ -9,8 +9,8 @@
 #include "BlackReader.h"
 #include "BlueMemStream.h"
 #include "IRootReader.h"
-#include "include/IBlueObjectProxy.h"
-#include "include/IBluePaths.h"
+#include "Include/IBlueObjectProxy.h"
+#include "Include/IBluePaths.h"
 #include "Include/IBlueOS.h"
 
 namespace

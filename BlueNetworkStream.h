@@ -9,7 +9,7 @@
 #ifndef BlueHttpStream_H
 #define BlueHttpStream_H
 
-#include "include/IBluePersist.h"
+#include "Include/IBluePersist.h"
 #include "curl/curl.h"
 
 

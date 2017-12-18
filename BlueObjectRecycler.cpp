@@ -8,9 +8,9 @@
 #include "StdAfx.h"
 
 #include "BlueObjectRecycler.h"
-#include "include/BlueFileUtil.h"
-#include "include/IBlueResMan.h"
-#include "include/IBlueOS.h"
+#include "Include/BlueFileUtil.h"
+#include "Include/IBlueResMan.h"
+#include "Include/IBlueOS.h"
 
 static CcpLogChannel_t s_ch = CCP_LOG_DEFINE_CHANNEL( "ObjectRecycler" );
 

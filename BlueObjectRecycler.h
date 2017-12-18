@@ -9,7 +9,7 @@
 #ifndef	BlueObjectRecycler_h
 #define BlueObjectRecycler_h
 
-#include "include/IBlueObjectRecycler.h"
+#include "Include/IBlueObjectRecycler.h"
 
 BLUE_CLASS( BlueObjectRecycler ) : 
 	public IBlueObjectRecycler, 

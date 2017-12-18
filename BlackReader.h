@@ -10,11 +10,11 @@
 #define BlackReader_h
 
 #include "IRootReader.h"
-#include "include/Blue.h"
-#include "include/IBlueObjectBuilder.h"
-#include "include/IBluePersist.h"
-#include "include/IMotherLode.h"
-#include "include/ICacheable.h"
+#include "Include/Blue.h"
+#include "Include/IBlueObjectBuilder.h"
+#include "Include/IBluePersist.h"
+#include "Include/IMotherLode.h"
+#include "Include/ICacheable.h"
 
 BLUE_CLASS( BlackReader ) :
 	public IBlueObjectBuilder,

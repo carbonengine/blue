@@ -9,7 +9,7 @@
 
 #if BLUE_WITH_PYTHON
 
-#include "include/IBluePersist.h"
+#include "Include/IBluePersist.h"
 #include "BlueExposure/include/BlueExposureMacrosDeprecated.h"
 #include "Include/IBlueOS.h"
 

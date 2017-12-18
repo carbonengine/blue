@@ -25,8 +25,8 @@
 #ifndef _BLUEPYTHON_H_
 #define _BLUEPYTHON_H_
 
-#include "include/IBluePython.h"
-#include "include/IBlueOS.h"
+#include "Include/IBluePython.h"
+#include "Include/IBlueOS.h"
 #include "TaskletTimer.h"
 #include "PyScheduler.h"
 #include "PythonEvents.h"

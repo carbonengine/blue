@@ -2,7 +2,7 @@
 
 #ifdef _WIN32
 
-#include "include/TransGaming.h"
+#include "Include/TransGaming.h"
 #include <windows.h>
 
 // --------------------------------------------------------------------------------

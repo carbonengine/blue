@@ -8,7 +8,7 @@
 #include "StdAfx.h"
 
 #include "BlueRemoteStream.h"
-#include "include/IBlueOS.h"
+#include "Include/IBlueOS.h"
 #include "Include/IBluePaths.h"
 
 #if CCP_STACKLESS
@@ -18,7 +18,7 @@
 #ifdef _WIN32
 #include <winhttp.h>
 #endif
-#include "include/IBlueResMan.h"
+#include "Include/IBlueResMan.h"
 #include "Include/IBlueThreadMonitor.h"
 
 static CcpLogChannel_t s_ch = CCP_LOG_DEFINE_CHANNEL( "RemoteStream" );

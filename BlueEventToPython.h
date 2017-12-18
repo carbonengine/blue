@@ -2,7 +2,7 @@
 #ifndef BlueEventToPython_h
 #define BlueEventToPython_h
 
-#include "include/IBlueEventListener.h"
+#include "Include/IBlueEventListener.h"
 
 BLUE_DECLARE( BlueEventToPython );
 

@@ -1,6 +1,6 @@
 #include "StdAfx.h"
 #include "IRootWriter.h"
-#include "include/IBlueObjectProxy.h"
+#include "Include/IBlueObjectProxy.h"
 
 #include "BlueResFile.h"
 

@@ -1,6 +1,6 @@
 #include "StdAfx.h"
-#include "include/Blue.h"
-#include "include/IBlueOS.h"
+#include "Include/Blue.h"
+#include "Include/IBlueOS.h"
 
 #if BLUE_WITH_PYTHON
 extern const char *Immortalize( PyObject *s );

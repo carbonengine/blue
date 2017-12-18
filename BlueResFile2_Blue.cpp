@@ -8,7 +8,7 @@
 #include "StdAfx.h"
 
 #include "BlueResFile2.h"
-#include "include/IBlueOS.h"
+#include "Include/IBlueOS.h"
 
 BLUE_DEFINE( ResFile );
 

@@ -25,8 +25,8 @@
 #ifndef _BLUEMEMSTREAM_H_
 #define _BLUEMEMSTREAM_H_
 
-#include "include/IBluePersist.h"
-#include "include/IMotherLode.h"
+#include "Include/IBluePersist.h"
+#include "Include/IMotherLode.h"
 
 BLUE_DECLARE( MemStream );
 

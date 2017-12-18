@@ -2,7 +2,7 @@
 
 #if BLUE_WITH_PYTHON
 
-#include "include/IBlueOS.h"
+#include "Include/IBlueOS.h"
 #include "BlueObjectBuilderPython.h"
 
 //BLUE_DEFINE_INTERFACE( IBlueObjectBuilder );

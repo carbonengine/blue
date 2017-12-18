@@ -5,9 +5,9 @@
 #endif
 
 #include "BlueOS.h"
-#include "include/IBluePersist.h"
-#include "include/IBlueCallbackMan.h"
-#include "include/TransGaming.h"
+#include "Include/IBluePersist.h"
+#include "Include/IBlueCallbackMan.h"
+#include "Include/TransGaming.h"
 #include "BlueMemoryTracker.h"
 #include "BlueResMan.h"
 #include "BlueMemStream.h"
@@ -18,7 +18,7 @@
 #include "BlueResFile.h"
 
 #if BLUE_WITH_PYTHON
-#include "include/ITaskletTimer.h"
+#include "Include/ITaskletTimer.h"
 #include "BluePython.h"
 #endif
 
@@ -29,10 +29,10 @@
 #endif
 
 #if CCP_STACKLESS
-#include "include/BitPacker.h"
+#include "Include/BitPacker.h"
 #if !PORTING_TO_LINUX
-#include "include/BlueNet.h"
-#include "include/BlueNetTypes.h"
+#include "Include/BlueNet.h"
+#include "Include/BlueNetTypes.h"
 #include "CcpUtils/PyCpp.h"
 #endif
 #include <stacklessio_api.h>

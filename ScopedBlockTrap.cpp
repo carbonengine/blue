@@ -6,7 +6,7 @@
 //
 
 #include "StdAfx.h"
-#include "include/ScopedBlockTrap.h"
+#include "Include/ScopedBlockTrap.h"
 
 #if CCP_STACKLESS
 #include "stackless_api.h"

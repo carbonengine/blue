@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 #include "YamlWriter.h"
-#include "include/IBluePersist.h"
-#include "include/IBlueOS.h"
+#include "Include/IBluePersist.h"
+#include "Include/IBlueOS.h"
 
 BLUE_DEFINE( YamlWriter );
 

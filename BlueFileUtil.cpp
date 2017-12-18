@@ -6,7 +6,7 @@
 //
 
 #include "StdAfx.h"
-#include "include/BlueFileUtil.h"
+#include "Include/BlueFileUtil.h"
 #include <vector>
 #include <cctype>
 #include <cwctype>

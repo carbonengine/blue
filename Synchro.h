@@ -23,7 +23,7 @@
 #ifndef _SYNCHRO_H_
 #define _SYNCHRO_H_
 
-#include "include/IBlueOS.h"
+#include "Include/IBlueOS.h"
 #include "Heap.h"
 #include "PyTemplates.h"
 #include <set>

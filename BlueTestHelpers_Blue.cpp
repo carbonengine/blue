@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 
 #include "BlueTestHelpers.h"
-#include "include/IBlueResMan.h"
+#include "Include/IBlueResMan.h"
 
 BLUE_DEFINE( BlueTestHelperAttributes );
 BLUE_DEFINE( BlueTestHelperProperties );

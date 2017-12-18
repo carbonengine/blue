@@ -3,8 +3,8 @@
 #if BLUE_WITH_PYTHON
 
 #include "BlueEventToPython.h"
-#include "include/Blue.h"
-#include "include/IBlueOS.h"
+#include "Include/Blue.h"
+#include "Include/IBlueOS.h"
 
 BLUE_DEFINE( BlueEventToPython );
 

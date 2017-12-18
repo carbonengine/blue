@@ -9,7 +9,7 @@
 #ifndef BlueLogInMemory_h
 #define BlueLogInMemory_h
 
-#include "include/Blue.h"
+#include "Include/Blue.h"
 
 BLUE_DECLARE( BlueLogInMemory );
 

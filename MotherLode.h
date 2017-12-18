@@ -29,7 +29,7 @@
 #ifndef _MOTHERLODE_H_
 #define _MOTHERLODE_H_
 
-#include "include/IMotherLode.h"
+#include "Include/IMotherLode.h"
 #include "Include/IBlueOS.h"
 
 

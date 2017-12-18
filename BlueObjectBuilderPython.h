@@ -2,7 +2,7 @@
 #ifndef BLUE_OBJECTBUILDER_PYTHON_H
 #define BLUE_OBJECTBUILDER_PYTHON_H
 
-#include "include/IBlueObjectBuilder.h"
+#include "Include/IBlueObjectBuilder.h"
 
 BLUE_DECLARE( BlueObjectBuilderPython );
 

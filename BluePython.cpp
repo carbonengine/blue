@@ -4,11 +4,11 @@
 
 #include "BluePython.h"
 
-#include "include/IBlueOS.h"
-#include "include/IMotherLode.h"
-#include "include/IBlueResMan.h"
-#include "include/IBlueObjectRecycler.h"
-#include "include/IBluePaths.h"
+#include "Include/IBlueOS.h"
+#include "Include/IMotherLode.h"
+#include "Include/IBlueResMan.h"
+#include "Include/IBlueObjectRecycler.h"
+#include "Include/IBluePaths.h"
 
 #include "BlueLogInMemory.h"
 #include "LogToPython.h"
@@ -37,7 +37,7 @@
 
 #if CCP_STACKLESS
 #if !PORTING_TO_LINUX
-#include "include/BlueNet.h"
+#include "Include/BlueNet.h"
 #endif
 #include <stacklessio_api.h>
 #endif

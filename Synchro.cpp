@@ -3,9 +3,9 @@
 #if CCP_STACKLESS
 
 #include "Synchro.h"
-#include "include/IBlueOS.h"
-#include "include/IBluePython.h"
-#include "include/ITaskletTimer.h"
+#include "Include/IBlueOS.h"
+#include "Include/IBluePython.h"
+#include "Include/ITaskletTimer.h"
 
 static CcpLogChannel_t s_ch = CCP_LOG_DEFINE_CHANNEL( "Synchro" );
 

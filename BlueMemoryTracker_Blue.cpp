@@ -7,7 +7,7 @@
 
 #include "StdAfx.h"
 
-#include "include/IBlueOS.h"
+#include "Include/IBlueOS.h"
 #include "BlueMemoryTracker.h"
 
 #ifdef _WIN32

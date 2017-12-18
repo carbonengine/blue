@@ -3,7 +3,7 @@
 
 #include "CcpCore/include/CcpSemaphore.h"
 #include "CcpCore/include/CcpAtomic.h"
-#include "include/IBlueCallbackMan.h"
+#include "Include/IBlueCallbackMan.h"
 
 BLUE_DECLARE( BlueCallbackMan );
 

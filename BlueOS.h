@@ -25,8 +25,8 @@
 #ifndef _BLUEOS_H_
 #define _BLUEOS_H_
 
-#include "include/IBlueOS.h"
-#include "include/IBluePython.h"
+#include "Include/IBlueOS.h"
+#include "Include/IBluePython.h"
 #include "BlueTime.h"
 #include "WatchdogThread.h"
 

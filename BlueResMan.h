@@ -2,10 +2,10 @@
 #ifndef BLUERESMAN_H
 #define BLUERESMAN_H
 
-#include "include/Blue.h"
-#include "include/IBlueResMan.h"
+#include "Include/Blue.h"
+#include "Include/IBlueResMan.h"
 #include "CallbackMan.h"
-#include "include/IBlueOS.h"
+#include "Include/IBlueOS.h"
 #include "MotherLode.h"
 #include "IRootReader.h"
 

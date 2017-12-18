@@ -1,6 +1,6 @@
 #include "StdAfx.h"
 
-#include "include/IBlueOS.h"
+#include "Include/IBlueOS.h"
 #include "BlueObjectProxy.h"
 
 BLUE_DEFINE_INTERFACE( IBlueObjectProxy );

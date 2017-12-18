@@ -29,8 +29,8 @@
 
 #include "IOLoop.h"
 
-#include "include/IBlueOS.h"
-#include "include/ITaskletTimer.h"
+#include "Include/IBlueOS.h"
+#include "Include/ITaskletTimer.h"
 
 #include "PyScheduler.h"
 #include <stacklessio_api.h>

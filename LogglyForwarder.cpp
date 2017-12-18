@@ -7,7 +7,7 @@
 
 #include "StdAfx.h"
 #include "LogglyForwarder.h"
-#include "include/IBluePaths.h"
+#include "Include/IBluePaths.h"
 
 static CcpThread* s_sendThread = nullptr;
 static std::string s_sessionId;

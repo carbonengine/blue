@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 
 #include "BlueObjectProxy.h"
-#include "include/IBlueOS.h"
+#include "Include/IBlueOS.h"
 #include "Include/IUnloadable.h"
 
 BlueObjectProxy::BlueObjectProxy() : 

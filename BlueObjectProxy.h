@@ -2,7 +2,7 @@
 #ifndef BLUEOBJECTPROXY_H
 #define BLUEOBJECTPROXY_H
 
-#include "include/IBlueObjectProxy.h"
+#include "Include/IBlueObjectProxy.h"
 
 BLUE_DECLARE( BlueObjectProxy );
 

@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 
 #include "BlueResMan.h"
-#include "include/IBlueResource.h"
+#include "Include/IBlueResource.h"
 #include "BlueMemStream.h"
 #include "YamlWriter.h"
 

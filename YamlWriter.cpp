@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 #include "YamlWriter.h"
-#include "include/IBluePersist.h"
-#include "include/Base64.h"
+#include "Include/IBluePersist.h"
+#include "Include/Base64.h"
 #include "Include/IBlueObjectMetadata.h"
 #include "BlueMemStream.h"
 #include <yaml.h>

@@ -9,8 +9,8 @@
 
 #if CCP_STACKLESS && !PORTING_TO_LINUX
 
-#include "include/BlueNet.h"
-#include "include/StructPacker.h"
+#include "Include/BlueNet.h"
+#include "Include/StructPacker.h"
 #include "Include/IBluePython.h"
 #include "Marshal.h"
 

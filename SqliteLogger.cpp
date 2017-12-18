@@ -10,7 +10,7 @@
 #if CCP_ENABLE_SQLITE_LOGGING
 
 #include "SqliteLogger.h"
-#include "include/CcpStatistics.h"
+#include "Include/CcpStatistics.h"
 #include <time.h>
 
 namespace CCP

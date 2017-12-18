@@ -8,14 +8,14 @@
 #include "BlackWriter.h"
 #include "BlackReader.h"
 #include "BlueResFile.h"
-#include "include/BlueAsyncRes.h"
-#include "include/IBlueResource.h"
-#include "include/IBluePersist.h"
-#include "include/IBlueOS.h"
-#include "include/IMotherLode.h"
-#include "include/BlueFileUtil.h"
-#include "include/IBlueObjectBuilder.h"
-#include "include/IBluePaths.h"
+#include "Include/BlueAsyncRes.h"
+#include "Include/IBlueResource.h"
+#include "Include/IBluePersist.h"
+#include "Include/IBlueOS.h"
+#include "Include/IMotherLode.h"
+#include "Include/BlueFileUtil.h"
+#include "Include/IBlueObjectBuilder.h"
+#include "Include/IBluePaths.h"
 
 #include <cctype>
 #include <cwctype>

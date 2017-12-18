@@ -1,4 +1,4 @@
 #include "StdAfx.h"
-#include "include/IBlueEventListener.h"
+#include "Include/IBlueEventListener.h"
 
 BLUE_DEFINE_INTERFACE( IBlueEventListener );

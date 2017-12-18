@@ -10,7 +10,7 @@
 #ifndef BlueFileStream_h
 #define BlueFileStream_h
 
-#include "include/IBluePersist.h"
+#include "Include/IBluePersist.h"
 
 BLUE_DECLARE( BlueFileStream );
 

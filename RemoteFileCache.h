@@ -9,7 +9,7 @@
 #ifndef RemoteFileCache_h
 #define RemoteFileCache_h
 
-#include "include/IBluePersist.h"
+#include "Include/IBluePersist.h"
 
 extern double g_thresholdForWarningLongDownloadTime;
 extern double g_thresholdForAbortingLongDownloadTime;

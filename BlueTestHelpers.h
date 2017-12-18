@@ -13,8 +13,8 @@
 #ifndef BlueTestHelpers_h
 #define BlueTestHelpers_h
 
-#include "include/BlueAsyncRes.h"
-#include "include/ICacheable.h"
+#include "Include/BlueAsyncRes.h"
+#include "Include/ICacheable.h"
 
 BLUE_DECLARE( BlueTestHelperAttributes );
 BLUE_DECLARE_VECTOR( BlueTestHelperAttributes );

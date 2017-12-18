@@ -3,10 +3,10 @@
 #define YamlReader_H
 
 #include "IRootReader.h"
-#include "include/Blue.h"
-#include "include/IBlueObjectBuilder.h"
-#include "include/IBluePersist.h"
-#include "include/IMotherLode.h"
+#include "Include/Blue.h"
+#include "Include/IBlueObjectBuilder.h"
+#include "Include/IBluePersist.h"
+#include "Include/IMotherLode.h"
 #include <map>
 #include <string>
 #include <yaml.h>

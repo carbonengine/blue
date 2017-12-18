@@ -12,7 +12,7 @@
 #include "BackgroundReader.h"
 #include "BlueResFile.h"
 #include "BlueFileStream.h"
-#include "include/IBlueResMan.h"
+#include "Include/IBlueResMan.h"
 #include "Include/IBlueOS.h"
 #include "Include/BlueFileUtil.h"
 

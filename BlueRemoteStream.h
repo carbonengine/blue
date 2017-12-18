@@ -10,7 +10,7 @@
 #ifndef BlueRemoteStream_h
 #define BlueRemoteStream_h
 
-#include "include/IBluePersist.h"
+#include "Include/IBluePersist.h"
 #include "curl/curl.h"
 
 BLUE_DECLARE( BlueRemoteStream );

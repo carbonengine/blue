@@ -10,8 +10,8 @@
 #include "BlueResFile2.h"
 #include "BlueFileStream.h"
 #include "BlueRemoteStream.h"
-#include "include/IBlueOS.h"
-#include "include/IBluePaths.h"
+#include "Include/IBlueOS.h"
+#include "Include/IBluePaths.h"
 
 #if BLUE_WITH_PYTHON
 #ifdef _WIN32

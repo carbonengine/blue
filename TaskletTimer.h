@@ -24,12 +24,12 @@
 #ifndef _TASKLETTIMER_H_
 #define _TASKLETTIMER_H_
 
-#include "include/ITaskletTimer.h"
+#include "Include/ITaskletTimer.h"
 
 #if CCP_STACKLESS
 
-#include "include/IBlueOS.h" //for python decleration macros
-#include "include/IBluePython.h" //for python decleration macros
+#include "Include/IBlueOS.h" //for python decleration macros
+#include "Include/IBluePython.h" //for python decleration macros
 #include "bluetime.h"
 
 #include <vector>

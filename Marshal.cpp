@@ -14,7 +14,7 @@
 #include "BlueMemStream.h"
 #include "BlueResFile.h"
 #include "PyTemplates.h"
-#include "include/ITaskletTimer.h"
+#include "Include/ITaskletTimer.h"
 #include "Include/IBluePython.h"
 
 #include "PyRowset.h"

@@ -16,9 +16,9 @@
 #define DictReader_h
 
 #include "IRootReader.h"
-#include "include/Blue.h"
-#include "include/IBlueObjectBuilder.h"
-#include "include/IBluePersist.h"
+#include "Include/Blue.h"
+#include "Include/IBlueObjectBuilder.h"
+#include "Include/IBluePersist.h"
 
 BLUE_DECLARE( DictReader );
 

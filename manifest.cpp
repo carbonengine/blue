@@ -33,9 +33,9 @@
 #include "resource.h"
 #include "BlueResFile.h"
 
-#include "include/IBlueOS.h"
-#include "include/IBluePersist.h"
-#include "include/IBluePaths.h"
+#include "Include/IBlueOS.h"
+#include "Include/IBluePersist.h"
+#include "Include/IBluePaths.h"
 
 #include <set>
 #include <vector>
