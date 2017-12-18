@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 #include "BlackWriter.h"
 #include "BlueMemStream.h"
-#include "include/IBlueOS.h"
+#include "Include/IBlueOS.h"
 
 BLUE_DEFINE( BlackWriter );
 

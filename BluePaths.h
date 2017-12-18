@@ -9,7 +9,7 @@
 #ifndef BluePaths_h
 #define BluePaths_h
 
-#include "include/IBluePaths.h"
+#include "Include/IBluePaths.h"
 #include "BlueResFileSystemLocal.h"
 #include "BlueResFileSystemRemote.h"
 
