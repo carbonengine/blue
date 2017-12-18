@@ -1,12 +1,12 @@
 #include "StdAfx.h"
-#include "include/IBlueObjectProxy.h"
+#include "Include/IBlueObjectProxy.h"
 #include "YamlReader.h"
 
-#include "include/IBlueOS.h"
+#include "Include/IBlueOS.h"
 #include "IRootReader.h"
-#include "include/Base64.h"
+#include "Include/Base64.h"
 #include "BlueMemStream.h"
-#include "include/IBluePaths.h"
+#include "Include/IBluePaths.h"
 #include "Include/IBlueObjectMetadata.h"
 
 
