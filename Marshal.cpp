@@ -2177,7 +2177,6 @@ bool Marshal::WriteObjectReduce(bool &handled, WriteStream* stream, PyObject* o)
 
 	//do it!
 	handled = true;
-	size_t pos = stream->GetPos();
 	RETFAIL(WriteType(stream, type));
 	return WriteObject(stream, data) && WriteListIter(stream, listitems) && WriteDictIter(stream, dictitems);
 }

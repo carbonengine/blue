@@ -2280,6 +2280,8 @@ PyObject* BlueOS::PyRegisterClientIDForSimTimeUpdates( PyObject* args )
 	int len = packer.Finalize();
 #if !PORTING_TO_LINUX
 	BeNet->SendPacketToClient(clientID, BNT_SIMCLOCK_SYNC_INIT, data, len);
+#else
+	CCP_UNUSED( len );
 #endif
 #endif
 
@@ -2360,6 +2362,8 @@ void BlueOS::SendDilationEvent( BlueOS::PendingDilationEvent newEvent )
 #if !PORTING_TO_LINUX
 	// Shoot it home~
 	BeNet->SendPacketToClientList( clientList, numClients, BNT_SIMCLOCK_SYNC_UPDATE, data, len );
+#else
+	CCP_UNUSED( len );
 #endif
 	delete[] clientList;
 
@@ -3032,6 +3036,8 @@ void BlueOS::ShowErrorMessageBox( const wchar_t* title, const wchar_t* message )
     
     CFUserNotificationDisplayAlert( 0, kCFUserNotificationStopAlertLevel, nullptr, nullptr, nullptr, titleRef, messageRef, nullptr, nullptr, nullptr, &result );
     
+	CFRelease( titleRef );
+	CFRelease( messageRef );
 #endif
 }
 

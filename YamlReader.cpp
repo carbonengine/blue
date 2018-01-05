@@ -679,6 +679,11 @@ void YamlReader::ReadFloatArray( float* values, size_t count )
 			// See if we can read a TriColor instead
 			const char* type = nullptr;
 			ReadClassType( type );
+			if( !type )
+			{
+				ReportError( "Expected a float sequence of 4 floats, or a fallback to TriColor/TriQuaternion" );
+				return;
+			}
 
 			const char** componentNames = nullptr;
 			if( strcmp( type, "TriColor") == 0 )

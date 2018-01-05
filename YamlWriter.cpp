@@ -46,6 +46,7 @@ Be::Result<std::string> YamlWriter::WriteObjectToStream( const IRoot* root, IBlu
     yaml_emitter_t emitter;
 	int res = yaml_emitter_initialize( &emitter );
 	CCP_ASSERT( res );
+	CCP_UNUSED( res );
 
 	int canonical = 0;
     if (canonical) {
@@ -69,7 +70,7 @@ Be::Result<std::string> YamlWriter::WriteObjectToStream( const IRoot* root, IBlu
 		if( !res )
 		{
 			CCP_LOGERR( emitter.problem );
-			res = yaml_emitter_flush( &emitter );
+			yaml_emitter_flush( &emitter );
 		}
 
 		++debugCounter;
@@ -283,6 +284,7 @@ void YamlWriter::AddScalarEvent( const char* value, yaml_scalar_style_t style )
 	}
 	int res = yaml_scalar_event_initialize( AddEvent(), NULL, NULL, (yaml_char_t*)value, -1, 1, quoted_implicit, style );
 	CCP_ASSERT( res );
+	CCP_UNUSED( res );
 }
 
 yaml_event_t* YamlWriter::AddMappingStartEvent()

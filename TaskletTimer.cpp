@@ -179,6 +179,8 @@ PyObject *TaskletTimer::EnterTaskletEx(PyObject *newContext, TASKLETFLAGS flags)
 		if (canonicalName) {
 			tmTaskletEnter(TMCM_GENERAL, PyString_AsString(canonicalName));
 		}
+#else
+		CCP_UNUSED( canonicalName );
 #endif
 	}
 

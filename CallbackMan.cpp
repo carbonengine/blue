@@ -177,7 +177,7 @@ void BlueCallbackMan::Cancel( uint32_t id )
 	}
 	if( !found )
 	{
-		found = RemoveFromQueue( m_fenceQueue, id );
+		RemoveFromQueue( m_fenceQueue, id );
 	}
 
 	m_queueMutex.Release();

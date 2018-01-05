@@ -320,12 +320,13 @@ HERR:
 	int f;
 	{
 		Ccp::PyAllowThreads _allow;
-		auto f = open( filenameStr, O_WRONLY | O_EXLOCK | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR );
+		f = open( filenameStr, O_WRONLY | O_EXLOCK | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR );
 		if( f < 0 )
 		{
 			return PyErr_SetFromErrnoWithFilename( PyExc_OSError, filenameStr );
 		}
 	}
+	ON_BLOCK_EXIT( [&] { close( f ) } );
 	Py_ssize_t segcount = buffer->bf_getsegcount( dataO, 0 );
 	for( Py_ssize_t i = 0; i < segcount; i++ )
 	{
@@ -333,26 +334,15 @@ HERR:
 		Py_ssize_t datalen = buffer->bf_getreadbuffer( dataO, i, &data );
 		if( datalen < 0 ) 
 		{
-			close( f );
-			return nullptr;
+			return PyErr_SetString( PyExc_ValueError, "Unexpected end of buffer" ), nullptr;
 		}
-		//support only DWORD sizes yet
 		ssize_t written;
 		{
 			Ccp::PyAllowThreads _allow;
 			written = write( f, data, datalen );
-			if( i + 1 == segcount ) 
-			{
-				close( f );
-				f = -1;
-			}
 		}
 		if( written != datalen ) 
 		{
-			if( f > 0 )
-			{
-				close( f );
-			}
 			return PyErr_SetString( PyExc_IOError, "Wrote short file" ), nullptr;
 		}
 	}	

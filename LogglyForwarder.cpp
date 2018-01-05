@@ -139,7 +139,7 @@ void LogglyForwarder::SendThreadFunc( std::string url )
 			// WritePackage gets delete in the callback that writes to 
 			curl_easy_setopt( curl, CURLOPT_READDATA, writePackage );
 			curl_easy_setopt( curl, CURLOPT_POSTFIELDSIZE, writePackage->m_dataSize );
-			CURLcode res = curl_easy_perform(curl);
+			curl_easy_perform( curl );
 		}
 	}
 }

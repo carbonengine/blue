@@ -536,8 +536,6 @@ bool BluePyOS::Startup()
 		mMarkupZonesInPython = true;
 	}
 
-	bool useVirtualAllocForBlockAllocator = BeOS->HasStartupArg( L"pythonUseVirtualAlloc" );
-
 	// initialize python engine	
 	Py_DebugFlag = 0; //debugs python , outputs heaps of gunk
 	Py_VerboseFlag = 0; //verbosity about module loading
@@ -566,7 +564,7 @@ bool BluePyOS::Startup()
 	
 	// Set block allocator to use for Python. Regular allocator is set with
 	// a static initializer in PyMemory.cpp
-	if( useVirtualAllocForBlockAllocator )
+	if( BeOS->HasStartupArg( L"pythonUseVirtualAlloc" ) )
 	{
 		PyCCP_SetAllocator( 1, &s_pyBlockAllocator );
 	}

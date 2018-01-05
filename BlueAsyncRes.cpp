@@ -450,7 +450,7 @@ std::wstring BlueAsyncRes::GetFilePath() const
 	}
 }
 
-std::wstring&& BlueAsyncRes::GetQuery() const
+std::wstring BlueAsyncRes::GetQuery() const
 {
 	auto query = m_path.find( L'?' );
 	if( query != std::wstring::npos )

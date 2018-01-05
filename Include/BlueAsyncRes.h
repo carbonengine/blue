@@ -97,7 +97,7 @@ public:
 	}
 
 	std::wstring GetFilePath() const;
-	std::wstring&& GetQuery() const;
+	std::wstring GetQuery() const;
 
 	typedef std::pair<std::wstring, std::wstring> QueryArgument;
 	typedef TrackableStdVector<QueryArgument> QueryArguments;

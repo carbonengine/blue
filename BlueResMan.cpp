@@ -302,7 +302,7 @@ IBlueResource* BlueResMan::GetResourceHelper( const std::wstring& path, const st
 		IWeakObjectPtr wrp = BlueCastPtr( result );
 		CCP_ASSERT_M( wrp, "Resource class types must support weak references" );
 
-		if( result && notifications )
+		if( notifications )
 		{
 			notifications->OnResourceCreated( result );
 		}
