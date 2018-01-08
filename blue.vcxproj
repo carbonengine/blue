@@ -61,7 +61,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <PlatformToolset>v100</PlatformToolset>
   </PropertyGroup>
-  <Import Project="$(VCTargetsPath)/Microsoft.Cpp.Default.props"/>
+  <Import Project="$(VCTargetsPath)/Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <UseOfMfc>False</UseOfMfc>
     <IntDir>../temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
@@ -102,7 +102,7 @@
     <IntDir>../temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <ConfigurationType>DynamicLibrary</ConfigurationType>
   </PropertyGroup>
-  <Import Project="$(VCTargetsPath)/Microsoft.Cpp.props"/>
+  <Import Project="$(VCTargetsPath)/Microsoft.Cpp.props" />
   <PropertyGroup Label="UserMacros">
     <CcpSdkPath>../../../../../../sdk</CcpSdkPath>
     <CcpSharedToolsPath>../../../../../../shared_tools</CcpSharedToolsPath>
@@ -119,15 +119,15 @@
       <Value>$(CcpBranchPath)</Value>
     </BuildMacro>
   </ItemGroup>
-  <ImportGroup Label="ExtensionSettings"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_27|Win32'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_27|x64'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_26|Win32'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_26|x64'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets"/>
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_27|Win32'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_27|x64'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_26|Win32'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_26|x64'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets" />
   <PropertyGroup>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.dll</TargetExt>
     <CcpConfigType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Debug</CcpConfigType>
@@ -192,10 +192,10 @@
       <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_27|Win32'">
     <ClCompile>
@@ -225,10 +225,10 @@
       <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -258,10 +258,10 @@
       <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_27|x64'">
     <ClCompile>
@@ -291,10 +291,10 @@
       <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_26|Win32'">
     <ClCompile>
@@ -324,10 +324,10 @@
       <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -357,10 +357,10 @@
       <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_26|x64'">
     <ClCompile>
@@ -390,10 +390,10 @@
       <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -423,247 +423,247 @@
       <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\Logger\Logger.h"/>
-    <ClInclude Include="..\Logger\LoggerLib.h"/>
-    <ClInclude Include="..\Logger\LogServer.h"/>
-    <ClInclude Include="autoversion.h"/>
-    <ClInclude Include="BackgroundReader.h"/>
-    <ClInclude Include="BlackReader.h"/>
-    <ClInclude Include="BlackWriter.h"/>
-    <ClInclude Include="BlueEventToPython.h"/>
-    <ClInclude Include="BlueFileStream.h"/>
-    <ClInclude Include="BlueHeapq.h"/>
-    <ClInclude Include="bluekey.h"/>
-    <ClInclude Include="blueloginmemory.h"/>
-    <ClInclude Include="BlueMemoryTracker.h"/>
-    <ClInclude Include="BlueMemStream.h"/>
-    <ClInclude Include="BlueNetworkStream.h"/>
-    <ClInclude Include="BlueObjectBuilderPython.h"/>
-    <ClInclude Include="BlueObjectMetadata.h"/>
-    <ClInclude Include="BlueObjectProxy.h"/>
-    <ClInclude Include="BlueObjectRecycler.h"/>
-    <ClInclude Include="BlueOS.h"/>
-    <ClInclude Include="BluePaths.h"/>
-    <ClInclude Include="BluePython.h"/>
-    <ClInclude Include="BluePythonWeakRef.h"/>
-    <ClInclude Include="BlueRemoteStream.h"/>
-    <ClInclude Include="BlueResFile.h"/>
-    <ClInclude Include="BlueResFile2.h"/>
-    <ClInclude Include="BlueResFileSystemLocal.h"/>
-    <ClInclude Include="BlueResFileSystemRemote.h"/>
-    <ClInclude Include="BlueResMan.h"/>
-    <ClInclude Include="BlueResManBackgroundCall.h"/>
-    <ClInclude Include="BlueSocketLogger.h"/>
-    <ClInclude Include="BlueSysInfo.h"/>
-    <ClInclude Include="BlueTestHelpers.h"/>
-    <ClInclude Include="BlueTextResource.h"/>
-    <ClInclude Include="BlueThreadMonitor.h"/>
-    <ClInclude Include="BlueTime.h"/>
-    <ClInclude Include="BlueTimeoutHandler.h"/>
-    <ClInclude Include="CallbackMan.h"/>
-    <ClInclude Include="crypto.h"/>
-    <ClInclude Include="DictReader.h"/>
-    <ClInclude Include="FileLogger.h"/>
-    <ClInclude Include="Heap.h"/>
-    <ClInclude Include="IOLoop.h"/>
-    <ClInclude Include="IRootReader.h"/>
-    <ClInclude Include="IRootWriter.h"/>
-    <ClInclude Include="LogControl.h"/>
-    <ClInclude Include="LogglyForwarder.h"/>
-    <ClInclude Include="LogToPython.h"/>
-    <ClInclude Include="manifest.h"/>
-    <ClInclude Include="Marshal.h"/>
-    <ClInclude Include="md5.h"/>
-    <ClInclude Include="MotherLode.h"/>
-    <ClInclude Include="NetworkLogger.h"/>
-    <ClInclude Include="PrettyPrint.h"/>
-    <ClInclude Include="PyRowset.h"/>
-    <ClInclude Include="PyScheduler.h"/>
-    <ClInclude Include="PyTemplates.h"/>
-    <ClInclude Include="PythonEvents.h"/>
-    <ClInclude Include="RemoteFileCache.h"/>
-    <ClInclude Include="resource.h"/>
-    <ClInclude Include="ResourceLoading.h"/>
-    <ClInclude Include="ResourceWatch.h"/>
-    <ClInclude Include="SimpleJson.h"/>
-    <ClInclude Include="SqliteLogger.h"/>
-    <ClInclude Include="StdAfx.h"/>
-    <ClInclude Include="Synchro.h"/>
-    <ClInclude Include="TaskletTimer.h"/>
-    <ClInclude Include="version.h"/>
-    <ClInclude Include="WatchdogThread.h"/>
-    <ClInclude Include="win32.h"/>
-    <ClInclude Include="YamlReader.h"/>
-    <ClInclude Include="YamlWriter.h"/>
-    <ClInclude Include="Accumulator\PercentileAccumulator.h"/>
-    <ClInclude Include="Include\Base64.h"/>
-    <ClInclude Include="Include\BitPacker.h"/>
-    <ClInclude Include="Include\Blue.h"/>
-    <ClInclude Include="Include\BlueAsyncRes.h"/>
-    <ClInclude Include="Include\BlueChoosers.h"/>
-    <ClInclude Include="Include\BlueFileUtil.h"/>
-    <ClInclude Include="Include\BlueId.h"/>
-    <ClInclude Include="Include\BlueMain.h"/>
-    <ClInclude Include="Include\BlueNet.h"/>
-    <ClInclude Include="Include\BlueNetTypes.h"/>
-    <ClInclude Include="Include\BluePySwrap.h"/>
-    <ClInclude Include="Include\BlueStatistics.h"/>
-    <ClInclude Include="Include\DataStructs.h"/>
-    <ClInclude Include="Include\IBlueCallbackMan.h"/>
-    <ClInclude Include="Include\IBlueEventListener.h"/>
-    <ClInclude Include="Include\IBlueObjectBuilder.h"/>
-    <ClInclude Include="Include\IBlueObjectMetadata.h"/>
-    <ClInclude Include="Include\IBlueObjectProxy.h"/>
-    <ClInclude Include="Include\IBlueObjectRecycler.h"/>
-    <ClInclude Include="Include\IBlueOS.h"/>
-    <ClInclude Include="Include\IBluePaths.h"/>
-    <ClInclude Include="Include\IBluePersist.h"/>
-    <ClInclude Include="Include\IBluePlacementObserver.h"/>
-    <ClInclude Include="Include\IBluePython.h"/>
-    <ClInclude Include="Include\IBlueResFileSystem.h"/>
-    <ClInclude Include="Include\IBlueResMan.h"/>
-    <ClInclude Include="Include\IBlueResource.h"/>
-    <ClInclude Include="Include\IBlueThreadMonitor.h"/>
-    <ClInclude Include="Include\ICacheable.h"/>
-    <ClInclude Include="Include\ICcpStatisticsAccumulator.h"/>
-    <ClInclude Include="Include\IMotherLode.h"/>
-    <ClInclude Include="Include\ITaskletTimer.h"/>
-    <ClInclude Include="Include\IUnloadable.h"/>
-    <ClInclude Include="Include\ScopedBlockTrap.h"/>
-    <ClInclude Include="Include\StructPacker.h"/>
-    <ClInclude Include="Include\TransGaming.h"/>
+    <ClInclude Include="..\Logger\Logger.h" />
+    <ClInclude Include="..\Logger\LoggerLib.h" />
+    <ClInclude Include="..\Logger\LogServer.h" />
+    <ClInclude Include="autoversion.h" />
+    <ClInclude Include="BackgroundReader.h" />
+    <ClInclude Include="BlackReader.h" />
+    <ClInclude Include="BlackWriter.h" />
+    <ClInclude Include="BlueEventToPython.h" />
+    <ClInclude Include="BlueFileStream.h" />
+    <ClInclude Include="BlueHeapq.h" />
+    <ClInclude Include="bluekey.h" />
+    <ClInclude Include="blueloginmemory.h" />
+    <ClInclude Include="BlueMemoryTracker.h" />
+    <ClInclude Include="BlueMemStream.h" />
+    <ClInclude Include="BlueNetworkStream.h" />
+    <ClInclude Include="BlueObjectBuilderPython.h" />
+    <ClInclude Include="BlueObjectMetadata.h" />
+    <ClInclude Include="BlueObjectProxy.h" />
+    <ClInclude Include="BlueObjectRecycler.h" />
+    <ClInclude Include="BlueOS.h" />
+    <ClInclude Include="BluePaths.h" />
+    <ClInclude Include="BluePython.h" />
+    <ClInclude Include="BluePythonWeakRef.h" />
+    <ClInclude Include="BlueRemoteStream.h" />
+    <ClInclude Include="BlueResFile.h" />
+    <ClInclude Include="BlueResFile2.h" />
+    <ClInclude Include="BlueResFileSystemLocal.h" />
+    <ClInclude Include="BlueResFileSystemRemote.h" />
+    <ClInclude Include="BlueResMan.h" />
+    <ClInclude Include="BlueResManBackgroundCall.h" />
+    <ClInclude Include="BlueSocketLogger.h" />
+    <ClInclude Include="BlueSysInfo.h" />
+    <ClInclude Include="BlueTestHelpers.h" />
+    <ClInclude Include="BlueTextResource.h" />
+    <ClInclude Include="BlueThreadMonitor.h" />
+    <ClInclude Include="BlueTime.h" />
+    <ClInclude Include="BlueTimeoutHandler.h" />
+    <ClInclude Include="CallbackMan.h" />
+    <ClInclude Include="crypto.h" />
+    <ClInclude Include="DictReader.h" />
+    <ClInclude Include="FileLogger.h" />
+    <ClInclude Include="Heap.h" />
+    <ClInclude Include="IOLoop.h" />
+    <ClInclude Include="IRootReader.h" />
+    <ClInclude Include="IRootWriter.h" />
+    <ClInclude Include="LogControl.h" />
+    <ClInclude Include="LogglyForwarder.h" />
+    <ClInclude Include="LogToPython.h" />
+    <ClInclude Include="manifest.h" />
+    <ClInclude Include="Marshal.h" />
+    <ClInclude Include="md5.h" />
+    <ClInclude Include="MotherLode.h" />
+    <ClInclude Include="NetworkLogger.h" />
+    <ClInclude Include="PrettyPrint.h" />
+    <ClInclude Include="PyRowset.h" />
+    <ClInclude Include="PyScheduler.h" />
+    <ClInclude Include="PyTemplates.h" />
+    <ClInclude Include="PythonEvents.h" />
+    <ClInclude Include="RemoteFileCache.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="ResourceLoading.h" />
+    <ClInclude Include="ResourceWatch.h" />
+    <ClInclude Include="SimpleJson.h" />
+    <ClInclude Include="SqliteLogger.h" />
+    <ClInclude Include="StdAfx.h" />
+    <ClInclude Include="Synchro.h" />
+    <ClInclude Include="TaskletTimer.h" />
+    <ClInclude Include="version.h" />
+    <ClInclude Include="WatchdogThread.h" />
+    <ClInclude Include="win32.h" />
+    <ClInclude Include="YamlReader.h" />
+    <ClInclude Include="YamlWriter.h" />
+    <ClInclude Include="Accumulator\PercentileAccumulator.h" />
+    <ClInclude Include="Include\Base64.h" />
+    <ClInclude Include="Include\BitPacker.h" />
+    <ClInclude Include="Include\Blue.h" />
+    <ClInclude Include="Include\BlueAsyncRes.h" />
+    <ClInclude Include="Include\BlueChoosers.h" />
+    <ClInclude Include="Include\BlueFileUtil.h" />
+    <ClInclude Include="Include\BlueId.h" />
+    <ClInclude Include="Include\BlueMain.h" />
+    <ClInclude Include="Include\BlueNet.h" />
+    <ClInclude Include="Include\BlueNetTypes.h" />
+    <ClInclude Include="Include\BluePySwrap.h" />
+    <ClInclude Include="Include\BlueStatistics.h" />
+    <ClInclude Include="Include\DataStructs.h" />
+    <ClInclude Include="Include\IBlueCallbackMan.h" />
+    <ClInclude Include="Include\IBlueEventListener.h" />
+    <ClInclude Include="Include\IBlueObjectBuilder.h" />
+    <ClInclude Include="Include\IBlueObjectMetadata.h" />
+    <ClInclude Include="Include\IBlueObjectProxy.h" />
+    <ClInclude Include="Include\IBlueObjectRecycler.h" />
+    <ClInclude Include="Include\IBlueOS.h" />
+    <ClInclude Include="Include\IBluePaths.h" />
+    <ClInclude Include="Include\IBluePersist.h" />
+    <ClInclude Include="Include\IBluePlacementObserver.h" />
+    <ClInclude Include="Include\IBluePython.h" />
+    <ClInclude Include="Include\IBlueResFileSystem.h" />
+    <ClInclude Include="Include\IBlueResMan.h" />
+    <ClInclude Include="Include\IBlueResource.h" />
+    <ClInclude Include="Include\IBlueThreadMonitor.h" />
+    <ClInclude Include="Include\ICacheable.h" />
+    <ClInclude Include="Include\ICcpStatisticsAccumulator.h" />
+    <ClInclude Include="Include\IMotherLode.h" />
+    <ClInclude Include="Include\ITaskletTimer.h" />
+    <ClInclude Include="Include\IUnloadable.h" />
+    <ClInclude Include="Include\ScopedBlockTrap.h" />
+    <ClInclude Include="Include\StructPacker.h" />
+    <ClInclude Include="Include\TransGaming.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\Logger\Logger.cpp"/>
-    <ClCompile Include="..\Logger\LogServer.cpp"/>
-    <ClCompile Include="BackgroundReader.cpp"/>
-    <ClCompile Include="Base64.cpp"/>
-    <ClCompile Include="BlackReader.cpp"/>
-    <ClCompile Include="BlackReader_Blue.cpp"/>
-    <ClCompile Include="BlackWriter.cpp"/>
-    <ClCompile Include="BlackWriter_Blue.cpp"/>
-    <ClCompile Include="blue.cpp"/>
-    <ClCompile Include="BlueAsyncRes.cpp"/>
-    <ClCompile Include="BlueAsyncRes_Blue.cpp"/>
-    <ClCompile Include="BlueEventToPython.cpp"/>
-    <ClCompile Include="BlueEventToPython_Blue.cpp"/>
-    <ClCompile Include="BlueFileStream.cpp"/>
-    <ClCompile Include="BlueFileStream_Blue.cpp"/>
-    <ClCompile Include="BlueFileUtil.cpp"/>
-    <ClCompile Include="BlueHeapq.cpp"/>
-    <ClCompile Include="BlueLogInMemory.cpp"/>
-    <ClCompile Include="BlueLogInMemory_Blue.cpp"/>
-    <ClCompile Include="BlueMemoryTracker.cpp"/>
-    <ClCompile Include="BlueMemoryTracker_Blue.cpp"/>
-    <ClCompile Include="BlueMemStream.cpp"/>
-    <ClCompile Include="BlueMemStream_Blue.cpp"/>
-    <ClCompile Include="BlueNet.cpp"/>
-    <ClCompile Include="BlueNetworkStream.cpp"/>
-    <ClCompile Include="BlueNetworkStream_Blue.cpp"/>
-    <ClCompile Include="BlueObjectBuilderPython.cpp"/>
-    <ClCompile Include="BlueObjectBuilderPython_Blue.cpp"/>
-    <ClCompile Include="BlueObjectMetadata.cpp"/>
-    <ClCompile Include="BlueObjectMetadata_Blue.cpp"/>
-    <ClCompile Include="BlueObjectProxy.cpp"/>
-    <ClCompile Include="BlueObjectProxy_Blue.cpp"/>
-    <ClCompile Include="BlueObjectRecycler.cpp"/>
-    <ClCompile Include="BlueObjectRecycler_Blue.cpp"/>
-    <ClCompile Include="BlueOS.cpp"/>
-    <ClCompile Include="BlueOS_Blue.cpp"/>
-    <ClCompile Include="BluePaths.cpp"/>
-    <ClCompile Include="BluePaths_Blue.cpp"/>
-    <ClCompile Include="BluePython.cpp"/>
-    <ClCompile Include="BluePythonWeakRef.cpp"/>
-    <ClCompile Include="BluePythonWeakRef_Blue.cpp"/>
-    <ClCompile Include="BluePython_Blue.cpp"/>
-    <ClCompile Include="BlueRemoteStream.cpp"/>
-    <ClCompile Include="BlueRemoteStream_Blue.cpp"/>
-    <ClCompile Include="BlueResFile2.cpp"/>
-    <ClCompile Include="BlueResFile2_Blue.cpp"/>
-    <ClCompile Include="BlueResFileSystemLocal.cpp"/>
-    <ClCompile Include="BlueResFileSystemLocal_Blue.cpp"/>
-    <ClCompile Include="BlueResFileSystemRemote.cpp"/>
-    <ClCompile Include="BlueResFileSystemRemote_Blue.cpp"/>
-    <ClCompile Include="BlueResMan.cpp"/>
-    <ClCompile Include="BlueResManBackgroundCall.cpp"/>
-    <ClCompile Include="BlueResMan_Blue.cpp"/>
-    <ClCompile Include="BlueSocketLogger.cpp"/>
-    <ClCompile Include="BlueStatistics.cpp"/>
-    <ClCompile Include="BlueStatistics_Blue.cpp"/>
-    <ClCompile Include="BlueStreamMethods.cpp"/>
-    <ClCompile Include="BlueSysInfo.cpp"/>
-    <ClCompile Include="BlueSysInfo_Blue.cpp"/>
-    <ClCompile Include="BlueTestHelpers.cpp"/>
-    <ClCompile Include="BlueTestHelpers_Blue.cpp"/>
-    <ClCompile Include="BlueTextResource.cpp"/>
-    <ClCompile Include="BlueTextResource_Blue.cpp"/>
-    <ClCompile Include="BlueThreadMonitor.cpp"/>
-    <ClCompile Include="BlueThreadMonitor_Blue.cpp"/>
-    <ClCompile Include="BlueTime.cpp"/>
-    <ClCompile Include="BlueTimeoutHandler.cpp"/>
-    <ClCompile Include="CallbackMan.cpp"/>
-    <ClCompile Include="CallbackMan_Blue.cpp"/>
-    <ClCompile Include="crypto.cpp"/>
-    <ClCompile Include="DictReader.cpp"/>
-    <ClCompile Include="DictReader_Blue.cpp"/>
-    <ClCompile Include="FileLogger.cpp"/>
-    <ClCompile Include="IBlueEventListener_Blue.cpp"/>
-    <ClCompile Include="IBlueObjectBuilder_Blue.cpp"/>
-    <ClCompile Include="IBluePlacementObserver_Blue.cpp"/>
-    <ClCompile Include="IOLoop.cpp"/>
-    <ClCompile Include="IRootReader.cpp"/>
-    <ClCompile Include="IRootWriter.cpp"/>
-    <ClCompile Include="IRootWriter_Blue.cpp"/>
-    <ClCompile Include="LogControl.cpp"/>
-    <ClCompile Include="LogglyForwarder.cpp"/>
-    <ClCompile Include="LogToPython.cpp"/>
-    <ClCompile Include="manifest.cpp"/>
-    <ClCompile Include="Marshal.cpp"/>
-    <ClCompile Include="md5.cpp"/>
-    <ClCompile Include="MotherLode.cpp"/>
-    <ClCompile Include="MotherLode_Blue.cpp"/>
-    <ClCompile Include="NetworkLogger.cpp"/>
-    <ClCompile Include="PrettyPrint.cpp"/>
-    <ClCompile Include="PyLogObject.cpp"/>
-    <ClCompile Include="PyMemory.cpp"/>
-    <ClCompile Include="PyRowSet.cpp"/>
-    <ClCompile Include="PyScheduler.cpp"/>
-    <ClCompile Include="PythonEvents.cpp"/>
-    <ClCompile Include="PythonEvents_Blue.cpp"/>
-    <ClCompile Include="RemoteFileCache.cpp"/>
-    <ClCompile Include="RemoteFileCache_Blue.cpp"/>
-    <ClCompile Include="ResourceLoading.cpp"/>
-    <ClCompile Include="ResourceWatch.cpp"/>
-    <ClCompile Include="ResourceWatch_Blue.cpp"/>
-    <ClCompile Include="ScopedBlockTrap.cpp"/>
-    <ClCompile Include="SimpleJson.cpp"/>
-    <ClCompile Include="SqliteLogger.cpp"/>
+    <ClCompile Include="..\Logger\Logger.cpp" />
+    <ClCompile Include="..\Logger\LogServer.cpp" />
+    <ClCompile Include="BackgroundReader.cpp" />
+    <ClCompile Include="Base64.cpp" />
+    <ClCompile Include="BlackReader.cpp" />
+    <ClCompile Include="BlackReader_Blue.cpp" />
+    <ClCompile Include="BlackWriter.cpp" />
+    <ClCompile Include="BlackWriter_Blue.cpp" />
+    <ClCompile Include="blue.cpp" />
+    <ClCompile Include="BlueAsyncRes.cpp" />
+    <ClCompile Include="BlueAsyncRes_Blue.cpp" />
+    <ClCompile Include="BlueEventToPython.cpp" />
+    <ClCompile Include="BlueEventToPython_Blue.cpp" />
+    <ClCompile Include="BlueFileStream.cpp" />
+    <ClCompile Include="BlueFileStream_Blue.cpp" />
+    <ClCompile Include="BlueFileUtil.cpp" />
+    <ClCompile Include="BlueHeapq.cpp" />
+    <ClCompile Include="BlueLogInMemory.cpp" />
+    <ClCompile Include="BlueLogInMemory_Blue.cpp" />
+    <ClCompile Include="BlueMemoryTracker.cpp" />
+    <ClCompile Include="BlueMemoryTracker_Blue.cpp" />
+    <ClCompile Include="BlueMemStream.cpp" />
+    <ClCompile Include="BlueMemStream_Blue.cpp" />
+    <ClCompile Include="BlueNet.cpp" />
+    <ClCompile Include="BlueNetworkStream.cpp" />
+    <ClCompile Include="BlueNetworkStream_Blue.cpp" />
+    <ClCompile Include="BlueObjectBuilderPython.cpp" />
+    <ClCompile Include="BlueObjectBuilderPython_Blue.cpp" />
+    <ClCompile Include="BlueObjectMetadata.cpp" />
+    <ClCompile Include="BlueObjectMetadata_Blue.cpp" />
+    <ClCompile Include="BlueObjectProxy.cpp" />
+    <ClCompile Include="BlueObjectProxy_Blue.cpp" />
+    <ClCompile Include="BlueObjectRecycler.cpp" />
+    <ClCompile Include="BlueObjectRecycler_Blue.cpp" />
+    <ClCompile Include="BlueOS.cpp" />
+    <ClCompile Include="BlueOS_Blue.cpp" />
+    <ClCompile Include="BluePaths.cpp" />
+    <ClCompile Include="BluePaths_Blue.cpp" />
+    <ClCompile Include="BluePython.cpp" />
+    <ClCompile Include="BluePythonWeakRef.cpp" />
+    <ClCompile Include="BluePythonWeakRef_Blue.cpp" />
+    <ClCompile Include="BluePython_Blue.cpp" />
+    <ClCompile Include="BlueRemoteStream.cpp" />
+    <ClCompile Include="BlueRemoteStream_Blue.cpp" />
+    <ClCompile Include="BlueResFile2.cpp" />
+    <ClCompile Include="BlueResFile2_Blue.cpp" />
+    <ClCompile Include="BlueResFileSystemLocal.cpp" />
+    <ClCompile Include="BlueResFileSystemLocal_Blue.cpp" />
+    <ClCompile Include="BlueResFileSystemRemote.cpp" />
+    <ClCompile Include="BlueResFileSystemRemote_Blue.cpp" />
+    <ClCompile Include="BlueResMan.cpp" />
+    <ClCompile Include="BlueResManBackgroundCall.cpp" />
+    <ClCompile Include="BlueResMan_Blue.cpp" />
+    <ClCompile Include="BlueSocketLogger.cpp" />
+    <ClCompile Include="BlueStatistics.cpp" />
+    <ClCompile Include="BlueStatistics_Blue.cpp" />
+    <ClCompile Include="BlueStreamMethods.cpp" />
+    <ClCompile Include="BlueSysInfo.cpp" />
+    <ClCompile Include="BlueSysInfo_Blue.cpp" />
+    <ClCompile Include="BlueTestHelpers.cpp" />
+    <ClCompile Include="BlueTestHelpers_Blue.cpp" />
+    <ClCompile Include="BlueTextResource.cpp" />
+    <ClCompile Include="BlueTextResource_Blue.cpp" />
+    <ClCompile Include="BlueThreadMonitor.cpp" />
+    <ClCompile Include="BlueThreadMonitor_Blue.cpp" />
+    <ClCompile Include="BlueTime.cpp" />
+    <ClCompile Include="BlueTimeoutHandler.cpp" />
+    <ClCompile Include="CallbackMan.cpp" />
+    <ClCompile Include="CallbackMan_Blue.cpp" />
+    <ClCompile Include="crypto.cpp" />
+    <ClCompile Include="DictReader.cpp" />
+    <ClCompile Include="DictReader_Blue.cpp" />
+    <ClCompile Include="FileLogger.cpp" />
+    <ClCompile Include="IBlueEventListener_Blue.cpp" />
+    <ClCompile Include="IBlueObjectBuilder_Blue.cpp" />
+    <ClCompile Include="IBluePlacementObserver_Blue.cpp" />
+    <ClCompile Include="IOLoop.cpp" />
+    <ClCompile Include="IRootReader.cpp" />
+    <ClCompile Include="IRootWriter.cpp" />
+    <ClCompile Include="IRootWriter_Blue.cpp" />
+    <ClCompile Include="LogControl.cpp" />
+    <ClCompile Include="LogglyForwarder.cpp" />
+    <ClCompile Include="LogToPython.cpp" />
+    <ClCompile Include="manifest.cpp" />
+    <ClCompile Include="Marshal.cpp" />
+    <ClCompile Include="md5.cpp" />
+    <ClCompile Include="MotherLode.cpp" />
+    <ClCompile Include="MotherLode_Blue.cpp" />
+    <ClCompile Include="NetworkLogger.cpp" />
+    <ClCompile Include="PrettyPrint.cpp" />
+    <ClCompile Include="PyLogObject.cpp" />
+    <ClCompile Include="PyMemory.cpp" />
+    <ClCompile Include="PyRowSet.cpp" />
+    <ClCompile Include="PyScheduler.cpp" />
+    <ClCompile Include="PythonEvents.cpp" />
+    <ClCompile Include="PythonEvents_Blue.cpp" />
+    <ClCompile Include="RemoteFileCache.cpp" />
+    <ClCompile Include="RemoteFileCache_Blue.cpp" />
+    <ClCompile Include="ResourceLoading.cpp" />
+    <ClCompile Include="ResourceWatch.cpp" />
+    <ClCompile Include="ResourceWatch_Blue.cpp" />
+    <ClCompile Include="ScopedBlockTrap.cpp" />
+    <ClCompile Include="SimpleJson.cpp" />
+    <ClCompile Include="SqliteLogger.cpp" />
     <ClCompile Include="StdAfx.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Synchro.cpp"/>
-    <ClCompile Include="TaskletTimer.cpp"/>
-    <ClCompile Include="TaskletTimer_Blue.cpp"/>
-    <ClCompile Include="TransGaming.cpp"/>
-    <ClCompile Include="WatchdogThread.cpp"/>
-    <ClCompile Include="win32.cpp"/>
-    <ClCompile Include="XUtil.cpp"/>
-    <ClCompile Include="YamlReader.cpp"/>
-    <ClCompile Include="YamlReader_Blue.cpp"/>
-    <ClCompile Include="YamlWriter.cpp"/>
-    <ClCompile Include="YamlWriter_Blue.cpp"/>
-    <ClCompile Include="Accumulator\PercentileAccumulator.cpp"/>
-    <ClCompile Include="Accumulator\PercentileAccumulator_Blue.cpp"/>
+    <ClCompile Include="Synchro.cpp" />
+    <ClCompile Include="TaskletTimer.cpp" />
+    <ClCompile Include="TaskletTimer_Blue.cpp" />
+    <ClCompile Include="TransGaming.cpp" />
+    <ClCompile Include="WatchdogThread.cpp" />
+    <ClCompile Include="win32.cpp" />
+    <ClCompile Include="XUtil.cpp" />
+    <ClCompile Include="YamlReader.cpp" />
+    <ClCompile Include="YamlReader_Blue.cpp" />
+    <ClCompile Include="YamlWriter.cpp" />
+    <ClCompile Include="YamlWriter_Blue.cpp" />
+    <ClCompile Include="Accumulator\PercentileAccumulator.cpp" />
+    <ClCompile Include="Accumulator\PercentileAccumulator_Blue.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="blue.rc"/>
+    <ResourceCompile Include="blue.rc" />
   </ItemGroup>
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets"/>
-  <ImportGroup Label="ExtensionTargets"/>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets" />
 </Project>
