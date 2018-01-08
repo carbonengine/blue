@@ -326,7 +326,7 @@ HERR:
 			return PyErr_SetFromErrnoWithFilename( PyExc_OSError, filenameStr );
 		}
 	}
-	ON_BLOCK_EXIT( [&] { close( f ) } );
+	ON_BLOCK_EXIT( [&] { close( f ); } );
 	Py_ssize_t segcount = buffer->bf_getsegcount( dataO, 0 );
 	for( Py_ssize_t i = 0; i < segcount; i++ )
 	{
