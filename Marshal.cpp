@@ -366,22 +366,6 @@ const char* MARSHAL_STRINGS[] = {
 	"agent.ResearchMissionDetails",
 	"agent.StorylineMissionDetails",
 
-	"carbon.common.script.net.machoNetPacket.ErrorResponse",
-	"carbon.common.script.net.machoNetPacket.IdentificationRsp",
-	"carbon.common.script.net.machoNetPacket.IdentificationReq",
-	"carbon.common.script.net.machoNetPacket.CallRsp",
-	"carbon.common.script.net.machoNetPacket.CallReq",
-	"carbon.common.script.net.machoNetPacket.TransportClosed",
-	"carbon.common.script.net.machoNetPacket.Notification",
-	"carbon.common.script.net.machoNetPacket.SessionChangeNotification",
-	"carbon.common.script.net.machoNetPacket.SessionInitialStateNotification",
-	"carbon.common.script.net.machoNetPacket.PingRsp",
-	"carbon.common.script.net.machoNetPacket.PingReq",
-	"carbon.common.script.net.machoNetPacket.MovementNotification",
-
-	"carbon.common.script.net.machoNetAddress.MachoAddress",
-
-
 };
 
 int MARSHAL_STRING_ARRAY_LEN = sizeof(MARSHAL_STRINGS) / sizeof (MARSHAL_STRINGS[0]);
