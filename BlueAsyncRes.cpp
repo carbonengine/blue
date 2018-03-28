@@ -119,7 +119,7 @@ void BlueAsyncRes::LoadAsync()
 	}
 	else
 	{
-		CCP_LOGWARN( "Failed to load '%S'", GetPath() );
+		CCP_LOGNOTICE( "BlueAsyncRes::LoadAsync: Failed to load '%S'", GetPath() );
 
 		BeResMan->AddToQueue( BRMQ_MAIN, StaticFailedLoadNotify, this, flags, &m_prepareCbId );
 	}
