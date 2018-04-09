@@ -18,7 +18,7 @@ shutil.copyfile(lib_path, os.path.join(os.getcwd(), 'blue', 'blue.pyd'))
 
 setup(
     name="blue",
-    version="{}+{}".format(blue.GetChangelist(), blue.GetBranch()),
+    version="{}+{}".format(blue.GetChangelist(), blue.GetBranch().lower()),
     description='Blue Library',
     packages=['blue'],
     package_data={
