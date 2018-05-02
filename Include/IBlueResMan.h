@@ -56,14 +56,14 @@ BLUE_INTERFACE( IBlueResMan ) : public IRoot
 	template <typename T>
 	bool GetResource( const std::wstring& path, const std::wstring& ex, T*& resource, IBlueResManNotifications* notifications = nullptr )
 	{
-		return GetResource( path, ex, BlueInterfaceIID<T>(), (void**)&resource, notifications );
+		return GetResourceW( path, ex, BlueInterfaceIID<T>(), (void**)&resource, notifications );
 	}
 
 	template <typename T>
 	bool GetResource( const std::wstring& path, const std::wstring& ex, BluePtr<T>& resource, IBlueResManNotifications* notifications = nullptr )
 	{
 		resource.Unlock();
-		return GetResource( path, ex, BlueInterfaceIID<T>(), (void**)&resource, notifications );
+		return GetResourceW( path, ex, BlueInterfaceIID<T>(), (void**)&resource, notifications );
 	}
 
 	// Returns true if the caller is on the same thread as the main thread queue
