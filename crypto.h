@@ -25,17 +25,15 @@ public:
 	HCRYPTKEY hKey;
 };
 
-//utomatic hash handle
+//Automatic hash handle
 class CryptHash
 {
 public:
 	CryptHash() : hHash(0) {}
-	~CryptHash() {
-		if (hHash)
-			CryptDestroyHash(hHash);
-	}
+	~CryptHash() { Destroy(); }
 	operator HCRYPTHASH () const {return hHash;}
 	HCRYPTHASH * operator &() {return &hHash;}
+	void Destroy() { if (hHash) CryptDestroyHash( hHash ); hHash = 0; }
 	HCRYPTHASH hHash;
 };
 

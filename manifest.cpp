@@ -373,7 +373,6 @@ PyObject *PyPackManifest_Impl(PyObject *seq, const char *timeStamp, HCRYPTPROV h
 
 	if (!CryptHashData(hash, (const BYTE*)b.GetData(), (DWORD)b.GetPos(), 0)) {
 		PyWin32Error("CryptHashData");
-		CryptDestroyHash(hash);
 		return false;
 	}
 
@@ -381,7 +380,6 @@ PyObject *PyPackManifest_Impl(PyObject *seq, const char *timeStamp, HCRYPTPROV h
 	DWORD signsize;
 	if (!CryptSignHash(hash, AT_SIGNATURE, 0, 0, 0, &signsize)) {
 		PyWin32Error("CryptSignHash");
-		CryptDestroyHash(hash);
 		return false;
 	}
 	BYTE *sign = (BYTE*)malloc(signsize);
@@ -389,11 +387,9 @@ PyObject *PyPackManifest_Impl(PyObject *seq, const char *timeStamp, HCRYPTPROV h
 		return PyErr_NoMemory();
 	if (!CryptSignHash(hash, AT_SIGNATURE, 0, 0, sign, &signsize)) {
 		PyWin32Error("CryptSignHash");
-		CryptDestroyHash(hash);
 		free(sign);
 		return false;
 	}
-	CryptDestroyHash(hash);
 
 	//append the signature to the buffer.
 	b.Write(sign, signsize);
@@ -600,7 +596,6 @@ bool UnpackManifest(std::wstring &errmsg, bool pyerr, Manifest_t &m, std::string
 			PyWin32Error("CryptHashData");
 		else
             BeOS->SetError(BE32, 0, "CryptSignData");
-		CryptDestroyHash(hash);
 		return false;
 	}
 
@@ -621,10 +616,8 @@ bool UnpackManifest(std::wstring &errmsg, bool pyerr, Manifest_t &m, std::string
 			else
 				BeOS->SetError(BE32, 0, "CryptVerifySignature");
 		}
-		CryptDestroyHash(hash);
 		return false;
 	}
-	CryptDestroyHash(hash);
 	CCP_LOG_CH( s_ch, "Manifest file verified");
 	return true;
 }
@@ -663,13 +656,11 @@ bool VerifyManifestEntry(std::wstring &errmsg, bool pyerr, __int32 &crc, const M
 	bool ok = ComputeInner(pyerr, crc, hash, buf, fileSize, CW2A(m.mName.c_str()));
 	tmp->UnlockData();
 	if (!ok) {
-		CryptDestroyHash(hash);
 		return false;
 	}
 
 	bool ok2 = true;
 	BOOL ok3 = CryptVerifySignature(hash, (BYTE*)&m.mHash[0], (DWORD)m.mHash.size(), key, 0, 0);
-	CryptDestroyHash(hash);
 	if (!ok3) {
 		if (GetLastError() == NTE_BAD_SIGNATURE) {
 			wchar_t buffer[512];
