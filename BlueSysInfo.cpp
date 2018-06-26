@@ -97,11 +97,7 @@ std::wstring BlueSysInfo::GetSharedFontsDirectory() const
 
 uint32_t BlueSysInfo::GetProcessBitCount() const
 {
-#ifdef _WIN64
-	return 64;
-#else
-	return 32;
-#endif
+	return PROCESS_BIT_COUNT;
 }
 
 uint32_t BlueSysInfo::GetSystemBitCount() const
