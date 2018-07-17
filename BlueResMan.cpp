@@ -88,13 +88,6 @@ BlueResMan::BlueResMan( IRoot* lockobj ) :
 
 BlueResMan::~BlueResMan()
 {
-#if BLUE_WITH_PYTHON
-	for( DynamicConstructors::iterator it = m_dynamicConstructors.begin();
-		it != m_dynamicConstructors.end(); ++it )
-	{
-		Py_DECREF( it->second );
-	}
-#endif
 }
 
 static const char* s_tickCookie = "BeResMan";
@@ -220,38 +213,22 @@ IBlueResource* BlueResMan::GetResourceHelper( const std::wstring& path, const st
 	GetResProtocol( key.c_str(), protocol );
 	if( protocol == L"dynamic" )
 	{
-#if BLUE_WITH_PYTHON
 		const wchar_t* slash = wcschr( key.c_str() + 9, L'/' );
 
 		std::wstring name = slash ? std::wstring( key.c_str() + 9, slash - key.c_str() - 9 ) : std::wstring( key.c_str() + 9 );
 		DynamicConstructors::iterator constructor = m_dynamicConstructors.find( name );
 		if( constructor == m_dynamicConstructors.end() )
 		{
-			char asciiKey[251];
-			wcstombs(asciiKey, key.c_str(), 250);
-			CCP_LOGERR_CH( s_ch, "No dynamic constructor found for resource name, %s", asciiKey );
+			CCP_LOGERR_CH( s_ch, "No dynamic constructor found for resource name, %S", key.c_str() );
 			CCP_ASSERT_M( false, "No dynamic constructor found for resource name" );
 			return NULL;
 		}
 
-		PyObject* resultObject = PyObject_CallFunction( constructor->second, const_cast<char*>("u"), slash ? slash + 1 : L"" );
-		if( resultObject == NULL )
+		result = constructor->second->GetResource( slash ? slash + 1 : L"" );
+		if( !result )
 		{
-			CCP_LOGERR_CH( s_ch, "Error while calling Python dynamic resource constructor" );
-			return NULL;
-			// TODO: Must clear python error
-		}
-
-		result = BluePythonCast<IBlueResource*>( resultObject );
-		if( result == NULL )
-		{
-			CCP_LOGERR_CH( s_ch, "Python dynamic resource constructor returned incorrect value (IBlueResource is expected)" );
 			return NULL;
 		}
-
-		result->Lock();
-
-		Py_DECREF( resultObject );
 
 		if( notifications )
 		{
@@ -261,11 +238,6 @@ IBlueResource* BlueResMan::GetResourceHelper( const std::wstring& path, const st
 		bool isOK = BeMotherLode->Insert( key.c_str(), result, true, 0, IMotherLode::CACHING_NOT_ALLOWED );
 		CCP_ASSERT( isOK );
         CCP_UNUSED( isOK );
-#else
-		CCP_LOGERR_CH( s_ch, "Dynamic resource constructor not supported" );
-		return nullptr;
-
-#endif
 	}
 	else
 	{
@@ -317,8 +289,7 @@ IBlueResource* BlueResMan::GetResourceHelper( const std::wstring& path, const st
 	return result;
 }
 
-#if BLUE_WITH_PYTHON
-void BlueResMan::RegisterResourceConstructor( const wchar_t* name, PyObject* constructor )
+void BlueResMan::RegisterResourceConstructor( const wchar_t* name, IBlueDynamicResourceConstructor* constructor )
 {
 	std::wstring key = name;
 	for( std::wstring::iterator it = key.begin(); it != key.end(); ++it )
@@ -326,17 +297,12 @@ void BlueResMan::RegisterResourceConstructor( const wchar_t* name, PyObject* con
 		*it = std::towlower( *it );
 	}
 
-	Py_IncRef( constructor );
-	DynamicConstructors::iterator it = m_dynamicConstructors.find( key );
-	if( it != m_dynamicConstructors.end() )
-	{
-		Py_DecRef( it->second );
-		it->second = constructor;
-	}
-	else
-	{
-		m_dynamicConstructors[key] = constructor;
-	}
+	m_dynamicConstructors[key].reset( constructor );
+}
+
+void BlueResMan::RegisterScriptResourceConstructor( const wchar_t* name, BlueScriptCallback constructor )
+{
+	RegisterResourceConstructor( name, new BluePythonDynamicResourceConstructor( constructor ) );
 }
 
 void BlueResMan::UnregisterResourceConstructor( const wchar_t* name )
@@ -350,11 +316,9 @@ void BlueResMan::UnregisterResourceConstructor( const wchar_t* name )
 	DynamicConstructors::iterator it = m_dynamicConstructors.find( key );
 	if( it != m_dynamicConstructors.end() )
 	{
-		Py_DecRef( it->second );
 		m_dynamicConstructors.erase( it );
 	}
 }
-#endif
 
 bool BlueResMan::IsOnMainThread()
 {
@@ -1042,6 +1006,35 @@ Be::Result<std::string> BlueResMan::GetFileContentsWithYield( std::wstring filen
 	m_filesInProgress.insert( filename );
 	auto result = BePaths->GetFileContentsWithYield( filename, &sourceStream );
 	m_filesInProgress.erase( filename );
+
+	return result;
+}
+
+
+BluePythonDynamicResourceConstructor::BluePythonDynamicResourceConstructor( BlueScriptCallback callable )
+	:m_callable( callable )
+{
+}
+
+IBlueResource* BluePythonDynamicResourceConstructor::GetResource( const wchar_t* query )
+{
+	if( !m_callable )
+	{
+		return nullptr;
+	}
+
+	IBlueResource* result = nullptr;
+	if( !m_callable.Call( result, query ) )
+	{
+		CCP_LOGERR_CH( s_ch, "Error while calling script dynamic resource constructor" );
+		PyErr_Clear();
+		return nullptr;
+	}
+
+	if( !result )
+	{
+		CCP_LOGERR_CH( s_ch, "Python dynamic resource constructor returned incorrect value (IBlueResource is expected)" );
+	}
 
 	return result;
 }

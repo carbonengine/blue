@@ -78,99 +78,6 @@ static PyObject* PySaveObjectToYamlString( PyObject* self, PyObject* args )
 	return returnValue;
 }
 
-static PyObject* PyRegisterResourceConstructor( PyObject* self, PyObject* args )
-{
-	BlueResMan* pThis = BluePythonCast<BlueResMan*>( self );
-	CCP_ASSERT( pThis == BeResMan );
-
-	PyObject *nameObject = NULL;
-	PyObject *constructor = NULL;
-	if (!PyArg_ParseTuple(args, "OO", &nameObject, &constructor ))
-	{
-		return NULL;
-	}
-
-	if( !PyString_Check( nameObject ) )
-	{
-		return NULL;
-	}
-
-	std::wstring name = (const wchar_t*)CA2W( PyString_AsString( nameObject ) );
-
-	pThis->RegisterResourceConstructor( name.c_str(), constructor );
-
-	Py_RETURN_NONE;
-}
-
-static PyObject* PyRegisterResourceConstructorW( PyObject* self, PyObject* args )
-{
-	BlueResMan* pThis = BluePythonCast<BlueResMan*>( self );
-	CCP_ASSERT( pThis == BeResMan );
-
-	PyObject *nameObject = NULL;
-	PyObject *constructor = NULL;
-	if (!PyArg_ParseTuple(args, "OO", &nameObject, &constructor ))
-	{
-		return NULL;
-	}
-
-	if( !PyString_Check( nameObject ) )
-	{
-		return NULL;
-	}
-
-	std::wstring name = (const wchar_t*)PyUnicode_AsUnicode( nameObject );
-
-	pThis->RegisterResourceConstructor( name.c_str(), constructor );
-
-	Py_RETURN_NONE;
-}
-
-static PyObject* PyUnregisterResourceConstructor( PyObject* self, PyObject* args )
-{
-	BlueResMan* pThis = BluePythonCast<BlueResMan*>( self );
-	CCP_ASSERT( pThis == BeResMan );
-
-	PyObject *nameObject = NULL;
-	if (!PyArg_ParseTuple(args, "O", &nameObject ))
-	{
-		return NULL;
-	}
-
-	if( !PyString_Check( nameObject ) )
-	{
-		return NULL;
-	}
-
-	std::wstring name = (const wchar_t*)CA2W( PyString_AsString( nameObject ) );
-
-	pThis->UnregisterResourceConstructor( name.c_str() );
-
-	Py_RETURN_NONE;
-}
-
-static PyObject* PyUnregisterResourceConstructorW( PyObject* self, PyObject* args )
-{
-	BlueResMan* pThis = BluePythonCast<BlueResMan*>( self );
-	CCP_ASSERT( pThis == BeResMan );
-
-	PyObject *nameObject = NULL;
-	if (!PyArg_ParseTuple(args, "O", &nameObject ))
-	{
-		return NULL;
-	}
-
-	if( !PyString_Check( nameObject ) )
-	{
-		return NULL;
-	}
-
-	std::wstring name = (const wchar_t*)PyUnicode_AsUnicode( nameObject );
-
-	pThis->UnregisterResourceConstructor( name.c_str() );
-
-	Py_RETURN_NONE;
-}
 #endif
 
 const Be::ClassInfo* BlueResMan::ExposeToBlue()
@@ -434,50 +341,22 @@ const Be::ClassInfo* BlueResMan::ExposeToBlue()
 			":param count: usually lower or equal to number of cores available, not lower than 1."
 		)
 
-		MAP_METHOD( 
+		MAP_METHOD_AND_WRAP( 
 			"RegisterResourceConstructor", 
-			PyRegisterResourceConstructor, 
+			RegisterScriptResourceConstructor, 
 			"Registers a new dynamic resource constructor function. This function is called \n" 
 			"for resources with paths like \"dynamic:/name\". If the constructor with the \n"
 			"same name is already registered, the new function will override the old one.\n"
 			":param name: Name to associate with the constructor in resource paths\n"
-			":type name: str\n"
 			":param function: A callable object that is used to construct dynamic resources\n"
-			":type function: (unicode)->IRoot\n"
-			":rtype: None"
 			)
 
-		MAP_METHOD( 
-			"RegisterResourceConstructorW", 
-			PyRegisterResourceConstructorW, 
-			"Registers a new dynamic resource constructor function. This function is called \n" 
-			"for resources with paths like \"dynamic:/name\". If the constructor with the \n"
-			"same name is already registered, the new function will override the old one.\n"
-			":param name: Name to associate with the constructor in resource paths\n"
-			":type name: unicode\n"
-			":param function: A callable object that is used to construct dynamic resources\n"
-			":type function: (unicode)->IRoot\n"
-			":rtype: None"
-			)
-
-		MAP_METHOD( 
+			MAP_METHOD_AND_WRAP(
 			"UnregisterResourceConstructor", 
-			PyUnregisterResourceConstructor, 
+			UnregisterResourceConstructor, 
 			"Unregisters dynamic resource constructor function previously registered with a " 
 			"call to RegisterResourceConstructor.\n"
 			":param name: Name associated with the constructor function to unregister\n"
-			":type name: str\n"
-			":rtype: None"
-			)
-
-		MAP_METHOD( 
-			"UnregisterResourceConstructorW", 
-			PyUnregisterResourceConstructorW, 
-			"Unregisters dynamic resource constructor function previously registered with a " 
-			"call to RegisterResourceConstructor.\n"
-			":param name: Name associated with the constructor function to unregister\n"
-			":type name: unicode\n"
-			":rtype: None"
 			)
 
 		EXPOSURE_END()

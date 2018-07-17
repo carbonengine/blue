@@ -97,10 +97,9 @@ public:
 
 	void SetLoadingThreadPriority( int prio );
 
-#if BLUE_WITH_PYTHON
-	void RegisterResourceConstructor( const wchar_t* name, PyObject* constructor );
+	void RegisterResourceConstructor( const wchar_t* name, IBlueDynamicResourceConstructor* constructor );
+	void RegisterScriptResourceConstructor( const wchar_t* name, BlueScriptCallback constructor );
 	void UnregisterResourceConstructor( const wchar_t* name );
-#endif
 
 private:
 #if BLUE_WITH_PYTHON
@@ -150,12 +149,21 @@ private:
 	float m_mainThreadTimeSlice;
 	float m_mainThreadMaxTime;
 
-#if BLUE_WITH_PYTHON
-	typedef std::map<std::wstring, PyObject*> DynamicConstructors;
+	typedef std::map<std::wstring, std::unique_ptr<IBlueDynamicResourceConstructor>> DynamicConstructors;
 	DynamicConstructors m_dynamicConstructors;
-#endif
 };
 
 TYPEDEF_BLUECLASS( BlueResMan );
+
+
+class BluePythonDynamicResourceConstructor : public IBlueDynamicResourceConstructor
+{
+public:
+	explicit BluePythonDynamicResourceConstructor( BlueScriptCallback callable );
+
+	IBlueResource* GetResource( const wchar_t* query );
+private:
+	BlueScriptCallback m_callable;
+};
 
 #endif

@@ -34,6 +34,13 @@ protected:
 
 struct IBlueResource;
 
+// Factories for dynamic:/... res paths
+struct IBlueDynamicResourceConstructor
+{
+	virtual ~IBlueDynamicResourceConstructor() {}
+	virtual IBlueResource* GetResource( const wchar_t* query ) = 0;
+};
+
 BLUE_INTERFACE( IBlueResMan ) : public IRoot
 {
 	// Get a reference to the resource identified by path+ex, with the given interface
@@ -122,6 +129,9 @@ BLUE_INTERFACE( IBlueResMan ) : public IRoot
 
 	virtual unsigned int GetPendingLoads() const = 0;
 	virtual unsigned int GetPendingPrepares() const = 0;
+
+	virtual void RegisterResourceConstructor( const wchar_t* name, IBlueDynamicResourceConstructor* constructor ) = 0;
+	virtual void UnregisterResourceConstructor( const wchar_t* name ) = 0;
 };
 
 extern BLUEIMPORT IBlueResMan* BeResMan;
