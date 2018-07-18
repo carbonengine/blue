@@ -86,8 +86,11 @@ void BlueAsyncRes::LoadAsync()
 		// Throttle back loads based on the assumption that most descendants
 		// load the entire file into memory on the background thread, then
 		// do something with it on the main thread.
-		m_reservedMemory = m_dataStream->GetSize();
-		BeResMan->ReserveBackgroundLoadMemory( m_reservedMemory );
+		if( m_dataStream )
+		{
+			m_reservedMemory = m_dataStream->GetSize();
+			BeResMan->ReserveBackgroundLoadMemory( m_reservedMemory );
+		}
 
 		load = DoLoad();
 	}
