@@ -1505,6 +1505,9 @@ void YamlReader::ReadStructureList( IBlueStructureList* structureList )
 			auto structureSize = structureList->GetStructureSize();
 			CcpMallocBuffer item( "item", structureSize );
 
+			auto notify = structureList->SetNotify( nullptr );
+			ON_BLOCK_EXIT( [&] { structureList->SetNotify( notify ); } );
+
 			while( ReadVectorNext() )
 			{
 				ReadVectorBegin();

@@ -569,6 +569,9 @@ void DictReader::ReadStructureList( IBlueStructureList* structureList )
 	BlueStructureDefinition* sdFromList = structureList->GetStructureDefinition();
 	CcpMallocBuffer item( "item", structureList->GetStructureSize() );
 
+	auto notify = structureList->SetNotify( nullptr );
+	ON_BLOCK_EXIT( [&] { structureList->SetNotify( notify ); } );
+
 	auto n = PyList_Size( items );
 	for( auto i = 0; i < n; ++i )
 	{
