@@ -309,8 +309,8 @@ void YamlWriter::WriteIRoot( const IRoot& instance, IRoot* defaultInstance )
 			AddMappingStartEvent();
 			for( auto it = metadata->begin(); it != metadata->end(); ++it )
 			{
-				AddScalarEvent( it->first.c_str() );
-				AddScalarEvent( it->second.c_str() );
+				AddScalarEvent( it->first.c_str(), YAML_DOUBLE_QUOTED_SCALAR_STYLE );
+				AddScalarEvent( it->second.c_str(), YAML_DOUBLE_QUOTED_SCALAR_STYLE );
 			}
 			AddMappingEndEvent();
 		}
