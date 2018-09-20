@@ -186,7 +186,7 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
       <DelayLoadDLLs>psapi.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
-      <AdditionalDependencies>BlueExposure_d.lib;CcpCore_d.lib;atlsd.lib;crypt32.lib;iphlpapi.lib;libcurl_d.lib;msvcprtd.lib;msvcrtd.lib;psapi.lib;python27_d.lib;rad_tm_win32.lib;version.lib;winhttp.lib;ws2_32.lib;yaml_d.lib;zlib_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>BlueExposure_d.lib;CcpCore_d.lib;crypt32.lib;iphlpapi.lib;libcurl_d.lib;msvcprtd.lib;msvcrtd.lib;psapi.lib;python27_d.lib;rad_tm_win32.lib;version.lib;winhttp.lib;ws2_32.lib;yaml_d.lib;zlib_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -252,7 +252,7 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
       <DelayLoadDLLs>psapi.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
-      <AdditionalDependencies>BlueExposure_d.lib;CcpCore_d.lib;atlsd.lib;crypt32.lib;iphlpapi.lib;libcurl_d.lib;msvcprtd.lib;msvcrtd.lib;psapi.lib;python27_d.lib;rad_tm_win64.lib;version.lib;winhttp.lib;ws2_32.lib;yaml_d.lib;zlib_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>BlueExposure_d.lib;CcpCore_d.lib;crypt32.lib;iphlpapi.lib;libcurl_d.lib;msvcprtd.lib;msvcrtd.lib;psapi.lib;python27_d.lib;rad_tm_win64.lib;version.lib;winhttp.lib;ws2_32.lib;yaml_d.lib;zlib_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
