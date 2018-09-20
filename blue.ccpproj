@@ -93,7 +93,6 @@ Configurations:
       AdditionalDependencies:
       - msvcrtd.lib
       - msvcprtd.lib
-      - atlsd.lib
 
   Release|Win32,x64:
     BaseConfigurations:
