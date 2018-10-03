@@ -786,13 +786,13 @@ PyObject *PyCryptExportKey(PyObject *self, PyObject *args)
 		return 0;
 
 	DWORD dataLen;
-	if (!CryptExportKey(*hKey, hExpKey?*hExpKey:0, blobType, flags, 0, &dataLen))
+	if (!CryptExportKey(hKey->hKey, hExpKey ? hExpKey->hKey : 0, blobType, flags, 0, &dataLen))
 		return PyWin32Error("CryptExportKey");
 	PyObject *r = PyString_FromStringAndSize(0, dataLen);
 	if (!r)
 		return 0;
 
-	if (!CryptExportKey(*hKey, hExpKey?*hExpKey:0, blobType, flags, (BYTE*)PyString_AS_STRING(r), &dataLen)) {
+	if (!CryptExportKey(hKey->hKey, hExpKey ? hExpKey->hKey : 0, blobType, flags, (BYTE*)PyString_AS_STRING(r), &dataLen)) {
 		Py_DECREF(r);
 		return PyWin32Error("CryptExportKey");
 	}
