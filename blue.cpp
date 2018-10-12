@@ -253,6 +253,7 @@ PyObject* PyAtomicFileWrite(PyObject *self, PyObject* args)
 	
 #ifdef _WIN32
 
+	Py_ssize_t segcount;
 	HANDLE h;
 	{
 		Ccp::PyAllowThreads _allow;		
@@ -272,7 +273,7 @@ PyObject* PyAtomicFileWrite(PyObject *self, PyObject* args)
 			goto HERR;
 	}
 
-	Py_ssize_t segcount = buffer->bf_getsegcount(dataO, 0);
+	segcount = buffer->bf_getsegcount(dataO, 0);
 	for(Py_ssize_t i = 0; i<segcount; i++){
 		void *data;
 		Py_ssize_t datalen = buffer->bf_getreadbuffer(dataO, i, &data);

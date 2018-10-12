@@ -2519,6 +2519,7 @@ void BlueNet::BlueNetCallback( const BlueNet::PacketInfo* info, const char* data
 
 	PyGILState_STATE pyGILState = PyGILState_Ensure();
 
+	PyObject* message;
 	char* type;
 	unsigned int typelen;
 	if ( !m_singleton.UnpackString(&type, &typelen, packer) )
@@ -2526,7 +2527,7 @@ void BlueNet::BlueNetCallback( const BlueNet::PacketInfo* info, const char* data
 		goto Callback_release;
 	}
 
-	PyObject* message = m_singleton.UnserializeObject( packer );
+	message = m_singleton.UnserializeObject( packer );
 	if ( !message )
 	{
 		goto Callback_release;
@@ -3065,7 +3066,7 @@ void BlueNet::PackMarshalStream( PyObject* object, BitPackerManaged& packer )
 	//	SERIALIZE(bnlog("MARSHALED into [%s]", PyString_AS_STRING(repr) ));
 	//	SERIALIZE(Py_DECREF(repr));
 
-	PyObject *stream = PyObject_CallMethod( object, "Str", 0 );
+	PyObject *stream = PyObject_CallMethod( object, (char*)"Str", 0 );
 	if ( stream )
 	{
 		Py_ssize_t len;

@@ -1899,7 +1899,7 @@ PyObject* BluePyOS::PyGetClipboardData(PyObject* args)
 {
 	PyObject *m = PyImport_ImportModule("blue.win32");
 	if (m) {
-		PyObject *r = PyObject_CallMethod(m, "GetClipboardData", "O", args);
+		PyObject *r = PyObject_CallMethod(m, (char*)"GetClipboardData", (char*)"O", args);
 		Py_DECREF(m);
 		m = r;
 	}
@@ -1914,7 +1914,7 @@ PyObject* BluePyOS::PySetClipboardData(PyObject* args)
 {
 	PyObject *m = PyImport_ImportModule("blue.win32");
 	if (m) {
-		PyObject *r = PyObject_CallMethod(m, "SetClipboardData", "O", args);
+		PyObject *r = PyObject_CallMethod(m, (char*)"SetClipboardData", (char*)"O", args);
 		Py_DECREF(m);
 		m = r;
 	}
@@ -2210,7 +2210,7 @@ void BluePyOS::LogCpuUsageAndOtherStats()
 		BluePy sys(PyImport_ImportModule("sys"));
 		BluePy pymem;
 		if (sys)
-			pymem = BluePy(PyObject_CallMethod(sys, "getpymalloced", ""));
+			pymem = BluePy(PyObject_CallMethod(sys, (char*)"getpymalloced", (char*)""));
 
 		Synchro::Stat synchroStat;
 		mSynchro->GetLastStat(synchroStat);

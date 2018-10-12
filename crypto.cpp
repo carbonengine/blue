@@ -792,7 +792,7 @@ PyObject *PyCryptExportKey(PyObject *self, PyObject *args)
 	if (!r)
 		return 0;
 
-	if (!CryptExportKey(hKey->hKey, hExpKey ? hExpKey->hKey : 0, blobType, flags, (BYTE*)PyString_AS_STRING(r), &dataLen)) {
+	if (!CryptExportKey(*hKey, hExpKey ? *hExpKey : (uint64_t)0, blobType, flags, (BYTE*)PyString_AS_STRING(r), &dataLen)) {
 		Py_DECREF(r);
 		return PyWin32Error("CryptExportKey");
 	}
@@ -821,7 +821,7 @@ PyObject *PyCryptImportKey(PyObject *self, PyObject *args)
 	PyCryptKey *hKey = PyCryptKey::New();
 	if (!hKey) return 0;
 
-	if (!CryptImportKey(*hProv, data, datalen, pubKey?*pubKey:0, flags, &(*hKey)))
+	if (!CryptImportKey(*hProv, data, datalen, pubKey?*pubKey:(uint64_t)0, flags, &(*hKey)))
 		return PyWin32Error("CryptImportKey");
 
 	return hKey;
@@ -892,7 +892,7 @@ PyObject *PyCryptCreateHash(PyObject *self, PyObject *args)
 	PyCryptHash *hHash = PyCryptHash::New();
 	if (!hHash) return 0;
 
-	if (!CryptCreateHash(*hProv, algid, hKey?*hKey:0, flags, &(*hHash))) {
+	if (!CryptCreateHash(*hProv, algid, hKey?*hKey:(uint64_t)0, flags, &(*hHash))) {
 		Py_DECREF(hHash);
 		return PyWin32Error("CryptCreateHash");
 	}
@@ -1051,7 +1051,7 @@ PyObject *PyCryptEncrypt(PyObject *self, PyObject *args)
 		return 0;
 
 	DWORD bufSize = indatalen;
-	if (!CryptEncrypt(*hKey, hHash?*hHash:0, final, flags, 0, &bufSize, 0))
+	if (!CryptEncrypt(*hKey, hHash?*hHash:(uint64_t)0, final, flags, 0, &bufSize, 0))
 		return PyWin32Error("CryptEncrypt");
 
 	PyObject *r = PyString_FromStringAndSize(0, bufSize);
@@ -1060,7 +1060,7 @@ PyObject *PyCryptEncrypt(PyObject *self, PyObject *args)
 	_ASSERT(bufSize >= indatalen);
 	memcpy(PyString_AS_STRING(r), indata, indatalen);
 
-	if (!CryptEncrypt(*hKey, hHash?*hHash:0, final, flags, (BYTE*)PyString_AS_STRING(r), &indatalen, bufSize)) {
+	if (!CryptEncrypt(*hKey, hHash?*hHash:(uint64_t)0, final, flags, (BYTE*)PyString_AS_STRING(r), &indatalen, bufSize)) {
 		Py_DECREF(r);
 		return PyWin32Error("CryptEncrypt");
 	}
@@ -1094,7 +1094,7 @@ PyObject *PyCryptDecrypt(PyObject *self, PyObject *args)
 	if (!r)
 		return 0;
 	memcpy(PyString_AS_STRING(r), indata, indatalen);
-	if (!CryptDecrypt(*hKey, hHash?*hHash:0, final, flags, (BYTE*)PyString_AS_STRING(r), &indatalen)) {
+	if (!CryptDecrypt(*hKey, hHash?*hHash:(uint64_t)0, final, flags, (BYTE*)PyString_AS_STRING(r), &indatalen)) {
 		Py_DECREF(r);
 		return PyWin32Error("CryptDecrypt");
 	}
@@ -1203,7 +1203,7 @@ PyObject *PyUnjumbleString(PyObject *self, PyObject *args)
 		//must unzip
 		BluePy zm(PyImport_ImportModule("zlib"));
 		if (!zm) return 0;
-		BluePy unzipped(PyObject_CallMethod(zm, "decompress", "O", decr.o));
+		BluePy unzipped(PyObject_CallMethod(zm, (char*)"decompress", (char*)"O", decr.o));
 		decr = unzipped;
 	}
 	return decr.Detach();
@@ -1278,7 +1278,7 @@ static bool ConvertKey(BYTE *pbBlob, DWORD cbBlob, BYTE **ppOut, DWORD *cbOutLen
 
 	// First build the CERT_PUBLIC_KEY_INFO struct ---------
 
-	pkinfo.Algorithm.pszObjId = szOID_RSA_RSA;
+	pkinfo.Algorithm.pszObjId = (char*)szOID_RSA_RSA;
 	pkinfo.Algorithm.Parameters.cbData = 2;
 	pkinfo.Algorithm.Parameters.pbData = (BYTE *) "\005";
 	pkinfo.PublicKey.cbData = cbData;
