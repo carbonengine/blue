@@ -620,3 +620,22 @@ std::wstring BlueResFileSystemLocal::GetInitialWorkingDirectory()
 	return m_initialWorkingDirectory;
 }
 
+std::wstring BlueResFileSystemLocal::ResolvePath( const wchar_t* path )
+{
+	std::wstring result;
+	ResolvePathW( path, result );
+	return result;
+}
+
+std::map<std::string, std::vector<std::wstring>> BlueResFileSystemLocal::GetExpandedSearchPathsAsDict()
+{
+	return GetExpandedSearchPaths();
+}
+
+std::vector<std::wstring> BlueResFileSystemLocal::ListDirFromScript( const std::wstring& dir )
+{
+	std::set<std::wstring> results;
+	GetDirectoryContents( dir.c_str(), results );
+	std::vector<std::wstring> list( begin( results ), end( results ) );
+	return list;
+}

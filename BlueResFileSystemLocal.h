@@ -47,6 +47,10 @@ public:
 	SearchPathMap_t GetAllSearchPaths() { return m_searchPaths; }
 	ExpandedSearchPathMap_t GetExpandedSearchPaths() { return m_expandedSearchPaths; }
 
+	std::wstring ResolvePath( const wchar_t* path );
+
+	std::map<std::string, std::vector<std::wstring>> GetExpandedSearchPathsAsDict();
+	std::vector<std::wstring> ListDirFromScript( const std::wstring& dir );
 private:
 	// Initial working directory. This is used to resolve relative search paths.
 	std::wstring m_initialWorkingDirectory;
