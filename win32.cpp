@@ -475,7 +475,7 @@ PyObject *PyGetFileVersionInfo(PyObject *self, PyObject *args)
 		d.Set("\\", d1);
 	}
 
-	char *keys[] = {"Comments", "InternalName", "ProductName", "CompanyName", "LegalCopyright", "ProductVersion", 
+	const char *keys[] = {"Comments", "InternalName", "ProductName", "CompanyName", "LegalCopyright", "ProductVersion", 
 		"FileDescription", "LegalTrademarks", "LegalTrademarks", "PrivateBuild", 
 		"FileVersion", "FileVersion", "SpecialBuild"};
 
@@ -518,13 +518,15 @@ PyObject* PyGetClipboardData(PyObject *self, PyObject* args)
 		return Py_None;
 	}
 	
+	char* string;
+	SIZE_T size;
 	HANDLE hdata = GetClipboardData(format);
 	if (!hdata) goto error;
 
-	SIZE_T size = GlobalSize(hdata);
+	size = GlobalSize(hdata);
 	if (!size) goto error;
 		
-	char* string = (char*)GlobalLock(hdata);
+	string = (char*)GlobalLock(hdata);
 	if (!string) goto error;
 		
 	PyObject *result;
@@ -557,13 +559,15 @@ PyObject* PyGetClipboardUnicode(PyObject *self, PyObject *args)
 		return Py_None;
 	}
 	
+	WCHAR* string;
+	PyObject *result;
 	HANDLE hdata = GetClipboardData(format);
 	if (!hdata) goto error;
 	
-	WCHAR* string = (WCHAR*)GlobalLock(hdata);
+	string = (WCHAR*)GlobalLock(hdata);
 	if (!string) goto error;
 		
-	PyObject *result = PyUnicode_FromWideChar(string, wcslen(string));
+	result = PyUnicode_FromWideChar(string, wcslen(string));
 	GlobalUnlock(string);
 	CloseClipboard();
 	return result;
@@ -779,6 +783,8 @@ PyObject *PyTest(PyObject *self, PyObject *args)
 
 PyObject *PyShellExecute(PyObject *self, PyObject *args)
 {
+	size_t ir;
+	HINSTANCE r;
 	std::string msg;
 	HWND hwnd = 0;
 	int show=0;
@@ -809,7 +815,7 @@ PyObject *PyShellExecute(PyObject *self, PyObject *args)
 		} else
 			dir = 0;
 	}
-	HINSTANCE r = ShellExecuteW(hwnd,
+	r = ShellExecuteW(hwnd,
 		verb?PyUnicode_AsUnicode(verb):0,
 		PyUnicode_AsUnicode(file),
 		params?PyUnicode_AsUnicode(params):0,
@@ -820,8 +826,7 @@ PyObject *PyShellExecute(PyObject *self, PyObject *args)
 	Py_XDECREF(params);
 	Py_XDECREF(dir);
 
-#pragma warning( suppress : 4311 )
-	int ir = (int)r;
+	ir = (size_t)r;
 
 	if (ir > 32) {
 		Py_INCREF(Py_None);
@@ -1592,7 +1597,7 @@ BLUEIMPORT int BlueCrtAllocHook( int allocType, void *userData, size_t size, int
 	const char *fn = (const char*)filename;
 	if (!fn)
 		fn = "";
-	r = PyObject_CallFunction(PyAllocHook, "iiiisi", allocType, size, blockType, requestNumber, fn, lineNumber);
+	r = PyObject_CallFunction(PyAllocHook, (char*)"iiiisi", allocType, size, blockType, requestNumber, fn, lineNumber);
 	if (!r) {
 		PyOS->PyError();
 		inThere = false;
