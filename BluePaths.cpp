@@ -200,11 +200,14 @@ bool BluePaths::GetStreamFromPathW( const wchar_t* path, IBlueStream** stream )
 
 	bool isRes = !wcsncmp(path, L"res:", 4);
 
+	// respreview: is defined in Jessica when in content mode
+	bool isResPreview = !wcsncmp(path, L"respreview:", 11);
+
 	std::wstring filenameToOpen = path;
 	std::wstring languageSpecificFilename = path;
 
 	bool tryLang = false; //no separate language try
-	if( isRes )
+	if( isRes || isResPreview )
 	{
 		tryLang = AdjustFilenameForLanguageCode( filenameToOpen, languageSpecificFilename );
 	}
