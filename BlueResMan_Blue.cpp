@@ -107,7 +107,7 @@ const Be::ClassInfo* BlueResMan::ExposeToBlue()
 			"loadObjectCache", 
 			m_loadObjectCache, 
 			"Cache for objects loaded via LoadObject", 
-			Be::READWRITE
+			Be::READ
 		)
 
 		MAP_ATTRIBUTE

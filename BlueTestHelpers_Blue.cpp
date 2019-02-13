@@ -72,7 +72,7 @@ const Be::ClassInfo* BlueTestHelperAttributes::ExposeToBlue()
 			"myVector",
 			m_myVector,
 			"vector test",
-			Be::READWRITE | Be::PERSIST
+			Be::READ | Be::PERSIST
 		)
 
 		MAP_ATTRIBUTE
@@ -80,7 +80,7 @@ const Be::ClassInfo* BlueTestHelperAttributes::ExposeToBlue()
 			"myDict",
 			m_myDict,
 			"dict test",
-			Be::READWRITE | Be::PERSIST
+			Be::READ | Be::PERSIST
 		)
 
 		MAP_ATTRIBUTE
@@ -97,7 +97,7 @@ const Be::ClassInfo* BlueTestHelperAttributes::ExposeToBlue()
 			"myStructureList",
 			m_myStructureList,
 			"structure list test",
-			Be::READWRITE | Be::PERSIST
+			Be::READ | Be::PERSIST
 		)
 #endif
 	EXPOSURE_END()
@@ -203,19 +203,19 @@ const Be::ClassInfo* BlueTestStructureLists::ExposeToBlue()
 
 		MAP_INTERFACE( BlueTestStructureLists )
 
-		MAP_ATTRIBUTE( "uint8", m_uint8, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "int8", m_int8, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "uint16", m_uint16, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "int16", m_int16, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "uint32", m_uint32, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "int32", m_int32, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "float32", m_float32, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "float16", m_float16, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "string", m_string, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "mixed", m_mixed, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "matrix", m_matrix, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "bool", m_bool, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "enum", m_enum, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "uint8", m_uint8, "", Be::READ | Be::PERSIST )
+		MAP_ATTRIBUTE( "int8", m_int8, "", Be::READ | Be::PERSIST )
+		MAP_ATTRIBUTE( "uint16", m_uint16, "", Be::READ | Be::PERSIST )
+		MAP_ATTRIBUTE( "int16", m_int16, "", Be::READ | Be::PERSIST )
+		MAP_ATTRIBUTE( "uint32", m_uint32, "", Be::READ | Be::PERSIST )
+		MAP_ATTRIBUTE( "int32", m_int32, "", Be::READ | Be::PERSIST )
+		MAP_ATTRIBUTE( "float32", m_float32, "", Be::READ | Be::PERSIST )
+		MAP_ATTRIBUTE( "float16", m_float16, "", Be::READ | Be::PERSIST )
+		MAP_ATTRIBUTE( "string", m_string, "", Be::READ | Be::PERSIST )
+		MAP_ATTRIBUTE( "mixed", m_mixed, "", Be::READ | Be::PERSIST )
+		MAP_ATTRIBUTE( "matrix", m_matrix, "", Be::READ | Be::PERSIST )
+		MAP_ATTRIBUTE( "bool", m_bool, "", Be::READ | Be::PERSIST )
+		MAP_ATTRIBUTE( "enum", m_enum, "", Be::READ | Be::PERSIST )
 
 	EXPOSURE_END()
 }
