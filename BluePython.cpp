@@ -2020,8 +2020,8 @@ PyObject* BluePyOS::PyBeNice(PyObject* args)
 {
 #if CCP_STACKLESS
 
-	double timeSlice = 1.000f * mBeNiceSlice;  //default timeslice in milliseconds
-	if (!PyArg_ParseTuple(args, "|f", &timeSlice))
+	double timeSlice = mBeNiceSlice;  //default timeslice in milliseconds
+	if (!PyArg_ParseTuple(args, "|d", &timeSlice))
 		return NULL;
 
 	//convert to seconds, which is what GetElapsed returns
