@@ -449,8 +449,8 @@ void TaskletTimer::WarnSlice(Be::Time now, Stack *stack, PyObject *newctxt, bool
 			tb.push_back("unknown");
 	}
 	while(tb.size()) {
-		char buffer[16];
-		sprintf_s( buffer, "stack_%zd", tb.size() );
+		char buffer[32];
+		sprintf_s( buffer, "stack_%lld", static_cast<long long>( tb.size() ) );
 		json.set( buffer, tb.back() );
 
 		tb.pop_back();
