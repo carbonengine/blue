@@ -352,7 +352,8 @@ BlueOS::BlueOS() :
 	m_frameTimeTimeout( 0 ),
 	mAdvanceTimeInPump( true ),
 	mTimeStampIdx( -1 ),
-	mLanguageID(L"EN")
+	mLanguageID(L"EN"),
+	mDelayTime( 0 )
 {
 	mPID = CcpGetCurrentProcessId();
 
@@ -1054,6 +1055,8 @@ void BlueOS::PumpOS()
 
 	EvaluateTimeDilation();
 
+	InsertDelay();
+
 	TickTickers();
 
 	if( mUseSimpleCatchupLoop )
@@ -1111,6 +1114,14 @@ void BlueOS::PumpOS()
 #endif
 	mExitTime = GetActualTime();
 	mInsidePump = false;
+}
+
+void BlueOS::InsertDelay()
+{
+	if( mDelayTime )
+	{
+		CcpThreadSleep( mDelayTime );
+	}
 }
 
 //////////////////////////////////////////////////////////////////////
