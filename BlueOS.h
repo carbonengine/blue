@@ -102,8 +102,8 @@ public:
 	float mSlugTimeDeltaMs;
 	bool mIsSlugTimeIncreasing;
 	void InitSlug();
-	void UpdateSlugTime();
-	void DoSlug();
+	void UpdateSlugTime( float deltaTime );
+	void DoSlug( float deltaTime );
 
 	// Variable Delta-T Support
 	bool mUseSimpleCatchupLoop;

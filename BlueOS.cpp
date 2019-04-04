@@ -725,11 +725,11 @@ void BlueOS::InitSlug()
 	mIsSlugTimeIncreasing = true;
 }
 
-void BlueOS::UpdateSlugTime()
+void BlueOS::UpdateSlugTime( float deltaTime )
 {
 	if( mIsSlugTimeIncreasing )
 	{
-		mSlugTimeCurrentMs += mSlugTimeDeltaMs;
+		mSlugTimeCurrentMs += mSlugTimeDeltaMs * deltaTime * 1000;
 		if( mSlugTimeCurrentMs > mSlugTimeMaxMs )
 		{
 			mSlugTimeCurrentMs = mSlugTimeMaxMs;
@@ -738,7 +738,7 @@ void BlueOS::UpdateSlugTime()
 	}
 	else
 	{
-		mSlugTimeCurrentMs -= mSlugTimeDeltaMs;
+		mSlugTimeCurrentMs -= mSlugTimeDeltaMs * deltaTime * 1000;
 		if( mSlugTimeCurrentMs < mSlugTimeMinMs )
 		{
 			mSlugTimeCurrentMs = mSlugTimeMinMs;
@@ -747,9 +747,9 @@ void BlueOS::UpdateSlugTime()
 	}
 }
 
-void BlueOS::DoSlug()
+void BlueOS::DoSlug( float deltaTime )
 {
-	UpdateSlugTime();
+	UpdateSlugTime( deltaTime );
 	CcpThreadSleep( int( mSlugTimeCurrentMs ) );
 }
 
@@ -1024,11 +1024,6 @@ void BlueOS::PumpOS()
 
 	// Variable-DeltaT Support...
 
-	// The "Slug" is a deliberately crude diagnostic feature which introduces a (potentially variable) delay into
-	// the mainloop. This helps to test our frame-rate compensation. Added by Patrick Kerr.
-	//
-	DoSlug();
-
 	Be::Time actualTime = 0;
 	float deltaT_sec = 0.0f;
 
@@ -1042,6 +1037,11 @@ void BlueOS::PumpOS()
 	{
 		mExternalTime = actualTime-mExitTime; //the time spent outside BlueOS
 	}
+
+	// The "Slug" is a deliberately crude diagnostic feature which introduces a (potentially variable) delay into
+	// the mainloop. This helps to test our frame-rate compensation. Added by Patrick Kerr.
+	//
+	DoSlug( deltaT_sec );
 
 #if BLUE_WITH_PYTHON
 	// Switch to python as soon as possible, since we woke up to service python tasklets.
