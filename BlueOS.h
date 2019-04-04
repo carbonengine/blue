@@ -115,10 +115,6 @@ public:
 	void ComputeTimeValues(Be::Time* ptrActualTime, float* ptrDeltaT_sec);
 	void RunSimpleCatchupLoop(float deltaT_sec);
 
-	// Manual delay for debugging purposes
-	void InsertDelay();
-	int mDelayTime;
-
 	struct Ticker
 	{
 		Ticker(IBlueEvents *cb, void* cookie);

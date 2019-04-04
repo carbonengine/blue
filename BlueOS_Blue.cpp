@@ -300,7 +300,6 @@ const Be::ClassInfo* BlueOS::ExposeToBlue()
 		)
 
 		// other stuff
-		MAP_ATTRIBUTE( "delayTime",		mDelayTime, "A custom delay for debugging purposes", Be::READWRITE )
 		MAP_ATTRIBUTE( "sleeptime",		mSleepTime,	"Sleep in ms. for pumping", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "overridefg",		mOverrideFG, "Override foreground mode", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "debuglevel",		mDebugLevel, "Level of debug checks", Be::READWRITE )
