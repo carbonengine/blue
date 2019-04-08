@@ -1105,12 +1105,13 @@
 				CONFIGURATION_TEMP_DIR = "../temp/blue/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					BLUEPROJECT,
+					_SCL_SECURE_NO_WARNINGS,
 					NDEBUG,
 					YAML_DECLARE_STATIC,
 					"PyMODINIT_FUNC=\"__attribute((visibility(\\\"default\\\"))) extern \\\"C\\\" void\"",
 					"BLUE_WITH_PYTHON=1",
 					NOMINMAX,
-					_SCL_SECURE_NO_WARNINGS,
+					_WINSOCK_DEPRECATED_NO_WARNINGS,
 					"PORTING_TO_LINUX=1",
 					"$(inherited)",
 					);
@@ -1121,7 +1122,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
 				SDKROOT = macosx;
-				WARNING_CFLAGS = "-Wno-nonportable-include-path -Wno-inconsistent-missing-override -Wno-deprecated-register";
+				WARNING_CFLAGS = "-Wno-nonportable-include-path -Wno-inconsistent-missing-override -Wno-deprecated-register -Wno-pragma-pack";
 				};
 			name = Release;
 			};
@@ -2781,13 +2782,14 @@
 				CONFIGURATION_TEMP_DIR = "../temp/blue/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					BLUEPROJECT,
+					_SCL_SECURE_NO_WARNINGS,
 					"CCP_STACKLESS=1",
 					NDEBUG,
 					YAML_DECLARE_STATIC,
 					"PyMODINIT_FUNC=\"__attribute((visibility(\\\"default\\\"))) extern \\\"C\\\" void\"",
 					"BLUE_WITH_PYTHON=1",
 					NOMINMAX,
-					_SCL_SECURE_NO_WARNINGS,
+					_WINSOCK_DEPRECATED_NO_WARNINGS,
 					"PORTING_TO_LINUX=1",
 					"$(inherited)",
 					);
@@ -2798,7 +2800,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
 				SDKROOT = macosx;
-				WARNING_CFLAGS = "-Wno-nonportable-include-path -Wno-inconsistent-missing-override -Wno-deprecated-register";
+				WARNING_CFLAGS = "-Wno-nonportable-include-path -Wno-inconsistent-missing-override -Wno-deprecated-register -Wno-pragma-pack";
 				};
 			name = Release;
 			};
