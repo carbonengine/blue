@@ -168,12 +168,12 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>BLUE_LIVELIST_ENABLED=1;BLUE_WITH_PYTHON=1;CCP_STACKLESS=1;CURL_STATICLIB;WIN32;YAML_DECLARE_STATIC;_DEBUG;BLUEPROJECT;NOMINMAX;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>BLUE_LIVELIST_ENABLED=1;BLUE_WITH_PYTHON=1;CCP_STACKLESS=1;CURL_STATICLIB;WIN32;YAML_DECLARE_STATIC;_DEBUG;BLUEPROJECT;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpSdkPath)/libyaml/0.1.7/include;$(CcpSdkPath)\libcurl\7.53.1\include;..\..\..\carbon\src\stackless\include;..\..\..\carbon\src\stackless\pc;..\..\..\carbon\src\stackless\stackless;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <PrecompiledHeaderOutputFile>$(IntDir)blue.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
       <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
@@ -201,12 +201,12 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_27|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>BLUE_WITH_PYTHON=1;CURL_STATICLIB;NDEBUG;WIN32;YAML_DECLARE_STATIC;BLUEPROJECT;NOMINMAX;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>BLUE_WITH_PYTHON=1;CURL_STATICLIB;NDEBUG;WIN32;YAML_DECLARE_STATIC;BLUEPROJECT;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpSdkPath)/libyaml/0.1.7/include;$(CcpSdkPath)\Python\27\include;$(CcpSdkPath)\libcurl\7.53.1\include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <PrecompiledHeaderOutputFile>$(IntDir)blue.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
       <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
@@ -234,12 +234,12 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>BLUE_LIVELIST_ENABLED=1;BLUE_WITH_PYTHON=1;CCP_STACKLESS=1;CURL_STATICLIB;WIN32;YAML_DECLARE_STATIC;_DEBUG;BLUEPROJECT;NOMINMAX;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>BLUE_LIVELIST_ENABLED=1;BLUE_WITH_PYTHON=1;CCP_STACKLESS=1;CURL_STATICLIB;WIN32;YAML_DECLARE_STATIC;_DEBUG;BLUEPROJECT;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpSdkPath)/libyaml/0.1.7/include;$(CcpSdkPath)\libcurl\7.53.1\include;..\..\..\carbon\src\stackless\include;..\..\..\carbon\src\stackless\pc;..\..\..\carbon\src\stackless\stackless;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <PrecompiledHeaderOutputFile>$(IntDir)blue.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
       <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
@@ -267,12 +267,12 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_27|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>BLUE_WITH_PYTHON=1;CURL_STATICLIB;NDEBUG;WIN32;YAML_DECLARE_STATIC;BLUEPROJECT;NOMINMAX;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>BLUE_WITH_PYTHON=1;CURL_STATICLIB;NDEBUG;WIN32;YAML_DECLARE_STATIC;BLUEPROJECT;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpSdkPath)/libyaml/0.1.7/include;$(CcpSdkPath)\Python\27_64\include;$(CcpSdkPath)\libcurl\7.53.1\include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <PrecompiledHeaderOutputFile>$(IntDir)blue.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
       <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
@@ -300,12 +300,12 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_26|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>BLUE_WITH_PYTHON=1;CURL_STATICLIB;NDEBUG;WIN32;YAML_DECLARE_STATIC;BLUEPROJECT;NOMINMAX;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>BLUE_WITH_PYTHON=1;CURL_STATICLIB;NDEBUG;WIN32;YAML_DECLARE_STATIC;BLUEPROJECT;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpSdkPath)/libyaml/0.1.7/include;$(CcpSdkPath)\Python\26\include;$(CcpSdkPath)\libcurl\7.53.1\include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <PrecompiledHeaderOutputFile>$(IntDir)blue.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
       <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
@@ -333,12 +333,12 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>BLUE_WITH_PYTHON=1;CCP_STACKLESS=1;CURL_STATICLIB;NDEBUG;WIN32;YAML_DECLARE_STATIC;BLUEPROJECT;NOMINMAX;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>BLUE_WITH_PYTHON=1;CCP_STACKLESS=1;CURL_STATICLIB;NDEBUG;WIN32;YAML_DECLARE_STATIC;BLUEPROJECT;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpSdkPath)/libyaml/0.1.7/include;$(CcpSdkPath)\libcurl\7.53.1\include;..\..\..\carbon\src\stackless\include;..\..\..\carbon\src\stackless\pc;..\..\..\carbon\src\stackless\stackless;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <PrecompiledHeaderOutputFile>$(IntDir)blue.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
       <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
@@ -366,12 +366,12 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_26|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>BLUE_WITH_PYTHON=1;CURL_STATICLIB;NDEBUG;WIN32;YAML_DECLARE_STATIC;BLUEPROJECT;NOMINMAX;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>BLUE_WITH_PYTHON=1;CURL_STATICLIB;NDEBUG;WIN32;YAML_DECLARE_STATIC;BLUEPROJECT;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpSdkPath)/libyaml/0.1.7/include;$(CcpSdkPath)\Python\26_64\include;$(CcpSdkPath)\libcurl\7.53.1\include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <PrecompiledHeaderOutputFile>$(IntDir)blue.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
       <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
@@ -399,12 +399,12 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>BLUE_WITH_PYTHON=1;CCP_STACKLESS=1;CURL_STATICLIB;NDEBUG;WIN32;YAML_DECLARE_STATIC;BLUEPROJECT;NOMINMAX;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>BLUE_WITH_PYTHON=1;CCP_STACKLESS=1;CURL_STATICLIB;NDEBUG;WIN32;YAML_DECLARE_STATIC;BLUEPROJECT;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpSdkPath)/libyaml/0.1.7/include;$(CcpSdkPath)\libcurl\7.53.1\include;..\..\..\carbon\src\stackless\include;..\..\..\carbon\src\stackless\pc;..\..\..\carbon\src\stackless\stackless;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <PrecompiledHeaderOutputFile>$(IntDir)blue.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
       <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
