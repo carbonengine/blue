@@ -28,11 +28,13 @@ ClCompile:
   - _SCL_SECURE_NO_WARNINGS
   # windows.h has macros named min and max that wreak havoc with std::min and std::max
   - NOMINMAX
+  # VS2017 complains about our use of 'inet_addr' and 'inet_ntoa' unless we add this
+  - _WINSOCK_DEPRECATED_NO_WARNINGS
   PrecompiledHeader: Use
   PrecompiledHeaderFile: StdAfx.h
   PrecompiledHeaderOutputFile: $(IntDir)blue.pch
   WarningLevel: Level3
-  TreatWarningAsError: true
+  TreatWarningAsError: false
   BufferSecurityCheck: false
 
 # Linker settings for all configurations
