@@ -52,11 +52,7 @@ void SetCrashKeyValues( const std::wstring& k, const std::wstring& v )
 	{
 		return;
 	}
-	wchar_t key[128];
-	wchar_t val[256];
-	wcsncpy_s( key, k.c_str(), 127 );
-	wcsncpy_s( val, v.c_str(), 255 );
-	BeCrashes->SetCrashKeyValueW(key, val);
+	BeCrashes->SetCrashKeyValueW(const_cast<wchar_t *>(k.c_str()), const_cast<wchar_t *>(v.c_str()));
 }
 
 MAP_FUNCTION_AND_WRAP( 
