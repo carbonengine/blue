@@ -81,9 +81,15 @@ bool ResFile::CreateW( const wchar_t* filename )
 
 	BlueFileStreamPtr fileStream;
 	fileStream.CreateInstance();
-	m_stream = fileStream;
 
-	return fileStream->Create( filenameOnDisk.c_str() );
+	if( !fileStream->Create( filenameOnDisk.c_str() ) )
+	{
+		BeOS->SetError(BE32, Clsid(), "Create failed on \"%S\"", filename);
+		return false;
+	}
+
+	m_stream = fileStream;
+	return true;
 }
 
 bool ResFile::FileExistsW( const wchar_t* filename )
