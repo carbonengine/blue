@@ -152,7 +152,7 @@ ptrdiff_t BlueFileStream::Write( const void* source, size_t count )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	if( !m_fileDescriptor )
+	if( m_fileDescriptor == INVALID_FILE )
 	{
 		BeOS->SetError(BE32, Clsid(), "Couldn't Write - file is not open");
 		return -1;
@@ -195,7 +195,7 @@ ptrdiff_t BlueFileStream::GetSize()
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	if( !m_fileDescriptor )
+	if( m_fileDescriptor == INVALID_FILE )
 	{
 		return -1;
 	}
