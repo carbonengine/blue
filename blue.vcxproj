@@ -182,7 +182,7 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\libcurl\7.53.1\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\libyaml\0.1.7\lib\$(Platform)\$(PlatformToolset);../../autobuild/BlueExposure/exefile/$(Platform)/$(PlatformToolset);..\..\..\carbon\autobuild\stackless\$(Platform);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\libcurl\7.53.1\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\libyaml\0.1.7\lib\$(Platform)\$(PlatformToolset);../../autobuild/BlueExposure/exefile/$(Platform)/$(PlatformToolset);..\..\..\carbon\autobuild\stackless\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
@@ -248,7 +248,7 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\libcurl\7.53.1\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\libyaml\0.1.7\lib\$(Platform)\$(PlatformToolset);../../autobuild/BlueExposure/exefile/$(Platform)/$(PlatformToolset);..\..\..\carbon\autobuild\stackless\$(Platform);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\libcurl\7.53.1\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\libyaml\0.1.7\lib\$(Platform)\$(PlatformToolset);../../autobuild/BlueExposure/exefile/$(Platform)/$(PlatformToolset);..\..\..\carbon\autobuild\stackless\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
@@ -347,7 +347,7 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\libcurl\7.53.1\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\libyaml\0.1.7\lib\$(Platform)\$(PlatformToolset);../../autobuild/BlueExposure/exefile/$(Platform)/$(PlatformToolset);..\..\..\carbon\autobuild\stackless\$(Platform);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\libcurl\7.53.1\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\libyaml\0.1.7\lib\$(Platform)\$(PlatformToolset);../../autobuild/BlueExposure/exefile/$(Platform)/$(PlatformToolset);..\..\..\carbon\autobuild\stackless\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
@@ -413,7 +413,7 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\libcurl\7.53.1\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\libyaml\0.1.7\lib\$(Platform)\$(PlatformToolset);../../autobuild/BlueExposure/exefile/$(Platform)/$(PlatformToolset);..\..\..\carbon\autobuild\stackless\$(Platform);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\libcurl\7.53.1\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\libyaml\0.1.7\lib\$(Platform)\$(PlatformToolset);../../autobuild/BlueExposure/exefile/$(Platform)/$(PlatformToolset);..\..\..\carbon\autobuild\stackless\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
