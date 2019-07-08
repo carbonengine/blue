@@ -13,12 +13,20 @@ class BinaryDistribution(Distribution):
         return True
 
 
+def getVersion():
+    return "{}+{}".format(blue.GetChangelist(), blue.GetBranch().lower())
+
+
+# Report the blue version out to Teamcity
+print("##teamcity[setParameter name='env.BLUE_VERSION' value='%s']" % getVersion())
+
+
 os.chdir(os.path.dirname(__file__))
 shutil.copyfile(lib_path, os.path.join(os.getcwd(), 'blue', 'blue.pyd'))
 
 setup(
     name="blue",
-    version="{}+{}".format(blue.GetChangelist(), blue.GetBranch().lower()),
+    version=getVersion(),
     description='Blue Library',
     packages=['blue'],
     package_data={
