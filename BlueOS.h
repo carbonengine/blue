@@ -181,6 +181,8 @@ public:
 	// class registration stuff
 private:
 
+	Be::Time m_startupTime;
+	
 	IBlueCallbackManPtr m_callbackManager;
 
 	// Command line arguments

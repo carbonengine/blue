@@ -355,6 +355,7 @@ BlueOS::BlueOS() :
 	mLanguageID(L"EN")
 {
 	mPID = CcpGetCurrentProcessId();
+	m_startupTime = CcpGetTimestamp();
 
 	BeOS = this;  //Set global IBlueOS pointer to this static object
 
@@ -968,6 +969,18 @@ void BlueOS::RunSimpleCatchupLoop(float deltaT_sec)
 void BlueOS::PumpOS()
 {
 	CCP_STATS_ZONE( "BlueOS/PumpOS" );
+
+#ifdef _WIN32
+	if( BeCrashes )
+	{
+		auto time = CcpGetTimestamp();
+		wchar_t timeStr[64];
+		float interval = float( double( time - m_startupTime ) / CcpGetTimestampFrequency() );
+		swprintf_s( timeStr, L"%.1f", interval );
+
+		BeCrashes->SetCrashKeyValueW( L"timeSinceStartup", timeStr );
+	}
+#endif
 
 #ifdef _WIN32
 	if( IsDebuggerPresent() )
