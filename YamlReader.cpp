@@ -427,6 +427,10 @@ void YamlReader::GetNextEvent()
 		else
 		{
 			m_event = new PoolAllocatedYamlEvent;
+            if( !m_event )
+            {
+                ReportError( "out of memory" );
+            }
 			m_event->type = YAML_NO_EVENT;
 		}
 		int ok = yaml_parser_parse( &m_parser, m_event );

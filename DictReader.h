@@ -44,7 +44,11 @@ protected:
 	void CleanupAfterCreate();
 
 	// Throw an error with the formatted error message given.
-	void ThrowError( const char* msg, ... );
+	void ThrowError( const char* msg, ... )
+#ifdef __clang__
+    __attribute__( ( __analyzer_noreturn__ ) )
+#endif
+;
 
 protected:
 	// Virtual functions required by base:

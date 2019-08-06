@@ -352,6 +352,7 @@ bool BlueCallbackMan::UpdateThread( struct ThreadData* td )
 		}
 
 		REPORT( "Front of fenced queue - %x - %x", maskBefore, fencedEntry.fenceMask );
+        (void)maskBefore;
 
 		if( fencedEntry.fenceMask == 0 )
 		{

@@ -664,9 +664,6 @@ void DictReader::ReadStructureList( IBlueStructureList* structureList )
 }
 
 void DictReader::ThrowError( const char* msg, ... )
-#ifdef __clang__
-__attribute__( ( analyzer_noreturn ) )
-#endif
 {
 	char buffer[512];
 
