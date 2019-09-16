@@ -26,17 +26,6 @@ void BlueTimeoutHandler::NotifyOfTimeout()
 			auto pythonDiagnosticThread = CcpCreateThread( PythonDiagnosticFunction, nullptr, CCP_THREAD_PRIORITY_NORMAL );
 			CcpJoinThreadWithTimeout( pythonDiagnosticThread, 10000, nullptr );
 #endif
-
-			BeCrashes->SetCrashKeyValueW(
-				const_cast<wchar_t*>( L"frameTimeTimeout" ),
-				const_cast<wchar_t*>( L"true" ) );
-
-			BeCrashes->ProduceImmediateDump();
-
-			// In case we recover and then crash later
-			BeCrashes->SetCrashKeyValueW(
-				const_cast<wchar_t*>( L"frameTimeTimeout" ),
-				const_cast<wchar_t*>( L"recovered" ) );
 		}
 	}
 }
