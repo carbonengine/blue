@@ -539,6 +539,7 @@
     <ClInclude Include="Include\ScopedBlockTrap.h" />
     <ClInclude Include="Include\StructPacker.h" />
     <ClInclude Include="Include\TransGaming.h" />
+    <ClInclude Include="Include\Wine.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Logger\Logger.cpp" />
@@ -654,6 +655,7 @@
     <ClCompile Include="TransGaming.cpp" />
     <ClCompile Include="WatchdogThread.cpp" />
     <ClCompile Include="win32.cpp" />
+    <ClCompile Include="Wine.cpp" />
     <ClCompile Include="XUtil.cpp" />
     <ClCompile Include="YamlReader.cpp" />
     <ClCompile Include="YamlReader_Blue.cpp" />

@@ -335,6 +335,9 @@
     <ClInclude Include="Include\TransGaming.h">
       <Filter>Source Files\Include</Filter>
     </ClInclude>
+    <ClInclude Include="Include\Wine.h">
+      <Filter>Source Files\Include</Filter>
+    </ClInclude>
     <ClCompile Include="..\Logger\Logger.cpp">
       <Filter>Source Files\Logger</Filter>
     </ClCompile>
@@ -666,6 +669,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="win32.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Wine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="XUtil.cpp">
