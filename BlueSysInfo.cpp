@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "BlueSysInfo.h"
+#include "Include/Wine.h"
 #ifdef _WIN32
 #include "Include/TransGaming.h"
 #include "win32.h"
@@ -134,15 +135,33 @@ bool BlueSysInfo::IsTransgaming() const
 
 bool BlueSysInfo::IsWine() const
 {
+	return Wine::IsWine();
+}
+
+std::wstring BlueSysInfo::GetWineVersion() const
+{
 	static bool hasCached = false;
-	static bool wine = false;
+	static std::wstring wineVersion = L"";
+
 	if( !hasCached )
 	{
-		HMODULE hMod = GetModuleHandle("ntdll");
-		wine = GetProcAddress( hMod, "wine_get_version" ) != nullptr;
-		hasCached = true;
+		wineVersion = CA2W( Wine::GetWineVersion() );
 	}
-	return wine;
+
+	return wineVersion;
+}
+
+std::wstring BlueSysInfo::GetWineHostOs() const
+{
+	static bool hasCached = false;
+	static std::wstring hostOs = L"";
+
+	if( !hasCached )
+	{
+		hostOs = CA2W( Wine::GetWineHostOs() );
+	}
+
+	return hostOs;
 }
 
 std::string BlueSysInfo::GetMachineUuid() const
@@ -173,36 +192,6 @@ std::string BlueSysInfo::GetMachineUuid() const
 		return "";
 	}
 	return guid;
-}
-
-std::wstring BlueSysInfo::GetWineHostOs() const
-{
-	typedef void (CDECL *wine_get_host_version_t)(const char **sysname, const char **release);
-
-	static bool hasCached = false;
-	static std::wstring hostOs = L"";
-	if( !hasCached )
-	{
-		HMODULE hMod = GetModuleHandle( "ntdll" );
-		wine_get_host_version_t wine_get_host_version = (wine_get_host_version_t)GetProcAddress( hMod, "wine_get_host_version" );
-
-		if( wine_get_host_version )
-		{
-			const char* sys_name = NULL;
-			const char* release_name = NULL;
-			wine_get_host_version( &sys_name, &release_name );
-
-			std::string hostOsA = sys_name;
-			hostOsA += " ";
-			hostOsA += release_name;
-
-			hostOs = CA2W( hostOsA.c_str() );
-		}
-
-		hasCached = true;
-	}
-
-	return hostOs;
 }
 
 
