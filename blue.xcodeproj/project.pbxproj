@@ -9,18 +9,18 @@
 			fileRef = 000001160000b28b357632e3;
 			};
 		000001520000b28b357632e3 = {
-			name = Marshal.h;
+			name = manifest.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = Marshal.h;
+			path = manifest.h;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
 		000001660000b28b357632e3 = {
-			name = resource.h;
+			name = RemoteFileCache.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = resource.h;
+			path = RemoteFileCache.h;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -49,10 +49,10 @@
 			sourceTree = "<group>";
 			};
 		000001800000b28b357632e3 = {
-			name = PercentileAccumulator.h;
+			name = YamlWriter.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Accumulator/PercentileAccumulator.h";
+			path = YamlWriter.h;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -65,10 +65,25 @@
 			fileRef = 000001440000b28b357632e3;
 			};
 		000001F50000b28b357632e3 = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
+			projectDirPath = "";
+			targets = (
+				000001EF0000b28b357632e3,
+				000001F20000b28b357632e3,
+				);
+			knownRegions = (
+				en,
+				);
+			developmentRegion = English;
+			projectRoot = "";
+			hasScannedForEncodings = 0;
+			compatibilityVersion = "Xcode 3.2";
+			mainGroup = 000001ED0000b28b357632e3;
+			attributes = {
+				ORGANIZATIONNAME = CCP;
+				LastUpgradeCheck = 0460;
 				};
-			name = Release;
+			isa = PBXProject;
+			buildConfigurationList = 000001F60000b28b357632e3;
 			};
 		000000C20000b28b357632e3 = {
 			name = RemoteFileCache.cpp;
@@ -107,18 +122,18 @@
 			fileRef = 000000680000b28b357632e3;
 			};
 		000000EE0000b28b357632e3 = {
-			name = BlueSysInfo.mm;
+			name = PercentileAccumulator_Blue.cpp;
 			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.objcpp;
-			path = BlueSysInfo.mm;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = "Accumulator/PercentileAccumulator_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
 		000001640000b28b357632e3 = {
-			name = RemoteFileCache.h;
+			name = PythonEvents.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = RemoteFileCache.h;
+			path = PythonEvents.h;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -131,10 +146,10 @@
 			fileRef = 000000660000b28b357632e3;
 			};
 		000001940000b28b357632e3 = {
-			name = BlueNetTypes.h;
+			name = BlueNet.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Include/BlueNetTypes.h";
+			path = "Include/BlueNet.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -143,10 +158,10 @@
 			fileRef = 0000011A0000b28b357632e3;
 			};
 		000001040000b28b357632e3 = {
-			name = bluekey.h;
+			name = BlueHeapq.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = bluekey.h;
+			path = BlueHeapq.h;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -191,10 +206,10 @@
 			fileRef = 000000C80000b28b357632e3;
 			};
 		000001700000b28b357632e3 = {
-			name = StdAfx.h;
+			name = SqliteLogger.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = StdAfx.h;
+			path = SqliteLogger.h;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -203,10 +218,10 @@
 			fileRef = 000001320000b28b357632e3;
 			};
 		0000013E0000b28b357632e3 = {
-			name = DictReader.h;
+			name = crypto.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = DictReader.h;
+			path = crypto.h;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -219,18 +234,18 @@
 			sourceTree = "<group>";
 			};
 		0000010C0000b28b357632e3 = {
-			name = BlueNetworkStream.h;
+			name = BlueMemStream.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = BlueNetworkStream.h;
+			path = BlueMemStream.h;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
 		000001080000b28b357632e3 = {
-			name = BlueMemoryTracker.h;
+			name = blueloginmemory.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = BlueMemoryTracker.h;
+			path = blueloginmemory.h;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -271,18 +286,18 @@
 			fileRef = 0000007A0000b28b357632e3;
 			};
 		000001C20000b28b357632e3 = {
-			name = IUnloadable.h;
+			name = ITaskletTimer.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Include/IUnloadable.h";
+			path = "Include/ITaskletTimer.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
 		000001120000b28b357632e3 = {
-			name = BlueObjectProxy.h;
+			name = BlueObjectMetadata.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = BlueObjectProxy.h;
+			path = BlueObjectMetadata.h;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -339,10 +354,10 @@
 			sourceTree = "<group>";
 			};
 		000001AE0000b28b357632e3 = {
-			name = IBluePlacementObserver.h;
+			name = IBluePersist.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Include/IBluePlacementObserver.h";
+			path = "Include/IBluePersist.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -358,2381 +373,7 @@
 			isa = PBXBuildFile;
 			fileRef = 000001660000b28b357632e3;
 			};
-		000001BD0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001BE0000b28b357632e3;
-			};
-		0000001A0000b28b357632e3 = {
-			name = BlueEventToPython_Blue.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueEventToPython_Blue.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001A50000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001A60000b28b357632e3;
-			};
-		000001E30000b28b357632e3 = {
-			isa = PBXGroup;
-			sourceTree = "<group>";
-			children = (
-				000000040000b28b357632e3,
-				000000F40000b28b357632e3,
-				000000020000b28b357632e3,
-				000000F00000b28b357632e3,
-				000000F20000b28b357632e3,
-				);
-			name = Logger;
-			};
-		0000011A0000b28b357632e3 = {
-			name = BluePython.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = BluePython.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000016D0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000016E0000b28b357632e3;
-			};
-		000001010000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001020000b28b357632e3;
-			};
-		000001380000b28b357632e3 = {
-			name = BlueTimeoutHandler.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = BlueTimeoutHandler.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000009F0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000A00000b28b357632e3;
-			};
-		000000020000b28b357632e3 = {
-			name = Logger.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "../Logger/Logger.cpp";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000210000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000220000b28b357632e3;
-			};
-		000000430000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000440000b28b357632e3;
-			};
-		0000013A0000b28b357632e3 = {
-			name = CallbackMan.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = CallbackMan.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001D90000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001DA0000b28b357632e3;
-			};
-		000001200000b28b357632e3 = {
-			name = BlueResFile.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = BlueResFile.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000010000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000020000b28b357632e3;
-			};
-		0000006D0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000006E0000b28b357632e3;
-			};
-		000001400000b28b357632e3 = {
-			name = FileLogger.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = FileLogger.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000010A0000b28b357632e3 = {
-			name = BlueMemStream.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = BlueMemStream.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000E30000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000E40000b28b357632e3;
-			};
-		0000018B0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000018C0000b28b357632e3;
-			};
-		000001420000b28b357632e3 = {
-			name = Heap.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Heap.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000003C0000b28b357632e3 = {
-			name = BlueObjectMetadata_Blue.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueObjectMetadata_Blue.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000011B0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000011C0000b28b357632e3;
-			};
-		0000019D0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000019E0000b28b357632e3;
-			};
-		000001300000b28b357632e3 = {
-			name = BlueTestHelpers.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = BlueTestHelpers.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000018C0000b28b357632e3 = {
-			name = BlueFileUtil.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = "Include/BlueFileUtil.h";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000000A0000b28b357632e3 = {
-			name = BlackReader.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlackReader.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000006F0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000700000b28b357632e3;
-			};
-		000001890000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000018A0000b28b357632e3;
-			};
-		000000C60000b28b357632e3 = {
-			name = ResourceLoading.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = ResourceLoading.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000CD0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000CE0000b28b357632e3;
-			};
-		0000015A0000b28b357632e3 = {
-			name = PrettyPrint.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = PrettyPrint.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000300000b28b357632e3 = {
-			name = BlueNet.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueNet.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000150000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000160000b28b357632e3;
-			};
-		0000017D0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000017E0000b28b357632e3;
-			};
-		000001880000b28b357632e3 = {
-			name = BlueAsyncRes.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = "Include/BlueAsyncRes.h";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000A00000b28b357632e3 = {
-			name = IRootWriter_Blue.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = IRootWriter_Blue.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000390000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000003A0000b28b357632e3;
-			};
-		000000870000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000880000b28b357632e3;
-			};
-		000001A60000b28b357632e3 = {
-			name = IBlueObjectRecycler.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = "Include/IBlueObjectRecycler.h";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001870000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001880000b28b357632e3;
-			};
-		000000450000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000460000b28b357632e3;
-			};
-		000000C40000b28b357632e3 = {
-			name = RemoteFileCache_Blue.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = RemoteFileCache_Blue.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000002E0000b28b357632e3 = {
-			name = BlueMemStream_Blue.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueMemStream_Blue.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000BF0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000C00000b28b357632e3;
-			};
-		0000000F0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000100000b28b357632e3;
-			};
-		000001AD0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001AE0000b28b357632e3;
-			};
-		000001450000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001460000b28b357632e3;
-			};
-		0000014E0000b28b357632e3 = {
-			name = LogToPython.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = LogToPython.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000BB0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000BC0000b28b357632e3;
-			};
-		0000019F0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001A00000b28b357632e3;
-			};
-		0000005F0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000600000b28b357632e3;
-			};
-		000000110000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000120000b28b357632e3;
-			};
-		000000500000b28b357632e3 = {
-			name = BluePython_Blue.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BluePython_Blue.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000007D0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000007E0000b28b357632e3;
-			};
-		000000700000b28b357632e3 = {
-			name = BlueStatistics_Blue.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueStatistics_Blue.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000005B0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000005C0000b28b357632e3;
-			};
-		0000011D0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000011E0000b28b357632e3;
-			};
-		000001AB0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001AC0000b28b357632e3;
-			};
-		000000050000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000060000b28b357632e3;
-			};
-		0000019C0000b28b357632e3 = {
-			name = IBlueCallbackMan.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = "Include/IBlueCallbackMan.h";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001210000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001220000b28b357632e3;
-			};
-		000000A30000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000A40000b28b357632e3;
-			};
-		0000006E0000b28b357632e3 = {
-			name = BlueStatistics.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueStatistics.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000000D0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000000E0000b28b357632e3;
-			};
-		000001C80000b28b357632e3 = {
-			name = TransGaming.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = "Include/TransGaming.h";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001600000b28b357632e3 = {
-			name = PyTemplates.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = PyTemplates.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001EC0000b28b357632e3 = {
-			isa = XCConfigurationList;
-			defaultConfigurationName = Release;
-			buildConfigurations = (
-				000001F30000b28b357632e3,
-				);
-			defaultConfigurationIsVisible = 0;
-			};
-		0000015F0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001600000b28b357632e3;
-			};
-		000000AA0000b28b357632e3 = {
-			name = Marshal.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Marshal.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001D60000b28b357632e3 = {
-			name = libBlueExposure.a;
-			fileEncoding = 4;
-			lastKnownFileType = archive.ar;
-			path = "../../autobuild/BlueExposure/exefile/MacOsXx86_64/clang4.2/libBlueExposure.a";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001220000b28b357632e3 = {
-			name = BlueResFile2.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = BlueResFile2.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000014C0000b28b357632e3 = {
-			name = LogglyForwarder.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = LogglyForwarder.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000D80000b28b357632e3 = {
-			name = TaskletTimer_Blue.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = TaskletTimer_Blue.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000CF0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000D00000b28b357632e3;
-			};
-		0000002D0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000002E0000b28b357632e3;
-			};
-		000000C80000b28b357632e3 = {
-			name = ResourceWatch.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = ResourceWatch.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000017F0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001800000b28b357632e3;
-			};
-		000000950000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000960000b28b357632e3;
-			};
-		000000AE0000b28b357632e3 = {
-			name = MotherLode.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = MotherLode.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000140000b28b357632e3 = {
-			name = BlueAsyncRes.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueAsyncRes.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000330000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000340000b28b357632e3;
-			};
-		000000420000b28b357632e3 = {
-			name = BlueObjectRecycler.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueObjectRecycler.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000012B0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000012C0000b28b357632e3;
-			};
-		000001540000b28b357632e3 = {
-			name = md5.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = md5.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000014A0000b28b357632e3 = {
-			name = LogControl.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = LogControl.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001840000b28b357632e3 = {
-			name = BitPacker.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = "Include/BitPacker.h";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001830000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001840000b28b357632e3;
-			};
-		000000590000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000005A0000b28b357632e3;
-			};
-		000001260000b28b357632e3 = {
-			name = BlueResFileSystemRemote.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = BlueResFileSystemRemote.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001E20000b28b357632e3 = {
-			isa = PBXGroup;
-			sourceTree = "<group>";
-			children = (
-				000001E30000b28b357632e3,
-				);
-			name = ..;
-			};
-		000001C60000b28b357632e3 = {
-			name = StructPacker.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = "Include/StructPacker.h";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001550000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001560000b28b357632e3;
-			};
-		000001690000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000016A0000b28b357632e3;
-			};
-		0000008A0000b28b357632e3 = {
-			name = CallbackMan_Blue.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = CallbackMan_Blue.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000610000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000620000b28b357632e3;
-			};
-		000000740000b28b357632e3 = {
-			name = BlueSysInfo.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueSysInfo.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000012E0000b28b357632e3 = {
-			name = BlueSysInfo.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = BlueSysInfo.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001AC0000b28b357632e3 = {
-			name = IBluePersist.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = "Include/IBluePersist.h";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000F10000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000F20000b28b357632e3;
-			};
-		0000000E0000b28b357632e3 = {
-			name = BlackWriter.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlackWriter.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000830000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000840000b28b357632e3;
-			};
-		000000310000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000320000b28b357632e3;
-			};
-		000001140000b28b357632e3 = {
-			name = BlueObjectRecycler.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = BlueObjectRecycler.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001560000b28b357632e3 = {
-			name = MotherLode.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = MotherLode.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000B30000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000B40000b28b357632e3;
-			};
-		000001020000b28b357632e3 = {
-			name = BlueHeapq.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = BlueHeapq.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000010E0000b28b357632e3 = {
-			name = BlueObjectBuilderPython.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = BlueObjectBuilderPython.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001290000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000012A0000b28b357632e3;
-			};
-		000001AF0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001B00000b28b357632e3;
-			};
-		0000018F0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001900000b28b357632e3;
-			};
-		000000C30000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000C40000b28b357632e3;
-			};
-		000001EB0000b28b357632e3 = {
-			dependencies = (
-				);
-			productReference = 000001E70000b28b357632e3;
-			name = Release_27_Mac64;
-			productType = "com.apple.product-type.library.dynamic";
-			buildRules = (
-				);
-			isa = PBXNativeTarget;
-			productName = blue;
-			buildConfigurationList = 000001EC0000b28b357632e3;
-			buildPhases = (
-				000001EA0000b28b357632e3,
-				000001ED0000b28b357632e3,
-				);
-			};
-		000001C40000b28b357632e3 = {
-			name = ScopedBlockTrap.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = "Include/ScopedBlockTrap.h";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000CB0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000CC0000b28b357632e3;
-			};
-		000001F30000b28b357632e3 = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				HEADER_SEARCH_PATHS = (
-					"../../../../../../sdk/zlib/1.2.11/include",
-					"../../../carbon/src",
-					"../../../../../../shared_tools/python/27_mac/include/python2.7",
-					..,
-					.,
-					"../../../../../../sdk/libyaml/yaml-0.1.2/include",
-					"../../../../../../sdk/telemetry/3.0.1.1008/include",
-					);
-				CLANG_WARN_INT_CONVERSION = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
-				OTHER_LDFLAGS = "-headerpad_max_install_names";
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				PRODUCT_NAME = blue;
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
-				GCC_WARN_UNINITIALIZED_AUTOS = YES;
-				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
-				GCC_OPTIMIZATION_LEVEL = s;
-				ONLY_ACTIVE_ARCH = YES;
-				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu99;
-				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
-				LIBRARY_SEARCH_PATHS = (
-					"../../../../../../sdk/zlib/1.2.11/lib/MacOsX$(ARCHS)",
-					"../../../../../../shared_tools/python/27_mac/lib",
-					"../../../../../../sdk/telemetry/3.0.1.1008/lib",
-					"../../../carbon/autobuild/CcpCore/MacOsX$(ARCHS)/clang4.2/",
-					"../../../carbon/autobuild/BlueExposure/python_27/MacOsX$(ARCHS)/clang4.2",
-					"../../../../../../sdk/libyaml/yaml-0.1.2/lib/MacOsX$(ARCHS)",
-					);
-				SYMROOT = "../../autobuild/blue/python_27/MacOsX$(ARCHS)/clang4.2";
-				OBJROOT = "../temp/blue/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
-				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
-				LD_DYLIB_INSTALL_NAME = "@rpath/$(PRODUCT_NAME).so";
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				CONFIGURATION_TEMP_DIR = "../temp/blue/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					BLUEPROJECT,
-					_SCL_SECURE_NO_WARNINGS,
-					NDEBUG,
-					YAML_DECLARE_STATIC,
-					"PyMODINIT_FUNC=\"__attribute((visibility(\\\"default\\\"))) extern \\\"C\\\" void\"",
-					"BLUE_WITH_PYTHON=1",
-					NOMINMAX,
-					_WINSOCK_DEPRECATED_NO_WARNINGS,
-					"PORTING_TO_LINUX=1",
-					"$(inherited)",
-					);
-				COPY_PHASE_STRIP = NO;
-				CLANG_CXX_LIBRARY = "libc++";
-				GCC_PREFIX_HEADER = StdAfx.h;
-				EXECUTABLE_EXTENSION = so;
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				GCC_DYNAMIC_NO_PIC = NO;
-				SDKROOT = macosx;
-				WARNING_CFLAGS = "-Wno-nonportable-include-path -Wno-inconsistent-missing-override -Wno-deprecated-register -Wno-pragma-pack";
-				};
-			name = Release;
-			};
-		0000007E0000b28b357632e3 = {
-			name = BlueTextResource_Blue.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueTextResource_Blue.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000380000b28b357632e3 = {
-			name = BlueObjectBuilderPython_Blue.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueObjectBuilderPython_Blue.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000490000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000004A0000b28b357632e3;
-			};
-		0000005D0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000005E0000b28b357632e3;
-			};
-		000000340000b28b357632e3 = {
-			name = BlueNetworkStream_Blue.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueNetworkStream_Blue.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001D70000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001D80000b28b357632e3;
-			};
-		0000014B0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000014C0000b28b357632e3;
-			};
-		000000460000b28b357632e3 = {
-			name = BlueOS.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueOS.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000180000b28b357632e3 = {
-			name = BlueEventToPython.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueEventToPython.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000510000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000520000b28b357632e3;
-			};
-		000000AF0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000B00000b28b357632e3;
-			};
-		000001D40000b28b357632e3 = {
-			name = libyaml.a;
-			fileEncoding = 4;
-			lastKnownFileType = archive.ar;
-			path = "../../../../../../sdk/libyaml/yaml-0.1.2/lib/MacOsXx86_64/libyaml.a";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000600000b28b357632e3 = {
-			name = BlueResFileSystemLocal_Blue.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueResFileSystemLocal_Blue.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000B50000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000B60000b28b357632e3;
-			};
-		000001630000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001640000b28b357632e3;
-			};
-		000000920000b28b357632e3 = {
-			name = FileLogger.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = FileLogger.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001900000b28b357632e3 = {
-			name = BlueMain.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = "Include/BlueMain.h";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000940000b28b357632e3 = {
-			name = IBlueEventListener_Blue.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = IBlueEventListener_Blue.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000CE0000b28b357632e3 = {
-			name = SimpleJson.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = SimpleJson.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000580000b28b357632e3 = {
-			name = BlueRemoteStream_Blue.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueRemoteStream_Blue.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001760000b28b357632e3 = {
-			name = version.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = version.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000560000b28b357632e3 = {
-			name = BlueRemoteStream.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueRemoteStream.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001610000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001620000b28b357632e3;
-			};
-		0000009D0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000009E0000b28b357632e3;
-			};
-		000000B40000b28b357632e3 = {
-			name = PrettyPrint.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = PrettyPrint.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000011E0000b28b357632e3 = {
-			name = BlueRemoteStream.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = BlueRemoteStream.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000AC0000b28b357632e3 = {
-			name = md5.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = md5.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001DD0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001DE0000b28b357632e3;
-			};
-		000001980000b28b357632e3 = {
-			name = BlueStatistics.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = "Include/BlueStatistics.h";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001A80000b28b357632e3 = {
-			name = IBlueOS.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = "Include/IBlueOS.h";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001330000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001340000b28b357632e3;
-			};
-		000000750000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000760000b28b357632e3;
-			};
-		000000D00000b28b357632e3 = {
-			name = SqliteLogger.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = SqliteLogger.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000960000b28b357632e3 = {
-			name = IBlueObjectBuilder_Blue.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = IBlueObjectBuilder_Blue.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000990000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000009A0000b28b357632e3;
-			};
-		0000016E0000b28b357632e3 = {
-			name = SqliteLogger.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = SqliteLogger.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000B70000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000B80000b28b357632e3;
-			};
-		000001990000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000019A0000b28b357632e3;
-			};
-		000001590000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000015A0000b28b357632e3;
-			};
-		0000004F0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000500000b28b357632e3;
-			};
-		000000080000b28b357632e3 = {
-			name = Base64.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Base64.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000004E0000b28b357632e3 = {
-			name = BluePython.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BluePython.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000F00000b28b357632e3 = {
-			name = Logger.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = "../Logger/Logger.h";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000016F0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001700000b28b357632e3;
-			};
-		000001A30000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001A40000b28b357632e3;
-			};
-		000000C10000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000C20000b28b357632e3;
-			};
-		0000005C0000b28b357632e3 = {
-			name = BlueResFile2_Blue.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueResFile2_Blue.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001460000b28b357632e3 = {
-			name = IRootReader.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = IRootReader.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001DC0000b28b357632e3 = {
-			name = libz.a;
-			fileEncoding = 4;
-			lastKnownFileType = archive.ar;
-			path = "../../../../../../sdk/zlib/1.2.11/lib/MacOsXx86_64/libz.a";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001A10000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001A20000b28b357632e3;
-			};
-		000000A80000b28b357632e3 = {
-			name = manifest.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = manifest.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001F10000b28b357632e3 = {
-			projectDirPath = "";
-			targets = (
-				000001EB0000b28b357632e3,
-				000001EE0000b28b357632e3,
-				);
-			knownRegions = (
-				en,
-				);
-			developmentRegion = English;
-			projectRoot = "";
-			hasScannedForEncodings = 0;
-			compatibilityVersion = "Xcode 3.2";
-			mainGroup = 000001E90000b28b357632e3;
-			attributes = {
-				ORGANIZATIONNAME = CCP;
-				LastUpgradeCheck = 0460;
-				};
-			isa = PBXProject;
-			buildConfigurationList = 000001F20000b28b357632e3;
-			};
-		000000B90000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000BA0000b28b357632e3;
-			};
-		000000F30000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000F40000b28b357632e3;
-			};
-		000000060000b28b357632e3 = {
-			name = BackgroundReader.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BackgroundReader.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000018E0000b28b357632e3 = {
-			name = BlueId.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = "Include/BlueId.h";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000012F0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001300000b28b357632e3;
-			};
-		000000CC0000b28b357632e3 = {
-			name = ScopedBlockTrap.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = ScopedBlockTrap.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001D80000b28b357632e3 = {
-			name = libpython2.7.dylib;
-			fileEncoding = 4;
-			lastKnownFileType = "compiled.mach-o.dylib";
-			path = "../../../../../../shared_tools/python/27_mac/lib/libpython2.7.dylib";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000012D0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000012E0000b28b357632e3;
-			};
-		000001740000b28b357632e3 = {
-			name = TaskletTimer.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = TaskletTimer.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000890000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000008A0000b28b357632e3;
-			};
-		000000410000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000420000b28b357632e3;
-			};
-		0000018A0000b28b357632e3 = {
-			name = BlueChoosers.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = "Include/BlueChoosers.h";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000AB0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000AC0000b28b357632e3;
-			};
-		000001490000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000014A0000b28b357632e3;
-			};
-		000000FC0000b28b357632e3 = {
-			name = BlackWriter.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = BlackWriter.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000040000b28b357632e3 = {
-			name = LogServer.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "../Logger/LogServer.cpp";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001E90000b28b357632e3 = {
-			isa = PBXGroup;
-			children = (
-				000001E10000b28b357632e3,
-				000001E60000b28b357632e3,
-				);
-			sourceTree = "<group>";
-			};
-		000000530000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000540000b28b357632e3;
-			};
-		000000120000b28b357632e3 = {
-			name = blue.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = blue.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000015D0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000015E0000b28b357632e3;
-			};
-		000001860000b28b357632e3 = {
-			name = Blue.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = "Include/Blue.h";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000001F0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000200000b28b357632e3;
-			};
-		000001580000b28b357632e3 = {
-			name = NetworkLogger.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = NetworkLogger.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001D00000b28b357632e3 = {
-			name = libCcpCore.a;
-			fileEncoding = 4;
-			lastKnownFileType = archive.ar;
-			path = "../../autobuild/CcpCore/MacOsXx86_64/clang4.2/libCcpCore.a";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001710000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001720000b28b357632e3;
-			};
-		000001DA0000b28b357632e3 = {
-			name = libBlueExposure.a;
-			fileEncoding = 4;
-			lastKnownFileType = archive.ar;
-			path = "../../autobuild/BlueExposure/python_27/MacOsXx86_64/clang4.2/libBlueExposure.a";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000A60000b28b357632e3 = {
-			name = LogToPython.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = LogToPython.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000008B0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000008C0000b28b357632e3;
-			};
-		000000540000b28b357632e3 = {
-			name = BluePythonWeakRef_Blue.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BluePythonWeakRef_Blue.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000FD0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000FE0000b28b357632e3;
-			};
-		000000A40000b28b357632e3 = {
-			name = LogglyForwarder.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = LogglyForwarder.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001340000b28b357632e3 = {
-			name = BlueThreadMonitor.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = BlueThreadMonitor.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000D50000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000D60000b28b357632e3;
-			};
-		000000D20000b28b357632e3 = {
-			name = StdAfx.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = StdAfx.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000012C0000b28b357632e3 = {
-			name = BlueSocketLogger.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = BlueSocketLogger.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000DB0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000DC0000b28b357632e3;
-			};
-		0000010D0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000010E0000b28b357632e3;
-			};
-		000001470000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001480000b28b357632e3;
-			};
-		000001230000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001240000b28b357632e3;
-			};
-		000001350000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001360000b28b357632e3;
-			};
-		000001970000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001980000b28b357632e3;
-			};
-		000001910000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001920000b28b357632e3;
-			};
-		000001110000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001120000b28b357632e3;
-			};
-		000001CC0000b28b357632e3 = {
-			name = IOKit.framework;
-			fileEncoding = 4;
-			lastKnownFileType = wrapper.framework;
-			path = "/System/Library/Frameworks/IOKit.framework";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000019A0000b28b357632e3 = {
-			name = DataStructs.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = "Include/DataStructs.h";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001E80000b28b357632e3 = {
-			path = blue.so;
-			isa = PBXFileReference;
-			includeInIndex = 0;
-			explicitFileType = "compiled.mach-o.dylib";
-			sourceTree = BUILT_PRODUCTS_DIR;
-			};
-		0000013F0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001400000b28b357632e3;
-			};
-		000000BC0000b28b357632e3 = {
-			name = PyScheduler.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = PyScheduler.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001A90000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001AA0000b28b357632e3;
-			};
-		000000BD0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000BE0000b28b357632e3;
-			};
-		000001E10000b28b357632e3 = {
-			isa = PBXGroup;
-			sourceTree = "<group>";
-			children = (
-				000001E20000b28b357632e3,
-				000001E40000b28b357632e3,
-				000001E50000b28b357632e3,
-				000000060000b28b357632e3,
-				000000F80000b28b357632e3,
-				000000080000b28b357632e3,
-				0000000A0000b28b357632e3,
-				000000FA0000b28b357632e3,
-				0000000C0000b28b357632e3,
-				0000000E0000b28b357632e3,
-				000000FC0000b28b357632e3,
-				000000100000b28b357632e3,
-				000000140000b28b357632e3,
-				000000160000b28b357632e3,
-				000000180000b28b357632e3,
-				000000FE0000b28b357632e3,
-				0000001A0000b28b357632e3,
-				0000001C0000b28b357632e3,
-				000001000000b28b357632e3,
-				0000001E0000b28b357632e3,
-				000000200000b28b357632e3,
-				000000220000b28b357632e3,
-				000001020000b28b357632e3,
-				000000240000b28b357632e3,
-				000000260000b28b357632e3,
-				0000002C0000b28b357632e3,
-				0000010A0000b28b357632e3,
-				0000002E0000b28b357632e3,
-				000000280000b28b357632e3,
-				000001080000b28b357632e3,
-				0000002A0000b28b357632e3,
-				000000300000b28b357632e3,
-				000000320000b28b357632e3,
-				0000010C0000b28b357632e3,
-				000000340000b28b357632e3,
-				000000460000b28b357632e3,
-				000001160000b28b357632e3,
-				000000480000b28b357632e3,
-				000000360000b28b357632e3,
-				0000010E0000b28b357632e3,
-				000000380000b28b357632e3,
-				0000003A0000b28b357632e3,
-				000001100000b28b357632e3,
-				0000003C0000b28b357632e3,
-				0000003E0000b28b357632e3,
-				000001120000b28b357632e3,
-				000000400000b28b357632e3,
-				000000420000b28b357632e3,
-				000001140000b28b357632e3,
-				000000440000b28b357632e3,
-				0000004A0000b28b357632e3,
-				000001180000b28b357632e3,
-				0000004C0000b28b357632e3,
-				0000004E0000b28b357632e3,
-				0000011A0000b28b357632e3,
-				000000520000b28b357632e3,
-				0000011C0000b28b357632e3,
-				000000540000b28b357632e3,
-				000000500000b28b357632e3,
-				000000560000b28b357632e3,
-				0000011E0000b28b357632e3,
-				000000580000b28b357632e3,
-				000001200000b28b357632e3,
-				0000005A0000b28b357632e3,
-				000001220000b28b357632e3,
-				0000005C0000b28b357632e3,
-				0000005E0000b28b357632e3,
-				000001240000b28b357632e3,
-				000000600000b28b357632e3,
-				000000620000b28b357632e3,
-				000001260000b28b357632e3,
-				000000640000b28b357632e3,
-				000000660000b28b357632e3,
-				000001280000b28b357632e3,
-				0000006A0000b28b357632e3,
-				0000012A0000b28b357632e3,
-				000000680000b28b357632e3,
-				0000006C0000b28b357632e3,
-				0000012C0000b28b357632e3,
-				0000006E0000b28b357632e3,
-				000000700000b28b357632e3,
-				000000720000b28b357632e3,
-				000000740000b28b357632e3,
-				0000012E0000b28b357632e3,
-				000000EE0000b28b357632e3,
-				000000760000b28b357632e3,
-				000000780000b28b357632e3,
-				000001300000b28b357632e3,
-				0000007A0000b28b357632e3,
-				0000007C0000b28b357632e3,
-				000001320000b28b357632e3,
-				0000007E0000b28b357632e3,
-				000000800000b28b357632e3,
-				000001340000b28b357632e3,
-				000000820000b28b357632e3,
-				000000840000b28b357632e3,
-				000001360000b28b357632e3,
-				000000860000b28b357632e3,
-				000001380000b28b357632e3,
-				000000880000b28b357632e3,
-				0000013A0000b28b357632e3,
-				0000008A0000b28b357632e3,
-				0000008E0000b28b357632e3,
-				0000013E0000b28b357632e3,
-				000000900000b28b357632e3,
-				000000920000b28b357632e3,
-				000001400000b28b357632e3,
-				000001420000b28b357632e3,
-				000000940000b28b357632e3,
-				000000960000b28b357632e3,
-				000000980000b28b357632e3,
-				0000009A0000b28b357632e3,
-				000001440000b28b357632e3,
-				0000009C0000b28b357632e3,
-				000001460000b28b357632e3,
-				0000009E0000b28b357632e3,
-				000001480000b28b357632e3,
-				000000A00000b28b357632e3,
-				000000A20000b28b357632e3,
-				0000014A0000b28b357632e3,
-				000000A60000b28b357632e3,
-				0000014E0000b28b357632e3,
-				000000A40000b28b357632e3,
-				0000014C0000b28b357632e3,
-				000000AA0000b28b357632e3,
-				000001520000b28b357632e3,
-				000000AE0000b28b357632e3,
-				000001560000b28b357632e3,
-				000000B00000b28b357632e3,
-				000000B20000b28b357632e3,
-				000001580000b28b357632e3,
-				000000B40000b28b357632e3,
-				0000015A0000b28b357632e3,
-				000000B60000b28b357632e3,
-				000000B80000b28b357632e3,
-				000000BA0000b28b357632e3,
-				0000015C0000b28b357632e3,
-				000000BC0000b28b357632e3,
-				0000015E0000b28b357632e3,
-				000001600000b28b357632e3,
-				000000BE0000b28b357632e3,
-				000001620000b28b357632e3,
-				000000C00000b28b357632e3,
-				000000C20000b28b357632e3,
-				000001640000b28b357632e3,
-				000000C40000b28b357632e3,
-				000000C60000b28b357632e3,
-				000001680000b28b357632e3,
-				000000C80000b28b357632e3,
-				0000016A0000b28b357632e3,
-				000000CA0000b28b357632e3,
-				000000CC0000b28b357632e3,
-				000000CE0000b28b357632e3,
-				0000016C0000b28b357632e3,
-				000000D00000b28b357632e3,
-				0000016E0000b28b357632e3,
-				000000D20000b28b357632e3,
-				000001700000b28b357632e3,
-				000000D40000b28b357632e3,
-				000001720000b28b357632e3,
-				000000D60000b28b357632e3,
-				000001740000b28b357632e3,
-				000000D80000b28b357632e3,
-				000000DA0000b28b357632e3,
-				000000DC0000b28b357632e3,
-				000001780000b28b357632e3,
-				000000E00000b28b357632e3,
-				000000E20000b28b357632e3,
-				0000017C0000b28b357632e3,
-				000000E40000b28b357632e3,
-				000000E60000b28b357632e3,
-				0000017E0000b28b357632e3,
-				000000E80000b28b357632e3,
-				000000F60000b28b357632e3,
-				000000120000b28b357632e3,
-				000001040000b28b357632e3,
-				000001060000b28b357632e3,
-				0000008C0000b28b357632e3,
-				0000013C0000b28b357632e3,
-				000000A80000b28b357632e3,
-				000001500000b28b357632e3,
-				000000AC0000b28b357632e3,
-				000001540000b28b357632e3,
-				000001660000b28b357632e3,
-				000001760000b28b357632e3,
-				000000DE0000b28b357632e3,
-				0000017A0000b28b357632e3,
-				);
-			name = "Source Files";
-			};
-		0000008F0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000900000b28b357632e3;
-			};
-		000000DC0000b28b357632e3 = {
-			name = WatchdogThread.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = WatchdogThread.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001930000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001940000b28b357632e3;
-			};
-		000001C30000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001C40000b28b357632e3;
-			};
-		0000016C0000b28b357632e3 = {
-			name = SimpleJson.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = SimpleJson.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000F70000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000F80000b28b357632e3;
-			};
-		000000820000b28b357632e3 = {
-			name = BlueThreadMonitor_Blue.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueThreadMonitor_Blue.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000900000b28b357632e3 = {
-			name = DictReader_Blue.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = DictReader_Blue.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000440000b28b357632e3 = {
-			name = BlueObjectRecycler_Blue.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueObjectRecycler_Blue.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000810000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000820000b28b357632e3;
-			};
-		000000070000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000080000b28b357632e3;
-			};
-		000000FF0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001000000b28b357632e3;
-			};
-		000000F80000b28b357632e3 = {
-			name = BackgroundReader.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = BackgroundReader.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000009E0000b28b357632e3 = {
-			name = IRootWriter.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = IRootWriter.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000290000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000002A0000b28b357632e3;
-			};
-		000001BC0000b28b357632e3 = {
-			name = ICcpStatisticsAccumulator.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = "Include/ICcpStatisticsAccumulator.h";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000001B0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000001C0000b28b357632e3;
-			};
-		000000E40000b28b357632e3 = {
-			name = YamlReader_Blue.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = YamlReader_Blue.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001050000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001060000b28b357632e3;
-			};
-		000000250000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000260000b28b357632e3;
-			};
-		000001250000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001260000b28b357632e3;
-			};
-		000001180000b28b357632e3 = {
-			name = BluePaths.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = BluePaths.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000004D0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000004E0000b28b357632e3;
-			};
-		000000C50000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000C60000b28b357632e3;
-			};
-		000001DB0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001DC0000b28b357632e3;
-			};
-		0000016B0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000016C0000b28b357632e3;
-			};
-		0000008E0000b28b357632e3 = {
-			name = DictReader.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = DictReader.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000015E0000b28b357632e3 = {
-			name = PyScheduler.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = PyScheduler.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000013D0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000013E0000b28b357632e3;
-			};
-		0000009B0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000009C0000b28b357632e3;
-			};
-		000001090000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000010A0000b28b357632e3;
-			};
-		000001510000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001520000b28b357632e3;
-			};
-		000000B10000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000B20000b28b357632e3;
-			};
-		000001270000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001280000b28b357632e3;
-			};
-		000000E60000b28b357632e3 = {
-			name = YamlWriter.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = YamlWriter.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000E10000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000E20000b28b357632e3;
-			};
-		0000007F0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000800000b28b357632e3;
-			};
-		000001170000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001180000b28b357632e3;
-			};
-		0000011C0000b28b357632e3 = {
-			name = BluePythonWeakRef.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = BluePythonWeakRef.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000130000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000140000b28b357632e3;
-			};
-		0000010F0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001100000b28b357632e3;
-			};
-		000001C00000b28b357632e3 = {
-			name = ITaskletTimer.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = "Include/ITaskletTimer.h";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001BB0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001BC0000b28b357632e3;
-			};
-		000000970000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000980000b28b357632e3;
-			};
-		000001A40000b28b357632e3 = {
-			name = IBlueObjectProxy.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = "Include/IBlueObjectProxy.h";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000000C0000b28b357632e3 = {
-			name = BlackReader_Blue.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlackReader_Blue.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000E80000b28b357632e3 = {
-			name = YamlWriter_Blue.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = YamlWriter_Blue.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001780000b28b357632e3 = {
-			name = WatchdogThread.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = WatchdogThread.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001620000b28b357632e3 = {
-			name = PythonEvents.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = PythonEvents.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001CB0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001CC0000b28b357632e3;
-			};
-		000000880000b28b357632e3 = {
-			name = CallbackMan.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = CallbackMan.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000EF0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000F00000b28b357632e3;
-			};
-		000001480000b28b357632e3 = {
-			name = IRootWriter.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = IRootWriter.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001D50000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001D60000b28b357632e3;
-			};
-		000001A70000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001A80000b28b357632e3;
-			};
-		000000B00000b28b357632e3 = {
-			name = MotherLode_Blue.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = MotherLode_Blue.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000FE0000b28b357632e3 = {
-			name = BlueEventToPython.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = BlueEventToPython.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001790000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000017A0000b28b357632e3;
-			};
-		0000017B0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000017C0000b28b357632e3;
-			};
-		0000003F0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000400000b28b357632e3;
-			};
-		000001500000b28b357632e3 = {
-			name = manifest.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = manifest.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001CF0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001D00000b28b357632e3;
-			};
-		000000360000b28b357632e3 = {
-			name = BlueObjectBuilderPython.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueObjectBuilderPython.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001ED0000b28b357632e3 = {
-			files = (
-				000001C90000b28b357632e3,
-				000001CB0000b28b357632e3,
-				000001CF0000b28b357632e3,
-				000001D10000b28b357632e3,
-				000001D30000b28b357632e3,
-				000001D70000b28b357632e3,
-				000001D90000b28b357632e3,
-				000001DB0000b28b357632e3,
-				000001DD0000b28b357632e3,
-				000001DF0000b28b357632e3,
-				);
-			buildActionMask = 2147483647;
-			isa = PBXFrameworksBuildPhase;
-			runOnlyForDeploymentPostprocessing = 0;
-			};
-		000001B80000b28b357632e3 = {
-			name = IBlueThreadMonitor.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = "Include/IBlueThreadMonitor.h";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000001C0000b28b357632e3 = {
-			name = BlueFileStream.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueFileStream.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000EA0000b28b357632e3 = {
-			name = PercentileAccumulator.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Accumulator/PercentileAccumulator.cpp";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000003D0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000003E0000b28b357632e3;
-			};
-		0000013B0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000013C0000b28b357632e3;
-			};
-		000001E70000b28b357632e3 = {
-			path = blue.so;
-			isa = PBXFileReference;
-			includeInIndex = 0;
-			explicitFileType = "compiled.mach-o.dylib";
-			sourceTree = BUILT_PRODUCTS_DIR;
-			};
-		000001EE0000b28b357632e3 = {
-			dependencies = (
-				);
-			productReference = 000001E80000b28b357632e3;
-			name = Release_Mac64;
-			productType = "com.apple.product-type.library.dynamic";
-			buildRules = (
-				);
-			isa = PBXNativeTarget;
-			productName = blue;
-			buildConfigurationList = 000001EF0000b28b357632e3;
-			buildPhases = (
-				000001EA0000b28b357632e3,
-				000001F00000b28b357632e3,
-				);
-			};
-		000001CD0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001CE0000b28b357632e3;
-			};
-		000001950000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001960000b28b357632e3;
-			};
-		000001670000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001680000b28b357632e3;
-			};
-		000000240000b28b357632e3 = {
-			name = BlueLogInMemory.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueLogInMemory.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001240000b28b357632e3 = {
-			name = BlueResFileSystemLocal.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = BlueResFileSystemLocal.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000980000b28b357632e3 = {
-			name = IBluePlacementObserver_Blue.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = IBluePlacementObserver_Blue.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000016A0000b28b357632e3 = {
-			name = ResourceWatch.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = ResourceWatch.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001060000b28b357632e3 = {
-			name = blueloginmemory.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = blueloginmemory.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000A10000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000A20000b28b357632e3;
-			};
-		0000007A0000b28b357632e3 = {
-			name = BlueTestHelpers_Blue.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueTestHelpers_Blue.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000CA0000b28b357632e3 = {
-			name = ResourceWatch_Blue.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = ResourceWatch_Blue.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000006A0000b28b357632e3 = {
-			name = BlueResManBackgroundCall.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueResManBackgroundCall.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000FB0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000FC0000b28b357632e3;
-			};
-		000000270000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000280000b28b357632e3;
-			};
-		000001D30000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001D40000b28b357632e3;
-			};
-		000000480000b28b357632e3 = {
-			name = BlueOS_Blue.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueOS_Blue.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000B20000b28b357632e3 = {
-			name = NetworkLogger.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = NetworkLogger.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000800000b28b357632e3 = {
-			name = BlueThreadMonitor.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueThreadMonitor.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000000B0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000000C0000b28b357632e3;
-			};
-		000000F20000b28b357632e3 = {
-			name = LoggerLib.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = "../Logger/LoggerLib.h";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000A20000b28b357632e3 = {
-			name = LogControl.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = LogControl.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000005E0000b28b357632e3 = {
-			name = BlueResFileSystemLocal.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueResFileSystemLocal.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000B60000b28b357632e3 = {
-			name = PyLogObject.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = PyLogObject.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001EF0000b28b357632e3 = {
-			isa = XCConfigurationList;
-			defaultConfigurationName = Release;
-			buildConfigurations = (
-				000001F40000b28b357632e3,
-				);
-			defaultConfigurationIsVisible = 0;
-			};
-		000001B60000b28b357632e3 = {
-			name = IBlueResource.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = "Include/IBlueResource.h";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000190000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000001A0000b28b357632e3;
-			};
-		000000280000b28b357632e3 = {
-			name = BlueMemoryTracker.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueMemoryTracker.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000730000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000740000b28b357632e3;
-			};
-		000001D10000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001D20000b28b357632e3;
-			};
-		000000E00000b28b357632e3 = {
-			name = XUtil.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = XUtil.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000EB0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000EC0000b28b357632e3;
-			};
-		000001360000b28b357632e3 = {
-			name = BlueTime.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = BlueTime.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000BA0000b28b357632e3 = {
-			name = PyRowSet.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = PyRowSet.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001160000b28b357632e3 = {
-			name = BlueOS.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = BlueOS.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000720000b28b357632e3 = {
-			name = BlueStreamMethods.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueStreamMethods.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000010B0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000010C0000b28b357632e3;
-			};
-		000001000000b28b357632e3 = {
-			name = BlueFileStream.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = BlueFileStream.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001920000b28b357632e3 = {
-			name = BlueNet.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = "Include/BlueNet.h";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000E20000b28b357632e3 = {
-			name = YamlReader.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = YamlReader.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001CE0000b28b357632e3 = {
-			name = libpython2.7.a;
-			fileEncoding = 4;
-			lastKnownFileType = archive.ar;
-			path = "../../bin/stackless/MacOsXx86_64/libpython2.7.a";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000F40000b28b357632e3 = {
-			name = LogServer.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = "../Logger/LogServer.h";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001B00000b28b357632e3 = {
-			name = IBluePython.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = "Include/IBluePython.h";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000690000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000006A0000b28b357632e3;
-			};
-		0000017E0000b28b357632e3 = {
-			name = YamlWriter.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = YamlWriter.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000017C0000b28b357632e3 = {
-			name = YamlReader.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = YamlReader.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001320000b28b357632e3 = {
-			name = BlueTextResource.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = BlueTextResource.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000710000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000720000b28b357632e3;
-			};
-		000000470000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000480000b28b357632e3;
-			};
-		000001730000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001740000b28b357632e3;
-			};
-		000001B10000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001B20000b28b357632e3;
-			};
-		000000F60000b28b357632e3 = {
-			name = autoversion.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = autoversion.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001280000b28b357632e3 = {
-			name = BlueResMan.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = BlueResMan.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000A90000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000AA0000b28b357632e3;
-			};
-		000001F40000b28b357632e3 = {
+		000001F80000b28b357632e3 = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				HEADER_SEARCH_PATHS = (
@@ -2804,565 +445,408 @@
 				};
 			name = Release;
 			};
-		0000019B0000b28b357632e3 = {
+		000001BD0000b28b357632e3 = {
 			isa = PBXBuildFile;
-			fileRef = 0000019C0000b28b357632e3;
+			fileRef = 000001BE0000b28b357632e3;
 			};
-		0000011F0000b28b357632e3 = {
+		0000001A0000b28b357632e3 = {
+			name = BlueEventToPython_Blue.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlueEventToPython_Blue.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001A50000b28b357632e3 = {
 			isa = PBXBuildFile;
-			fileRef = 000001200000b28b357632e3;
+			fileRef = 000001A60000b28b357632e3;
 			};
-		0000015C0000b28b357632e3 = {
-			name = PyRowset.h;
+		0000011A0000b28b357632e3 = {
+			name = BluePaths.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = PyRowset.h;
+			path = BluePaths.h;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		000001570000b28b357632e3 = {
+		0000016D0000b28b357632e3 = {
 			isa = PBXBuildFile;
-			fileRef = 000001580000b28b357632e3;
+			fileRef = 0000016E0000b28b357632e3;
 			};
-		000000930000b28b357632e3 = {
+		000001010000b28b357632e3 = {
 			isa = PBXBuildFile;
-			fileRef = 000000940000b28b357632e3;
+			fileRef = 000001020000b28b357632e3;
 			};
-		0000017A0000b28b357632e3 = {
-			name = win32.h;
+		000001380000b28b357632e3 = {
+			name = BlueTime.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = win32.h;
+			path = BlueTime.h;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		000001B20000b28b357632e3 = {
-			name = IBlueResFileSystem.h;
+		0000009F0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000A00000b28b357632e3;
+			};
+		000000020000b28b357632e3 = {
+			name = Logger.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = "../Logger/Logger.cpp";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000210000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000220000b28b357632e3;
+			};
+		000000430000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000440000b28b357632e3;
+			};
+		0000013A0000b28b357632e3 = {
+			name = BlueTimeoutHandler.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Include/IBlueResFileSystem.h";
+			path = BlueTimeoutHandler.h;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		000000230000b28b357632e3 = {
+		000001D90000b28b357632e3 = {
 			isa = PBXBuildFile;
-			fileRef = 000000240000b28b357632e3;
+			fileRef = 000001DA0000b28b357632e3;
 			};
-		0000003B0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000003C0000b28b357632e3;
-			};
-		0000004B0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000004C0000b28b357632e3;
-			};
-		000001820000b28b357632e3 = {
-			name = Base64.h;
+		000001200000b28b357632e3 = {
+			name = BlueRemoteStream.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Include/Base64.h";
+			path = BlueRemoteStream.h;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		000000C90000b28b357632e3 = {
+		000000010000b28b357632e3 = {
 			isa = PBXBuildFile;
-			fileRef = 000000CA0000b28b357632e3;
+			fileRef = 000000020000b28b357632e3;
 			};
-		000001BE0000b28b357632e3 = {
-			name = IMotherLode.h;
+		0000006D0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000006E0000b28b357632e3;
+			};
+		000001400000b28b357632e3 = {
+			name = DictReader.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Include/IMotherLode.h";
+			path = DictReader.h;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		000001680000b28b357632e3 = {
-			name = ResourceLoading.h;
+		0000010A0000b28b357632e3 = {
+			name = BlueMemoryTracker.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = ResourceLoading.h;
+			path = BlueMemoryTracker.h;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		0000002B0000b28b357632e3 = {
+		000000E30000b28b357632e3 = {
 			isa = PBXBuildFile;
-			fileRef = 0000002C0000b28b357632e3;
+			fileRef = 000000E40000b28b357632e3;
 			};
-		0000019E0000b28b357632e3 = {
-			name = IBlueEventListener.h;
+		0000018B0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000018C0000b28b357632e3;
+			};
+		000001F90000b28b357632e3 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				};
+			name = Release;
+			};
+		000001420000b28b357632e3 = {
+			name = FileLogger.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Include/IBlueEventListener.h";
+			path = FileLogger.h;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		000000370000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000380000b28b357632e3;
-			};
-		0000014F0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001500000b28b357632e3;
-			};
-		0000006C0000b28b357632e3 = {
-			name = BlueSocketLogger.cpp;
+		0000003C0000b28b357632e3 = {
+			name = BlueObjectMetadata_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueSocketLogger.cpp;
+			path = BlueObjectMetadata_Blue.cpp;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		0000012A0000b28b357632e3 = {
-			name = BlueResManBackgroundCall.h;
+		0000011B0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000011C0000b28b357632e3;
+			};
+		0000019D0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000019E0000b28b357632e3;
+			};
+		000001300000b28b357632e3 = {
+			name = BlueSysInfo.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = BlueResManBackgroundCall.h;
+			path = BlueSysInfo.h;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		000001CA0000b28b357632e3 = {
-			name = libcurl.dylib;
-			fileEncoding = 4;
-			lastKnownFileType = "compiled.mach-o.dylib";
-			path = "../../../../../../../../../../../usr/lib/libcurl.dylib";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001370000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001380000b28b357632e3;
-			};
-		000000550000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000560000b28b357632e3;
-			};
-		000001390000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000013A0000b28b357632e3;
-			};
-		000001070000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001080000b28b357632e3;
-			};
-		000001F20000b28b357632e3 = {
-			isa = XCConfigurationList;
-			defaultConfigurationName = Release;
-			buildConfigurations = (
-				000001F50000b28b357632e3,
-				);
-			defaultConfigurationIsVisible = 0;
-			};
-		0000013C0000b28b357632e3 = {
-			name = crypto.h;
+		0000018C0000b28b357632e3 = {
+			name = BlueChoosers.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = crypto.h;
+			path = "Include/BlueChoosers.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		000000630000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000640000b28b357632e3;
-			};
-		000000D70000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000D80000b28b357632e3;
-			};
-		000001C90000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001CA0000b28b357632e3;
-			};
-		000000100000b28b357632e3 = {
-			name = BlackWriter_Blue.cpp;
+		0000000A0000b28b357632e3 = {
+			name = BlackReader.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlackWriter_Blue.cpp;
+			path = BlackReader.cpp;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		000001E40000b28b357632e3 = {
-			isa = PBXGroup;
-			sourceTree = "<group>";
-			children = (
-				000000EA0000b28b357632e3,
-				000001800000b28b357632e3,
-				000000EC0000b28b357632e3,
-				);
-			name = Accumulator;
-			};
-		000000DF0000b28b357632e3 = {
+		0000006F0000b28b357632e3 = {
 			isa = PBXBuildFile;
-			fileRef = 000000E00000b28b357632e3;
+			fileRef = 000000700000b28b357632e3;
 			};
-		000000780000b28b357632e3 = {
-			name = BlueTestHelpers.cpp;
+		000001890000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000018A0000b28b357632e3;
+			};
+		000000C60000b28b357632e3 = {
+			name = ResourceLoading.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueTestHelpers.cpp;
+			path = ResourceLoading.cpp;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		000000770000b28b357632e3 = {
+		000000CD0000b28b357632e3 = {
 			isa = PBXBuildFile;
-			fileRef = 000000780000b28b357632e3;
+			fileRef = 000000CE0000b28b357632e3;
 			};
-		000001A00000b28b357632e3 = {
-			name = IBlueObjectBuilder.h;
+		0000015A0000b28b357632e3 = {
+			name = NetworkLogger.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Include/IBlueObjectBuilder.h";
+			path = NetworkLogger.h;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		000001100000b28b357632e3 = {
-			name = BlueObjectMetadata.h;
+		000001E30000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001E40000b28b357632e3;
+			};
+		000000150000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000160000b28b357632e3;
+			};
+		0000017D0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000017E0000b28b357632e3;
+			};
+		000001880000b28b357632e3 = {
+			name = Blue.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = BlueObjectMetadata.h;
+			path = "Include/Blue.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		000000F50000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000F60000b28b357632e3;
-			};
-		000001C50000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001C60000b28b357632e3;
-			};
-		0000003E0000b28b357632e3 = {
-			name = BlueObjectProxy.cpp;
+		000000A00000b28b357632e3 = {
+			name = IRootWriter_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueObjectProxy.cpp;
+			path = IRootWriter_Blue.cpp;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		000001DF0000b28b357632e3 = {
+		000000390000b28b357632e3 = {
 			isa = PBXBuildFile;
-			fileRef = 000001E00000b28b357632e3;
+			fileRef = 0000003A0000b28b357632e3;
 			};
-		000001530000b28b357632e3 = {
+		000000870000b28b357632e3 = {
 			isa = PBXBuildFile;
-			fileRef = 000001540000b28b357632e3;
+			fileRef = 000000880000b28b357632e3;
 			};
-		000000640000b28b357632e3 = {
-			name = BlueResFileSystemRemote_Blue.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueResFileSystemRemote_Blue.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001C70000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001C80000b28b357632e3;
-			};
-		000001B90000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001BA0000b28b357632e3;
-			};
-		000001AA0000b28b357632e3 = {
-			name = IBluePaths.h;
+		000001A60000b28b357632e3 = {
+			name = IBlueObjectProxy.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Include/IBluePaths.h";
+			path = "Include/IBlueObjectProxy.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		0000002C0000b28b357632e3 = {
-			name = BlueMemStream.cpp;
+		000001870000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001880000b28b357632e3;
+			};
+		000000450000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000460000b28b357632e3;
+			};
+		000000C40000b28b357632e3 = {
+			name = RemoteFileCache_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueMemStream.cpp;
+			path = RemoteFileCache_Blue.cpp;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		0000002A0000b28b357632e3 = {
-			name = BlueMemoryTracker_Blue.cpp;
+		0000002E0000b28b357632e3 = {
+			name = BlueMemStream_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueMemoryTracker_Blue.cpp;
+			path = BlueMemStream_Blue.cpp;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		000000910000b28b357632e3 = {
+		000000BF0000b28b357632e3 = {
 			isa = PBXBuildFile;
-			fileRef = 000000920000b28b357632e3;
+			fileRef = 000000C00000b28b357632e3;
 			};
-		000000570000b28b357632e3 = {
+		0000000F0000b28b357632e3 = {
 			isa = PBXBuildFile;
-			fileRef = 000000580000b28b357632e3;
+			fileRef = 000000100000b28b357632e3;
 			};
-		000001E00000b28b357632e3 = {
-			name = libutil.dylib;
-			fileEncoding = 4;
-			lastKnownFileType = "compiled.mach-o.dylib";
-			path = "../../../../../../../../../../../usr/lib/libutil.dylib";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000D90000b28b357632e3 = {
+		000001AD0000b28b357632e3 = {
 			isa = PBXBuildFile;
-			fileRef = 000000DA0000b28b357632e3;
+			fileRef = 000001AE0000b28b357632e3;
 			};
-		0000008C0000b28b357632e3 = {
-			name = crypto.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = crypto.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000D40000b28b357632e3 = {
-			name = Synchro.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Synchro.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001E60000b28b357632e3 = {
-			isa = PBXGroup;
-			sourceTree = "<group>";
-			children = (
-				000001E00000b28b357632e3,
-				000001CC0000b28b357632e3,
-				000001DE0000b28b357632e3,
-				000001D40000b28b357632e3,
-				000001D20000b28b357632e3,
-				000001DA0000b28b357632e3,
-				000001D60000b28b357632e3,
-				000001CE0000b28b357632e3,
-				000001CA0000b28b357632e3,
-				000001DC0000b28b357632e3,
-				000001D00000b28b357632e3,
-				000001D80000b28b357632e3,
-				);
-			name = Dependencies;
-			};
-		000000840000b28b357632e3 = {
-			name = BlueTime.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueTime.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000D10000b28b357632e3 = {
+		000001450000b28b357632e3 = {
 			isa = PBXBuildFile;
-			fileRef = 000000D20000b28b357632e3;
+			fileRef = 000001460000b28b357632e3;
 			};
-		0000008D0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000008E0000b28b357632e3;
-			};
-		000001BF0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001C00000b28b357632e3;
-			};
-		000000E50000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000E60000b28b357632e3;
-			};
-		000000350000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000360000b28b357632e3;
-			};
-		000001BA0000b28b357632e3 = {
-			name = ICacheable.h;
+		0000014E0000b28b357632e3 = {
+			name = LogglyForwarder.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Include/ICacheable.h";
+			path = LogglyForwarder.h;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		0000007C0000b28b357632e3 = {
-			name = BlueTextResource.cpp;
+		000000BB0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000BC0000b28b357632e3;
+			};
+		0000019F0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001A00000b28b357632e3;
+			};
+		0000005F0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000600000b28b357632e3;
+			};
+		000000110000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000120000b28b357632e3;
+			};
+		000000500000b28b357632e3 = {
+			name = BluePython_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueTextResource.cpp;
+			path = BluePython_Blue.cpp;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		000001A20000b28b357632e3 = {
-			name = IBlueObjectMetadata.h;
+		0000007D0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000007E0000b28b357632e3;
+			};
+		000000700000b28b357632e3 = {
+			name = BlueStatistics_Blue.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlueStatistics_Blue.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000005B0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000005C0000b28b357632e3;
+			};
+		0000011D0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000011E0000b28b357632e3;
+			};
+		000001AB0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001AC0000b28b357632e3;
+			};
+		000000050000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000060000b28b357632e3;
+			};
+		0000019C0000b28b357632e3 = {
+			name = DataStructs.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Include/IBlueObjectMetadata.h";
+			path = "Include/DataStructs.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		000000ED0000b28b357632e3 = {
+		000001210000b28b357632e3 = {
 			isa = PBXBuildFile;
-			fileRef = 000000EE0000b28b357632e3;
+			fileRef = 000001220000b28b357632e3;
 			};
-		000001960000b28b357632e3 = {
-			name = BluePySwrap.h;
+		000000A30000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000A40000b28b357632e3;
+			};
+		0000006E0000b28b357632e3 = {
+			name = BlueStatistics.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlueStatistics.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000000D0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000000E0000b28b357632e3;
+			};
+		000001C80000b28b357632e3 = {
+			name = StructPacker.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Include/BluePySwrap.h";
+			path = "Include/StructPacker.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		000001DE0000b28b357632e3 = {
-			name = CoreFoundation.framework;
-			fileEncoding = 4;
-			lastKnownFileType = wrapper.framework;
-			path = "/System/Library/Frameworks/CoreFoundation.framework";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000015B0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000015C0000b28b357632e3;
-			};
-		000000A50000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000A60000b28b357632e3;
-			};
-		000000860000b28b357632e3 = {
-			name = BlueTimeoutHandler.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueTimeoutHandler.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000520000b28b357632e3 = {
-			name = BluePythonWeakRef.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BluePythonWeakRef.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000660000b28b357632e3 = {
-			name = BlueResMan.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueResMan.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001030000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001040000b28b357632e3;
-			};
-		000000320000b28b357632e3 = {
-			name = BlueNetworkStream.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueNetworkStream.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001720000b28b357632e3 = {
-			name = Synchro.h;
+		000001600000b28b357632e3 = {
+			name = PyScheduler.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = Synchro.h;
+			path = PyScheduler.h;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		000000FA0000b28b357632e3 = {
-			name = BlackReader.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = BlackReader.h;
+		000001EC0000b28b357632e3 = {
+			path = blue.so;
 			isa = PBXFileReference;
-			sourceTree = "<group>";
+			includeInIndex = 0;
+			explicitFileType = "compiled.mach-o.dylib";
+			sourceTree = BUILT_PRODUCTS_DIR;
 			};
-		000001810000b28b357632e3 = {
+		0000015F0000b28b357632e3 = {
 			isa = PBXBuildFile;
-			fileRef = 000001820000b28b357632e3;
+			fileRef = 000001600000b28b357632e3;
 			};
-		000000170000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000180000b28b357632e3;
-			};
-		000000B80000b28b357632e3 = {
-			name = PyMemory.cpp;
+		000000AA0000b28b357632e3 = {
+			name = Marshal.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = PyMemory.cpp;
+			path = Marshal.cpp;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		000001F00000b28b357632e3 = {
-			files = (
-				000001C90000b28b357632e3,
-				000001CB0000b28b357632e3,
-				000001CD0000b28b357632e3,
-				000001CF0000b28b357632e3,
-				000001D10000b28b357632e3,
-				000001D30000b28b357632e3,
-				000001D50000b28b357632e3,
-				000001DB0000b28b357632e3,
-				000001DD0000b28b357632e3,
-				000001DF0000b28b357632e3,
-				);
-			buildActionMask = 2147483647;
-			isa = PBXFrameworksBuildPhase;
-			runOnlyForDeploymentPostprocessing = 0;
-			};
-		000000DA0000b28b357632e3 = {
-			name = TransGaming.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = TransGaming.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000002F0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000300000b28b357632e3;
-			};
-		0000014D0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 0000014E0000b28b357632e3;
-			};
-		000000AD0000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000000AE0000b28b357632e3;
-			};
-		0000004A0000b28b357632e3 = {
-			name = BluePaths.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BluePaths.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000260000b28b357632e3 = {
-			name = BlueLogInMemory_Blue.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueLogInMemory_Blue.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001850000b28b357632e3 = {
-			isa = PBXBuildFile;
-			fileRef = 000001860000b28b357632e3;
-			};
-		000000160000b28b357632e3 = {
-			name = BlueAsyncRes_Blue.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = BlueAsyncRes_Blue.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000EC0000b28b357632e3 = {
-			name = PercentileAccumulator_Blue.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Accumulator/PercentileAccumulator_Blue.cpp";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001D20000b28b357632e3 = {
+		000001D60000b28b357632e3 = {
 			name = libdl.dylib;
 			fileEncoding = 4;
 			lastKnownFileType = "compiled.mach-o.dylib";
@@ -3370,11 +854,730 @@
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		000001E50000b28b357632e3 = {
+		000001220000b28b357632e3 = {
+			name = BlueResFile.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = BlueResFile.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000014C0000b28b357632e3 = {
+			name = LogControl.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = LogControl.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000D80000b28b357632e3 = {
+			name = TaskletTimer_Blue.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = TaskletTimer_Blue.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000CF0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000D00000b28b357632e3;
+			};
+		0000002D0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000002E0000b28b357632e3;
+			};
+		000000C80000b28b357632e3 = {
+			name = ResourceWatch.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = ResourceWatch.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000017F0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001800000b28b357632e3;
+			};
+		000000950000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000960000b28b357632e3;
+			};
+		000000AE0000b28b357632e3 = {
+			name = MotherLode.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = MotherLode.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000140000b28b357632e3 = {
+			name = BlueAsyncRes.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlueAsyncRes.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000330000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000340000b28b357632e3;
+			};
+		000000420000b28b357632e3 = {
+			name = BlueObjectRecycler.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlueObjectRecycler.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000012B0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000012C0000b28b357632e3;
+			};
+		000001540000b28b357632e3 = {
+			name = Marshal.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Marshal.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000014A0000b28b357632e3 = {
+			name = IRootWriter.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = IRootWriter.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001840000b28b357632e3 = {
+			name = Base64.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = "Include/Base64.h";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001830000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001840000b28b357632e3;
+			};
+		000000590000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000005A0000b28b357632e3;
+			};
+		000001260000b28b357632e3 = {
+			name = BlueResFileSystemLocal.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = BlueResFileSystemLocal.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001E20000b28b357632e3 = {
+			name = CoreFoundation.framework;
+			fileEncoding = 4;
+			lastKnownFileType = wrapper.framework;
+			path = "/System/Library/Frameworks/CoreFoundation.framework";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001C60000b28b357632e3 = {
+			name = ScopedBlockTrap.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = "Include/ScopedBlockTrap.h";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001550000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001560000b28b357632e3;
+			};
+		000001690000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000016A0000b28b357632e3;
+			};
+		0000008A0000b28b357632e3 = {
+			name = CallbackMan_Blue.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = CallbackMan_Blue.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000610000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000620000b28b357632e3;
+			};
+		000000740000b28b357632e3 = {
+			name = BlueSysInfo.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlueSysInfo.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000012E0000b28b357632e3 = {
+			name = BlueSocketLogger.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = BlueSocketLogger.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001AC0000b28b357632e3 = {
+			name = IBluePaths.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = "Include/IBluePaths.h";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000F10000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000F20000b28b357632e3;
+			};
+		0000000E0000b28b357632e3 = {
+			name = BlackWriter.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlackWriter.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000830000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000840000b28b357632e3;
+			};
+		000000310000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000320000b28b357632e3;
+			};
+		000001140000b28b357632e3 = {
+			name = BlueObjectProxy.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = BlueObjectProxy.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001560000b28b357632e3 = {
+			name = md5.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = md5.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000B30000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000B40000b28b357632e3;
+			};
+		000001020000b28b357632e3 = {
+			name = BlueFileStream.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = BlueFileStream.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000010E0000b28b357632e3 = {
+			name = BlueNetworkStream.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = BlueNetworkStream.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001290000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000012A0000b28b357632e3;
+			};
+		000001AF0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001B00000b28b357632e3;
+			};
+		0000018F0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001900000b28b357632e3;
+			};
+		000000C30000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000C40000b28b357632e3;
+			};
+		000001EB0000b28b357632e3 = {
+			path = blue.so;
+			isa = PBXFileReference;
+			includeInIndex = 0;
+			explicitFileType = "compiled.mach-o.dylib";
+			sourceTree = BUILT_PRODUCTS_DIR;
+			};
+		000001C40000b28b357632e3 = {
+			name = IUnloadable.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = "Include/IUnloadable.h";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000CB0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000CC0000b28b357632e3;
+			};
+		000001F30000b28b357632e3 = {
+			isa = XCConfigurationList;
+			defaultConfigurationName = Release;
+			buildConfigurations = (
+				000001F80000b28b357632e3,
+				);
+			defaultConfigurationIsVisible = 0;
+			};
+		0000007E0000b28b357632e3 = {
+			name = BlueTextResource_Blue.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlueTextResource_Blue.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000380000b28b357632e3 = {
+			name = BlueObjectBuilderPython_Blue.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlueObjectBuilderPython_Blue.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000490000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000004A0000b28b357632e3;
+			};
+		0000005D0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000005E0000b28b357632e3;
+			};
+		000000340000b28b357632e3 = {
+			name = BlueNetworkStream_Blue.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlueNetworkStream_Blue.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001D70000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001D80000b28b357632e3;
+			};
+		0000014B0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000014C0000b28b357632e3;
+			};
+		000000460000b28b357632e3 = {
+			name = BlueOS.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlueOS.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000180000b28b357632e3 = {
+			name = BlueEventToPython.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlueEventToPython.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000510000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000520000b28b357632e3;
+			};
+		000000AF0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000B00000b28b357632e3;
+			};
+		000001D40000b28b357632e3 = {
+			name = libCcpCore.a;
+			fileEncoding = 4;
+			lastKnownFileType = archive.ar;
+			path = "../../autobuild/CcpCore/MacOsXx86_64/clang4.2/libCcpCore.a";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000600000b28b357632e3 = {
+			name = BlueResFileSystemLocal_Blue.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlueResFileSystemLocal_Blue.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000B50000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000B60000b28b357632e3;
+			};
+		000001630000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001640000b28b357632e3;
+			};
+		000000920000b28b357632e3 = {
+			name = FileLogger.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = FileLogger.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001900000b28b357632e3 = {
+			name = BlueId.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = "Include/BlueId.h";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000940000b28b357632e3 = {
+			name = IBlueEventListener_Blue.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = IBlueEventListener_Blue.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000CE0000b28b357632e3 = {
+			name = SimpleJson.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = SimpleJson.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000580000b28b357632e3 = {
+			name = BlueRemoteStream_Blue.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlueRemoteStream_Blue.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001760000b28b357632e3 = {
+			name = TaskletTimer.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = TaskletTimer.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000560000b28b357632e3 = {
+			name = BlueRemoteStream.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlueRemoteStream.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001610000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001620000b28b357632e3;
+			};
+		0000009D0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000009E0000b28b357632e3;
+			};
+		000000B40000b28b357632e3 = {
+			name = PrettyPrint.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = PrettyPrint.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000011E0000b28b357632e3 = {
+			name = BluePythonWeakRef.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = BluePythonWeakRef.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000AC0000b28b357632e3 = {
+			name = md5.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = md5.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001DD0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001DE0000b28b357632e3;
+			};
+		000001980000b28b357632e3 = {
+			name = BluePySwrap.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = "Include/BluePySwrap.h";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001A80000b28b357632e3 = {
+			name = IBlueObjectRecycler.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = "Include/IBlueObjectRecycler.h";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001330000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001340000b28b357632e3;
+			};
+		000000750000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000760000b28b357632e3;
+			};
+		000000D00000b28b357632e3 = {
+			name = SqliteLogger.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = SqliteLogger.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000960000b28b357632e3 = {
+			name = IBlueObjectBuilder_Blue.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = IBlueObjectBuilder_Blue.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000990000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000009A0000b28b357632e3;
+			};
+		0000016E0000b28b357632e3 = {
+			name = SimpleJson.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = SimpleJson.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000B70000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000B80000b28b357632e3;
+			};
+		000001990000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000019A0000b28b357632e3;
+			};
+		000001590000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000015A0000b28b357632e3;
+			};
+		0000004F0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000500000b28b357632e3;
+			};
+		000000080000b28b357632e3 = {
+			name = Base64.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Base64.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000004E0000b28b357632e3 = {
+			name = BluePython.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BluePython.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000F00000b28b357632e3 = {
+			name = BlueSysInfo.mm;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.objcpp;
+			path = BlueSysInfo.mm;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000016F0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001700000b28b357632e3;
+			};
+		000001A30000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001A40000b28b357632e3;
+			};
+		000000C10000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000C20000b28b357632e3;
+			};
+		0000005C0000b28b357632e3 = {
+			name = BlueResFile2_Blue.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlueResFile2_Blue.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001460000b28b357632e3 = {
+			name = IOLoop.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = IOLoop.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001DC0000b28b357632e3 = {
+			name = libpython2.7.dylib;
+			fileEncoding = 4;
+			lastKnownFileType = "compiled.mach-o.dylib";
+			path = "../../../../../../shared_tools/python/27_mac/lib/libpython2.7.dylib";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001A10000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001A20000b28b357632e3;
+			};
+		000000A80000b28b357632e3 = {
+			name = manifest.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = manifest.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001F60000b28b357632e3 = {
+			isa = XCConfigurationList;
+			defaultConfigurationName = Release;
+			buildConfigurations = (
+				000001F90000b28b357632e3,
+				);
+			defaultConfigurationIsVisible = 0;
+			};
+		000001F10000b28b357632e3 = {
+			files = (
+				000001CD0000b28b357632e3,
+				000001CF0000b28b357632e3,
+				000001D30000b28b357632e3,
+				000001D50000b28b357632e3,
+				000001D70000b28b357632e3,
+				000001DB0000b28b357632e3,
+				000001DD0000b28b357632e3,
+				000001DF0000b28b357632e3,
+				000001E10000b28b357632e3,
+				000001E30000b28b357632e3,
+				);
+			buildActionMask = 2147483647;
+			isa = PBXFrameworksBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+			};
+		000000B90000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000BA0000b28b357632e3;
+			};
+		000000F30000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000F40000b28b357632e3;
+			};
+		000000060000b28b357632e3 = {
+			name = BackgroundReader.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BackgroundReader.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000018E0000b28b357632e3 = {
+			name = BlueFileUtil.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = "Include/BlueFileUtil.h";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000012F0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001300000b28b357632e3;
+			};
+		000000CC0000b28b357632e3 = {
+			name = ScopedBlockTrap.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = ScopedBlockTrap.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001D80000b28b357632e3 = {
+			name = libyaml.a;
+			fileEncoding = 4;
+			lastKnownFileType = archive.ar;
+			path = "../../../../../../sdk/libyaml/yaml-0.1.2/lib/MacOsXx86_64/libyaml.a";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000012D0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000012E0000b28b357632e3;
+			};
+		000001740000b28b357632e3 = {
+			name = Synchro.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Synchro.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000890000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000008A0000b28b357632e3;
+			};
+		000000410000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000420000b28b357632e3;
+			};
+		0000018A0000b28b357632e3 = {
+			name = BlueAsyncRes.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = "Include/BlueAsyncRes.h";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000AB0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000AC0000b28b357632e3;
+			};
+		000001490000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000014A0000b28b357632e3;
+			};
+		000000FC0000b28b357632e3 = {
+			name = BlackReader.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = BlackReader.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000040000b28b357632e3 = {
+			name = LogServer.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = "../Logger/LogServer.cpp";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001E90000b28b357632e3 = {
 			isa = PBXGroup;
 			sourceTree = "<group>";
 			children = (
-				000001820000b28b357632e3,
 				000001840000b28b357632e3,
 				000001860000b28b357632e3,
 				000001880000b28b357632e3,
@@ -3389,12 +1592,12 @@
 				0000019A0000b28b357632e3,
 				0000019C0000b28b357632e3,
 				0000019E0000b28b357632e3,
-				000001A80000b28b357632e3,
 				000001A00000b28b357632e3,
+				000001AA0000b28b357632e3,
 				000001A20000b28b357632e3,
 				000001A40000b28b357632e3,
 				000001A60000b28b357632e3,
-				000001AA0000b28b357632e3,
+				000001A80000b28b357632e3,
 				000001AC0000b28b357632e3,
 				000001AE0000b28b357632e3,
 				000001B00000b28b357632e3,
@@ -3410,18 +1613,618 @@
 				000001C40000b28b357632e3,
 				000001C60000b28b357632e3,
 				000001C80000b28b357632e3,
+				000001CA0000b28b357632e3,
+				000001CC0000b28b357632e3,
 				);
 			name = Include;
 			};
-		000000F90000b28b357632e3 = {
+		000000530000b28b357632e3 = {
 			isa = PBXBuildFile;
-			fileRef = 000000FA0000b28b357632e3;
+			fileRef = 000000540000b28b357632e3;
 			};
-		000001750000b28b357632e3 = {
+		000000120000b28b357632e3 = {
+			name = blue.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = blue.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000015D0000b28b357632e3 = {
 			isa = PBXBuildFile;
-			fileRef = 000001760000b28b357632e3;
+			fileRef = 0000015E0000b28b357632e3;
 			};
-		000001EA0000b28b357632e3 = {
+		000001860000b28b357632e3 = {
+			name = BitPacker.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = "Include/BitPacker.h";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000001F0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000200000b28b357632e3;
+			};
+		000001580000b28b357632e3 = {
+			name = MotherLode.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = MotherLode.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001D00000b28b357632e3 = {
+			name = IOKit.framework;
+			fileEncoding = 4;
+			lastKnownFileType = wrapper.framework;
+			path = "/System/Library/Frameworks/IOKit.framework";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001710000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001720000b28b357632e3;
+			};
+		000001DA0000b28b357632e3 = {
+			name = libBlueExposure.a;
+			fileEncoding = 4;
+			lastKnownFileType = archive.ar;
+			path = "../../autobuild/BlueExposure/exefile/MacOsXx86_64/clang4.2/libBlueExposure.a";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000A60000b28b357632e3 = {
+			name = LogToPython.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = LogToPython.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000008B0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000008C0000b28b357632e3;
+			};
+		000000540000b28b357632e3 = {
+			name = BluePythonWeakRef_Blue.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BluePythonWeakRef_Blue.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000FD0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000FE0000b28b357632e3;
+			};
+		000000A40000b28b357632e3 = {
+			name = LogglyForwarder.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = LogglyForwarder.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001340000b28b357632e3 = {
+			name = BlueTextResource.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = BlueTextResource.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000D50000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000D60000b28b357632e3;
+			};
+		000000D20000b28b357632e3 = {
+			name = StdAfx.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = StdAfx.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000012C0000b28b357632e3 = {
+			name = BlueResManBackgroundCall.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = BlueResManBackgroundCall.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000DB0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000DC0000b28b357632e3;
+			};
+		0000010D0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000010E0000b28b357632e3;
+			};
+		000001470000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001480000b28b357632e3;
+			};
+		000001230000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001240000b28b357632e3;
+			};
+		000001350000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001360000b28b357632e3;
+			};
+		000001970000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001980000b28b357632e3;
+			};
+		000001910000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001920000b28b357632e3;
+			};
+		000001110000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001120000b28b357632e3;
+			};
+		000001CC0000b28b357632e3 = {
+			name = Wine.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = "Include/Wine.h";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000019A0000b28b357632e3 = {
+			name = BlueStatistics.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = "Include/BlueStatistics.h";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001E80000b28b357632e3 = {
+			isa = PBXGroup;
+			sourceTree = "<group>";
+			children = (
+				000000EC0000b28b357632e3,
+				000001820000b28b357632e3,
+				000000EE0000b28b357632e3,
+				);
+			name = Accumulator;
+			};
+		0000013F0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001400000b28b357632e3;
+			};
+		000000BC0000b28b357632e3 = {
+			name = PyScheduler.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = PyScheduler.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001A90000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001AA0000b28b357632e3;
+			};
+		000000BD0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000BE0000b28b357632e3;
+			};
+		000001E10000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001E20000b28b357632e3;
+			};
+		0000008F0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000900000b28b357632e3;
+			};
+		000000DC0000b28b357632e3 = {
+			name = WatchdogThread.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = WatchdogThread.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001930000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001940000b28b357632e3;
+			};
+		000001C30000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001C40000b28b357632e3;
+			};
+		0000016C0000b28b357632e3 = {
+			name = ResourceWatch.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = ResourceWatch.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000F70000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000F80000b28b357632e3;
+			};
+		000000820000b28b357632e3 = {
+			name = BlueThreadMonitor_Blue.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlueThreadMonitor_Blue.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000900000b28b357632e3 = {
+			name = DictReader_Blue.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = DictReader_Blue.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000440000b28b357632e3 = {
+			name = BlueObjectRecycler_Blue.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlueObjectRecycler_Blue.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000810000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000820000b28b357632e3;
+			};
+		000000070000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000080000b28b357632e3;
+			};
+		000000FF0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001000000b28b357632e3;
+			};
+		000000F80000b28b357632e3 = {
+			name = autoversion.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = autoversion.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000009E0000b28b357632e3 = {
+			name = IRootWriter.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = IRootWriter.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000290000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000002A0000b28b357632e3;
+			};
+		000001BC0000b28b357632e3 = {
+			name = ICacheable.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = "Include/ICacheable.h";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000001B0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000001C0000b28b357632e3;
+			};
+		000000E40000b28b357632e3 = {
+			name = YamlReader.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = YamlReader.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001050000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001060000b28b357632e3;
+			};
+		000000250000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000260000b28b357632e3;
+			};
+		000001250000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001260000b28b357632e3;
+			};
+		000001180000b28b357632e3 = {
+			name = BlueOS.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = BlueOS.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000004D0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000004E0000b28b357632e3;
+			};
+		000000C50000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000C60000b28b357632e3;
+			};
+		000001DB0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001DC0000b28b357632e3;
+			};
+		0000016B0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000016C0000b28b357632e3;
+			};
+		0000008E0000b28b357632e3 = {
+			name = DictReader.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = DictReader.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000015E0000b28b357632e3 = {
+			name = PyRowset.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = PyRowset.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000013D0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000013E0000b28b357632e3;
+			};
+		0000009B0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000009C0000b28b357632e3;
+			};
+		000001090000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000010A0000b28b357632e3;
+			};
+		000001510000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001520000b28b357632e3;
+			};
+		000000B10000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000B20000b28b357632e3;
+			};
+		000001270000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001280000b28b357632e3;
+			};
+		000000E60000b28b357632e3 = {
+			name = YamlReader_Blue.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = YamlReader_Blue.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000E10000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000E20000b28b357632e3;
+			};
+		0000007F0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000800000b28b357632e3;
+			};
+		000001170000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001180000b28b357632e3;
+			};
+		0000011C0000b28b357632e3 = {
+			name = BluePython.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = BluePython.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000130000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000140000b28b357632e3;
+			};
+		0000010F0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001100000b28b357632e3;
+			};
+		000001C00000b28b357632e3 = {
+			name = IMotherLode.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = "Include/IMotherLode.h";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001BB0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001BC0000b28b357632e3;
+			};
+		000000970000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000980000b28b357632e3;
+			};
+		000001A40000b28b357632e3 = {
+			name = IBlueObjectMetadata.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = "Include/IBlueObjectMetadata.h";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000000C0000b28b357632e3 = {
+			name = BlackReader_Blue.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlackReader_Blue.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000E80000b28b357632e3 = {
+			name = YamlWriter.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = YamlWriter.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001780000b28b357632e3 = {
+			name = version.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = version.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001620000b28b357632e3 = {
+			name = PyTemplates.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = PyTemplates.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001CB0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001CC0000b28b357632e3;
+			};
+		000000880000b28b357632e3 = {
+			name = CallbackMan.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = CallbackMan.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000EF0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000F00000b28b357632e3;
+			};
+		000001480000b28b357632e3 = {
+			name = IRootReader.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = IRootReader.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001D50000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001D60000b28b357632e3;
+			};
+		000001A70000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001A80000b28b357632e3;
+			};
+		000000B00000b28b357632e3 = {
+			name = MotherLode_Blue.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = MotherLode_Blue.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000FE0000b28b357632e3 = {
+			name = BlackWriter.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = BlackWriter.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001790000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000017A0000b28b357632e3;
+			};
+		0000017B0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000017C0000b28b357632e3;
+			};
+		0000003F0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000400000b28b357632e3;
+			};
+		000001500000b28b357632e3 = {
+			name = LogToPython.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = LogToPython.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001CF0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001D00000b28b357632e3;
+			};
+		000000360000b28b357632e3 = {
+			name = BlueObjectBuilderPython.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlueObjectBuilderPython.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001ED0000b28b357632e3 = {
+			isa = PBXGroup;
+			children = (
+				000001E50000b28b357632e3,
+				000001EA0000b28b357632e3,
+				);
+			sourceTree = "<group>";
+			};
+		000001B80000b28b357632e3 = {
+			name = IBlueResource.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = "Include/IBlueResource.h";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000001C0000b28b357632e3 = {
+			name = BlueFileStream.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlueFileStream.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000EA0000b28b357632e3 = {
+			name = YamlWriter_Blue.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = YamlWriter_Blue.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000003D0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000003E0000b28b357632e3;
+			};
+		0000013B0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000013C0000b28b357632e3;
+			};
+		000001E70000b28b357632e3 = {
+			isa = PBXGroup;
+			sourceTree = "<group>";
+			children = (
+				000000040000b28b357632e3,
+				000000F60000b28b357632e3,
+				000000020000b28b357632e3,
+				000000F20000b28b357632e3,
+				000000F40000b28b357632e3,
+				);
+			name = Logger;
+			};
+		000001EE0000b28b357632e3 = {
 			files = (
 				000000010000b28b357632e3,
 				000000030000b28b357632e3,
@@ -3542,16 +2345,1240 @@
 				000000E90000b28b357632e3,
 				000000EB0000b28b357632e3,
 				000000ED0000b28b357632e3,
+				000000EF0000b28b357632e3,
 				);
 			buildActionMask = 2147483647;
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
 			};
-		000001440000b28b357632e3 = {
-			name = IOLoop.h;
+		000001CD0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001CE0000b28b357632e3;
+			};
+		000001950000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001960000b28b357632e3;
+			};
+		000001670000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001680000b28b357632e3;
+			};
+		000000240000b28b357632e3 = {
+			name = BlueLogInMemory.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlueLogInMemory.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001240000b28b357632e3 = {
+			name = BlueResFile2.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = IOLoop.h;
+			path = BlueResFile2.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000980000b28b357632e3 = {
+			name = IBluePlacementObserver_Blue.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = IBluePlacementObserver_Blue.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000016A0000b28b357632e3 = {
+			name = ResourceLoading.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = ResourceLoading.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001060000b28b357632e3 = {
+			name = bluekey.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = bluekey.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000A10000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000A20000b28b357632e3;
+			};
+		0000007A0000b28b357632e3 = {
+			name = BlueTestHelpers_Blue.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlueTestHelpers_Blue.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000CA0000b28b357632e3 = {
+			name = ResourceWatch_Blue.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = ResourceWatch_Blue.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000006A0000b28b357632e3 = {
+			name = BlueResManBackgroundCall.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlueResManBackgroundCall.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000FB0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000FC0000b28b357632e3;
+			};
+		000000270000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000280000b28b357632e3;
+			};
+		000001D30000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001D40000b28b357632e3;
+			};
+		000000480000b28b357632e3 = {
+			name = BlueOS_Blue.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlueOS_Blue.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000B20000b28b357632e3 = {
+			name = NetworkLogger.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = NetworkLogger.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000800000b28b357632e3 = {
+			name = BlueThreadMonitor.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlueThreadMonitor.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000000B0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000000C0000b28b357632e3;
+			};
+		000000F20000b28b357632e3 = {
+			name = Logger.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = "../Logger/Logger.h";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000A20000b28b357632e3 = {
+			name = LogControl.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = LogControl.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000005E0000b28b357632e3 = {
+			name = BlueResFileSystemLocal.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlueResFileSystemLocal.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000B60000b28b357632e3 = {
+			name = PyLogObject.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = PyLogObject.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001EF0000b28b357632e3 = {
+			dependencies = (
+				);
+			productReference = 000001EB0000b28b357632e3;
+			name = Release_27_Mac64;
+			productType = "com.apple.product-type.library.dynamic";
+			buildRules = (
+				);
+			isa = PBXNativeTarget;
+			productName = blue;
+			buildConfigurationList = 000001F00000b28b357632e3;
+			buildPhases = (
+				000001EE0000b28b357632e3,
+				000001F10000b28b357632e3,
+				);
+			};
+		000001B60000b28b357632e3 = {
+			name = IBlueResMan.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = "Include/IBlueResMan.h";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000190000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000001A0000b28b357632e3;
+			};
+		000000280000b28b357632e3 = {
+			name = BlueMemoryTracker.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlueMemoryTracker.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000730000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000740000b28b357632e3;
+			};
+		000001D10000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001D20000b28b357632e3;
+			};
+		000000E00000b28b357632e3 = {
+			name = Wine.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Wine.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000EB0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000EC0000b28b357632e3;
+			};
+		000001360000b28b357632e3 = {
+			name = BlueThreadMonitor.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = BlueThreadMonitor.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000BA0000b28b357632e3 = {
+			name = PyRowSet.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = PyRowSet.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001160000b28b357632e3 = {
+			name = BlueObjectRecycler.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = BlueObjectRecycler.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000720000b28b357632e3 = {
+			name = BlueStreamMethods.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlueStreamMethods.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000010B0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000010C0000b28b357632e3;
+			};
+		000001000000b28b357632e3 = {
+			name = BlueEventToPython.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = BlueEventToPython.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001920000b28b357632e3 = {
+			name = BlueMain.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = "Include/BlueMain.h";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000E20000b28b357632e3 = {
+			name = XUtil.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = XUtil.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001CE0000b28b357632e3 = {
+			name = libcurl.dylib;
+			fileEncoding = 4;
+			lastKnownFileType = "compiled.mach-o.dylib";
+			path = "../../../../../../../../../../../usr/lib/libcurl.dylib";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000F40000b28b357632e3 = {
+			name = LoggerLib.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = "../Logger/LoggerLib.h";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001B00000b28b357632e3 = {
+			name = IBluePlacementObserver.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = "Include/IBluePlacementObserver.h";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000690000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000006A0000b28b357632e3;
+			};
+		0000017E0000b28b357632e3 = {
+			name = YamlReader.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = YamlReader.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000017C0000b28b357632e3 = {
+			name = win32.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = win32.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001320000b28b357632e3 = {
+			name = BlueTestHelpers.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = BlueTestHelpers.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000710000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000720000b28b357632e3;
+			};
+		000000470000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000480000b28b357632e3;
+			};
+		000001730000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001740000b28b357632e3;
+			};
+		000001B10000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001B20000b28b357632e3;
+			};
+		000000F60000b28b357632e3 = {
+			name = LogServer.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = "../Logger/LogServer.h";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001280000b28b357632e3 = {
+			name = BlueResFileSystemRemote.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = BlueResFileSystemRemote.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000A90000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000AA0000b28b357632e3;
+			};
+		000001F40000b28b357632e3 = {
+			files = (
+				000001CD0000b28b357632e3,
+				000001CF0000b28b357632e3,
+				000001D10000b28b357632e3,
+				000001D30000b28b357632e3,
+				000001D50000b28b357632e3,
+				000001D70000b28b357632e3,
+				000001D90000b28b357632e3,
+				000001DF0000b28b357632e3,
+				000001E10000b28b357632e3,
+				000001E30000b28b357632e3,
+				);
+			buildActionMask = 2147483647;
+			isa = PBXFrameworksBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+			};
+		0000019B0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000019C0000b28b357632e3;
+			};
+		0000011F0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001200000b28b357632e3;
+			};
+		0000015C0000b28b357632e3 = {
+			name = PrettyPrint.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = PrettyPrint.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001570000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001580000b28b357632e3;
+			};
+		000000930000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000940000b28b357632e3;
+			};
+		0000017A0000b28b357632e3 = {
+			name = WatchdogThread.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = WatchdogThread.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001B20000b28b357632e3 = {
+			name = IBluePython.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = "Include/IBluePython.h";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000230000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000240000b28b357632e3;
+			};
+		0000003B0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000003C0000b28b357632e3;
+			};
+		0000004B0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000004C0000b28b357632e3;
+			};
+		000001820000b28b357632e3 = {
+			name = PercentileAccumulator.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = "Accumulator/PercentileAccumulator.h";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000C90000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000CA0000b28b357632e3;
+			};
+		000001BE0000b28b357632e3 = {
+			name = ICcpStatisticsAccumulator.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = "Include/ICcpStatisticsAccumulator.h";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001680000b28b357632e3 = {
+			name = resource.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = resource.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000002B0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000002C0000b28b357632e3;
+			};
+		0000019E0000b28b357632e3 = {
+			name = IBlueCallbackMan.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = "Include/IBlueCallbackMan.h";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000370000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000380000b28b357632e3;
+			};
+		0000014F0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001500000b28b357632e3;
+			};
+		0000006C0000b28b357632e3 = {
+			name = BlueSocketLogger.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlueSocketLogger.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000012A0000b28b357632e3 = {
+			name = BlueResMan.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = BlueResMan.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001CA0000b28b357632e3 = {
+			name = TransGaming.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = "Include/TransGaming.h";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001370000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001380000b28b357632e3;
+			};
+		000000550000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000560000b28b357632e3;
+			};
+		000001F70000b28b357632e3 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					"../../../../../../sdk/zlib/1.2.11/include",
+					"../../../carbon/src",
+					"../../../../../../shared_tools/python/27_mac/include/python2.7",
+					..,
+					.,
+					"../../../../../../sdk/libyaml/yaml-0.1.2/include",
+					"../../../../../../sdk/telemetry/3.0.1.1008/include",
+					);
+				CLANG_WARN_INT_CONVERSION = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				OTHER_LDFLAGS = "-headerpad_max_install_names";
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				PRODUCT_NAME = blue;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/";
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				GCC_OPTIMIZATION_LEVEL = s;
+				ONLY_ACTIVE_ARCH = YES;
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				LIBRARY_SEARCH_PATHS = (
+					"../../../../../../sdk/zlib/1.2.11/lib/MacOsX$(ARCHS)",
+					"../../../../../../shared_tools/python/27_mac/lib",
+					"../../../../../../sdk/telemetry/3.0.1.1008/lib",
+					"../../../carbon/autobuild/CcpCore/MacOsX$(ARCHS)/clang4.2/",
+					"../../../carbon/autobuild/BlueExposure/python_27/MacOsX$(ARCHS)/clang4.2",
+					"../../../../../../sdk/libyaml/yaml-0.1.2/lib/MacOsX$(ARCHS)",
+					);
+				SYMROOT = "../../autobuild/blue/python_27/MacOsX$(ARCHS)/clang4.2";
+				OBJROOT = "../temp/blue/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
+				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
+				LD_DYLIB_INSTALL_NAME = "@rpath/$(PRODUCT_NAME).so";
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				CONFIGURATION_TEMP_DIR = "../temp/blue/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					BLUEPROJECT,
+					_SCL_SECURE_NO_WARNINGS,
+					NDEBUG,
+					YAML_DECLARE_STATIC,
+					"PyMODINIT_FUNC=\"__attribute((visibility(\\\"default\\\"))) extern \\\"C\\\" void\"",
+					"BLUE_WITH_PYTHON=1",
+					NOMINMAX,
+					_WINSOCK_DEPRECATED_NO_WARNINGS,
+					"PORTING_TO_LINUX=1",
+					"$(inherited)",
+					);
+				COPY_PHASE_STRIP = NO;
+				CLANG_CXX_LIBRARY = "libc++";
+				GCC_PREFIX_HEADER = StdAfx.h;
+				EXECUTABLE_EXTENSION = so;
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				SDKROOT = macosx;
+				WARNING_CFLAGS = "-Wno-nonportable-include-path -Wno-inconsistent-missing-override -Wno-deprecated-register -Wno-pragma-pack";
+				};
+			name = Release;
+			};
+		000001390000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000013A0000b28b357632e3;
+			};
+		000001070000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001080000b28b357632e3;
+			};
+		000001F20000b28b357632e3 = {
+			dependencies = (
+				);
+			productReference = 000001EC0000b28b357632e3;
+			name = Release_Mac64;
+			productType = "com.apple.product-type.library.dynamic";
+			buildRules = (
+				);
+			isa = PBXNativeTarget;
+			productName = blue;
+			buildConfigurationList = 000001F30000b28b357632e3;
+			buildPhases = (
+				000001EE0000b28b357632e3,
+				000001F40000b28b357632e3,
+				);
+			};
+		0000013C0000b28b357632e3 = {
+			name = CallbackMan.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = CallbackMan.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000630000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000640000b28b357632e3;
+			};
+		000000D70000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000D80000b28b357632e3;
+			};
+		000001C90000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001CA0000b28b357632e3;
+			};
+		000000100000b28b357632e3 = {
+			name = BlackWriter_Blue.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlackWriter_Blue.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001E40000b28b357632e3 = {
+			name = libutil.dylib;
+			fileEncoding = 4;
+			lastKnownFileType = "compiled.mach-o.dylib";
+			path = "../../../../../../../../../../../usr/lib/libutil.dylib";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000DF0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000E00000b28b357632e3;
+			};
+		000000780000b28b357632e3 = {
+			name = BlueTestHelpers.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlueTestHelpers.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000770000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000780000b28b357632e3;
+			};
+		000001A00000b28b357632e3 = {
+			name = IBlueEventListener.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = "Include/IBlueEventListener.h";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001100000b28b357632e3 = {
+			name = BlueObjectBuilderPython.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = BlueObjectBuilderPython.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000F50000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000F60000b28b357632e3;
+			};
+		000001C50000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001C60000b28b357632e3;
+			};
+		0000003E0000b28b357632e3 = {
+			name = BlueObjectProxy.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlueObjectProxy.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001DF0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001E00000b28b357632e3;
+			};
+		000001530000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001540000b28b357632e3;
+			};
+		000000640000b28b357632e3 = {
+			name = BlueResFileSystemRemote_Blue.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlueResFileSystemRemote_Blue.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001C70000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001C80000b28b357632e3;
+			};
+		000001B90000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001BA0000b28b357632e3;
+			};
+		000001AA0000b28b357632e3 = {
+			name = IBlueOS.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = "Include/IBlueOS.h";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000002C0000b28b357632e3 = {
+			name = BlueMemStream.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlueMemStream.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000002A0000b28b357632e3 = {
+			name = BlueMemoryTracker_Blue.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlueMemoryTracker_Blue.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000910000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000920000b28b357632e3;
+			};
+		000000570000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000580000b28b357632e3;
+			};
+		000001E00000b28b357632e3 = {
+			name = libz.a;
+			fileEncoding = 4;
+			lastKnownFileType = archive.ar;
+			path = "../../../../../../sdk/zlib/1.2.11/lib/MacOsXx86_64/libz.a";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000D90000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000DA0000b28b357632e3;
+			};
+		0000008C0000b28b357632e3 = {
+			name = crypto.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = crypto.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000D40000b28b357632e3 = {
+			name = Synchro.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Synchro.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001E60000b28b357632e3 = {
+			isa = PBXGroup;
+			sourceTree = "<group>";
+			children = (
+				000001E70000b28b357632e3,
+				);
+			name = ..;
+			};
+		000000840000b28b357632e3 = {
+			name = BlueTime.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlueTime.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000D10000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000D20000b28b357632e3;
+			};
+		0000008D0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000008E0000b28b357632e3;
+			};
+		000001BF0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001C00000b28b357632e3;
+			};
+		000000E50000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000E60000b28b357632e3;
+			};
+		000000350000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000360000b28b357632e3;
+			};
+		000001BA0000b28b357632e3 = {
+			name = IBlueThreadMonitor.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = "Include/IBlueThreadMonitor.h";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000007C0000b28b357632e3 = {
+			name = BlueTextResource.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlueTextResource.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001A20000b28b357632e3 = {
+			name = IBlueObjectBuilder.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = "Include/IBlueObjectBuilder.h";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000300000b28b357632e3 = {
+			name = BlueNet.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlueNet.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000ED0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000EE0000b28b357632e3;
+			};
+		000001960000b28b357632e3 = {
+			name = BlueNetTypes.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = "Include/BlueNetTypes.h";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001DE0000b28b357632e3 = {
+			name = libBlueExposure.a;
+			fileEncoding = 4;
+			lastKnownFileType = archive.ar;
+			path = "../../autobuild/BlueExposure/python_27/MacOsXx86_64/clang4.2/libBlueExposure.a";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000015B0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000015C0000b28b357632e3;
+			};
+		000000A50000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000A60000b28b357632e3;
+			};
+		000000860000b28b357632e3 = {
+			name = BlueTimeoutHandler.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlueTimeoutHandler.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000520000b28b357632e3 = {
+			name = BluePythonWeakRef.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BluePythonWeakRef.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000660000b28b357632e3 = {
+			name = BlueResMan.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlueResMan.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001030000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001040000b28b357632e3;
+			};
+		000000320000b28b357632e3 = {
+			name = BlueNetworkStream.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlueNetworkStream.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001720000b28b357632e3 = {
+			name = StdAfx.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = StdAfx.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000FA0000b28b357632e3 = {
+			name = BackgroundReader.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = BackgroundReader.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001810000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001820000b28b357632e3;
+			};
+		000000170000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000180000b28b357632e3;
+			};
+		000000B80000b28b357632e3 = {
+			name = PyMemory.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = PyMemory.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001F00000b28b357632e3 = {
+			isa = XCConfigurationList;
+			defaultConfigurationName = Release;
+			buildConfigurations = (
+				000001F70000b28b357632e3,
+				);
+			defaultConfigurationIsVisible = 0;
+			};
+		000000DA0000b28b357632e3 = {
+			name = TransGaming.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = TransGaming.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000002F0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000300000b28b357632e3;
+			};
+		0000014D0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 0000014E0000b28b357632e3;
+			};
+		000000AD0000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000AE0000b28b357632e3;
+			};
+		0000004A0000b28b357632e3 = {
+			name = BluePaths.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BluePaths.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000260000b28b357632e3 = {
+			name = BlueLogInMemory_Blue.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlueLogInMemory_Blue.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001850000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001860000b28b357632e3;
+			};
+		000000160000b28b357632e3 = {
+			name = BlueAsyncRes_Blue.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BlueAsyncRes_Blue.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000EC0000b28b357632e3 = {
+			name = PercentileAccumulator.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = "Accumulator/PercentileAccumulator.cpp";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001D20000b28b357632e3 = {
+			name = libpython2.7.a;
+			fileEncoding = 4;
+			lastKnownFileType = archive.ar;
+			path = "../../bin/stackless/MacOsXx86_64/libpython2.7.a";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001E50000b28b357632e3 = {
+			isa = PBXGroup;
+			sourceTree = "<group>";
+			children = (
+				000001E60000b28b357632e3,
+				000001E80000b28b357632e3,
+				000001E90000b28b357632e3,
+				000000060000b28b357632e3,
+				000000FA0000b28b357632e3,
+				000000080000b28b357632e3,
+				0000000A0000b28b357632e3,
+				000000FC0000b28b357632e3,
+				0000000C0000b28b357632e3,
+				0000000E0000b28b357632e3,
+				000000FE0000b28b357632e3,
+				000000100000b28b357632e3,
+				000000140000b28b357632e3,
+				000000160000b28b357632e3,
+				000000180000b28b357632e3,
+				000001000000b28b357632e3,
+				0000001A0000b28b357632e3,
+				0000001C0000b28b357632e3,
+				000001020000b28b357632e3,
+				0000001E0000b28b357632e3,
+				000000200000b28b357632e3,
+				000000220000b28b357632e3,
+				000001040000b28b357632e3,
+				000000240000b28b357632e3,
+				000000260000b28b357632e3,
+				0000002C0000b28b357632e3,
+				0000010C0000b28b357632e3,
+				0000002E0000b28b357632e3,
+				000000280000b28b357632e3,
+				0000010A0000b28b357632e3,
+				0000002A0000b28b357632e3,
+				000000300000b28b357632e3,
+				000000320000b28b357632e3,
+				0000010E0000b28b357632e3,
+				000000340000b28b357632e3,
+				000000460000b28b357632e3,
+				000001180000b28b357632e3,
+				000000480000b28b357632e3,
+				000000360000b28b357632e3,
+				000001100000b28b357632e3,
+				000000380000b28b357632e3,
+				0000003A0000b28b357632e3,
+				000001120000b28b357632e3,
+				0000003C0000b28b357632e3,
+				0000003E0000b28b357632e3,
+				000001140000b28b357632e3,
+				000000400000b28b357632e3,
+				000000420000b28b357632e3,
+				000001160000b28b357632e3,
+				000000440000b28b357632e3,
+				0000004A0000b28b357632e3,
+				0000011A0000b28b357632e3,
+				0000004C0000b28b357632e3,
+				0000004E0000b28b357632e3,
+				0000011C0000b28b357632e3,
+				000000520000b28b357632e3,
+				0000011E0000b28b357632e3,
+				000000540000b28b357632e3,
+				000000500000b28b357632e3,
+				000000560000b28b357632e3,
+				000001200000b28b357632e3,
+				000000580000b28b357632e3,
+				000001220000b28b357632e3,
+				0000005A0000b28b357632e3,
+				000001240000b28b357632e3,
+				0000005C0000b28b357632e3,
+				0000005E0000b28b357632e3,
+				000001260000b28b357632e3,
+				000000600000b28b357632e3,
+				000000620000b28b357632e3,
+				000001280000b28b357632e3,
+				000000640000b28b357632e3,
+				000000660000b28b357632e3,
+				0000012A0000b28b357632e3,
+				0000006A0000b28b357632e3,
+				0000012C0000b28b357632e3,
+				000000680000b28b357632e3,
+				0000006C0000b28b357632e3,
+				0000012E0000b28b357632e3,
+				0000006E0000b28b357632e3,
+				000000700000b28b357632e3,
+				000000720000b28b357632e3,
+				000000740000b28b357632e3,
+				000001300000b28b357632e3,
+				000000F00000b28b357632e3,
+				000000760000b28b357632e3,
+				000000780000b28b357632e3,
+				000001320000b28b357632e3,
+				0000007A0000b28b357632e3,
+				0000007C0000b28b357632e3,
+				000001340000b28b357632e3,
+				0000007E0000b28b357632e3,
+				000000800000b28b357632e3,
+				000001360000b28b357632e3,
+				000000820000b28b357632e3,
+				000000840000b28b357632e3,
+				000001380000b28b357632e3,
+				000000860000b28b357632e3,
+				0000013A0000b28b357632e3,
+				000000880000b28b357632e3,
+				0000013C0000b28b357632e3,
+				0000008A0000b28b357632e3,
+				0000008E0000b28b357632e3,
+				000001400000b28b357632e3,
+				000000900000b28b357632e3,
+				000000920000b28b357632e3,
+				000001420000b28b357632e3,
+				000001440000b28b357632e3,
+				000000940000b28b357632e3,
+				000000960000b28b357632e3,
+				000000980000b28b357632e3,
+				0000009A0000b28b357632e3,
+				000001460000b28b357632e3,
+				0000009C0000b28b357632e3,
+				000001480000b28b357632e3,
+				0000009E0000b28b357632e3,
+				0000014A0000b28b357632e3,
+				000000A00000b28b357632e3,
+				000000A20000b28b357632e3,
+				0000014C0000b28b357632e3,
+				000000A60000b28b357632e3,
+				000001500000b28b357632e3,
+				000000A40000b28b357632e3,
+				0000014E0000b28b357632e3,
+				000000AA0000b28b357632e3,
+				000001540000b28b357632e3,
+				000000AE0000b28b357632e3,
+				000001580000b28b357632e3,
+				000000B00000b28b357632e3,
+				000000B20000b28b357632e3,
+				0000015A0000b28b357632e3,
+				000000B40000b28b357632e3,
+				0000015C0000b28b357632e3,
+				000000B60000b28b357632e3,
+				000000B80000b28b357632e3,
+				000000BA0000b28b357632e3,
+				0000015E0000b28b357632e3,
+				000000BC0000b28b357632e3,
+				000001600000b28b357632e3,
+				000001620000b28b357632e3,
+				000000BE0000b28b357632e3,
+				000001640000b28b357632e3,
+				000000C00000b28b357632e3,
+				000000C20000b28b357632e3,
+				000001660000b28b357632e3,
+				000000C40000b28b357632e3,
+				000000C60000b28b357632e3,
+				0000016A0000b28b357632e3,
+				000000C80000b28b357632e3,
+				0000016C0000b28b357632e3,
+				000000CA0000b28b357632e3,
+				000000CC0000b28b357632e3,
+				000000CE0000b28b357632e3,
+				0000016E0000b28b357632e3,
+				000000D00000b28b357632e3,
+				000001700000b28b357632e3,
+				000000D20000b28b357632e3,
+				000001720000b28b357632e3,
+				000000D40000b28b357632e3,
+				000001740000b28b357632e3,
+				000000D60000b28b357632e3,
+				000001760000b28b357632e3,
+				000000D80000b28b357632e3,
+				000000DA0000b28b357632e3,
+				000000DC0000b28b357632e3,
+				0000017A0000b28b357632e3,
+				000000E00000b28b357632e3,
+				000000E20000b28b357632e3,
+				000000E40000b28b357632e3,
+				0000017E0000b28b357632e3,
+				000000E60000b28b357632e3,
+				000000E80000b28b357632e3,
+				000001800000b28b357632e3,
+				000000EA0000b28b357632e3,
+				000000F80000b28b357632e3,
+				000000120000b28b357632e3,
+				000001060000b28b357632e3,
+				000001080000b28b357632e3,
+				0000008C0000b28b357632e3,
+				0000013E0000b28b357632e3,
+				000000A80000b28b357632e3,
+				000001520000b28b357632e3,
+				000000AC0000b28b357632e3,
+				000001560000b28b357632e3,
+				000001680000b28b357632e3,
+				000001780000b28b357632e3,
+				000000DE0000b28b357632e3,
+				0000017C0000b28b357632e3,
+				);
+			name = "Source Files";
+			};
+		000000F90000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000000FA0000b28b357632e3;
+			};
+		000001750000b28b357632e3 = {
+			isa = PBXBuildFile;
+			fileRef = 000001760000b28b357632e3;
+			};
+		000001EA0000b28b357632e3 = {
+			isa = PBXGroup;
+			sourceTree = "<group>";
+			children = (
+				000001E00000b28b357632e3,
+				000001D60000b28b357632e3,
+				000001DE0000b28b357632e3,
+				000001D40000b28b357632e3,
+				000001E40000b28b357632e3,
+				000001D20000b28b357632e3,
+				000001DA0000b28b357632e3,
+				000001CE0000b28b357632e3,
+				000001E20000b28b357632e3,
+				000001DC0000b28b357632e3,
+				000001D00000b28b357632e3,
+				000001D80000b28b357632e3,
+				);
+			name = Dependencies;
+			};
+		000001440000b28b357632e3 = {
+			name = Heap.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Heap.h;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -3564,10 +3591,10 @@
 			sourceTree = "<group>";
 			};
 		000001B40000b28b357632e3 = {
-			name = IBlueResMan.h;
+			name = IBlueResFileSystem.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Include/IBlueResMan.h";
+			path = "Include/IBlueResFileSystem.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -3577,5 +3604,5 @@
 			};
 		};
 	objectVersion = 46;
-	rootObject = 000001F10000b28b357632e3;
+	rootObject = 000001F50000b28b357632e3;
 	}
