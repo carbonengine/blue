@@ -1,11 +1,9 @@
 // There is already an outdated interface for ITr2DebugRenderer that needs to be 
 // there atm for legacy reasons. Thus why this is nr.2 (okt 2019)
+#pragma once
 
 #ifndef ITr2DebugRenderer2_H
 #define ITr2DebugRenderer2_H
-
-#pragma once
-//#include "TriDebugTextRenderer.h"
 
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2DebugRenderer );
@@ -15,10 +13,7 @@ typedef std::set<Tr2DebugRendererOption> Tr2DebugRendererOptions;
 
 class Tr2RenderContext;
 
-//BLUE_INTERFACE( ITr2DebugRendererOptions ) : public IRoot
-//{
-//	virtual void insert( Tr2DebugRendererOptions & options ) = 0;
-//};
+
 enum TriDebugFont
 {
 	TRI_DBG_FONT_SMALL,
@@ -58,7 +53,7 @@ struct Tr2DebugColor
 		return c;
 	}
 
-	Tr2DebugColor::Tr2DebugColor( uint32_t color )
+	Tr2DebugColor( uint32_t color )
 		:m_color( color ),
 		m_zFailColor( 0u ),
 		m_colorSelected( GetAutoSelectedColor( color ) ),
@@ -66,7 +61,7 @@ struct Tr2DebugColor
 	{
 	}
 
-	Tr2DebugColor::Tr2DebugColor( const Color& color )
+	Tr2DebugColor( const Color& color )
 		:m_color( color ),
 		m_zFailColor( 0u ),
 		m_colorSelected( GetAutoSelectedColor( color ) ),
@@ -74,7 +69,7 @@ struct Tr2DebugColor
 	{
 	}
 
-	Tr2DebugColor::Tr2DebugColor( uint32_t color, uint32_t zFailColor )
+	Tr2DebugColor( uint32_t color, uint32_t zFailColor )
 		:m_color( color ),
 		m_zFailColor( zFailColor ),
 		m_colorSelected( GetAutoSelectedColor( color ) ),
@@ -82,7 +77,7 @@ struct Tr2DebugColor
 	{
 	}
 
-	Tr2DebugColor::Tr2DebugColor( const Color& color, const Color& zFailColor )
+	Tr2DebugColor( const Color& color, const Color& zFailColor )
 		:m_color( color ),
 		m_zFailColor( zFailColor ),
 		m_colorSelected( GetAutoSelectedColor( color ) ),
@@ -90,7 +85,7 @@ struct Tr2DebugColor
 	{
 	}
 
-	Tr2DebugColor::Tr2DebugColor( const Color& color, const Color& zFailColor, const Color& selectedColor, const Color& zFailSelectedColor )
+	Tr2DebugColor( const Color& color, const Color& zFailColor, const Color& selectedColor, const Color& zFailSelectedColor )
 		:m_color( color ),
 		m_zFailColor( zFailColor ),
 		m_colorSelected( selectedColor ),
@@ -135,13 +130,6 @@ BLUE_INTERFACE( ITr2DebugRenderer2 ) : public IRoot
 		Solid,
 		Lit,
 	};
-
-	//enum TriDebugFont
-	//{
-	//	TRI_DBG_FONT_SMALL,
-	//	TRI_DBG_FONT_MEDIUM,
-	//	TRI_DBG_FONT_LARGE,
-	//};
 
 	template <typename T>
 	bool HasOption( T* owner, const char* option ) const
