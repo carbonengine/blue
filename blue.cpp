@@ -74,36 +74,41 @@ namespace
 
 #endif
 
-void AttachToLogServer()
+bool AttachToLogServer()
 {
+	bool result = false;
 	if( StartSocketLogger() )
 	{
 		CCP::RegisterLogEcho( &LogToSocketLogger, CCP::LOGTYPE_INFO, true, CCP::LOG_ECHO_REQUIRES_PRIVILEGE_CHECK );
 		CCP_LOG( "Socket logger has been attached" );
+		result = true;
 	}
 	else
 	{
 		CCP_LOG( "Failed to attach to socket logger" );
+		result = false;
 	}
 #ifdef _WIN32
 	if( Log__IsLogging() )
 	{
 		CCP_LOG( "LogServer can't reattach" );
-		return;
-	}
-
-	Log__InitLibrary( (LONG_PTR)s_instance, CW2A( s_logDeviceName.c_str()));
-	if( Log__IsLogging() )
-	{
-		// Instruct the CCP logging system to echo to the LogServer as well
-		CCP::RegisterLogEcho( &LogToLogServer, CCP::LOGTYPE_INFO, true, CCP::LOG_ECHO_REQUIRES_PRIVILEGE_CHECK );
-		CCP_LOG( "LogServer has been attached" );
 	}
 	else
 	{
-		CCP_LOG( "Failed to attach to LogServer" );
+		Log__InitLibrary( (LONG_PTR)s_instance, CW2A( s_logDeviceName.c_str() ) );
+		if ( Log__IsLogging() )
+		{
+			// Instruct the CCP logging system to echo to the LogServer as well
+			CCP::RegisterLogEcho( &LogToLogServer, CCP::LOGTYPE_INFO, true, CCP::LOG_ECHO_REQUIRES_PRIVILEGE_CHECK );
+			CCP_LOG( "LogServer has been attached" );
+		}
+		else
+		{
+			CCP_LOG( "Failed to attach to LogServer" );
+		}
 	}
 #endif
+	return result;
 }
 
 MAP_FUNCTION_AND_WRAP( "AttachToLogServer", AttachToLogServer, "Attaches to the log server" );
