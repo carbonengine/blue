@@ -94,11 +94,6 @@ uint64_t BlueSysInfo::GetProcessStartTime() const
     return s_startTime.m_time;
 }
 
-bool BlueSysInfo::IsTransgaming() const
-{
-    return false;
-}
-
 bool BlueSysInfo::IsWine() const
 {
     return false;
