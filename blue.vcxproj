@@ -538,7 +538,6 @@
     <ClInclude Include="Include\IUnloadable.h" />
     <ClInclude Include="Include\ScopedBlockTrap.h" />
     <ClInclude Include="Include\StructPacker.h" />
-    <ClInclude Include="Include\TransGaming.h" />
     <ClInclude Include="Include\Wine.h" />
   </ItemGroup>
   <ItemGroup>
@@ -652,7 +651,6 @@
     <ClCompile Include="Synchro.cpp" />
     <ClCompile Include="TaskletTimer.cpp" />
     <ClCompile Include="TaskletTimer_Blue.cpp" />
-    <ClCompile Include="TransGaming.cpp" />
     <ClCompile Include="WatchdogThread.cpp" />
     <ClCompile Include="win32.cpp" />
     <ClCompile Include="Wine.cpp" />

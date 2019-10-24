@@ -332,9 +332,6 @@
     <ClInclude Include="Include\StructPacker.h">
       <Filter>Source Files\Include</Filter>
     </ClInclude>
-    <ClInclude Include="Include\TransGaming.h">
-      <Filter>Source Files\Include</Filter>
-    </ClInclude>
     <ClInclude Include="Include\Wine.h">
       <Filter>Source Files\Include</Filter>
     </ClInclude>
@@ -660,9 +657,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="TaskletTimer_Blue.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TransGaming.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="WatchdogThread.cpp">
