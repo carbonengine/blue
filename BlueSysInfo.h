@@ -99,7 +99,6 @@ public:
 	BlueSysInfoMemoryPtr GetMemory() const;
     uint64_t GetProcessStartTime() const;
 
-	bool IsTransgaming() const;
 	bool IsWine() const;
 	std::wstring GetWineVersion() const;
 	std::wstring GetWineHostOs() const;

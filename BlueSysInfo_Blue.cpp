@@ -19,7 +19,6 @@ const Be::ClassInfo* BlueSysInfo::ExposeToBlue()
 		MAP_PROPERTY_READONLY( "systemBitCount", GetSystemBitCount, "Bit count for OS" );
 		MAP_ATTRIBUTE( "cpu", m_cpu, "CPU information", Be::READ );
 		MAP_ATTRIBUTE( "os", m_os, "OS information", Be::READ );
-		MAP_PROPERTY_READONLY( "isTransgaming", IsTransgaming, "Is the process running under Cider" );
 		MAP_PROPERTY_READONLY( "isWine", IsWine, "Is the process running under Wine" );
 		MAP_PROPERTY_READONLY( "wineVersion", GetWineVersion, "Version number of Wine" );
 		MAP_PROPERTY_READONLY( "wineHostOs", GetWineHostOs, "Description of the host OS when running under Wine" );

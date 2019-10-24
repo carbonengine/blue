@@ -7,7 +7,6 @@
 #include "BlueOS.h"
 #include "Include/IBluePersist.h"
 #include "Include/IBlueCallbackMan.h"
-#include "Include/TransGaming.h"
 #include "BlueMemoryTracker.h"
 #include "BlueResMan.h"
 #include "BlueMemStream.h"
@@ -2776,14 +2775,13 @@ PyObject* BlueOS::PyShellExecute(PyObject* args)
 	}
 
 	//since IE7, urls cannot be opened directly from multithreaded applications.  Instead, we must have
-	//rundll do it for us. But under Transgaming we must preserve the old behaviour, since it doesn't
-	//support rundll32.exe.
+	//rundll do it for us.
 
 	SHELLEXECUTEINFOW ei;
 	memset(&ei, 0, sizeof(ei));
 	ei.cbSize = sizeof(ei);
 	std::wstring tmp;
-	if( !http || IsTransgaming() )
+	if( !http )
 	{
 		ei.lpFile = file.c_str();
 		if( params )
@@ -2793,7 +2791,6 @@ PyObject* BlueOS::PyShellExecute(PyObject* args)
 	}
 	else
 	{
-		//have rundll handle http if not running under TransGaming
 		ei.lpVerb = L"open";
 		ei.lpFile = L"rundll32.exe";
 		tmp = L"url.dll,FileProtocolHandler ";

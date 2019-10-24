@@ -112,7 +112,6 @@ void GetWindowsVersionFromApi( OSVERSIONINFOEX &info )
 
 #include "Include/Blue.h"
 #include "Include/IBluePython.h"
-#include "Include/TransGaming.h"
 
 
 // Need some structure definitions for the extended TCP functionality.  Normally defined in Iphlpapi.h,
@@ -383,9 +382,6 @@ PROTO(GetProcessTcpEStats)
 //process info and stuff
 PROTO(GetSystemInfo)
 PROTO(GetNativeSystemInfo)
-PROTO(TGGetVersion)
-PROTO(TGGetOS)
-PROTO(TGGetSystemInfo)
 
 //IP stuff
 PROTO(GetAdaptersInfo)
@@ -418,9 +414,6 @@ DEF(ToggleTcpEStats)
 DEF(GetProcessTcpEStats)
 DEF(GetSystemInfo)
 DEF(GetNativeSystemInfo)
-DEF(TGGetOS)
-DEF(TGGetVersion)
-DEF(TGGetSystemInfo)
 DEF(GetAdaptersInfo)
 
 DEF(Test)
@@ -1370,93 +1363,6 @@ PyObject *PyGetNativeSystemInfo(PyObject *self, PyObject *args)
 	else
 		GetSystemInfo(&si);
 	return PackSystemInfo(si);
-}
-
-
-PyObject *PyTGGetVersion(PyObject *self, PyObject *args)
-{
-	if (!PyArg_ParseTuple(args, ":TGGetVersion"))
-		return 0;
-
-	std::string versionStr = "Invalid";
-
-	// only on the mac
-	if( IsTransgaming() )
-	{
-		// get function out of "emulated" ntdll
-		HMODULE hMod = GetModuleHandle( "ntdll" );
-		typedef BOOL (WINAPI *TGGetVersion) ( LPSTR, SIZE_T );
-		TGGetVersion pFunc = (TGGetVersion)GetProcAddress( hMod, "TGGetVersion" );
-		if( pFunc )
-		{
-			char buffer[64];
-			buffer[0] = 0;
-			if( pFunc( buffer, 64 ) )
-			{
-				versionStr = buffer;
-			}
-		}
-	}
-
-	return PyString_FromString( versionStr.c_str() );
-}
-
-
-PyObject *PyTGGetOS(PyObject *self, PyObject *args)
-{
-	if (!PyArg_ParseTuple(args, ":TGGetOS"))
-		return 0;
-
-	HMODULE hMod = GetModuleHandle("ntdll");
-	typedef const char * (WINAPI *  TGGetOS) (void);
-	TGGetOS pFunc = (TGGetOS)GetProcAddress (hMod, "TGGetOS");
-	if (!pFunc)
-		return PyErr_SetString(PyExc_NotImplementedError, "TGGetOS"), 0;
-	return PyString_FromString(pFunc());
-}
-
-
-PyObject *PyTGGetSystemInfo(PyObject *self, PyObject *args)
-{
-	if (!PyArg_ParseTuple(args, ":TGGetSystemInfo"))
-		return 0;
-
-	HMODULE hMod = GetModuleHandle("ntdll");
-	typedef BOOL (WINAPI *  TGGetSystemInfo) (
-		char *platform_type,
-		size_t platform_type_size,
-		DWORD *platform_major_version,
-		DWORD *platform_minor_version,
-		char *platform_extra,
-		size_t platform_extra_size,
-		char *platform_distro,
-		size_t platform_distro_size,
-		DWORD *platform_bitcount);
-
-	TGGetSystemInfo pFunc = (TGGetSystemInfo)GetProcAddress (hMod, "TGGetSystemInfo");
-	if (!pFunc)
-		return PyErr_SetString(PyExc_NotImplementedError, "TGGetSystemInfo"), 0;
-
-	char platform_type[1025];
-	char platform_extra[1025];
-	char platform_distro[1025];
-	DWORD major, minor, bitcount;
-	BOOL ok = pFunc(
-		platform_type, sizeof(platform_type),
-		&major, &minor,
-		platform_extra, sizeof(platform_extra),
-		platform_distro, sizeof(platform_distro),
-		&bitcount);
-	if (!ok)
-		return PyErr_SetString(PyExc_RuntimeError, "TGGetSystemInfo"), 0;
-
-	return Py_BuildValue("{ss sk sk ss ss sk}",
-		"platform_type", platform_type, 
-		"platform_major_version", major,
-		"platform_minor_version", minor, 
-		"platform_extra", platform_extra,
-		"platform_distro", platform_distro,
-		"platform_bitcount", bitcount);
 }
 
 /****************************

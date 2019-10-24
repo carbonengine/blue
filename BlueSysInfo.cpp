@@ -2,7 +2,6 @@
 #include "BlueSysInfo.h"
 #include "Include/Wine.h"
 #ifdef _WIN32
-#include "Include/TransGaming.h"
 #include "win32.h"
 #include <ShlObj.h>
 #include <intrin.h>
@@ -126,11 +125,6 @@ uint64_t BlueSysInfo::GetProcessStartTime() const
 	{
 		return 0;
 	}
-}
-
-bool BlueSysInfo::IsTransgaming() const
-{
-	return ::IsTransgaming();
 }
 
 bool BlueSysInfo::IsWine() const
