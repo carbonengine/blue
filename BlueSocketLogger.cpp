@@ -325,6 +325,11 @@ Logger* s_logger = nullptr;
 
 }
 
+bool IsSocketLoggerConnected()
+{
+	return s_logger && s_logger->IsConnected();
+}
+
 
 bool StartSocketLogger( const char* ip, int port )
 {

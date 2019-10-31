@@ -77,7 +77,12 @@ namespace
 bool AttachToLogServer()
 {
 	bool result = false;
-	if( StartSocketLogger() )
+	if ( IsSocketLoggerConnected() )
+	{
+		CCP_LOG( "Socket logger is already attached" );
+		result = true;
+	}
+	else if ( StartSocketLogger() )
 	{
 		CCP::RegisterLogEcho( &LogToSocketLogger, CCP::LOGTYPE_INFO, true, CCP::LOG_ECHO_REQUIRES_PRIVILEGE_CHECK );
 		CCP_LOG( "Socket logger has been attached" );

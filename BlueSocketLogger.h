@@ -2,6 +2,7 @@
 #ifndef BlueSocketLogger_H
 #define BlueSocketLogger_H
 
+bool IsSocketLoggerConnected();
 bool StartSocketLogger( const char* ip = "127.0.0.1", int port = 0xCC9 );
 void StopSocketLogger();
 
