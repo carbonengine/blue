@@ -268,7 +268,6 @@ public:
 	PyObject* PyGetTimeParts( PyObject* args );
 	PyObject* PyGetTimeFromParts( PyObject* args );
 	PyObject* PyTimeDiffAsParts( PyObject* args );
-	PyObject* PyFormatUTC( PyObject* args );
 
 	PyObject* PyGetCpuTime( PyObject* args );
 

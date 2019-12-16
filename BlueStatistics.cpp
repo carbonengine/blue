@@ -57,33 +57,6 @@ const char *Immortalize( PyObject *s )
 }
 #endif
 
-static void LogToTelemetry( CcpLogChannel_t& logObject, CCP::LogType type, unsigned long userData, const char* message )
-{
-	CCP_STATS_ZONE( __FUNCTION__ );
-	tm_message_flags flag;
-	switch( type )
-	{
-	case CCP::LOGTYPE_INFO:
-		flag = TMMF_SEVERITY_LOG;
-		break;
-	case CCP::LOGTYPE_NOTICE:
-		flag = (tm_message_flags)(TMMF_SEVERITY_LOG | TMMF_ICON_EXCLAMATION);
-		break;
-	case CCP::LOGTYPE_WARN:
-		flag = TMMF_SEVERITY_WARNING;
-		break;
-	case CCP::LOGTYPE_ERR:
-		flag = TMMF_SEVERITY_ERROR;
-		break;
-	}
-
-	tmMessage( TMCM_GENERAL, flag, "%s/%s: %s", logObject.facility, logObject.object, tmDynamicString( TMCM_GENERAL, message ) );
-}
-
-#else
-
-typedef uint32_t HTELEMETRY;
-
 #endif
 
 
@@ -251,8 +224,6 @@ void BlueStatistics::StopTelemetry()
 	}
 	if( s_isTelemetryConnected )
 	{
-		CCP::UnregisterLogEcho( LogToTelemetry );
-
 		s_isTelemetryConnected = false;
 		s_isTelemetryShuttingDown = true;
 

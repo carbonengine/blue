@@ -478,17 +478,6 @@ const Be::ClassInfo* BlueOS::ExposeToBlue()
 			":type t2: long\n"
 			":rtype: (int, int, int, int, int, int, int)"
 		)
-		MAP_METHOD_AS_METHOD
-		(
-			"FormatUTC",
-			PyFormatUTC,
-			"Returns UTC time as string\n" 
-			":param time: UTC time\n"
-			":type time: long\n"
-			":param localtime: use local or UTC time\n"
-			":type localtime: Optional[int]\n"
-			":rtype: list[str]"
-		)
 
 		MAP_METHOD_AS_METHOD
 		(
