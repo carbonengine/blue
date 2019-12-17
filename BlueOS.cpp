@@ -1216,11 +1216,9 @@ bool BlueOS::RunStackless()
 		if( HasStartupArg( L"py" ) )
 		{
 			std::vector<std::wstring> argv = GetStartupArgs();
-			if( runPyMain( argv ) )
-			{
-				return false;
-			}
-			return true;
+			int ret = runPyMain(argv);
+			// exit with the interpreter's failure exit code
+			Terminate(ret);
 		}
 	}
 
