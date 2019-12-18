@@ -386,9 +386,9 @@ MAP_FUNCTION(
 	":rtype: None" );
 
 
-MAP_FUNCTION_AND_WRAP( 
+MAP_FUNCTION( 
 	"FindRoute", 
-	FindRoute, 
+	PyFindRoute, 
 	"Searches for all routes from one object to another. A route is a sequence of getattr or index operations.\n"
 	"This function is relatively heavy and should not be used in production code, but rather is indended for\n"
 	"in-house tools.\n"
@@ -399,9 +399,9 @@ MAP_FUNCTION_AND_WRAP(
 	":param toObj: blue object that is the end of the path" );
 
 
-MAP_FUNCTION_AND_WRAP(
+MAP_FUNCTION(
 	"FindInterface",
-	FindInterface,
+	PyFindInterface,
 	"Searches though hierarhy of object for all objects implementing the given interface.\n"
 	":param root: root object\n"
 	":param iid: interface name\n"
