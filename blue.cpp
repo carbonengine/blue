@@ -395,8 +395,12 @@ MAP_FUNCTION(
 	"Function returns a list of all paths from one object to another, where each path is a list of tuples\n"
 	"(parent, type, index) where parent is a parent blue object, type is 0 for getattr call and 1 for index call,\n"
 	"index is either an attribute name or a list/dict key."
-	":param fromObj: blue object that is the start of the path\n"
-	":param toObj: blue object that is the end of the path" );
+	":param from: blue object that is the start of the path\n"
+	":type from: IRoot\n"
+	":param to: blue object that is the end of the path\n"
+	":type to: IRoot\n"
+	":returns: list of paths between the objects\n"
+	":rtype: list" );
 
 
 MAP_FUNCTION(
@@ -404,8 +408,11 @@ MAP_FUNCTION(
 	PyFindInterface,
 	"Searches though hierarhy of object for all objects implementing the given interface.\n"
 	":param root: root object\n"
-	":param iid: interface name\n"
-	":returns: list of objects that implements the given interface" );
+	":type root: IRoot\n"
+	":param iidName: interface name\n"
+	":type iidName: basestring\n"
+	":returns: list of objects that implements the given interface\n"
+	":rtype: list" );
 
 #ifdef _WIN32
 
