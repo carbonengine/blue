@@ -77,9 +77,14 @@ BlueResFileSystemLocal::BlueResFileSystemLocal( IRoot* lockobj /*= nullptr */ )
 {
 }
 
-bool BlueResFileSystemLocal::Initialize()
+bool BlueResFileSystemLocal::Initialize(const std::wstring& initialPath)
 {
-	m_initialWorkingDirectory = CcpGetCurrentWorkingDirectory();
+	m_initialWorkingDirectory = initialPath;
+
+	if (!CcpIsPathDirectory(m_initialWorkingDirectory.c_str())) {
+		CCP_LOGWARN("\"%S\" is not a valid directory, falling back to current working directory", m_initialWorkingDirectory.c_str());
+		m_initialWorkingDirectory = CcpGetCurrentWorkingDirectory();
+	}
 	CCP_LOG( "Current working directory is %S", m_initialWorkingDirectory.c_str() );
 	InitializeStdAppPaths();
 

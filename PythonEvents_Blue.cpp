@@ -36,6 +36,12 @@ const Be::ClassInfo* PythonEvents::ExposeToBlue()
 			":rtype: None"
 		)
 
+		MAP_PROPERTY_READONLY
+		(
+			"encoding",
+			Pyencoding,
+			":rtype: str | None"
+		)
 
 	EXPOSURE_END()
 }

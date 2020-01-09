@@ -18,13 +18,15 @@ class PythonEvents :
 public:
 	EXPOSE_TO_BLUE();
 
-	PythonEvents() :  mPort(PYSTDOUT), mSoftspace(0) {}
+	PythonEvents() : mPort(PYSTDOUT), mSoftspace(0) { Py_INCREF(Py_None); mEncoding = Py_None; }
 
 	PYPORT mPort;
 	int mSoftspace; //used by python's print handler
+	PyObject* mEncoding;
 
 	PyObject* Pywrite ( PyObject* args );
 	PyObject* Pyflush ( PyObject* args );
+	PyObject* Pyencoding() { return mEncoding; };
 
 };
 

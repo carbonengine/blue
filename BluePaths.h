@@ -22,7 +22,7 @@ public:
 
 	// Constructor is private
 
-	static bool Initialize();
+	static bool Initialize(const std::wstring& initialPath);
 
 	void ClearSearchPaths();
 
@@ -80,7 +80,7 @@ protected:
 	~BluePaths();
 
 private:
-	bool InitializeHelper();
+	bool InitializeHelper(const std::wstring& initialPath);
 
 	std::map<std::string, std::wstring> GetAllSearchPathsAsDict();
 	std::map<std::string, std::vector<std::wstring>> GetExpandedSearchPathsAsDict();

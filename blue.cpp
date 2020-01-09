@@ -607,7 +607,6 @@ void BlueModuleStartup()
     }
 
     BeClasses->RegisterClasses( BlueRegistration::GetClassRegs() );
-    BlueInitializePaths();
 }
 
 #if BLUE_WITH_PYTHON
@@ -707,6 +706,7 @@ PyMODINIT_FUNC
 	// Inform the logging system of the main thread
 	CCP::SetLogMainThreadId();
 
+	BlueInitializePaths(L"");
 	BlueInitializeResourceLoading();
 
 	BeOS->Startup(0, IGNORE_MANIFEST);

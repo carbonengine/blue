@@ -21,9 +21,9 @@ BLUE_REGISTER_GLOBAL_AS_MODULE_OBJECT( "paths", BePaths );
 
 static CcpLogChannel_t s_ch = CCP_LOG_DEFINE_CHANNEL( "BePaths" );
 
-BLUEIMPORT bool BlueInitializePaths()
+BLUEIMPORT bool BlueInitializePaths(const std::wstring& initialPath)
 {
-	return BluePaths::Initialize();
+	return BluePaths::Initialize(initialPath);
 }
 
 BluePaths::BluePaths( IRoot* lockobj /*= NULL */ )
@@ -34,7 +34,7 @@ BluePaths::~BluePaths()
 {
 }
 
-bool BluePaths::Initialize()
+bool BluePaths::Initialize(const std::wstring& initialPath)
 {
 	if( BePaths )
 	{
@@ -44,13 +44,13 @@ bool BluePaths::Initialize()
 	static CBluePaths instance;
 	BePaths = &instance;
 
-	return instance.InitializeHelper();
+	return instance.InitializeHelper(initialPath);
 }
 
-bool BluePaths::InitializeHelper()
+bool BluePaths::InitializeHelper(const std::wstring& initialPath)
 {
 	m_localFileSystem.CreateInstance();
-	m_localFileSystem->Initialize();
+	m_localFileSystem->Initialize(initialPath);
 
 #if CCP_STACKLESS
 	InitializeStdAppPaths();

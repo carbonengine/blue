@@ -29,7 +29,7 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////
 
-	bool Initialize();
+	bool Initialize(const std::wstring& initialPath);
 	void InitializeStdAppPaths();
 
 	void SetSearchPathW( const char* key, const wchar_t* value );

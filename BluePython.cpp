@@ -259,6 +259,15 @@ bool BluePyOS::InitBasicModuleSupport()
 	for (int i = 0; i <= _PYPORTLAST; i++)
 	{
 		mPyPorts[i].mPort = (PYPORT)i;
+		// Need to track encoding for stdout and stderr so that interpreter mode works.
+		if (i == PYSTDOUT) {
+			if (mPyPorts[i].mEncoding == Py_None) {
+				Py_DECREF(Py_None);
+			}
+			PyObject* orig_stdout = PySys_GetObject("stdout");
+			// no need to incref because it's a borrowed reference
+			mPyPorts[i].mEncoding = PyObject_GetAttrString(orig_stdout, "encoding");
+		}
 		BluePythonObject* obj = WrapBlueObject(mPyPorts[i].GetRawRoot());
 		PyObject_SetAttrString(sysmodule, (char*)PORTNAMES[i], obj);
 		Py_DECREF(obj);

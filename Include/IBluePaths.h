@@ -52,7 +52,7 @@ BLUE_INTERFACE( IBluePaths ) : public IRoot
 };
 
 extern BLUEIMPORT IBluePaths* BePaths;
-BLUEIMPORT bool BlueInitializePaths();
+BLUEIMPORT bool BlueInitializePaths(const std::wstring& initialPath);
 BLUEIMPORT bool BlueInitializeResourceLoading();
 
 #endif
