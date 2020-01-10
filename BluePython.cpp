@@ -264,7 +264,7 @@ bool BluePyOS::InitBasicModuleSupport()
 			if (mPyPorts[i].mEncoding == Py_None) {
 				Py_DECREF(Py_None);
 			}
-			PyObject* orig_stdout = PySys_GetObject("stdout");
+			PyObject* orig_stdout = PySys_GetObject((char*)"stdout");
 			// no need to incref because it's a borrowed reference
 			mPyPorts[i].mEncoding = PyObject_GetAttrString(orig_stdout, "encoding");
 		}
