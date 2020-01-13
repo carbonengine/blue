@@ -465,18 +465,9 @@ BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID)
 		_CrtSetDbgFlag(newFlag);
     
 		DisableThreadLibraryCalls(instance);
-
-		BlueModuleStartup();
 	}
 	else if (reason == DLL_PROCESS_DETACH)
 	{
-		BeClasses->UnregisterClasses( BlueRegistration::GetClassRegs() );
-		CCP_LOG( "Blue module terminating");
-		
-		// not terminating this here, there are a lot
-		// of automagic classes that are still alive
-		// and may have to express themselves
-		//LOGTERMINATE();
 	}
 	else if (reason == DLL_THREAD_ATTACH)
 	{
@@ -667,7 +658,7 @@ void PatchPythonExit()
 	PyObject* sysmodule = PyImport_ImportModule("sys");
 
 	static PyMethodDef exceptHookDef;
-	exceptHookDef.ml_doc = "Pathed sys.excepthook that records process exit code.\nPart of Blue exit patching";
+	exceptHookDef.ml_doc = "Patched sys.excepthook that records process exit code.\nPart of Blue exit patching";
 	exceptHookDef.ml_flags = METH_VARARGS;
 	exceptHookDef.ml_meth = &BlueExceptHook;
 	exceptHookDef.ml_name = "excepthook";
@@ -678,7 +669,7 @@ void PatchPythonExit()
 	s_savedSysExit = PySys_GetObject( (char*)"exit" );
 
 	static PyMethodDef exitDef;
-	exitDef.ml_doc = "Pathed sys.exit that records process exit code.\nPart of Blue exit patching";
+	exitDef.ml_doc = "Patched sys.exit that records process exit code.\nPart of Blue exit patching";
 	exitDef.ml_flags = METH_VARARGS;
 	exitDef.ml_meth = &BlueExit;
 	exitDef.ml_name = "exit";
@@ -697,14 +688,9 @@ PyMODINIT_FUNC
 	if (gNoRecursiveInitBlue)
 		return;
 
-#ifndef _WIN32
     BlueModuleStartup();
-#endif
 
 	BlueInitializeSocketLogger();
-
-	// Inform the logging system of the main thread
-	CCP::SetLogMainThreadId();
 
 	BlueInitializePaths(L"");
 	BlueInitializeResourceLoading();

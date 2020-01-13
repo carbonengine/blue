@@ -545,20 +545,22 @@ bool BluePyOS::Startup()
 		mMarkupZonesInPython = true;
 	}
 
-	// initialize python engine	
-	Py_DebugFlag = 0; //debugs python , outputs heaps of gunk
-	Py_VerboseFlag = 0; //verbosity about module loading
-	
-	// Set the optimize flag: one = remove asserts, two = also remove docstrings
-	// initialize to 0 if it wasn't set, meaning same as regular python: asserts
-	// and docstrings are kept.
-	if (mOptimizeFlag < 0)
-		mOptimizeFlag = 0;
-	Py_OptimizeFlag += mOptimizeFlag;
-	
-	Py_NoSiteFlag++; //Don't attempt evil autload of 'site' module.
-	Py_IgnoreEnvironmentFlag++; //ignore PYTHONPATH and like
-	Py_DontWriteBytecodeFlag++; // Do not read or write .pyc ro .pyo files
+	if (!BeOS->HasStartupArg(L"py")) {
+		// initialize python engine	
+		Py_DebugFlag = 0; //debugs python , outputs heaps of gunk
+		Py_VerboseFlag = 0; //verbosity about module loading
+
+		// Set the optimize flag: one = remove asserts, two = also remove docstrings
+		// initialize to 0 if it wasn't set, meaning same as regular python: asserts
+		// and docstrings are kept.
+		if (mOptimizeFlag < 0)
+			mOptimizeFlag = 0;
+		Py_OptimizeFlag += mOptimizeFlag;
+
+		Py_NoSiteFlag++; //Don't attempt evil autload of 'site' module.
+		Py_IgnoreEnvironmentFlag++; //ignore PYTHONPATH and like
+		Py_DontWriteBytecodeFlag++; // Do not read or write .pyc ro .pyo files
+	}
 	
 	PySys_AddWarnOption( const_cast<char*>( "d" ) ); //default warning level
 
