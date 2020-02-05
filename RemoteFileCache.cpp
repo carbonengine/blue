@@ -451,6 +451,22 @@ bool RemoteFileCache::IsDirectory( const wchar_t* resPath )
 	return foundIt != m_folderIndex.end();
 }
 
+namespace
+{
+	ssize_t GetFileSize( const wchar_t* filePath )
+	{
+		BlueFileStreamPtr fileStream;
+		fileStream.CreateInstance();
+		if( fileStream && fileStream->Open( filePath, CCP_OM_READONLY, CCP_SM_READSHARING ) )
+		{
+			auto size = fileStream->GetSize();
+			fileStream->Close();
+			return size;
+		}
+		return -1;
+	}
+}
+
 void RemoteFileCache::CacheContentsOfRemoteStream( BlueRemoteStream* stream, const std::wstring& cachedName, const wchar_t* resPath )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
@@ -493,16 +509,35 @@ void RemoteFileCache::CacheContentsOfRemoteStream( BlueRemoteStream* stream, con
 			fileStream->Write(data, size);
 			fileStream->Close();
 
-			CCP_LOG_CH(s_ch, "Cached %S as %S", resPath, cachedNameOnDisk.c_str());
+			auto writtenSize = GetFileSize( tempNameOnDisk.c_str() );
+			if( writtenSize == size )
+			{
+				CCP_LOG_CH( s_ch, "Cached %S as %S", resPath, cachedNameOnDisk.c_str() );
 
-			if( CcpRenameFile( tempNameOnDisk, cachedNameOnDisk ) )
-			{
-				++m_filesCached;
-				m_bytesCached += size;
+				if( CcpRenameFile( tempNameOnDisk, cachedNameOnDisk ) )
+				{
+					++m_filesCached;
+					m_bytesCached += size;
+				}
+				else if( !CcpIsPathExistingFile( cachedNameOnDisk ) )
+				{
+					CCP_LOGWARN_CH( s_ch, "Failed to rename file %S, yet it does not exist", cachedNameOnDisk.c_str() );
+				}
 			}
-			else if( !CcpIsPathExistingFile( cachedNameOnDisk ) )
+			else if( writtenSize >= 0 )
 			{
-				CCP_LOGWARN_CH( s_ch, "Failed to rename file %S, yet it does not exist", cachedNameOnDisk.c_str() );
+				CCP_LOGWARN_CH( 
+					s_ch, 
+					"Failed to write the entire downloaded file %S to disk: written %" CCP_SIZET_FORMAT " bytes, while downloaded size is %" CCP_SIZET_FORMAT " bytes", 
+					tempNameOnDisk.c_str(),
+					size_t( writtenSize ), 
+					size_t( size ) );
+				CcpRemoveFile( tempNameOnDisk );
+			}
+			else
+			{
+				CCP_LOGWARN_CH( s_ch, "Failed to verify file %S size", tempNameOnDisk.c_str() );
+				CcpRemoveFile( tempNameOnDisk );
 			}
 		}
 		else if( !CcpIsPathExistingFile( tempNameOnDisk ) )
