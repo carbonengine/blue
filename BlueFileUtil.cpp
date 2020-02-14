@@ -297,9 +297,6 @@ BLUEIMPORT std::wstring ConvertRelativeToAbsolutePath( const wchar_t* path )
 	{
 		normPathTmp[0] = 0;
 	}
-#elif defined(__ORBIS__)
-	CCP_ASSERT_M( false, "Not implemented" );
-	const wchar_t* normPathTmp = L"ConvertRelativeToAbsolutePath not implemented yet";
 #else
 	CW2A pathA( path );
 	char normPathTmpA[PATH_MAX];

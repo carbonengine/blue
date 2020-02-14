@@ -13,13 +13,6 @@
 
 static CcpLogChannel_t s_ch = CCP_LOG_DEFINE_CHANNEL( "BlueResFileSystemLocal" );
 
-#ifdef __ORBIS__
-int wcscasecmp(const wchar_t *s1, const wchar_t *s2)
-{
-	return 0;
-}
-#endif
-
 namespace
 {
 #ifdef __ANDROID__

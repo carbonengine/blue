@@ -1406,8 +1406,6 @@ void BlueOS::Terminate( int retCode )
 	// If we ever get here something has gone horribly wrong - induce a crash so
 	// we learn about this via the crash dumps.
 	CcpCrashOnPurpose();
-#elif defined(__ORBIS__)
-	// TODO: kill it!
 #else
     kill( getpid(), SIGKILL );
 #endif
@@ -1443,10 +1441,6 @@ void BlueOS::SetTime(Be::Time time)
 		li.LowPart = ft1.dwLowDateTime;
 		li.HighPart = ft1.dwHighDateTime;
 		time = li.QuadPart;
-#elif defined(__ORBIS__)
-		SceKernelTimespec ts;
-		sceKernelClockGettime( SCE_KERNEL_CLOCK_MONOTONIC, &ts );
-		time = (uint64_t)ts.tv_sec * 10000000LL + (uint64_t)ts.tv_nsec / 100;
 #else
         struct timeval tv;
         gettimeofday( &tv, nullptr );

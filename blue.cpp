@@ -480,11 +480,6 @@ BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID)
 }
 #endif
 
-#elif defined( __ORBIS__ )
-extern "C" int DLLEXPORT module_start( size_t, const void* )
-{
-	return 0;
-}
 #endif
 
 void BlueInitializeSocketLogger()
