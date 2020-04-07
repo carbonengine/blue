@@ -690,8 +690,16 @@ static PyObject *ValueToPython(const char *buffer, int valueLen, DWORD valueType
 		break; }
 	case REG_SZ:
 	case REG_EXPAND_SZ:
-		resultO = PyString_FromString(buffer);
+	{
+		auto str = reinterpret_cast<const wchar_t*>( buffer );
+		auto size = valueLen / sizeof( wchar_t );
+		if( size > 0 && str[size - 1] == 0 )
+		{
+			--size;
+		}
+		resultO = PyUnicode_FromWideChar( str, size );
 		break;
+	}
 	case REG_NONE:
 		resultO = Py_None;
 		break;
@@ -704,12 +712,12 @@ static PyObject *ValueToPython(const char *buffer, int valueLen, DWORD valueType
 		if (!resultO) {
 			return 0;
 		}
-		const char *start = buffer, *next;
+		const wchar_t *start = reinterpret_cast<const wchar_t*>( buffer ), *next;
 		for(;;) {
-			next = strchr(start, 0);
+			next = wcschr( start, 0 );
 			if (next==start)
 				break;
-			PyObject *str = PyString_FromString(start);
+			PyObject *str = PyUnicode_FromWideChar( start, next - start - 1 );
 			if (!str) {
 				Py_DECREF(resultO);
 				return 0;
@@ -753,7 +761,7 @@ PyObject *PyRegistryGetValue(PyObject *self, PyObject*args)
 	char *buffer = CCP_NEW("PyRegistryGetValue/buffer") char[maxValueLen];
 	DWORD valueType;
 	ULONG valueLen = maxValueLen;
-	result = RegQueryValueEx(hKey, valueName, 0, &valueType, (LPBYTE)buffer, &valueLen);
+	result = RegQueryValueExW(hKey, CA2W( valueName ), 0, &valueType, (LPBYTE)buffer, &valueLen);
 	if (result != ERROR_SUCCESS) {
 		CCP_DELETE [] buffer;
 		return PyErr_SetFromWindowsErr(result);
