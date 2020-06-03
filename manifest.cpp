@@ -452,9 +452,18 @@ bool VerifyManifestFile(int &type, std::wstring &errmsg, bool pyerr, directives_
 	if (!ok)
 		return false;
 
+	std::wstring executablePath = BeOS->GetExecutablePath();
+	bool executableChecked = false;
+
 	FileHierarchy hierarchy;
 	for (size_t i=0; i<manifest.size(); i++) {
 		const std::wstring &name = manifest[i].mName;
+
+		if( CanonicalName( name ) == executablePath )
+		{
+			executableChecked = true;
+		}
+
 		bool success;
 		if (name.size() && name[name.size()-1] == L'/' && !manifest[i].mHash.size()) {
 			//dir closure thingy
@@ -477,6 +486,11 @@ bool VerifyManifestFile(int &type, std::wstring &errmsg, bool pyerr, directives_
 			ok = false;
 		}
 	}
+	if( !executableChecked && !manifest.empty() )
+	{
+		ok = false;
+	}
+
 	if (ok)
 		CCP_LOG_CH( s_ch, "Successfully verified %s", (char*)CW2A(fname));
 	else
