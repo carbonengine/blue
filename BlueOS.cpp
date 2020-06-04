@@ -2725,19 +2725,6 @@ bool BlueOS::HasStartupArg( const std::wstring& arg ) const
 	return false;
 }
 
-std::wstring BlueOS::GetExecutablePath() const
-{
-#if !PORTING_TO_LINUX
-	WCHAR path[MAX_PATH];
-	if( GetModuleFileNameW( NULL, path, MAX_PATH ) )
-	{
-		return std::wstring( std::begin( path ), std::begin( path ) + wcslen( path ) );
-	}
-#endif
-
-	return L"";
-}
-
 std::wstring BlueOS::GetStartupArgValue( const std::wstring& arg ) const
 {
 	auto it = m_startupArgsMap.find( arg );

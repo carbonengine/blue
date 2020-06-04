@@ -375,9 +375,6 @@ public:
 	// If /arg=value is on the command line, this method returns value.
 	virtual std::wstring GetStartupArgValue( const std::wstring& arg ) const;
 
-	// Returns the path of the currently running executable.
-	virtual std::wstring GetExecutablePath() const;
-
 	virtual bool IsUsingTheSimpleCatchupLoop()
 	{
 		return mUseSimpleCatchupLoop;

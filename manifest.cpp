@@ -452,7 +452,7 @@ bool VerifyManifestFile(int &type, std::wstring &errmsg, bool pyerr, directives_
 	if (!ok)
 		return false;
 
-	std::wstring executablePath = BeOS->GetExecutablePath();
+	std::wstring executablePath = CcpExecutablePath();
 	bool executableChecked = false;
 
 	FileHierarchy hierarchy;
