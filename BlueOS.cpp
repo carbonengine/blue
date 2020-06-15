@@ -1135,16 +1135,12 @@ bool BlueOS::Startup( int pyOptimizeFlag, ManifestVerification manifestVerificat
 {
 	mManifestVerification = manifestVerification;
 
-#if _WIN32
-#if BLUE_WITH_PYTHON
 	//start up crypto
-	if( !InitVerificationCtxt() )
+	if( !InitCrypto() )
 	{ 
-		SetError(BEDEF, Clsid(), "BlueOS::Startup(): InitVerificationContext failed");
+		SetError( BEDEF, Clsid(), "BlueOS::Startup(): InitCrypto failed" );
 		return false;
 	}
-#endif
-#endif
 
 	// pump yielding
 	mSleepTime = 10000;

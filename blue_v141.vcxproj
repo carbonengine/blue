@@ -171,7 +171,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>BLUE_LIVELIST_ENABLED=1;BLUE_WITH_PYTHON=1;CCP_STACKLESS=1;CURL_STATICLIB;WIN32;YAML_DECLARE_STATIC;_DEBUG;BLUEPROJECT;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/libyaml/0.1.7/include;$(CcpSdkPath)\libcurl\7.53.1\include;..\..\..\carbon\src\stackless\include;..\..\..\carbon\src\stackless\pc;..\..\..\carbon\src\stackless\stackless;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)/python_externals/openssl-1.1.1g/include/Windows;$(CcpSdkPath)/libyaml/0.1.7/include;$(CcpSdkPath)\libcurl\7.53.1\include;..\..\..\carbon\src\stackless\include;..\..\..\carbon\src\stackless\pc;..\..\..\carbon\src\stackless\stackless;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>False</TreatWarningAsError>
@@ -181,14 +181,15 @@
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <Optimization>Disabled</Optimization>
       <WarningLevel>Level3</WarningLevel>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\libcurl\7.53.1\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\libyaml\0.1.7\lib\$(Platform)\$(PlatformToolset);../../autobuild/BlueExposure/exefile/$(Platform)/$(PlatformToolset);..\..\..\carbon\autobuild\stackless\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/python_externals/openssl-1.1.1g/lib/Windows/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\libcurl\7.53.1\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\libyaml\0.1.7\lib\$(Platform)\$(PlatformToolset);../../autobuild/BlueExposure/exefile/$(Platform)/$(PlatformToolset);..\..\..\carbon\autobuild\stackless\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
       <DelayLoadDLLs>psapi.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
-      <AdditionalDependencies>BlueExposure_d.lib;CcpCore_d.lib;crypt32.lib;iphlpapi.lib;libcurl_d.lib;msvcprtd.lib;msvcrtd.lib;psapi.lib;python27_d.lib;rad_tm_win32.lib;version.lib;winhttp.lib;ws2_32.lib;yaml_d.lib;zlib_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libcrypto.lib;libssl.lib;BlueExposure_d.lib;CcpCore_d.lib;crypt32.lib;iphlpapi.lib;libcurl_d.lib;msvcprtd.lib;msvcrtd.lib;psapi.lib;python27_d.lib;rad_tm_win32.lib;version.lib;winhttp.lib;ws2_32.lib;yaml_d.lib;zlib_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -204,7 +205,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>BLUE_WITH_PYTHON=1;CURL_STATICLIB;NDEBUG;WIN32;YAML_DECLARE_STATIC;BLUEPROJECT;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/libyaml/0.1.7/include;$(CcpSdkPath)\Python\27\include;$(CcpSdkPath)\libcurl\7.53.1\include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)/python_externals/openssl-1.1.1g/include/Windows;$(CcpSdkPath)/libyaml/0.1.7/include;$(CcpSdkPath)\Python\27\include;$(CcpSdkPath)\libcurl\7.53.1\include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>False</TreatWarningAsError>
@@ -214,14 +215,15 @@
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <Optimization>MaxSpeed</Optimization>
       <WarningLevel>Level3</WarningLevel>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\Python\27\libs;$(CcpSdkPath)\libcurl\7.53.1\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\libyaml\0.1.7\lib\$(Platform)\$(PlatformToolset);../../../carbon/autobuild/BlueExposure/python_27/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/python_externals/openssl-1.1.1g/lib/Windows/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\Python\27\libs;$(CcpSdkPath)\libcurl\7.53.1\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\libyaml\0.1.7\lib\$(Platform)\$(PlatformToolset);../../../carbon/autobuild/BlueExposure/python_27/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
       <DelayLoadDLLs>psapi.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
-      <AdditionalDependencies>BlueExposure.lib;CcpCore.lib;atls.lib;crypt32.lib;iphlpapi.lib;libcurl.lib;msvcprt.lib;msvcrt.lib;psapi.lib;python27.lib;rad_tm_win32.lib;version.lib;winhttp.lib;ws2_32.lib;yaml.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libcrypto.lib;libssl.lib;BlueExposure.lib;CcpCore.lib;atls.lib;crypt32.lib;iphlpapi.lib;libcurl.lib;msvcprt.lib;msvcrt.lib;psapi.lib;python27.lib;rad_tm_win32.lib;version.lib;winhttp.lib;ws2_32.lib;yaml.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -237,7 +239,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>BLUE_LIVELIST_ENABLED=1;BLUE_WITH_PYTHON=1;CCP_STACKLESS=1;CURL_STATICLIB;WIN32;YAML_DECLARE_STATIC;_DEBUG;BLUEPROJECT;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/libyaml/0.1.7/include;$(CcpSdkPath)\libcurl\7.53.1\include;..\..\..\carbon\src\stackless\include;..\..\..\carbon\src\stackless\pc;..\..\..\carbon\src\stackless\stackless;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)/python_externals/openssl-1.1.1g/include/Windows;$(CcpSdkPath)/libyaml/0.1.7/include;$(CcpSdkPath)\libcurl\7.53.1\include;..\..\..\carbon\src\stackless\include;..\..\..\carbon\src\stackless\pc;..\..\..\carbon\src\stackless\stackless;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>False</TreatWarningAsError>
@@ -247,14 +249,15 @@
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <Optimization>Disabled</Optimization>
       <WarningLevel>Level3</WarningLevel>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\libcurl\7.53.1\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\libyaml\0.1.7\lib\$(Platform)\$(PlatformToolset);../../autobuild/BlueExposure/exefile/$(Platform)/$(PlatformToolset);..\..\..\carbon\autobuild\stackless\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/python_externals/openssl-1.1.1g/lib/Windows/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\libcurl\7.53.1\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\libyaml\0.1.7\lib\$(Platform)\$(PlatformToolset);../../autobuild/BlueExposure/exefile/$(Platform)/$(PlatformToolset);..\..\..\carbon\autobuild\stackless\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
       <DelayLoadDLLs>psapi.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
-      <AdditionalDependencies>BlueExposure_d.lib;CcpCore_d.lib;crypt32.lib;iphlpapi.lib;libcurl_d.lib;msvcprtd.lib;msvcrtd.lib;psapi.lib;python27_d.lib;rad_tm_win64.lib;version.lib;winhttp.lib;ws2_32.lib;yaml_d.lib;zlib_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libcrypto.lib;libssl.lib;BlueExposure_d.lib;CcpCore_d.lib;crypt32.lib;iphlpapi.lib;libcurl_d.lib;msvcprtd.lib;msvcrtd.lib;psapi.lib;python27_d.lib;rad_tm_win64.lib;version.lib;winhttp.lib;ws2_32.lib;yaml_d.lib;zlib_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -270,7 +273,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>BLUE_WITH_PYTHON=1;CURL_STATICLIB;NDEBUG;WIN32;YAML_DECLARE_STATIC;BLUEPROJECT;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/libyaml/0.1.7/include;$(CcpSdkPath)\Python\27_64\include;$(CcpSdkPath)\libcurl\7.53.1\include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)/python_externals/openssl-1.1.1g/include/Windows;$(CcpSdkPath)/libyaml/0.1.7/include;$(CcpSdkPath)\Python\27_64\include;$(CcpSdkPath)\libcurl\7.53.1\include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>False</TreatWarningAsError>
@@ -280,14 +283,15 @@
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <Optimization>MaxSpeed</Optimization>
       <WarningLevel>Level3</WarningLevel>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\Python\27_64\libs;$(CcpSdkPath)\libcurl\7.53.1\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\libyaml\0.1.7\lib\$(Platform)\$(PlatformToolset);../../../carbon/autobuild/BlueExposure/python_27/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/python_externals/openssl-1.1.1g/lib/Windows/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\Python\27_64\libs;$(CcpSdkPath)\libcurl\7.53.1\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\libyaml\0.1.7\lib\$(Platform)\$(PlatformToolset);../../../carbon/autobuild/BlueExposure/python_27/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
       <DelayLoadDLLs>psapi.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
-      <AdditionalDependencies>BlueExposure.lib;CcpCore.lib;atls.lib;crypt32.lib;iphlpapi.lib;libcurl.lib;msvcprt.lib;msvcrt.lib;psapi.lib;python27.lib;rad_tm_win64.lib;version.lib;winhttp.lib;ws2_32.lib;yaml.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libcrypto.lib;libssl.lib;BlueExposure.lib;CcpCore.lib;atls.lib;crypt32.lib;iphlpapi.lib;libcurl.lib;msvcprt.lib;msvcrt.lib;psapi.lib;python27.lib;rad_tm_win64.lib;version.lib;winhttp.lib;ws2_32.lib;yaml.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -303,7 +307,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>BLUE_WITH_PYTHON=1;CURL_STATICLIB;NDEBUG;WIN32;YAML_DECLARE_STATIC;BLUEPROJECT;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/libyaml/0.1.7/include;$(CcpSdkPath)\Python\26\include;$(CcpSdkPath)\libcurl\7.53.1\include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)/python_externals/openssl-1.1.1g/include/Windows;$(CcpSdkPath)/libyaml/0.1.7/include;$(CcpSdkPath)\Python\26\include;$(CcpSdkPath)\libcurl\7.53.1\include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>False</TreatWarningAsError>
@@ -313,14 +317,15 @@
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <Optimization>MaxSpeed</Optimization>
       <WarningLevel>Level3</WarningLevel>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\Python\26\libs;$(CcpSdkPath)\libcurl\7.53.1\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\libyaml\0.1.7\lib\$(Platform)\$(PlatformToolset);../../autobuild/BlueExposure/python_26/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/python_externals/openssl-1.1.1g/lib/Windows/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\Python\26\libs;$(CcpSdkPath)\libcurl\7.53.1\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\libyaml\0.1.7\lib\$(Platform)\$(PlatformToolset);../../autobuild/BlueExposure/python_26/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
       <DelayLoadDLLs>psapi.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
-      <AdditionalDependencies>BlueExposure.lib;CcpCore.lib;atls.lib;crypt32.lib;iphlpapi.lib;libcurl.lib;msvcprt.lib;msvcrt.lib;psapi.lib;python26.lib;rad_tm_win32.lib;version.lib;winhttp.lib;ws2_32.lib;yaml.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libcrypto.lib;libssl.lib;BlueExposure.lib;CcpCore.lib;atls.lib;crypt32.lib;iphlpapi.lib;libcurl.lib;msvcprt.lib;msvcrt.lib;psapi.lib;python26.lib;rad_tm_win32.lib;version.lib;winhttp.lib;ws2_32.lib;yaml.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -336,7 +341,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>BLUE_WITH_PYTHON=1;CCP_STACKLESS=1;CURL_STATICLIB;NDEBUG;WIN32;YAML_DECLARE_STATIC;BLUEPROJECT;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/libyaml/0.1.7/include;$(CcpSdkPath)\libcurl\7.53.1\include;..\..\..\carbon\src\stackless\include;..\..\..\carbon\src\stackless\pc;..\..\..\carbon\src\stackless\stackless;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)/python_externals/openssl-1.1.1g/include/Windows;$(CcpSdkPath)/libyaml/0.1.7/include;$(CcpSdkPath)\libcurl\7.53.1\include;..\..\..\carbon\src\stackless\include;..\..\..\carbon\src\stackless\pc;..\..\..\carbon\src\stackless\stackless;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>False</TreatWarningAsError>
@@ -346,14 +351,15 @@
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <Optimization>MaxSpeed</Optimization>
       <WarningLevel>Level3</WarningLevel>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\libcurl\7.53.1\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\libyaml\0.1.7\lib\$(Platform)\$(PlatformToolset);../../autobuild/BlueExposure/exefile/$(Platform)/$(PlatformToolset);..\..\..\carbon\autobuild\stackless\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/python_externals/openssl-1.1.1g/lib/Windows/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\libcurl\7.53.1\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\libyaml\0.1.7\lib\$(Platform)\$(PlatformToolset);../../autobuild/BlueExposure/exefile/$(Platform)/$(PlatformToolset);..\..\..\carbon\autobuild\stackless\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
       <DelayLoadDLLs>psapi.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
-      <AdditionalDependencies>BlueExposure.lib;CcpCore.lib;atls.lib;crypt32.lib;iphlpapi.lib;libcurl.lib;msvcprt.lib;msvcrt.lib;psapi.lib;python27.lib;rad_tm_win64.lib;version.lib;winhttp.lib;ws2_32.lib;yaml.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libcrypto.lib;libssl.lib;BlueExposure.lib;CcpCore.lib;atls.lib;crypt32.lib;iphlpapi.lib;libcurl.lib;msvcprt.lib;msvcrt.lib;psapi.lib;python27.lib;rad_tm_win64.lib;version.lib;winhttp.lib;ws2_32.lib;yaml.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -369,7 +375,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>BLUE_WITH_PYTHON=1;CURL_STATICLIB;NDEBUG;WIN32;YAML_DECLARE_STATIC;BLUEPROJECT;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/libyaml/0.1.7/include;$(CcpSdkPath)\Python\26_64\include;$(CcpSdkPath)\libcurl\7.53.1\include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)/python_externals/openssl-1.1.1g/include/Windows;$(CcpSdkPath)/libyaml/0.1.7/include;$(CcpSdkPath)\Python\26_64\include;$(CcpSdkPath)\libcurl\7.53.1\include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>False</TreatWarningAsError>
@@ -379,14 +385,15 @@
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <Optimization>MaxSpeed</Optimization>
       <WarningLevel>Level3</WarningLevel>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\Python\26_64\libs;$(CcpSdkPath)\libcurl\7.53.1\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\libyaml\0.1.7\lib\$(Platform)\$(PlatformToolset);../../autobuild/BlueExposure/python_26/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/python_externals/openssl-1.1.1g/lib/Windows/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\Python\26_64\libs;$(CcpSdkPath)\libcurl\7.53.1\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\libyaml\0.1.7\lib\$(Platform)\$(PlatformToolset);../../autobuild/BlueExposure/python_26/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
       <DelayLoadDLLs>psapi.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
-      <AdditionalDependencies>BlueExposure.lib;CcpCore.lib;atls.lib;crypt32.lib;iphlpapi.lib;libcurl.lib;msvcprt.lib;msvcrt.lib;psapi.lib;python26.lib;rad_tm_win64.lib;version.lib;winhttp.lib;ws2_32.lib;yaml.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libcrypto.lib;libssl.lib;BlueExposure.lib;CcpCore.lib;atls.lib;crypt32.lib;iphlpapi.lib;libcurl.lib;msvcprt.lib;msvcrt.lib;psapi.lib;python26.lib;rad_tm_win64.lib;version.lib;winhttp.lib;ws2_32.lib;yaml.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -402,7 +409,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>BLUE_WITH_PYTHON=1;CCP_STACKLESS=1;CURL_STATICLIB;NDEBUG;WIN32;YAML_DECLARE_STATIC;BLUEPROJECT;NOMINMAX;_SCL_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/libyaml/0.1.7/include;$(CcpSdkPath)\libcurl\7.53.1\include;..\..\..\carbon\src\stackless\include;..\..\..\carbon\src\stackless\pc;..\..\..\carbon\src\stackless\stackless;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)/python_externals/openssl-1.1.1g/include/Windows;$(CcpSdkPath)/libyaml/0.1.7/include;$(CcpSdkPath)\libcurl\7.53.1\include;..\..\..\carbon\src\stackless\include;..\..\..\carbon\src\stackless\pc;..\..\..\carbon\src\stackless\stackless;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <TreatWarningAsError>False</TreatWarningAsError>
@@ -412,14 +419,15 @@
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <Optimization>MaxSpeed</Optimization>
       <WarningLevel>Level3</WarningLevel>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\libcurl\7.53.1\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\libyaml\0.1.7\lib\$(Platform)\$(PlatformToolset);../../autobuild/BlueExposure/exefile/$(Platform)/$(PlatformToolset);..\..\..\carbon\autobuild\stackless\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/python_externals/openssl-1.1.1g/lib/Windows/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\libcurl\7.53.1\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\libyaml\0.1.7\lib\$(Platform)\$(PlatformToolset);../../autobuild/BlueExposure/exefile/$(Platform)/$(PlatformToolset);..\..\..\carbon\autobuild\stackless\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
       <DelayLoadDLLs>psapi.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
-      <AdditionalDependencies>BlueExposure.lib;CcpCore.lib;atls.lib;crypt32.lib;iphlpapi.lib;libcurl.lib;msvcprt.lib;msvcrt.lib;psapi.lib;python27.lib;rad_tm_win32.lib;version.lib;winhttp.lib;ws2_32.lib;yaml.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libcrypto.lib;libssl.lib;BlueExposure.lib;CcpCore.lib;atls.lib;crypt32.lib;iphlpapi.lib;libcurl.lib;msvcprt.lib;msvcrt.lib;psapi.lib;python27.lib;rad_tm_win32.lib;version.lib;winhttp.lib;ws2_32.lib;yaml.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -441,7 +449,6 @@
     <ClInclude Include="BlueEventToPython.h" />
     <ClInclude Include="BlueFileStream.h" />
     <ClInclude Include="BlueHeapq.h" />
-    <ClInclude Include="bluekey.h" />
     <ClInclude Include="blueloginmemory.h" />
     <ClInclude Include="BlueMemoryTracker.h" />
     <ClInclude Include="BlueMemStream.h" />
@@ -611,6 +618,7 @@
     <ClCompile Include="CallbackMan.cpp" />
     <ClCompile Include="CallbackMan_Blue.cpp" />
     <ClCompile Include="crypto.cpp" />
+    <ClCompile Include="crypto_Blue.cpp" />
     <ClCompile Include="DictReader.cpp" />
     <ClCompile Include="DictReader_Blue.cpp" />
     <ClCompile Include="FileLogger.cpp" />

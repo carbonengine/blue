@@ -16,6 +16,7 @@
 #include "BlueHeapq.h"
 #include "Marshal.h"
 #include "PyRowset.h"
+#include "crypto.h"
 
 #if _WIN32
 #include "win32.h"
@@ -223,11 +224,12 @@ bool BluePyOS::InitBasicModuleSupport()
         return false;
     
 #if _WIN32
-	//init the submodules blue.win32, blue.heapq and blue.crypto.  The latter is required for the Marshal::New()
+	//init the submodules blue.win32 and blue.heapq.  The latter is required for the Marshal::New()
 	initwin32();
-	if( !InitCrypto() )
-		return false;
 #endif
+
+	if( !InitCryptoModule() )
+		return false;
 
 	if (!MarshalInit(mBlueModule))
 		return false;
@@ -350,36 +352,34 @@ bool BluePyOS::FiniBasicModuleSupport()
 }
 
 //--------------------------------------------------------------------
-bool BluePyOS::InitIncludePaths(std::wstring &path)
+bool BluePyOS::InitIncludePaths( std::wstring& path )
 {
 	std::vector<std::wstring> zips;
 
-	if (BeOS->ShouldVerifyManifest())
+	if( BeOS->ShouldVerifyManifest() )
 	{
 		directives_t directives;
 
-		if (!VerifyManifestAndGatherDirectives(directives))
+		if( !VerifyManifestAndGatherDirectives( directives ) )
 		{
 			return false;
 		}
 
-		ProcessLibDirectives(directives, zips);
+		ProcessLibDirectives( directives, zips );
 	}
-	
+
 	//build pathlist
-	std::vector<std::wstring> pathlist;
-	//add the zips to the path
-	pathlist = zips;
-	
+	std::vector<std::wstring> pathlist = zips;
+
 	//add other paths
-	if (!zips.size())
+	if( !zips.size() )
 	{
 		BePaths->GetExpandedSearchPaths( "lib", pathlist );
 	}
 
 	// BIN path is required.
 	BePaths->GetExpandedSearchPaths( "bin", pathlist );
-	
+
 	BuildConcatenatedPathFromPathlist( pathlist, path );
 
 	return true;
@@ -1741,7 +1741,7 @@ PyObject* BluePyOS::PyGetEnv(PyObject* args)
 
 	return dict;
 #else
-	return nullptr;
+        return nullptr;
 #endif
 }
 
@@ -2320,28 +2320,19 @@ void BluePyOS::ShowMessageBoxForVerificationFailure( int type, const std::wstrin
 
 bool BluePyOS::VerifyManifestAndGatherDirectives( directives_t& directives )
 {
-#if !PORTING_TO_LINUX
 	//We always read our manifest.  We have a null manifest that we try first for kicks.
-	std::wstring errmsg;
-	const wchar_t *manifest = L"root:/manifest.dat";
-	int type;
-	bool verified = VerifyManifestFile(type, errmsg, false, directives, manifest);
-
-	if( !verified && type == 0 )
+	if( !BeIsSuccess( VerifyManifestFile( "root:/manifest.dat", directives ) ) )
 	{
-		// Failed verification with an unspecified error - most likely the manifest
-		// file wasn't found. Try again with a different path.
-		manifest = L"bin:/manifest.dat";
-		verified = VerifyManifestFile( type, errmsg, false, directives, manifest );
+		// Try again with a different path.
+		Be::Result<std::string> result = VerifyManifestFile( "bin:/manifest.dat", directives );
+		if( !BeIsSuccess( result ) )
+		{
+			BeOS->SetError( BEFLUSH );
+			ShowMessageBoxForVerificationFailure( 0, std::wstring( result.value.begin(), result.value.end() ) );
+			return false;
+		}
 	}
 
-	if( !verified )
-	{
-		BeOS->SetError(BEFLUSH);
-		ShowMessageBoxForVerificationFailure( type, errmsg );
-		return false;
-	}
-#endif
 	return true;
 }
 
@@ -2350,13 +2341,13 @@ void BluePyOS::ProcessLibDirectives( const directives_t& directives, std::vector
 	//now, process lib directives from the file
 	mPackaged = false;
 
-	for(size_t i = 0; i<directives.size(); i++){
-		const std::wstring &d = directives[i];
-		if (d.find(L"lib:") == 0) {
+	for( const std::string directive : directives )
+	{
+		if( directive.find( "lib:" ) == 0 )
+		{
 			mPackaged = true;
-			std::wstring fullname = BePaths->ResolvePathW(d.substr(4).c_str());
-			CCP_LOG_CH( s_chPy, "Directive %s : %s", (const char*)CW2A(d.c_str()), (const char*)CW2A(fullname.c_str()));
-			zips.push_back(fullname.c_str());
+			CCP_LOG_CH( s_chPy, "Directive %s", directive.c_str() );
+			zips.push_back( BePaths->ResolvePathW( std::wstring( std::begin( directive ) + 4, std::end( directive ) ) ) );
 		}
 	}
 }

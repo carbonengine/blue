@@ -1,30 +1,12 @@
-/* 
-	*************************************************************************
+////////////////////////////////////////////////////////////////////////////////
+//
+// Creator:   Kristjan Gerhardsson
+// Created:   May 2020
+// Copyright: CCP 2020
+//
 
-	Manifest.h
+#pragma once
 
-	Author:    Kristjan Valur Jonsson
-	Created:   Aug. 2007
-	OS:        Win32
-	Project:   Blue
+typedef std::vector<std::string> directives_t;
 
-	Description:   
-
-		Declerations of functions for the reading and wrinting of
-		packaging manifests.
-
-	Dependencies:
-
-		Blue
-
-	(c) CCP 2007
-
-	*************************************************************************
-*/
-#ifndef _MANIFEST_H_
-#define _MANIFEST_H_
-
-#include <wincrypt.h>
-
-PyObject *PyPackManifest_Impl(PyObject *seq, const char *timeStamp, HCRYPTPROV hProv, ALG_ID algid);
-#endif //_MANIFEST_H_
+Be::Result<std::string> VerifyManifestFile( const std::string& name, directives_t& directives );

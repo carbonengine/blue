@@ -35,7 +35,7 @@
 #include <stackless_api.h>
 #endif
 
-#include <crypto.h>
+#include "manifest.h"
 
 #include <vector>
 #include <map>

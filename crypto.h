@@ -1,55 +1,102 @@
-//header for the crypto.cpp file
-#ifndef _CRYPTO_H_
-#define _CRYPTO_H_
+////////////////////////////////////////////////////////////////////////////////
+//
+// Creator:   Kristjan Gerhardsson
+// Created:   May 2020
+// Copyright: CCP 2020
+//
 
-#ifdef _WIN32
+#pragma once
 
-#include <wincrypt.h>
-#include <string>
-#include <vector>
+#include "openssl/evp.h"
+#include "openssl/rsa.h"
 
-extern HCRYPTPROV verCtxt;
-extern HCRYPTKEY verKey;
-extern HCRYPTKEY verCryptKey;
-extern const char codeTimeStamp[];
 
-//automatic KeyHandle class
-class CryptKey
+#define BE_RETURN_ON_ERROR( beResult ) \
+{ \
+	Be::Result<std::string> _result = ( beResult ); \
+	if( !BeIsSuccess( _result ) ) \
+	{ \
+		return _result; \
+	} \
+}
+
+
+bool InitCryptoModule();
+bool InitCrypto();
+
+Be::Result<std::string> SHA256( const void* buffer, size_t length, std::string& returnValue );
+Be::Result<std::string> SHA256( const std::string& value, std::string& returnValue );
+
+
+BLUE_DECLARE( SymmetricCipher );
+
+BLUE_CLASS( SymmetricCipher )
+	: public IRoot
 {
+	using EVP_CIPHER_CTX_ptr = std::unique_ptr< EVP_CIPHER_CTX, decltype( &::EVP_CIPHER_CTX_free )>;
+
 public:
-	CryptKey() : hKey(0) {}
-	~CryptKey() {Destroy();}
-	operator HCRYPTKEY () const {return hKey;}
-	HCRYPTKEY * operator &() {return &hKey;}
-	void Destroy() {if (hKey) CryptDestroyKey(hKey);  hKey = 0; }
-	HCRYPTKEY hKey;
+	EXPOSE_TO_BLUE();
+
+	SymmetricCipher( IRoot* lockobj = nullptr );
+	~SymmetricCipher();
+
+	Be::Result<std::string> IsValid() const;
+	Be::Result<std::string> LoadKey( const std::string& key, const std::string& iv, bool& returnValue );
+	Be::Result<std::string> Encrypt( const std::string& plainText, std::string& returnValue ) const;
+	Be::Result<std::string> Decrypt( const std::string& encryptedText, std::string& returnValue ) const;
+
+private:
+	EVP_CIPHER_CTX_ptr m_encryptCtx{ nullptr, ::EVP_CIPHER_CTX_free };
+	EVP_CIPHER_CTX_ptr m_decryptCtx{ nullptr, ::EVP_CIPHER_CTX_free };
+
+	std::string m_key;
+	std::string m_iv;
 };
 
-//Automatic hash handle
-class CryptHash
+TYPEDEF_BLUECLASS( SymmetricCipher );
+
+
+BLUE_DECLARE( AsymmetricCipher );
+
+BLUE_CLASS( AsymmetricCipher )
+	: public IRoot
 {
+	using BN_ptr = std::unique_ptr<BIGNUM, decltype( &::BN_free )>;
+	using RSA_ptr = std::unique_ptr<RSA, decltype( &::RSA_free )>;
+	using EVP_PKEY_ptr = std::unique_ptr<EVP_PKEY, decltype( &::EVP_PKEY_free )>;
+	using EVP_PKEY_CTX_ptr = std::unique_ptr<EVP_PKEY_CTX, decltype( &::EVP_PKEY_CTX_free )>;
+	using EVP_MD_CTX_ptr = std::unique_ptr<EVP_MD_CTX, decltype( &::EVP_MD_CTX_free )>;
+	using BIO_ptr = std::unique_ptr<BIO, decltype( &::BIO_free )>;
+
 public:
-	CryptHash() : hHash(0) {}
-	~CryptHash() { Destroy(); }
-	operator HCRYPTHASH () const {return hHash;}
-	HCRYPTHASH * operator &() {return &hHash;}
-	void Destroy() { if (hHash) CryptDestroyHash( hHash ); hHash = 0; }
-	HCRYPTHASH hHash;
+	EXPOSE_TO_BLUE();
+
+	AsymmetricCipher( IRoot* lockobj = nullptr );
+	~AsymmetricCipher();
+
+	Be::Result<std::string> IsValid() const;
+	Be::Result<std::string> GenerateKey( int bitsize );
+	Be::Result<std::string> LoadPublicKey( const std::string& key, const std::string& password, bool& returnValue );
+	Be::Result<std::string> LoadPrivateKey( const std::string& key, const std::string& password, bool& returnValue );
+	Be::Result<std::string> GetPublicKey( std::string& returnValue ) const;
+	Be::Result<std::string> GetPrivateKey( const std::string& password, std::string& returnValue ) const;
+	Be::Result<std::string> Encrypt( const std::string& plainText, std::string& returnValue ) const;
+	Be::Result<std::string> Decrypt( const std::string& encryptedText, std::string& returnValue ) const;
+	Be::Result<std::string> Sign( const std::string& text, std::string& returnValue ) const;
+	Be::Result<std::string> VerifySignature( const std::string& text, const std::string& signature, bool& returnValue ) const;
+
+private:
+	Be::Result<std::string> SetContext();
+
+	RSA_ptr m_rsa{ nullptr, ::RSA_free };
+	EVP_PKEY_ptr m_key{ nullptr, ::EVP_PKEY_free };
+	EVP_PKEY_CTX_ptr m_encryptCtx{ nullptr, ::EVP_PKEY_CTX_free };
+	EVP_PKEY_CTX_ptr m_decryptCtx{ nullptr, ::EVP_PKEY_CTX_free };
+	EVP_MD_CTX_ptr m_signCtx{ nullptr, ::EVP_MD_CTX_free };
+	EVP_MD_CTX_ptr m_verifyCtx{ nullptr, ::EVP_MD_CTX_free };
 };
 
-typedef std::vector<std::wstring> directives_t;
+TYPEDEF_BLUECLASS( AsymmetricCipher );
 
-bool InitCrypto(void);
-bool InitVerificationCtxt();
-bool VerifyManifestFile(int &failType, std::wstring &errmsg, bool pyerr, directives_t &directives, const wchar_t *fname);
-
-//special extra function to provide a workaround for cryptoapi deficiancy for win2000 and lower
-BOOL WINAPI CryptGenPrivateExponentOneKey(
-		HCRYPTPROV hProv, ALG_ID Algid, DWORD flags, HCRYPTKEY *phKey);
-#else
-
-typedef std::vector<std::wstring> directives_t;
-
-#endif // _WIN32
-
-#endif
+AsymmetricCipher* GetSharedAsymmetricCipher();
