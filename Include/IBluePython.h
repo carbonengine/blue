@@ -214,6 +214,8 @@ BLUE_INTERFACE(IBluePyOS) : public IRoot
 	virtual bool PythonEvent(const char *event, PyObject * arg) = 0;
 
 	virtual bool IsPackaged() = 0;
+
+	virtual bool IsInterpreterMode() = 0;
 		
 	// Returns true if the current tasklet can yield. The tasklet may be blocked
 	// from yielding, and the main tasklet is not allowed to yield.

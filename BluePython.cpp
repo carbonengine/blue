@@ -169,6 +169,7 @@ BluePyOS::BluePyOS(IRoot*) :
 	mInit = 0;
 	mSoftspace = 0;
 	mPackaged = false;
+	mInterpreterMode = false;
 
 	//default value for optimize
 	mOptimizeFlag = -1;
@@ -535,6 +536,8 @@ bool BluePyOS::Startup()
 
 	BeTimer timer("BluePyOS::Startup()");
 
+	mInterpreterMode = BeOS->HasStartupArg( L"py" );
+
 	mExceptionHandler = NULL;
 	
 	sPyEventHandler = static_cast<IPythonEvents*>( this );  //We are the event handler initially.
@@ -545,7 +548,7 @@ bool BluePyOS::Startup()
 		mMarkupZonesInPython = true;
 	}
 
-	if (!BeOS->HasStartupArg(L"py")) {
+	if ( !mInterpreterMode ) {
 		// initialize python engine	
 		Py_DebugFlag = 0; //debugs python , outputs heaps of gunk
 		Py_VerboseFlag = 0; //verbosity about module loading
@@ -2360,6 +2363,23 @@ void BluePyOS::BuildConcatenatedPathFromPathlist( const std::vector<std::wstring
     const wchar_t separator = L':';
 #endif
 	path.clear();
+
+	// We need to obey the environment settings when running in interpreter mode.
+	// NB: this is only necessary because our Stackless fork overrides the way sys.path is bootstrapped,
+	// and as such we kind of need to re-implement a part of `calculate_path()` in stackless' getpathp.c.
+	if( mInterpreterMode )
+	{
+#ifdef _WIN32
+		// in case you're wondering about the maximum length of an environment variable on Windows:
+		// https://devblogs.microsoft.com/oldnewthing/20100203-00/?p=15083
+		wchar_t pythonpath[4096];
+		GetEnvironmentVariableW(L"PYTHONPATH", pythonpath, 4096);
+		path = pythonpath;
+		path += separator;
+#else
+#error "Missing implementation!"
+#endif
+	}
 	for(size_t i = 0; i<pathlist.size(); i++) {
 		std::wstring elem = pathlist[i];
 		while (elem[elem.size()-1] == L'/' || elem[elem.size()-1] == L'\\')

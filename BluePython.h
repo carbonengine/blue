@@ -52,13 +52,13 @@ PyObject* PyGetLogEchoFunction( PyObject* self, PyObject* args );
 //////////////////////////////////////////////////////////////////////
 BLUE_DECLARE( BluePyOS );
 
-BLUE_CLASS( BluePyOS ) : 
+BLUE_CLASS( BluePyOS ) :
 	public IBluePyOS,
 	public IPythonEvents
 {
 public:
 	// ctor
-	BluePyOS(IRoot* lockobj = NULL);
+	BluePyOS( IRoot* lockobj = NULL );
 
 	// synchro
 #if CCP_STACKLESS
@@ -67,18 +67,25 @@ public:
 #endif
 
 #ifdef _WIN32
-	// spying 
-	struct SpyEntry {
-		SpyEntry(PyObject *dir, PyObject *notify = 0) :
-			mDir(BluePy(dir, true)), mNotify(notify, true) {}
-		bool operator == (const SpyEntry &o) const {return PyObject_Compare(mDir, o.mDir) == 0;}
+	// spying
+	struct SpyEntry
+	{
+		SpyEntry( PyObject* dir, PyObject* notify = 0 ) :
+			mDir( BluePy( dir, true ) ),
+			mNotify( notify, true )
+		{
+		}
+		bool operator==( const SpyEntry& o ) const
+		{
+			return PyObject_Compare( mDir, o.mDir ) == 0;
+		}
 
 		BluePy mDir;
 		BluePy mNotify;
 	};
 	std::vector<SpyEntry> mSpyDirs;
 	std::vector<HANDLE> mSpyHandles;
-	
+
 	// Process info header
 	PyObject* mProcessInfoHeader;
 #endif
@@ -96,38 +103,35 @@ public:
 #endif
 
 	void ProcessLibDirectives( const directives_t& directives, std::vector<std::wstring>& zips );
-	bool VerifyManifestAndGatherDirectives( directives_t& directives );
+	bool VerifyManifestAndGatherDirectives( directives_t & directives );
 	void ShowMessageBoxForVerificationFailure( int type, const std::wstring& errmsg );
-	
+
 	// init funcs and corresponding fini functions
 	bool InitBasicModuleSupport();
 	bool FiniBasicModuleSupport();
-	
-	bool InitIncludePaths(std::wstring &path);
+
+	bool InitIncludePaths( std::wstring & path );
 
 	void BuildConcatenatedPathFromPathlist( const std::vector<std::wstring>& pathlist, std::wstring& path );
 
 	void ProcessSpyHandles();
 	void LogCpuUsageAndOtherStats();
 
-
 	PyObject* mExceptionHandler;
-	
+
 	//The extra list of python hooks for context switch
-	PyObject *mContextHooks;
-	
+	PyObject* mContextHooks;
+
 	PyObject* CreateTaskletImpl(
-		PyObject* meth, 
-		PyObject* args, 
-		PyObject* kw,
-		PyObject* ctx
-		);
+		PyObject * meth,
+		PyObject * args,
+		PyObject * kw,
+		PyObject * ctx );
 
 	PyObject* CallPyObjectWithTrap(
-		PyObject* meth, 
-		PyObject* args = 0, 
-		PyObject* ctx = 0
-		);
+		PyObject * meth,
+		PyObject* args = 0,
+		PyObject* ctx = 0 );
 
 
 	struct ThreadSnapshot
@@ -142,7 +146,7 @@ public:
 	uint64_t mLastProcessCpuUsage;
 	uint64_t mLastProcessKernelUsage;
 	PyObject* mCpuUsage;
-	
+
 	// This flag is set based on a command line argument (/telemetryMarkup).
 	// This is used in bluepy.py to determine whether decorators  and metaclass
 	// for markup do anything. The reason this variable lives here is to ensure
@@ -151,28 +155,29 @@ public:
 
 	long mSliceWarning;
 	long mBeNiceSlice; //default benice in milliseconds
-    long mPerformanceUpdateFrequency; // How often PumpPython updates process performance data
+	long mPerformanceUpdateFrequency; // How often PumpPython updates process performance data
 
 	// for python events
-	CPythonEvents mPyPorts[_PYPORTLAST+1];
+	CPythonEvents mPyPorts[_PYPORTLAST + 1];
 
 	// exit procs
-	PyObject *mExitProcs; //a python list
-	
+	PyObject* mExitProcs; //a python list
+
 #if CCP_STACKLESS
 	CTaskletTimer mTTimer; //the new tasklet timing object
 #endif
 
 private:
-	double GetTimeSinceSwitch(bool update = false); //time since last tasklet switch
-	bool UpdateTaskletRunTime(PyObject *tasklet, double elapsed);
+	double GetTimeSinceSwitch( bool update = false ); //time since last tasklet switch
+	bool UpdateTaskletRunTime( PyObject * tasklet, double elapsed );
 
 private:
-	PyObject	*mBlueModule;  //weak ref to us as a module;
-	BluePy mTaskletExt;		//the tasklet extension class
-	bool mInit;	
-	int mSoftspace;			//for python's print statement
+	PyObject* mBlueModule; //weak ref to us as a module;
+	BluePy mTaskletExt; //the tasklet extension class
+	bool mInit;
+	int mSoftspace; //for python's print statement
 	bool mPackaged;
+	bool mInterpreterMode; // do we run in interpreter mode?
 
 	BlueScriptCallback m_scatterEvent;
 	BlueScriptCallback m_sendEvent;
@@ -189,61 +194,57 @@ private:
 #endif
 
 public:
-
-	void OnTaskletSwitch(PyObject *from, PyObject *to);
+	void OnTaskletSwitch( PyObject * from, PyObject * to );
 
 	bool RecurseFolder(
-		PyObject* result, 
-		const char* directory, 
+		PyObject * result,
+		const char* directory,
 		Py_ssize_t prefixlen,
-		const char* filter
-		);
+		const char* filter );
 
 private:
-	void HandleException(const char *message);
+	void HandleException( const char* message );
 
 public:
 	EXPOSE_TO_BLUE();
 
-	PyObject* PyAddExitProc( PyObject* args );
-	PyObject* PyGetArg( PyObject* args );
-	PyObject* PyGetEnv( PyObject* args );
-	PyObject* PyDumpState( PyObject* args );
-	PyObject* Py_EnableTrace( PyObject* args );
-	PyObject* Py_GetWrapperList( PyObject* args );
-	PyObject* Py_GetObjectState( PyObject* args );
-	PyObject* Pywrite( PyObject* args );
-	PyObject* PyGetThunkers( PyObject* args );
-	PyObject* PyCreateTasklet( PyObject* args );
-	PyObject* PySpyDirectory( PyObject* args );
-	PyObject* PyNextScheduledEvent( PyObject* args );
-	PyObject* PyGetClipboardData( PyObject* args );
-	PyObject* PySetClipboardData( PyObject* args );
-	PyObject* PyGetThreadTimes( PyObject* args );
-	PyObject* PyProbeStuff( PyObject* args );
-	PyObject* PyGetTimeSinceSwitch( PyObject* args );
-	PyObject* PyBeNice( PyObject* args );
-	PyObject* PyXUtil_Index( PyObject* args );
-	PyObject* PyXUtil_Filter( PyObject* args );
-	PyObject* PyGetMaxRunTime( PyObject* args );
-	PyObject* PySetMaxRunTime( PyObject* args );
-	
+	PyObject* PyAddExitProc( PyObject * args );
+	PyObject* PyGetArg( PyObject * args );
+	PyObject* PyGetEnv( PyObject * args );
+	PyObject* PyDumpState( PyObject * args );
+	PyObject* Py_EnableTrace( PyObject * args );
+	PyObject* Py_GetWrapperList( PyObject * args );
+	PyObject* Py_GetObjectState( PyObject * args );
+	PyObject* Pywrite( PyObject * args );
+	PyObject* PyGetThunkers( PyObject * args );
+	PyObject* PyCreateTasklet( PyObject * args );
+	PyObject* PySpyDirectory( PyObject * args );
+	PyObject* PyNextScheduledEvent( PyObject * args );
+	PyObject* PyGetClipboardData( PyObject * args );
+	PyObject* PySetClipboardData( PyObject * args );
+	PyObject* PyGetThreadTimes( PyObject * args );
+	PyObject* PyProbeStuff( PyObject * args );
+	PyObject* PyGetTimeSinceSwitch( PyObject * args );
+	PyObject* PyBeNice( PyObject * args );
+	PyObject* PyXUtil_Index( PyObject * args );
+	PyObject* PyXUtil_Filter( PyObject * args );
+	PyObject* PyGetMaxRunTime( PyObject * args );
+	PyObject* PySetMaxRunTime( PyObject * args );
+
 
 	//--------------------------------------------------------------------
 	// IBluePyOS interface
 	//--------------------------------------------------------------------
 	// Magic blue to python marriage
 	//--------------------------------------------------------------------
-	
+
 	// returns a pyobject representation of 'object'
 	BluePythonObject* WrapBlueObject(
-		IRoot* object
-		);
+		IRoot * object );
 
 	const PyMethodDef* GetGenericThunker(
-		const char* name, 
-		const Be::ClassInfo* type
-		);
+		const char* name,
+		const Be::ClassInfo* type );
 
 
 	//--------------------------------------------------------------------
@@ -253,117 +254,110 @@ public:
 	// the startup.
 	// will pump python automatically in the context
 	// of the callers thread
-	bool Startup(
-		);	
+	bool Startup();
 
 	// the shutdown
 	void Shutdown(
-		int level
-		);
+		int level );
 
 	// the pumping
 	int PumpPython(
-		bool quit
-		);
+		bool quit );
 
 	void SetEventHandler(
-		IPythonEvents* handler
-		);
+		IPythonEvents * handler );
 
-	
+
 	//--------------------------------------------------------------------
 	// Convenience functions
 	//--------------------------------------------------------------------
-	
+
 	PyObject* PyError(
-		PyObject* exception = NULL
-		);
+		PyObject* exception = NULL );
 
 	bool PyFlushError(
-		const char *whence
-		);
+		const char* whence );
 
-	PyObject *PyErr_BlueError();
+	PyObject* PyErr_BlueError();
 
-	void RebaseSimClock(Be::Time oldTime, Be::Time newTime);
+	void RebaseSimClock( Be::Time oldTime, Be::Time newTime );
 
 	//Turn a python exception into a string
-	void FormatException(char **result);
+	void FormatException( char** result );
 
-	bool IsPackaged() {return mPackaged;}
+	bool IsPackaged()
+	{
+		return mPackaged;
+	}
+	bool IsInterpreterMode()
+	{
+		return mInterpreterMode;
+	}
 
 	bool CanYield();
 	bool Yield();
 
 	void GetSchedulerStats(
-		int &inQueue1,
-		int &inQueue2,
-		float &lastTime,
-		float &maxTime
-		);
+		int& inQueue1,
+		int& inQueue2,
+		float& lastTime,
+		float& maxTime );
 
 	void DoStackTrace(
-		PyObject* frame =0
-		);
+		PyObject* frame = 0 );
 
-	PyObject *GetStackTrace(
-		PyObject* frame =0
-		);
+	PyObject* GetStackTrace(
+		PyObject* frame = 0 );
 
-	ITaskletTimer *GetTaskletTimer();  //Get the tasklet timer object
+	ITaskletTimer* GetTaskletTimer(); //Get the tasklet timer object
 
 	//blocktrapping call methods
-	PyObject *CallMethodWithTrap(PyObject *target, const char *method, const char *ctxt, const char *format, ...);
+	PyObject* CallMethodWithTrap( PyObject * target, const char* method, const char* ctxt, const char* format, ... );
 
-	bool PythonEvent(const char *event, PyObject * arg);
+	bool PythonEvent( const char* event, PyObject* arg );
 
 public:
 	PyObject* CreateTasklet(
-		PyObject* meth, 
-		PyObject* args, 
-		PyObject* kw
-		);
+		PyObject * meth,
+		PyObject * args,
+		PyObject * kw );
 
-    // --------------------------------------------------------------------
+	// --------------------------------------------------------------------
 	// Event dispatching
-    // --------------------------------------------------------------------
+	// --------------------------------------------------------------------
 	bool DispatchEvent(
-		IRoot* caller,
+		IRoot * caller,
 		const char* context,
 		const char* eventName,
 		PyObject** pRetval,
 		const char* format,
 		va_list vargs,
-		bool post
-		);
+		bool post );
 
 	bool SendEvent(
-		IRoot* caller,
+		IRoot * caller,
 		const char* context,
 		const char* eventName,
 		PyObject** pRetval = NULL,
 		const char* format = NULL,
-		...
-		);
+		... );
 
 	bool PostEvent(
-		IRoot* caller,
+		IRoot * caller,
 		const char* context,
 		const char* eventName,
 		const char* format = NULL,
-		...
-		);
+		... );
 
 	//--------------------------------------------------------------------
 	// IPythonEvents interface
 	//--------------------------------------------------------------------
 	void OnWrite(
 		PYPORT port,
-		const char* text
-		);	
+		const char* text );
 };
 
-TYPEDEF_BLUECLASS_WR(BluePyOS); //need weakref support for the singleton factory
+TYPEDEF_BLUECLASS_WR( BluePyOS ); //need weakref support for the singleton factory
 
 // For testing crashdumps
 static void CrashHorribly( bool reallyCrash )
@@ -372,13 +366,13 @@ static void CrashHorribly( bool reallyCrash )
 	{
 		return;
 	}
-	
+
 	BeOS->SetError( BEFLUSH, 0, "" );
 	CcpCrashOnPurpose();
 }
-MAP_FUNCTION_AND_WRAP( 
-	"CrashHorribly", 
-	CrashHorribly, 
+MAP_FUNCTION_AND_WRAP(
+	"CrashHorribly",
+	CrashHorribly,
 	"Crashes Blue. Intended for testing crashdumps etc.\n"
 	":param reallyCrash: Pass in True if you really want to crash" );
 
@@ -388,26 +382,26 @@ namespace
 class PureVirtualCallHelperBase
 {
 public:
-    PureVirtualCallHelperBase()
+	PureVirtualCallHelperBase()
 	{
 		helper();
 	}
+
 protected:
-    virtual void virtualFunc() = 0;
-    void helper()
+	virtual void virtualFunc() = 0;
+	void helper()
 	{
 		this->virtualFunc();
 	}
 };
 
-class PureVirtualCallHelper: public PureVirtualCallHelperBase
+class PureVirtualCallHelper : public PureVirtualCallHelperBase
 {
 protected:
 	virtual void virtualFunc()
 	{
 	}
 };
-
 }
 
 // For testing crashdumps
@@ -421,9 +415,10 @@ MAP_FUNCTION_AND_WRAP( "PureVirtualCall", PureVirtualCall, "Induces a C++ pure v
 
 
 // Callbacks for python to call when it starts and stops GC
-extern "C" {
-	void * PyOS_GcStart(void);
-	void PyOS_GcStop(void* arg);
+extern "C"
+{
+	void* PyOS_GcStart( void );
+	void PyOS_GcStop( void* arg );
 }
 
 #endif // _BLUEPYTHON_H_

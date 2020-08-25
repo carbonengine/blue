@@ -1206,16 +1206,12 @@ bool BlueOS::RunStackless()
 
 	// Now, enter stackless and continue running from there.  This allows stackless to initialize
 	// the main tasklet.
-	if( !PyOS->IsPackaged() )
+	if( !PyOS->IsPackaged() && PyOS->IsInterpreterMode() )
 	{
-		// See if /py is on the command line
-		if( HasStartupArg( L"py" ) )
-		{
-			std::vector<std::wstring> argv = GetStartupArgs();
-			int ret = runPyMain(argv);
-			// exit with the interpreter's failure exit code
-			Terminate(ret);
-		}
+		std::vector<std::wstring> argv = GetStartupArgs();
+		int ret = runPyMain(argv);
+		// exit with the interpreter's failure exit code
+		Terminate(ret);
 	}
 
 	PyObject* me = BlueWrapObjectForPython( this );

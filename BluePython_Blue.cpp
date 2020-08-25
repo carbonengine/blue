@@ -71,6 +71,8 @@ const Be::ClassInfo* BluePyOS::ExposeToBlue()
 
 		MAP_ATTRIBUTE( "softspace", mSoftspace, "", Be::READWRITE ) //for python write
 
+		MAP_ATTRIBUTE( "interpreterMode", mInterpreterMode, "True if running in Python interpreter mode.", Be::READ )
+
 		MAP_METHOD_AS_METHOD
 		(
 			"AddExitProc",
