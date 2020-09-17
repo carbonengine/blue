@@ -312,8 +312,9 @@ public:
 		if (lLib == NULL)
 			return 0;
 		HMODULE h = GetModuleHandle(dll); //we assume the module is already loaded
-			if (!h) return 0;
-		return GetProcAddress(h, function);
+		if( !h )
+			return 0; // cppcheck-suppress resourceLeak
+		return GetProcAddress( h, function ); // cppcheck-suppress resourceLeak
 	}
 
 //typedefs
@@ -940,7 +941,7 @@ PyObject *PyGetProcessWorkingSetSize(PyObject *self, PyObject *args)
 	if (!loader->GetProcessWorkingSetSize())
 		return PyErr_SetString(PyExc_NotImplementedError, "not availible on this platform"), 0;
 	
-	SIZE_T min, max;
+	SIZE_T min = 0, max = 0;
 	BOOL ok = loader->GetProcessWorkingSetSize()(GetCurrentProcess(), &min, &max);
 	if (!ok)
 		return PyWin32Error(), 0;
@@ -1196,7 +1197,7 @@ PyObject* PyGetProcessTcpEStats(PyObject* self, PyObject* args)
 		PyDict_SetItemString( valueDictionary, "remoteAddr", tmp = PyString_FromString( inet_ntoa( ipAddr ) ) );  Py_DECREF( tmp );
 		PyDict_SetItemString( valueDictionary, "remotePort", tmp = PyLong_FromLong( ntohs( ( u_short ) tcpTable->table[i].dwRemotePort ) ) );  Py_DECREF( tmp );
 
-		TCP_ESTATS_DATA_ROD_v0 connData;
+		TCP_ESTATS_DATA_ROD_v0 connData = {};
 		retValue = loader->GetPerTcpConnectionEStats()( ( MIB_TCPROW* ) &tcpTable->table[i], TcpConnectionEstatsData,
 			                                            NULL, 0, 0, NULL, 0, 0, ( PUCHAR ) &connData, 0, sizeof( connData ) );
 		if( retValue == NO_ERROR )
@@ -1222,7 +1223,7 @@ PyObject* PyGetProcessTcpEStats(PyObject* self, PyObject* args)
 			Py_DECREF( connDataDict );
 		}
 
-		TCP_ESTATS_SND_CONG_ROD_v0 congData;
+		TCP_ESTATS_SND_CONG_ROD_v0 congData = {};
 		retValue = loader->GetPerTcpConnectionEStats()( ( MIB_TCPROW* ) &tcpTable->table[i], TcpConnectionEstatsSndCong,
 			                                            NULL, 0, 0, NULL, 0, 0, ( PUCHAR ) &congData, 0, sizeof( congData ) );
 		if( retValue == NO_ERROR )
@@ -1252,7 +1253,7 @@ PyObject* PyGetProcessTcpEStats(PyObject* self, PyObject* args)
 			Py_DECREF( congDataDict );
 		}
 
-		TCP_ESTATS_PATH_ROD_v0 pathData;
+		TCP_ESTATS_PATH_ROD_v0 pathData = {};
 		retValue = loader->GetPerTcpConnectionEStats()( ( MIB_TCPROW*) &tcpTable->table[i], TcpConnectionEstatsPath,
 			                                            NULL, 0, 0, NULL, 0, 0, ( PUCHAR ) &pathData, 0, sizeof(pathData));
 		if( retValue == NO_ERROR ) {
@@ -1303,7 +1304,7 @@ PyObject* PyGetProcessTcpEStats(PyObject* self, PyObject* args)
 			Py_DECREF( pathDataDict );
 		}
 
-		TCP_ESTATS_REC_ROD_v0 recStats;
+		TCP_ESTATS_REC_ROD_v0 recStats = {};
 		retValue = loader->GetPerTcpConnectionEStats()( ( MIB_TCPROW* ) &tcpTable->table[i], TcpConnectionEstatsRec,
 			                                            NULL, 0, 0, NULL, 0, 0, ( PUCHAR ) &recStats, 0, sizeof( recStats ) );
 		if( retValue == NO_ERROR ) {
@@ -1328,7 +1329,7 @@ PyObject* PyGetProcessTcpEStats(PyObject* self, PyObject* args)
 			Py_DECREF( recDataDict );
 		}
 
-		TCP_ESTATS_BANDWIDTH_ROD_v0 bwidthStats;
+		TCP_ESTATS_BANDWIDTH_ROD_v0 bwidthStats = {};
 		retValue = loader->GetPerTcpConnectionEStats()( ( MIB_TCPROW* ) &tcpTable->table[i], TcpConnectionEstatsBandwidth,
 			                                            NULL, 0, 0, NULL, 0, 0, ( PUCHAR ) &bwidthStats, 0, sizeof( bwidthStats ) );
 		if( retValue == NO_ERROR ) {
