@@ -46,72 +46,23 @@ static PyObject *PyCarbonIoManualWakeup( PyObject* self, PyObject* args)
 	return res;
 }
 
-void SetCrashKeyValues( const std::wstring& k, const std::wstring& v )
+void SetCrashKeyValues( const std::string& k, const std::string& v )
 {
 	if( !BeCrashes )
 	{
 		return;
 	}
-	BeCrashes->SetCrashKeyValueW(const_cast<wchar_t *>(k.c_str()), const_cast<wchar_t *>(v.c_str()));
+	BeCrashes->SetCrashKeyValue( k.c_str(), v.c_str() );
 }
 
 MAP_FUNCTION_AND_WRAP( 
 	"SetCrashKeyValues", 
 	SetCrashKeyValues, 
-	"Sets arbitrary key values for Breakpad uploads\n"
+	"Sets arbitrary key values for crash dump uploads\n"
 	":param key: key string\n"
 	":param value: value string" );
 
-void SetCrashSessionFileDescriptor( int fd )
-{
-	if( !BeCrashes )
-	{
-		return;
-	}
-
-	BeCrashes->SetSessionFileDescriptor(fd);
-}
-
-MAP_FUNCTION_AND_WRAP( 
-	"SetCrashSessionFileDescriptor", 
-	SetCrashSessionFileDescriptor, 
-	"Sets a session file descriptor, for writing log info in case of a crash\n"
-	":param fd: file descriptor"
-	);
-
-void SetCrashUserId( int id )
-{
-	if( !BeCrashes )
-	{
-		return;
-	}
-
-	BeCrashes->SetUserId(id);
-}
-
-MAP_FUNCTION_AND_WRAP( 
-	"SetCrashUserId", 
-	SetCrashUserId, 
-	"Sets a user id, for writing to session file in case of a crash\n"
-	":param userId: user id" );
-
-void SetCrashSessionId( int64_t id )
-{
-	if( !BeCrashes )
-	{
-		return;
-	}
-
-	BeCrashes->SetSessionId(id);
-}
-
-MAP_FUNCTION_AND_WRAP( 
-	"SetCrashSessionId", 
-	SetCrashSessionId, 
-	"Sets a session id, for writing to session file in case of a crash\n"
-	":param sessionId: session id" );
-
-void EnableBreakpad( bool enable )
+void EnableCrashReporting( bool enable )
 {
 	if( !BeCrashes )
 	{
@@ -122,12 +73,12 @@ void EnableBreakpad( bool enable )
 }
 
 MAP_FUNCTION_AND_WRAP( 
-	"EnableBreakpad", 
-	EnableBreakpad, 
-	"Enable or disable breakpad\n"
+	"EnableCrashReporting", 
+	EnableCrashReporting, 
+	"Enable or disable crash reporting\n"
 	":param enable: True to enable and False to disable" );
 
-bool IsBreakpadEnabled()
+bool IsCrashReportingEnabled()
 {
 	if( !BeCrashes )
 	{
@@ -137,23 +88,10 @@ bool IsBreakpadEnabled()
 	return BeCrashes->IsCrashReportingEnabled();
 }
 
-MAP_FUNCTION_AND_WRAP( "IsBreakpadEnabled", IsBreakpadEnabled, "Check if Breakpad upload is currently enabled" );
-
-void SetBuildNumber( int buildNo )
-{
-	if( !BeCrashes )
-	{
-		return;
-	}
-
-	BeCrashes->SetBuildNumber( buildNo );
-}
-
-MAP_FUNCTION_AND_WRAP( 
-	"SetBreakpadBuildNumber", 
-	SetBuildNumber, 
-	"Set the build number for breakpad\n"
-	":param buildNo: build number" );
+MAP_FUNCTION_AND_WRAP(
+	"IsCrashReportingEnabled",
+	IsCrashReportingEnabled,
+	"Check if crash report uploading is currently enabled" );
 
 #ifdef _WIN32
 static PyObject *PyGetExeFilePids( PyObject* self, PyObject* args)
