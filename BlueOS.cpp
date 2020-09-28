@@ -973,11 +973,11 @@ void BlueOS::PumpOS()
 	if( BeCrashes )
 	{
 		auto time = CcpGetTimestamp();
-		char timeStr[64];
+		wchar_t timeStr[64];
 		float interval = float( double( time - m_startupTime ) / CcpGetTimestampFrequency() );
-		sprintf_s( timeStr, "%.1f", interval );
+		swprintf_s( timeStr, L"%.1f", interval );
 
-		BeCrashes->SetCrashKeyValue( "timeSinceStartup", timeStr );
+		BeCrashes->SetCrashKeyValueW( L"timeSinceStartup", timeStr );
 	}
 #endif
 
