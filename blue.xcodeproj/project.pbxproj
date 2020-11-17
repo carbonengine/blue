@@ -2516,7 +2516,7 @@
 					..,
 					.,
 					"../../../../../../sdk/libyaml/yaml-0.1.2/include",
-					"../../../../../../sdk/telemetry/3.5.0.13/include",
+					"../../../../../../sdk/telemetry/3.0.1.1008/include",
 					);
 				CLANG_WARN_INT_CONVERSION = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -2540,7 +2540,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"../../../../../../sdk/zlib/1.2.11/lib/MacOsX$(ARCHS)",
 					"../../../../../../shared_tools/python/27_mac/lib",
-					"../../../../../../sdk/telemetry/3.5.0.13/lib",
+					"../../../../../../sdk/telemetry/3.0.1.1008/lib",
 					"../../../carbon/autobuild/CcpCore/MacOsX$(ARCHS)/clang4.2/",
 					"../../../carbon/autobuild/BlueExposure/python_27/MacOsX$(ARCHS)/clang4.2",
 					"../../../../../../sdk/libyaml/yaml-0.1.2/lib/MacOsX$(ARCHS)",
@@ -3364,7 +3364,7 @@
 					"../../../../../../sdk/libyaml/yaml-0.1.2/include",
 					.,
 					"../../../carbon/src/stackless/Mac",
-					"../../../../../../sdk/telemetry/3.5.0.13/include",
+					"../../../../../../sdk/telemetry/3.0.1.1008/include",
 					);
 				CLANG_WARN_INT_CONVERSION = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -3391,7 +3391,7 @@
 					"../../../../../../sdk/zlib/1.2.11/lib/MacOsX$(ARCHS)",
 					"../../autobuild/BlueExposure/exefile/MacOsX$(ARCHS)/clang4.2",
 					"../../../../../../sdk/libyaml/yaml-0.1.2/lib/MacOsX$(ARCHS)",
-					"../../../../../../sdk/telemetry/3.5.0.13/lib",
+					"../../../../../../sdk/telemetry/3.0.1.1008/lib",
 					"../../../carbon/autobuild/CcpCore/MacOsX$(ARCHS)/clang4.2/",
 					);
 				SYMROOT = "../../autobuild/blue/exefile/MacOsX$(ARCHS)/clang4.2";

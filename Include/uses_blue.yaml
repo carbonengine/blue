@@ -1,7 +1,7 @@
 # This file defines settings for all modules that link against Blue with Stackless
 Imports:
 - ../../stackless/Include/stackless.yaml
-- ../../../../vendor/telemetry/3.5.0.13/telemetry.yaml
+- ../../../../vendor/telemetry/3.0.1.1719/telemetry.yaml
 
 General:
   OutDir: ../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/
