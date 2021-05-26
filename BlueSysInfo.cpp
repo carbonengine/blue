@@ -151,7 +151,8 @@ std::vector<BlueSysInfoNetworkAdapterPtr> BlueSysInfo::GetNetworkAdapters() cons
 		BlueSysInfoNetworkAdapterPtr ptr;
 		ptr.CreateInstance();
 		ptr->m_name = PDM::UTF8ToWString( adapter.name );
-		ptr->m_macAddress = std::string( adapter.macAddress.begin(), adapter.macAddress.end() );
+		const auto& mac = adapter.macAddress;
+		ptr->m_macAddress = std::string( mac.begin(), mac.end() );
 		ptr->m_macAddressString = adapter.macAddressString;
 		ptr->m_uuid = adapter.uuidString;
 
@@ -193,10 +194,9 @@ std::string BlueSysInfo::GetMachineUuid() const
 
 
 
-BlueSysInfoCpu::BlueSysInfoCpu()
+BlueSysInfoCpu::BlueSysInfoCpu() :
+	m_extensions( PDM::GetCPUInfo().extensions )
 {
-	m_extensions = PDM::GetCPUInfo().extensions;
-
 	SYSTEM_INFO info;
 	GetSystemInfo( &info );
 
