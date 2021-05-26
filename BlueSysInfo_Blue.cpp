@@ -23,8 +23,9 @@ const Be::ClassInfo* BlueSysInfo::ExposeToBlue()
 		MAP_PROPERTY_READONLY( "wineVersion", GetWineVersion, "Version number of Wine" );
 		MAP_PROPERTY_READONLY( "wineHostOs", GetWineHostOs, "Description of the host OS when running under Wine" );
 
-		MAP_PROPERTY_READONLY( "machineUuid", GetMachineUuid, "UUID of the machine as a string. It has different format on different OSes" );
+		MAP_PROPERTY_READONLY( "machineUuid", GetMachineUuid, "UUID of the machine as a string" );
 
+		MAP_METHOD_AND_WRAP( "GetNetworkAdapters", GetNetworkAdapters, "Get a list of all network adapters on this machine" );
 		MAP_METHOD_AND_WRAP( "GetMemory", GetMemory, "Returns BlueSysInfoMemory object with memory status report" );
 		MAP_METHOD_AND_WRAP(
 			"GetUserDocumentsDirectory",
@@ -72,6 +73,7 @@ const Be::ClassInfo* BlueSysInfoCpu::ExposeToBlue()
 		MAP_ATTRIBUTE( "bitCount", m_bitCount, "64 or 32", Be::READ );
 		MAP_ATTRIBUTE( "identifier", m_identifier, "CPU identifier string", Be::READ );
 		MAP_ATTRIBUTE( "brand", m_brand, "CPU brand name", Be::READ );
+		MAP_METHOD_AND_WRAP( "GetExtensions", GetExtensions, "Get CPU extensions" );
     EXPOSURE_END()
 }
 
@@ -147,4 +149,19 @@ const Be::ClassInfo* BlueSysInfoMemory::ExposeToBlue()
 		MAP_ATTRIBUTE( "totalPhysical", m_totalPhysical, "Total physical memory machine has in bytes", Be::READ );
 		MAP_ATTRIBUTE( "availablePhysical", m_availablePhysical, "Available physical memory in bytes", Be::READ );
     EXPOSURE_END()
+}
+
+
+BLUE_DEFINE( BlueSysInfoNetworkAdapter );
+
+const Be::ClassInfo* BlueSysInfoNetworkAdapter::ExposeToBlue()
+{
+	EXPOSURE_BEGIN( BlueSysInfoNetworkAdapter, "" )
+		MAP_INTERFACE( BlueSysInfoNetworkAdapter )
+
+		MAP_ATTRIBUTE( "name", m_name, "Name given to the adapter", Be::READ );
+		MAP_ATTRIBUTE( "macAddress", m_macAddress, "Adapter MAC address in binary format", Be::READ );
+		MAP_ATTRIBUTE( "macAddressString", m_macAddressString, "Adapter MAC address in human readable format", Be::READ );
+		MAP_ATTRIBUTE( "uuid", m_uuid, "Adapter UUID, which can be empty", Be::READ );
+	EXPOSURE_END()
 }

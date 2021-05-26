@@ -6,16 +6,19 @@
 BLUE_CLASS( BlueSysInfoCpu ): public IRoot
 {
 public:
-    EXPOSE_TO_BLUE();
+	EXPOSE_TO_BLUE();
 
 	BlueSysInfoCpu();
-    
+
+	const std::vector<std::string> GetExtensions() const { return m_extensions; }
+
 	uint32_t m_family;
 	uint32_t m_revision;
 	uint32_t m_logicalCpuCount;
 	uint32_t m_bitCount;
 	std::string m_brand;
 	std::string m_identifier;
+	std::vector<std::string> m_extensions;
 };
 
 TYPEDEF_BLUECLASS( BlueSysInfoCpu );
@@ -81,6 +84,22 @@ public:
 TYPEDEF_BLUECLASS( BlueSysInfoMemory );
 
 
+BLUE_CLASS( BlueSysInfoNetworkAdapter ) : public IRoot
+{
+public:
+	EXPOSE_TO_BLUE();
+
+	BlueSysInfoNetworkAdapter();
+
+	std::wstring m_name;
+	std::string m_macAddress;
+	std::string m_macAddressString;
+	std::string m_uuid;
+};
+
+TYPEDEF_BLUECLASS( BlueSysInfoNetworkAdapter );
+
+
 
 BLUE_CLASS( BlueSysInfo ): public IRoot
 {
@@ -102,6 +121,7 @@ public:
 	bool IsWine() const;
 	std::wstring GetWineVersion() const;
 	std::wstring GetWineHostOs() const;
+	std::vector<BlueSysInfoNetworkAdapterPtr> GetNetworkAdapters() const;
 
 	std::string GetMachineUuid() const;
 private:

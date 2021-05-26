@@ -1,6 +1,6 @@
 #include "StdAfx.h"
 #include "BlueSysInfo.h"
-#include "Include/Wine.h"
+#include "pdm.h"
 #ifdef _WIN32
 #include "win32.h"
 #include <ShlObj.h>
@@ -129,33 +129,36 @@ uint64_t BlueSysInfo::GetProcessStartTime() const
 
 bool BlueSysInfo::IsWine() const
 {
-	return Wine::IsWine();
+	return PDM::IsWine();
 }
 
 std::wstring BlueSysInfo::GetWineVersion() const
 {
-	static bool hasCached = false;
-	static std::wstring wineVersion = L"";
-
-	if( !hasCached )
-	{
-		wineVersion = CA2W( Wine::GetWineVersion() );
-	}
-
-	return wineVersion;
+	return PDM::UTF8ToWString( PDM::GetWineVersion() );
 }
 
 std::wstring BlueSysInfo::GetWineHostOs() const
 {
-	static bool hasCached = false;
-	static std::wstring hostOs = L"";
+	return PDM::UTF8ToWString( PDM::GetWineHostOs() );
+}
 
-	if( !hasCached )
+std::vector<BlueSysInfoNetworkAdapterPtr> BlueSysInfo::GetNetworkAdapters() const
+{
+	std::vector<BlueSysInfoNetworkAdapterPtr> adapters;
+
+	for( auto& adapter : PDM::GetNetworkAdapterInfo() )
 	{
-		hostOs = CA2W( Wine::GetWineHostOs() );
-	}
+		BlueSysInfoNetworkAdapterPtr ptr;
+		ptr.CreateInstance();
+		ptr->m_name = PDM::UTF8ToWString( adapter.name );
+		ptr->m_macAddress = std::string( adapter.macAddress.begin(), adapter.macAddress.end() );
+		ptr->m_macAddressString = adapter.macAddressString;
+		ptr->m_uuid = adapter.uuidString;
 
-	return hostOs;
+		adapters.push_back( ptr );
+	}
+	
+	return adapters;
 }
 
 std::string BlueSysInfo::GetMachineUuid() const
@@ -192,6 +195,8 @@ std::string BlueSysInfo::GetMachineUuid() const
 
 BlueSysInfoCpu::BlueSysInfoCpu()
 {
+	m_extensions = PDM::GetCPUInfo().extensions;
+
 	SYSTEM_INFO info;
 	GetSystemInfo( &info );
 
@@ -304,5 +309,7 @@ BlueSysInfoMemory::BlueSysInfoMemory()
 	m_totalPhysical = uint64_t( status.ullTotalPhys );
 	m_availablePhysical = uint64_t( status.ullAvailPhys );
 }
+
+BlueSysInfoNetworkAdapter::BlueSysInfoNetworkAdapter() {}
 
 #endif
