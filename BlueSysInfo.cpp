@@ -134,12 +134,12 @@ bool BlueSysInfo::IsWine() const
 
 std::wstring BlueSysInfo::GetWineVersion() const
 {
-	return PDM::UTF8ToWString( PDM::GetWineVersion() );
+	return UTF8ToWide( PDM::GetWineVersion() );
 }
 
 std::wstring BlueSysInfo::GetWineHostOs() const
 {
-	return PDM::UTF8ToWString( PDM::GetWineHostOs() );
+	return UTF8ToWide( PDM::GetWineHostOs() );
 }
 
 std::vector<BlueSysInfoNetworkAdapterPtr> BlueSysInfo::GetNetworkAdapters() const
@@ -150,7 +150,7 @@ std::vector<BlueSysInfoNetworkAdapterPtr> BlueSysInfo::GetNetworkAdapters() cons
 	{
 		BlueSysInfoNetworkAdapterPtr ptr;
 		ptr.CreateInstance();
-		ptr->m_name = PDM::UTF8ToWString( adapter.name );
+		ptr->m_name = UTF8ToWide( adapter.name );
 		const auto& mac = adapter.macAddress;
 		ptr->m_macAddress = std::string( mac.begin(), mac.end() );
 		ptr->m_macAddressString = adapter.macAddressString;
