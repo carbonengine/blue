@@ -137,7 +137,7 @@ public:
 // Tasklet performance counting
 static int OnTaskletSwitch(PyTaskletObject *from, PyTaskletObject *to)
 {
-	BlueStatistics::OnTaskletSwitch( from, to );
+	BlueStatistics::OnTaskletSwitch( (PyObject*)from, (PyObject*)to );
 
 	PyOS->OnTaskletSwitch( (PyObject*)from, (PyObject*)to );
 	return 0;

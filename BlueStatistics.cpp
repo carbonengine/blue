@@ -315,6 +315,7 @@ void BlueStatistics::UpdateTelemetry()
 			PyEval_SetProfile( nullptr, nullptr );
 		}
 
+#if CCP_STACKLESS
 		for( auto& free : s_taskletFree )
 		{
 			free.first->tp_free = free.second;
@@ -322,7 +323,7 @@ void BlueStatistics::UpdateTelemetry()
 		s_taskletFree.clear();
 
 		s_lastTasklet = s_fallbackInfo;
-
+#endif
 		s_isTelemetryShuttingDown = false;
 	}
 	else if(s_telemetrySamplePeriod > 0.0f ) // Check if we have passed our timed sample time
@@ -342,9 +343,12 @@ void BlueStatistics::UpdateTelemetry()
 }
 
 #if CCP_STACKLESS
-void BlueStatistics::OnTaskletSwitch( PyTaskletObject* from, PyTaskletObject* to )
+void BlueStatistics::OnTaskletSwitch( PyObject* _from, PyObject* _to )
 {
 #if CCP_TELEMETRY_ENABLED
+	PyTaskletObject* from = (PyTaskletObject*)_from;
+	PyTaskletObject* to = (PyTaskletObject*)_to;
+
 	if( tmRunning() )
 	{
 		StoreFree( from );

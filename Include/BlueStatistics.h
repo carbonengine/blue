@@ -117,7 +117,7 @@ public:
 
 #if CCP_STACKLESS
 	// Called from BluePyOS
-	static void OnTaskletSwitch( PyTaskletObject * from, PyTaskletObject * to );
+	static void OnTaskletSwitch( PyObject* from, PyObject* to );
 #endif
 
 #endif
