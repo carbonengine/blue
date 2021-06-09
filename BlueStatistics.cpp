@@ -15,6 +15,8 @@ BLUE_REGISTER_GLOBAL_AS_MODULE_OBJECT( "statistics", g_statistics );
 static bool s_isTelemetryConnectionRequested = false;
 static bool s_isTelemetryConnected = false;
 static bool s_isTelemetryCppCaptureEnabled = true;
+static bool s_isTelemetryTaskletCaptureEnabled = true;
+static bool s_isTelemetryPythonCaptureEnabled = false;
 static bool s_isTelemetryPaused = false;
 static float s_telemetrySamplePeriod = 0.0f; // In seconds
 
@@ -24,14 +26,6 @@ static int s_telemetryConnectionType = 0;
 static std::string s_telemetryServerOrFileSystemDumpPath;
 static Be::Time s_telemetryStartTime;
 static Be::Time s_telemetryLastCheckTime;
-static CcpThreadId_t s_telemetryThread = NULL;
-static uint32_t s_telemetryTaskletTlsIx = NULL;
-static uint32_t s_telemetryTaskletStackTlsIx = NULL;
-
-typedef TrackableStdVector<const char*> ZoneStack_t;
-typedef TrackableStdMap<intptr_t, ZoneStack_t> TaskletZoneStackMap_t;
-
-static TaskletZoneStackMap_t s_taskletZoneStackMap( "s_taskletZoneStackMap" );
 
 #if BLUE_WITH_PYTHON
 // Turn a python string into an "immortal" string.  It is kept alive as long as the
@@ -57,82 +51,119 @@ const char *Immortalize( PyObject *s )
 }
 #endif
 
+#if CCP_STACKLESS
+
+namespace
+{
+
+struct TaskletInfo
+{
+	const char* name;
+	const char* filename;
+	int line;
+};
+
+const TaskletInfo s_fallbackInfo = { "Tasklet?", "", 0 };
+TaskletInfo s_lastTasklet = s_fallbackInfo;  // need to remember last activated tasklet for tmEnd
+
+std::unordered_map<PyTypeObject*, freefunc> s_taskletFree; // original tp_free functions for tasklet types
+tm_uint32 s_taskletTrackID = 0;  // telemetry track ID for tasklet time spans
+
+// Overriden tp_free function for tasklets: notify telemetry and call original tp_free
+void OnTaskletFree( void* tasklet )
+{
+	tmEndFiber( 0, reinterpret_cast<uintptr_t>( tasklet ) );
+
+	auto found = s_taskletFree.find( Py_TYPE( tasklet ) );
+	if( found != end( s_taskletFree ) )
+	{
+		( *found->second )( tasklet );
+	}
+}
+
+void StoreFree( PyTaskletObject* tasklet )
+{
+	if( !tasklet )
+	{
+		return;
+	}
+	auto type = Py_TYPE( tasklet );
+	auto free = type->tp_free;
+	if( free && free != OnTaskletFree )
+	{
+		s_taskletFree[type] = free;
+		type->tp_free = OnTaskletFree;
+	}
+}
+
+// Try to get a readable description of a tasklet object for telemetry time span.
+// Use infomation set by bluepy.TaskletExt.
+TaskletInfo GetTaskletInfo( PyTaskletObject* tasklet )
+{
+	TaskletInfo info = s_fallbackInfo;
+
+	if( auto methodName = PyObject_GetAttrString( (PyObject*)tasklet, "method_name" ) )
+	{
+		if( PyString_CheckExact( methodName ) )
+		{
+			info.name = PyString_AsString( methodName );
+		}
+		Py_XDECREF( methodName );
+	}
+	else
+	{
+		PyErr_Clear();
+	}
+
+	if( auto fileName = PyObject_GetAttrString( (PyObject*)tasklet, "file_name" ) )
+	{
+		if( PyString_CheckExact( fileName ) )
+		{
+			info.filename = PyString_AsString( fileName );
+		}
+		Py_XDECREF( fileName );
+	}
+	else
+	{
+		PyErr_Clear();
+	}
+
+	if( auto lineNumber = PyObject_GetAttrString( (PyObject*)tasklet, "line_number" ) )
+	{
+		if( PyInt_Check( lineNumber ) )
+		{
+			info.line = int( PyInt_AsLong( lineNumber ) );
+		}
+		Py_XDECREF( lineNumber );
+	}
+	else
+	{
+		PyErr_Clear();
+	}
+	return info;
+}
+
+int PythonProfiler( PyObject* obj, PyFrameObject* frame, int what, PyObject* arg )
+{
+	switch( what )
+	{
+	case PyTrace_CALL:
+		tmEnterEx( 0, nullptr, 0, 0, PyString_AsString( frame->f_code->co_filename ), PyFrame_GetLineNumber( frame ), TMZF_NONE, "%s", PyString_AsString( frame->f_code->co_name ) );
+		tmZoneColor( 0, 94.f / 255.f, 32.f / 255.f );
+		break;
+	case PyTrace_EXCEPTION:
+	case PyTrace_RETURN:
+		tmLeave( 0 );
+		break;
+	default:
+		break;
+	}
+	return 0;
+}
+
+}
+
 #endif
-
-
-#if CCP_STACKLESS && CCP_TELEMETRY_ENABLED
-
-#include "CcpUtils/PyCpp.h"
-
-static ZoneStack_t& GetStackForTasklet( intptr_t taskletId )
-{
-	TaskletZoneStackMap_t* taskletZoneStackMap = (TaskletZoneStackMap_t*)TlsGetValue( s_telemetryTaskletStackTlsIx );
-	if( !taskletZoneStackMap )
-	{
-		taskletZoneStackMap = CCP_NEW( "CcpStatistics/taskletZoneStackMap" ) TaskletZoneStackMap_t( "CcpStatistics/taskletZoneStackMap" );
-		TlsSetValue( s_telemetryTaskletStackTlsIx, taskletZoneStackMap );
-	}
-
-	auto foundIt = taskletZoneStackMap->find( taskletId );
-
-	if( foundIt != taskletZoneStackMap->end() )
-	{
-		return foundIt->second;
-	}
-
-
-	std::pair<TaskletZoneStackMap_t::iterator, bool> res = taskletZoneStackMap->insert(TaskletZoneStackMap_t::value_type(taskletId, ZoneStack_t( "zoneStack" ) ) );
-	ZoneStack_t& stack = res.first->second;
-	if( res.second )
-	{
-		// The stack was added, find the context if possible
-		const char* context = NULL;
-
-		stack.reserve( 32 );
-
-		if( Ccp::PyGilHave() )
-		{
-			PyObject* tasklet = PyStackless_GetCurrent();
-			if( tasklet )
-			{
-				if( PyObject_HasAttrString( tasklet, "context" ) )
-				{
-					PyObject* ctx = PyObject_GetAttrString( tasklet, "context" );
-					if( ctx && PyString_Check( ctx ) )
-					{
-						context = CCP_STRDUP( "Tasklet context", PyString_AS_STRING( ctx ) );
-
-						// Note that we leak the memory for the context string
-					}
-
-					Py_XDECREF( ctx );
-				}
-				Py_DECREF( tasklet );
-			}
-		}
-
-		if( context )
-		{
-			stack.push_back( context );
-		}
-	}
-	return stack;
-}
-
-static void SwitchZoneContext( intptr_t from, intptr_t to )
-{
-	ZoneStack_t& stackFrom = GetStackForTasklet( from );
-	for( ZoneStack_t::const_reverse_iterator it = stackFrom.rbegin(); it != stackFrom.rend(); ++it )
-	{
-		tmLeave( TMCM_GENERAL );
-	}
-
-	ZoneStack_t& stackTo = GetStackForTasklet( to );
-	for( ZoneStack_t::const_iterator it = stackTo.begin(); it != stackTo.end(); ++it )
-	{
-		tmEnter( TMCM_GENERAL, TMZF_NONE, "%s", *it );
-	}
-}
 
 #endif
 
@@ -140,22 +171,14 @@ static void SwitchZoneContext( intptr_t from, intptr_t to )
 BlueStatistics::BlueStatistics(IRoot* lockobj) :
 	m_accumulators( "m_accumulators" ),
 	m_capture( "BlueStatistics::m_capture" ),
+	m_telemetryMaxThreadCount( 512 ),
 	m_isCapturing( false )
 {
-#if CCP_TELEMETRY_ENABLED
-	s_telemetryTaskletTlsIx = TlsAlloc();
-	s_telemetryTaskletStackTlsIx = TlsAlloc();
-#endif
 }
 
 CcpStaticStatisticsEntry* BlueStatistics::CreateDynamicEntry( const char* name, bool reset, CcpStatisticsType_t type, const char* desc )
 {
 	return CCP_NEW( "CcpStaticStatisticsEntry" ) CcpStaticStatisticsEntry( name, reset, type, desc );
-}
-
-void BlueStatistics::SetTelemetryBufferSize( int bufferSize )
-{
-	CCP_LOGWARN("SetTelemetryBufferSize is deprecated");
 }
 
 // Buffer size and sampling period hard coded in here as this
@@ -257,7 +280,25 @@ void BlueStatistics::UpdateTelemetry()
 #if CCP_TELEMETRY_ENABLED
 	if( s_isTelemetryConnectionRequested && !s_isTelemetryShuttingDown )
 	{
-		s_isTelemetryConnected = CcpStartTelemetry( s_telemetryServerOrFileSystemDumpPath.c_str(), s_telemetryConnectionType );
+		s_isTelemetryConnected = CcpStartTelemetry( s_telemetryServerOrFileSystemDumpPath.c_str(), s_telemetryConnectionType, m_telemetryMaxThreadCount );
+
+		if( s_isTelemetryConnected )
+		{
+#if CCP_STACKLESS
+			if( s_isTelemetryPythonCaptureEnabled )
+			{
+				// There doesn't seem to be an easy way to back up the previous profiler function, so it gets lost
+				PyEval_SetProfile( &PythonProfiler, nullptr );
+			}
+
+			if( s_isTelemetryTaskletCaptureEnabled )
+			{
+				s_taskletTrackID = tmNewTimeSpanTrackID();
+				tmTrackName( 0, s_taskletTrackID, "Tasklets" );
+				tmTrackOrder( 0, s_taskletTrackID, 0 );
+			}
+#endif
+		}
 		s_isTelemetryConnectionRequested = false;
 		s_telemetryLastCheckTime = s_telemetryStartTime = BeOS->GetActualTime();
 		return;
@@ -269,9 +310,20 @@ void BlueStatistics::UpdateTelemetry()
 	{
 		CcpStopTelemetry();
 
-		s_isTelemetryShuttingDown = false;
+		if( s_isTelemetryPythonCaptureEnabled )
+		{
+			PyEval_SetProfile( nullptr, nullptr );
+		}
 
-		s_taskletZoneStackMap.clear();
+		for( auto& free : s_taskletFree )
+		{
+			free.first->tp_free = free.second;
+		}
+		s_taskletFree.clear();
+
+		s_lastTasklet = s_fallbackInfo;
+
+		s_isTelemetryShuttingDown = false;
 	}
 	else if(s_telemetrySamplePeriod > 0.0f ) // Check if we have passed our timed sample time
 	{
@@ -288,6 +340,40 @@ void BlueStatistics::UpdateTelemetry()
 	}
 #endif
 }
+
+#if CCP_STACKLESS
+void BlueStatistics::OnTaskletSwitch( PyTaskletObject* from, PyTaskletObject* to )
+{
+#if CCP_TELEMETRY_ENABLED
+	if( tmRunning() )
+	{
+		StoreFree( from );
+		StoreFree( to );
+
+		if( s_isTelemetryTaskletCaptureEnabled && from && !PyTasklet_IsMain( from ) )
+		{
+			tmEndTimeSpanEx( 0, reinterpret_cast<uintptr_t>( from ), s_lastTasklet.filename, s_lastTasklet.line );
+		}
+
+		if( !to || PyTasklet_IsMain( to ) )
+		{
+			tmSwitchToFiber( 0, 0 );
+		}
+		else
+		{
+			tmSwitchToFiber( 0, reinterpret_cast<uintptr_t>( to ) );
+
+			if( s_isTelemetryTaskletCaptureEnabled )
+			{
+				auto toInfo = GetTaskletInfo( to );
+				tmBeginColoredTimeSpanEx( 0, reinterpret_cast<uintptr_t>( to ), s_taskletTrackID, 0, TMZF_NONE, toInfo.filename, toInfo.line, "%s", toInfo.name );
+				s_lastTasklet = toInfo;
+			}
+		}
+	}
+#endif
+}
+#endif
 
 void BlueStatistics::BeginCapture()
 {
@@ -393,15 +479,7 @@ void BlueStatistics::SetTimelineSectionName( const char* name )
 
 void BlueStatistics::SetCppCaptureEnabled( bool b )
 {
-#if CCP_TELEMETRY_ENABLED
 	s_isTelemetryCppCaptureEnabled = b;
-	tm_uint32 mask = TMCM_GENERAL;
-	if (s_isTelemetryCppCaptureEnabled)
-	{
-		mask |= TMCM_CPP;
-	}
-	tmSetCaptureMask(mask);
-#endif
 }
 
 bool BlueStatistics::IsCppCaptureEnabled()
@@ -409,9 +487,39 @@ bool BlueStatistics::IsCppCaptureEnabled()
 	return s_isTelemetryCppCaptureEnabled;
 }
 
+void BlueStatistics::SetTaskletCaptureEnabled( bool b )
+{
+	s_isTelemetryTaskletCaptureEnabled = b;
+}
+
+bool BlueStatistics::IsTaskletCaptureEnabled() const
+{
+	return s_isTelemetryTaskletCaptureEnabled;
+}
+
+void BlueStatistics::SetPythonCaptureEnabled( bool b )
+{
+	s_isTelemetryPythonCaptureEnabled = b;
+}
+
+bool BlueStatistics::IsPythonCaptureEnabled() const
+{
+	return s_isTelemetryPythonCaptureEnabled;
+}
+
+uint32_t BlueStatistics::GetTelemetryMaxThreadCount() const
+{
+	return m_telemetryMaxThreadCount;
+}
+
+void BlueStatistics::SetTelemetryMaxThreadCount( uint32_t maxThreadCount )
+{
+	m_telemetryMaxThreadCount = maxThreadCount;
+}
+
 void BlueStatistics::PrimeTelemetry()
 {
-	CcpPrimeTelemetry();
+	CcpPrimeTelemetry( m_telemetryMaxThreadCount );
 }
 
 CcpStatisticsEntry::CcpStatisticsEntry( IRoot* lockobj ) :
@@ -603,45 +711,21 @@ void CcpStatisticsEntry::SetResetPerFrame( bool val )
 // Enter a zone in Python
 void tmTaskletEnter( uint32_t ctx, const char* name )
 {
-#if CCP_STACKLESS
-	intptr_t lastTasklet = (intptr_t)TlsGetValue( s_telemetryTaskletTlsIx );
-	intptr_t curTasklet = PyStackless_GetCurrentId();
-
-	if( curTasklet != lastTasklet )
+	// Current Telemetry version (3.5.0.13) has a bug when using capture masks along with fiber switching
+	// so we have to filter out zones manually
+	if( s_isTelemetryCppCaptureEnabled || (ctx & TMCM_CPP) == 0 )
 	{
-		SwitchZoneContext( lastTasklet, curTasklet );
-		TlsSetValue( s_telemetryTaskletTlsIx, (void*)curTasklet );
+		tmEnter( ctx, TMZF_NONE, "%s", name );
 	}
-
-	ZoneStack_t& stack = GetStackForTasklet( curTasklet );
-	stack.push_back( name );
-#endif
-
-	tmEnter( ctx, TMZF_NONE, "%s", name );
 }
 
 // Leave a zone in Python
 void tmTaskletLeave( uint32_t ctx)
 {
-	tmLeave( ctx );
-
-#if CCP_STACKLESS
-	intptr_t lastTasklet = (intptr_t)TlsGetValue( s_telemetryTaskletTlsIx );
-	intptr_t curTasklet = PyStackless_GetCurrentId();
-
-	ZoneStack_t& stack = GetStackForTasklet( curTasklet );
-
-	if( !stack.empty() )
+	if( s_isTelemetryCppCaptureEnabled || ( ctx & TMCM_CPP ) == 0 )
 	{
-		stack.pop_back();
+		tmLeave( ctx );
 	}
-
-	if( curTasklet != lastTasklet )
-	{
-		SwitchZoneContext( lastTasklet, curTasklet );
-		TlsSetValue( s_telemetryTaskletTlsIx, (void*)curTasklet );
-	}
-#endif
 }
 
 void tmTaskletAppendText( uint32_t ctx, const char* appendText )

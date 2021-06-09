@@ -1252,8 +1252,8 @@ PyObject* BlueOS::PyStacklessMain( PyObject* args )
 	{
 		std::wstring server = GetStartupArgValue( L"telemetryServer" );
 		std::string aServer( CW2A( server.c_str() ) );
-		const int ARENA_SIZE = 8*1024*1024;
-		g_statistics->SetTelemetryBufferSize( ARENA_SIZE );
+		// large number because some of our usage of stackless spawn thousands of tasklets (e.g. sol node and proxy)
+		g_statistics->SetTelemetryMaxThreadCount( 32768 );
 		g_statistics->StartTelemetry( aServer );
 	}
 

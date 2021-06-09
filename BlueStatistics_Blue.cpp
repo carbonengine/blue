@@ -625,14 +625,6 @@ const Be::ClassInfo* BlueStatistics::ExposeToBlue()
 
 		MAP_METHOD_AND_WRAP
 		(
-			"SetTelemetryBufferSize", 
-			SetTelemetryBufferSize, 
-			"Sets Telemetry Arena workspace size.\n"
-			":param bufferSize: The size of the memory buffer allocated for telemetry data, in megabytes."
-		)
-
-		MAP_METHOD_AND_WRAP
-		(
 			"PrimeTelemetry",
 			PrimeTelemetry,
 			"Prepares Telemetry for use, loading in DLLs so there is less chance of a stall\n"
@@ -733,6 +725,25 @@ const Be::ClassInfo* BlueStatistics::ExposeToBlue()
 			"Setting this to False can reduce the size of Telemetry captures drastically,\n"
 			"making it easier to grab longer sessions if you are focusing on Python code."
 		)
+
+		MAP_PROPERTY(
+			"isTaskletCaptureEnabled",
+			IsTaskletCaptureEnabled,
+			SetTaskletCaptureEnabled,
+			"If set (default), then we record a \"Tasklet\" tack in telemetry with all active tasklets" )
+
+		MAP_PROPERTY(
+			"isPythonCaptureEnabled",
+			IsPythonCaptureEnabled,
+			SetPythonCaptureEnabled,
+			"If set, then all Python calls are captured" )
+
+		MAP_ATTRIBUTE(
+			"telemetryMaxThreadCount",
+			m_telemetryMaxThreadCount,
+			"Maximum number of threads/tasklets expected during telemetry capture. This attribute needs to be set before the first\n"
+			"call to PrimeTelemetry/StartTelemetry. Changing it after starting telemetry capture will not have an effect.",
+			Be::READWRITE )
 #endif
 
 		MAP_METHOD_AND_WRAP

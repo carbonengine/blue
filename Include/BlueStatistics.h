@@ -70,9 +70,6 @@ public:
 
 	void Update();
 
-	// Telemetry buffer defaults to 8MB. But can be changed between samples using this.
-	void SetTelemetryBufferSize( int bufferSize );
-
 	// Typically used from the client.
 	void StartTelemetry( const std::string& server );
 
@@ -90,8 +87,19 @@ public:
 	float TelemetrySamplingTimeLeft();
 	bool IsTelemetryConnected();
 	bool IsTelemetryPaused();
+
 	void SetCppCaptureEnabled( bool b );
 	bool IsCppCaptureEnabled();
+
+	void SetTaskletCaptureEnabled( bool b );
+	bool IsTaskletCaptureEnabled() const;
+
+	void SetPythonCaptureEnabled( bool b );
+	bool IsPythonCaptureEnabled() const;
+
+	uint32_t GetTelemetryMaxThreadCount() const;
+	void SetTelemetryMaxThreadCount( uint32_t maxThreadCount );
+
 
 	void BeginCapture();
 	std::map<std::string, std::vector<double>> EndCapture();
@@ -106,6 +114,12 @@ public:
 	static PyObject* PyGetStats( PyObject* self, PyObject* args );
 	static PyObject* PyGetValues( PyObject* self, PyObject* args );
 	static PyObject* PyGetSingleStat( PyObject* self, PyObject* args );
+
+#if CCP_STACKLESS
+	// Called from BluePyOS
+	static void OnTaskletSwitch( PyTaskletObject * from, PyTaskletObject * to );
+#endif
+
 #endif
 
 protected:
@@ -116,6 +130,7 @@ protected:
 	};
 	TrackableStdHashMap<std::string, AccumulatorEntry> m_accumulators;
 	TrackableStdHashMap<std::string, std::vector<double>> m_capture;
+	uint32_t m_telemetryMaxThreadCount;
 	bool m_isCapturing;
 };
 
