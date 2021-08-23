@@ -40,38 +40,38 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////
 	// IBluePaths
-	virtual void InitializeStdAppPaths();
+	void InitializeStdAppPaths() override;
 
-	virtual void SetSearchPathW( const char* key, const wchar_t* value );
-	virtual const wchar_t* GetSearchPathW( const char* key );
+	void SetSearchPathW( const char* key, const wchar_t* value ) override;
+	const wchar_t* GetSearchPathW( const char* key ) override;
 
-	virtual std::wstring ResolvePathW( const std::wstring& path );
-	virtual std::wstring ResolvePathForWritingW( const std::wstring& path );
-	virtual std::wstring ResolvePathToRootW( const std::string& root, const std::wstring& path );
+	std::wstring ResolvePathW( const std::wstring& path ) override;
+	std::wstring ResolvePathForWritingW( const std::wstring& path ) override;
+	std::wstring ResolvePathToRootW( const std::string& root, const std::wstring& path ) override;
 
-	virtual void GetExpandedSearchPaths( const char* key, std::vector<std::wstring>& paths );
+	void GetExpandedSearchPaths( const char* key, std::vector<std::wstring>& paths ) override;
 
 	// Get the contents of the given directory
-	virtual void GetDirectoryContents( const wchar_t* dir, std::set<std::wstring>& results );
+	void GetDirectoryContents( const wchar_t* dir, std::set<std::wstring>& results ) override;
 
 	// Returns true if the path is a directory
-	virtual bool IsDirectory( const std::wstring& dir );
+	bool IsDirectory( const std::wstring& dir ) override;
 
 	// Returns true if the file exists. Checking for .red files returns true if a corresponding
 	// black file exists and BeResMan->GetSubstituteBlackForRed() is set.
-	virtual bool FileExists( const std::wstring& filename );
+	bool FileExists( const std::wstring& filename ) override;
 
 	// Dump current search paths to log
-	virtual void LogPaths();
+	void LogPaths() override;
 
-	virtual bool FileExistsLocally( const wchar_t* filename );
+	bool FileExistsLocally( const wchar_t* filename ) override;
 
-	virtual bool FileNeedsDownload( const wchar_t* filename );
+	bool FileNeedsDownload( const wchar_t* filename ) override;
 
 	// Get a stream from a resource path
-	virtual bool GetStreamFromPathW( const wchar_t* path, IBlueStream** stream );
+	bool GetStreamFromPathW( const wchar_t* path, IBlueStream** stream ) override;
 
-	Be::Result<std::string> GetFileContentsWithYield( const std::wstring& path, IBlueStream** contents );
+	Be::Result<std::string> GetFileContentsWithYield( const std::wstring& path, IBlueStream** contents ) override;
 	//
 	//////////////////////////////////////////////////////////////////////////
 

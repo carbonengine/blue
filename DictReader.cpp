@@ -90,7 +90,7 @@ IRoot* DictReader::CreateObjectInternal()
 		IInitializePtr init( BlueCastPtr( instance ) );
 		if( init )
 		{
-			CCP_STATS_ZONE( __FUNCTION__ ": Initialize" );
+			CCP_STATS_ZONE( CCP_STRINGIZE( __FUNCTION__ ) ": Initialize" );
 			init->Initialize();
 		}
 	}
@@ -150,7 +150,7 @@ void DictReader::ReadIRoot( IRoot& instance )
 		IInitializePtr init( BlueCastPtr( &instance ) );
 		if( init )
 		{
-			CCP_STATS_ZONE( __FUNCTION__ ": Initialize" );
+			CCP_STATS_ZONE( CCP_STRINGIZE( __FUNCTION__ ) ": Initialize" );
 			init->Initialize();
 		}
 	}

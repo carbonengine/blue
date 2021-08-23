@@ -52,6 +52,46 @@ BlueSysInfoMemoryPtr BlueSysInfo::GetMemory() const
 	return memory;
 }
 
+bool BlueSysInfo::IsRosetta() const
+{
+    return PDM::IsRosetta();
+}
+
+bool BlueSysInfo::IsWine() const
+{
+	return PDM::IsWine();
+}
+
+std::wstring BlueSysInfo::GetWineVersion() const
+{
+	return UTF8ToWide( PDM::GetWineVersion() );
+}
+
+std::wstring BlueSysInfo::GetWineHostOs() const
+{
+	return UTF8ToWide( PDM::GetWineHostOs() );
+}
+
+std::vector<BlueSysInfoNetworkAdapterPtr> BlueSysInfo::GetNetworkAdapters() const
+{
+	std::vector<BlueSysInfoNetworkAdapterPtr> adapters;
+
+	for( auto& adapter : PDM::GetNetworkAdapterInfo() )
+	{
+		BlueSysInfoNetworkAdapterPtr ptr;
+		ptr.CreateInstance();
+		ptr->m_name = UTF8ToWide( adapter.name );
+		const auto& mac = adapter.macAddress;
+		ptr->m_macAddress = std::string( mac.begin(), mac.end() );
+		ptr->m_macAddressString = adapter.macAddressString;
+		ptr->m_uuid = adapter.uuidString;
+
+		adapters.push_back( ptr );
+	}
+
+	return adapters;
+}
+
 #ifdef _WIN32
 
 std::wstring BlueSysInfo::GetUserDocumentsDirectory() const
@@ -94,10 +134,15 @@ std::wstring BlueSysInfo::GetSharedFontsDirectory() const
     return L"";
 }
 
+std::wstring BlueSysInfo::GetSystemFontsDirectory() const
+{
+	// Windows only has one fonts directory
+	return GetSharedFontsDirectory();
+}
 
 uint32_t BlueSysInfo::GetProcessBitCount() const
 {
-	return PROCESS_BIT_COUNT;
+	return CcpGetProcessBitCount();
 }
 
 uint32_t BlueSysInfo::GetSystemBitCount() const
@@ -125,41 +170,6 @@ uint64_t BlueSysInfo::GetProcessStartTime() const
 	{
 		return 0;
 	}
-}
-
-bool BlueSysInfo::IsWine() const
-{
-	return PDM::IsWine();
-}
-
-std::wstring BlueSysInfo::GetWineVersion() const
-{
-	return UTF8ToWide( PDM::GetWineVersion() );
-}
-
-std::wstring BlueSysInfo::GetWineHostOs() const
-{
-	return UTF8ToWide( PDM::GetWineHostOs() );
-}
-
-std::vector<BlueSysInfoNetworkAdapterPtr> BlueSysInfo::GetNetworkAdapters() const
-{
-	std::vector<BlueSysInfoNetworkAdapterPtr> adapters;
-
-	for( auto& adapter : PDM::GetNetworkAdapterInfo() )
-	{
-		BlueSysInfoNetworkAdapterPtr ptr;
-		ptr.CreateInstance();
-		ptr->m_name = UTF8ToWide( adapter.name );
-		const auto& mac = adapter.macAddress;
-		ptr->m_macAddress = std::string( mac.begin(), mac.end() );
-		ptr->m_macAddressString = adapter.macAddressString;
-		ptr->m_uuid = adapter.uuidString;
-
-		adapters.push_back( ptr );
-	}
-	
-	return adapters;
 }
 
 std::string BlueSysInfo::GetMachineUuid() const
@@ -192,13 +202,40 @@ std::string BlueSysInfo::GetMachineUuid() const
 	return guid;
 }
 
+std::string BlueSysInfo::GetMachineName() const
+{
+	char buffer[MAX_COMPUTERNAME_LENGTH + 1];
+	buffer[0] = 0;
+	DWORD size = MAX_COMPUTERNAME_LENGTH + 1;
+	GetComputerNameA( buffer, &size );
+	return buffer;
+}
+
+std::string BlueSysInfo::GetDomainName() const
+{
+	DWORD size = 0;
+	GetComputerNameExA( ComputerNamePhysicalDnsDomain, nullptr, &size );
+
+	std::unique_ptr<char[]> buffer( new char[size] );
+	if( !GetComputerNameExA( ComputerNamePhysicalDnsDomain, buffer.get(), &size ) )
+	{
+		return "";
+	}
+
+	char name[MAX_COMPUTERNAME_LENGTH + 1];
+	name[0] = 0;
+	size = MAX_COMPUTERNAME_LENGTH + 1;
+	DnsHostnameToComputerNameA( buffer.get(), name, &size );
+	return name;
+}
+
 
 
 BlueSysInfoCpu::BlueSysInfoCpu() :
 	m_extensions( PDM::GetCPUInfo().extensions )
 {
 	SYSTEM_INFO info;
-	GetSystemInfo( &info );
+	GetNativeSystemInfo( &info );
 
 	m_family = info.wProcessorLevel;
 	m_revision = info.wProcessorRevision;
@@ -241,7 +278,7 @@ BlueSysInfoCpu::BlueSysInfoCpu() :
 	if( idMax > 0 )
 	{
 		__cpuidex( cpuInfo, 1, 0 );
-		model = ( cpuInfo[0] >> 4 ) & 0xf;
+		model = ( ( cpuInfo[0] >> 4 ) & 0xf ) | ( ( cpuInfo[0] >> 12 ) & 0xf0 );
 		stepping = cpuInfo[0] & 0xf;
 	}
 
@@ -250,16 +287,24 @@ BlueSysInfoCpu::BlueSysInfoCpu() :
 	switch( info.wProcessorArchitecture )
 	{
 	case PROCESSOR_ARCHITECTURE_AMD64:
+		m_architecture = "AMD64";
 		platform = strstr( vendor, "Intel" ) ? "Intel64" : "AMD64";
 		break;
 	case PROCESSOR_ARCHITECTURE_ARM:
+		m_architecture = "ARM";
 		platform = "ARM";
 		break;
 	case PROCESSOR_ARCHITECTURE_IA64:
+		m_architecture = "IA64";
 		platform = "IA64";
 		break;
 	case PROCESSOR_ARCHITECTURE_INTEL:
+		m_architecture = "x86";
 		platform = "x86";
+		break;
+	case PROCESSOR_ARCHITECTURE_ARM64:
+		m_architecture = "ARM64";
+		platform = "ARM64";
 		break;
 	default:
 		platform = "Unknown";
@@ -310,6 +355,18 @@ BlueSysInfoMemory::BlueSysInfoMemory()
 	m_availablePhysical = uint64_t( status.ullAvailPhys );
 }
 
+#endif
+
+
+
 BlueSysInfoNetworkAdapter::BlueSysInfoNetworkAdapter() {}
 
-#endif
+const BlueSysInfoCpu& BlueSysInfo::GetCpuInfo() const
+{
+    return m_cpu;
+}
+
+const BlueSysInfoOs& BlueSysInfo::GetOsInfo() const
+{
+    return m_os;
+}

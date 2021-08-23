@@ -301,6 +301,10 @@ BLUEIMPORT std::wstring ConvertRelativeToAbsolutePath( const wchar_t* path )
 	CW2A pathA( path );
 	char normPathTmpA[PATH_MAX];
 	char* resolvedPath = realpath( pathA, normPathTmpA );
+	if( !resolvedPath )
+	{
+		return L"";
+	}
 	CA2W tmp( resolvedPath );
 	const wchar_t* normPathTmp = (const wchar_t*)tmp;
 #endif

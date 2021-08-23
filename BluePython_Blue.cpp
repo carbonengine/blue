@@ -127,19 +127,6 @@ const Be::ClassInfo* BluePyOS::ExposeToBlue()
 			":type kwargs: dict\n"
 			":rtype: stackless.tasklet"
 		)
-#ifdef _WIN32
-		MAP_METHOD_AS_METHOD
-		(
-			"SpyDirectory",
-			PySpyDirectory,	
-			"SpyDirectory\n" 
-			":param path: directory path\n"
-			":type path: basestring\n"
-			":param callback: function to call on directory changes\n"
-			":type callback: ()->None\n"
-			":rtype: None"
-		)
-#endif
 		MAP_METHOD_AS_METHOD
 		(
 			"NextScheduledEvent",
@@ -150,40 +137,15 @@ const Be::ClassInfo* BluePyOS::ExposeToBlue()
 			":rtype: None"
 		)
 
-#ifdef _WIN32
-		MAP_METHOD_AS_METHOD
-		(
-			"GetClipboardData",
-			PyGetClipboardData,	
-			"GetClipboardData\n" 
-			":param dataFormat:\n"
-			":type dataFormat: Optional[int]\n"
-			":rtype: str"
-		)
 		MAP_METHOD_AS_METHOD
 		(
 			"SetClipboardData",
 			PySetClipboardData,	
 			"SetClipboardData\n" 
+			":jessica-deprecated: use blue.clipboard\n"
 			":param data:\n"
 			":type data: basestring\n"
-			":param dataFormat:\n"
-			":type dataFormat: Optional[int]\n"
 			":rtype: None"
-		)
-		MAP_METHOD_AS_METHOD
-		(
-			"GetThreadTimes",
-			PyGetThreadTimes,	
-			"GetThreadTimes\n" 
-			":rtype: (list[str], list[long])"
-		)
-		MAP_METHOD_AS_METHOD
-		(
-			"ProbeStuff",
-			PyProbeStuff,	
-			"ProbeStuff\n" 
-			":rtype: ((str, str, str, str, str, str, str, str, str), list)"
 		)
 #if CCP_STACKLESS
 		MAP_METHOD_AS_METHOD
@@ -193,7 +155,6 @@ const Be::ClassInfo* BluePyOS::ExposeToBlue()
 			"time since last tasklet switch\n"
 			":rtype: float"
 		)
-#endif
 #endif
 		MAP_METHOD_AS_METHOD
 		(

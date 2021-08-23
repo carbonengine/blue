@@ -9,7 +9,7 @@ class PercentileAccumulator : public ICcpStatisticsAccumulator
 public:
 	EXPOSE_TO_BLUE();
 	PercentileAccumulator();
-	void Add( double val );
+	void Add( double val ) override;
 	void Clear();
 	Be::Result<std::string> GetPercentiles(double start, double step, std::list<double>& percentiles);
 	Be::Result<std::string> GetValuesForPercentiles(double cutoff_point, double step_size, std::list<double>& percentiles);

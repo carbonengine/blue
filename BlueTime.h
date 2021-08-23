@@ -64,9 +64,6 @@ class SysTickTime : public BlueClock
 public:
 	Be::Time Get();
 	Be::Time GetUnitsPerSecond();
-private:
-	static uint32_t s_Prev;
-	static Be::Time s_High;
 };
 
 // ----------------------------------------------------------------------------
@@ -80,9 +77,6 @@ class HiResTime : public BlueClock
 public:
 	Be::Time Get();
 	Be::Time GetUnitsPerSecond();
-private:
-	static Be::Time s_Prev;
-	static Be::Time s_Freq;
 };
 
 // ----------------------------------------------------------------------------

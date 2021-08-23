@@ -10,12 +10,12 @@ public:
 	BlueObjectMetadata( IRoot* lockobj = nullptr );
 	~BlueObjectMetadata();
 
-	const Metadata* GetMetadata( IWeakObject* owner ) const;
+	const Metadata* GetMetadata( IWeakObject* owner ) const override;
 
-	virtual void Set( IWeakObject* owner, const char* key, const char* value );
-	virtual const char* Get( IWeakObject* owner, const char* key, const char* defaultValue ) const;
-	virtual BlueStdResult Delete( IWeakObject* owner, const char* key );
-	virtual BlueStdResult DeleteObject( IWeakObject* owner );
+	void Set( IWeakObject* owner, const char* key, const char* value ) override;
+	const char* Get( IWeakObject* owner, const char* key, const char* defaultValue ) const override;
+	BlueStdResult Delete( IWeakObject* owner, const char* key ) override;
+	BlueStdResult DeleteObject( IWeakObject* owner ) override;
 
 	BlueStdResult Index( IWeakObject* owner, const char* key, const char*& value ) const;
 	BlueStdResult GetKeys( IWeakObject* owner, std::vector<std::string>& keys ) const;
@@ -28,7 +28,7 @@ private:
 		Metadata mapping;
 	};
 
-	virtual void WeakRefNotify( IWeakObject* weak );
+	void WeakRefNotify( IWeakObject* weak ) override;
 
 	TrackableStdUnorderedMap<IWeakObject*, DataTable*> m_metadata;
 };

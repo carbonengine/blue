@@ -335,7 +335,7 @@ IRoot* BlackReader::ReadIRootClass()
 	const char* typeName = ReadString();
 
 	{
-		CCP_STATS_ZONE( __FUNCTION__": CreateInstance" );
+		CCP_STATS_ZONE( CCP_STRINGIZE( __FUNCTION__ ) ": CreateInstance" );
 
 		// need to create our own using the factory
 		if( !BeClasses->CreateInstanceFromName( typeName, GetIRootIID(), (void**)&instance ) )
@@ -391,7 +391,7 @@ IRoot* BlackReader::ReadIRootClass()
 		IInitializePtr init( BlueCastPtr( instance ) );
 		if( init )
 		{
-			CCP_STATS_ZONE( __FUNCTION__ ": Initialize" );
+			CCP_STATS_ZONE( CCP_STRINGIZE( __FUNCTION__ ) ": Initialize" );
 			init->Initialize();
 		}
 	}
@@ -745,43 +745,69 @@ bool BlackReader::FillWStringTable( IBlueStream* stream )
 	ReadValueFromStream( stream, numWStrings );
 	wstringTableDataSize -= sizeof( uint16_t );
 
-	m_wstringData = (wchar_t*)CCP_MALLOC( "BlackReader/m_wstringData", wstringTableDataSize );
-	if( !m_wstringData )
-	{
-		return false;
-	}
+    if( sizeof(wchar_t) == 2 )
+    {
+        m_wstringData = (wchar_t*)CCP_MALLOC( "BlackReader/m_wstringData", wstringTableDataSize );
+        if( !m_wstringData )
+        {
+            return false;
+        }
 
-	stream->Read( m_wstringData, wstringTableDataSize );
+        stream->Read( m_wstringData, wstringTableDataSize );
+    }
+    else
+    {
+        m_wstringData = (wchar_t*)CCP_MALLOC( "BlackReader/m_wstringData", wstringTableDataSize * 2 );
+        if( !m_wstringData )
+        {
+            return false;
+        }
 
-	m_wstrings.resize( numWStrings );
+        std::unique_ptr<uint8_t[]> ucs2( new uint8_t[wstringTableDataSize] );
+        if( !ucs2.get() )
+        {
+            return false;
+        }
+        stream->Read( ucs2.get(), wstringTableDataSize );
+        
+        auto src = reinterpret_cast<const char16_t*>( ucs2.get() );
+        auto dest = m_wstringData;
+        for( size_t i = 0; i < wstringTableDataSize; i += 2 )
+        {
+            *dest++ = *src++;
+        }
+        wstringTableDataSize *= 2;
+    }
 
-	const wchar_t* wp = m_wstringData;
-	const wchar_t* wstringEnd = (const wchar_t*)((uintptr_t)m_wstringData + wstringTableDataSize);
-	int i;
-	for( i = 0; (i < numWStrings) && (wp < wstringEnd); ++i )
-	{
-		m_wstrings[i] = wp;
-		while( *wp && wp < wstringEnd )
-		{
-			++wp;
-		}
-		if( wp < wstringEnd )
-		{
-			// Skip the zero terminator
-			++wp;
-		}
-	}
+    m_wstrings.resize( numWStrings );
 
-	if( i < numWStrings || wp != wstringEnd )
-	{
-		m_wstrings.clear();
-		CCP_FREE( m_wstringData );
-		m_wstringData = nullptr;
-		return false;
-	}
+    const wchar_t* wp = m_wstringData;
+    const wchar_t* wstringEnd = (const wchar_t*)((uintptr_t)m_wstringData + wstringTableDataSize);
+    int i;
+    for( i = 0; (i < numWStrings) && (wp < wstringEnd); ++i )
+    {
+        m_wstrings[i] = wp;
+        while( *wp && wp < wstringEnd )
+        {
+            ++wp;
+        }
+        if( wp < wstringEnd )
+        {
+            // Skip the zero terminator
+            ++wp;
+        }
+    }
 
-	m_wstringDataSize = wstringTableDataSize;
-	return true;
+    if( i < numWStrings || wp != wstringEnd )
+    {
+        m_wstrings.clear();
+        CCP_FREE( m_wstringData );
+        m_wstringData = nullptr;
+        return false;
+    }
+
+    m_wstringDataSize = wstringTableDataSize;
+    return true;
 }
 
 void BlackReader::Cleanup()

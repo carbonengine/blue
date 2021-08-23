@@ -540,6 +540,12 @@ void BlueResFileSystemLocal::InitializeStdAppPaths()
 		m_searchPaths["bin"] = bin;
 	}
 
+	if( m_searchPaths.find( "lib" ) == m_searchPaths.end() )
+	{
+		// set default lib path to the python default
+		m_searchPaths["lib"] = m_searchPaths.find( "bin" )->second + sep + L"lib";
+	}
+
 	if( m_searchPaths.find( "root" ) == m_searchPaths.end() )
 	{
 		//no root has been set.  By default, it is the directory above the current module
@@ -560,11 +566,11 @@ void BlueResFileSystemLocal::InitializeStdAppPaths()
 
 	// fixup the rest.  cache and settings both point to root/cache originally.
 	static const char* stdFolderNames[] =
-	{"res", "bin", "lib", "macro", "stdlib", "script", "cache", "settings" };
+	{"res", "bin", "macro", "script", "cache", "settings" };
 
     const auto stdFolderNamesCount = sizeof(stdFolderNames) / sizeof(stdFolderNames[0]);
 	static const wchar_t* defnames[stdFolderNamesCount] =
-	{L"res", L"bin", L"lib;stdlib", L"macros", 0, L"script", L"cache", L"cache"};
+	{L"res", L"bin", L"macros", L"script", L"cache", L"cache"};
 
 	for( int i = 0; i < stdFolderNamesCount; ++i )
 	{

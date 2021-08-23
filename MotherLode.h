@@ -3,7 +3,7 @@
 
 	MotherLode.h
 
-	Author:    Kristján Valur Jónsson
+	Author:    Kristjï¿½n Valur Jï¿½nsson
 	Created:   Dec 2008
 	OS:        Win32
 	Project:   Yep
@@ -63,37 +63,37 @@ public:
 	~MotherLode();
 
 	//the IMotherLode interface
-	virtual bool Insert(
+	bool Insert(
 		const wchar_t*	key,
 		IRoot*			object,
 		bool			replace = true,
 		bool			*inserted = 0,
 		ResourceCaching	allowCaching = CACHING_ALLOWED
-		);
+		) override;
 
-	virtual bool HasKey( const wchar_t* key );
+	bool HasKey( const wchar_t* key ) override;
 
-	virtual LookupResult Lookup(
+	LookupResult Lookup(
 		const wchar_t *key,
 		const Be::IID& riid,
 		void** ppv,
 		BLUEQIOPT options = BEQI_NONE
-		);
+		) override;
 
-	virtual bool Delete(const wchar_t *key);
-	virtual void SetCacheSize(size_t size);
-	virtual size_t GetCacheSize();
-	virtual void GetStats(size_t *n_live, size_t *n_cached, size_t *c_mem);
-	virtual void Startup();
-	virtual void Shutdown();
+	bool Delete(const wchar_t *key) override;
+	void SetCacheSize(size_t size) override;
+	size_t GetCacheSize() override;
+	void GetStats(size_t *n_live, size_t *n_cached, size_t *c_mem) override;
+	void Startup() override;
+	void Shutdown() override;
 
 
 	//The IBlueEvents interface
-	virtual void OnTick(
+	void OnTick(
 		Be::Time realTime,		// Time since client started
 		Be::Time simTime,
 		void* cookie			// user supplied cookie value
-		);
+		) override;
 
 	// Clear all objects.
 	void Clear();

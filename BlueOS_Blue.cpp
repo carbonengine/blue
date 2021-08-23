@@ -2,8 +2,8 @@
 
 #include "BlueOS.h"
 
-#ifdef _WIN32
-#include <Psapi.h>
+#if __APPLE__
+#include <sys/sysctl.h>
 #endif
 
 #if BLUE_WITH_PYTHON
@@ -138,6 +138,54 @@ static PyObject *PyGetExeFilePids( PyObject* self, PyObject* args)
 
 	return list;
 }
+#elif __APPLE__
+
+static PyObject *PyGetExeFilePids( PyObject* self, PyObject* args)
+{
+    if( !PyArg_ParseTuple( args, "" ) )
+    {
+        return nullptr;
+    }
+    std::vector<kinfo_proc> result;
+    int name[] = { CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0 };
+
+    while( true )
+    {
+        size_t length = 0;
+        if( sysctl( name, ( sizeof( name ) / sizeof( *name ) ) - 1, nullptr, &length, nullptr, 0 ) )
+        {
+            return PyErr_SetFromErrno( PyExc_OSError );
+        }
+
+        result.resize( length / sizeof( kinfo_proc ) );
+
+        auto err = sysctl( name, ( sizeof( name ) / sizeof( *name ) ) - 1, result.data(), &length, nullptr, 0 );
+        if( err == 0 )
+        {
+            break;
+        }
+        if( err == -1 )
+        {
+            return PyErr_SetFromErrno( PyExc_OSError );
+        }
+        if( err == ENOMEM )
+        {
+            continue;
+        }
+    }
+    
+    PyObject* list = PyList_New( 0 );
+
+    for( auto proc : result )
+    {
+        if( strcmp( proc.kp_proc.p_comm, "Exefile" ) == 0 )
+        {
+            PyList_Append( list, BluePy( PyLong_FromLong( proc.kp_proc.p_pid ) ) );
+        }
+    }
+
+    return list;
+}
 #endif
 #endif
 
@@ -195,9 +243,6 @@ const Be::ClassInfo* BlueOS::ExposeToBlue()
 		MAP_ATTRIBUTE( "slugTimeMaxMs", mSlugTimeMaxMs, "Maximum slug time, in ms", Be::READWRITE )
 
 		// variable-rate ticking stuff
-		MAP_ATTRIBUTE( "useSimpleCatchupLoop", mUseSimpleCatchupLoop,
-			"Use the simple one-call-per-pump loop",
-			Be::READWRITE )
 		MAP_ATTRIBUTE( "useNominalDeltaT", mUseNominalDeltaT,
 			"Use a nominal deltaT rather than a measured one",
 			Be::READWRITE )
@@ -405,17 +450,6 @@ const Be::ClassInfo* BlueOS::ExposeToBlue()
 			":type milliseconds: int\n"
 			":rtype: long\n"
 		)
-		MAP_METHOD_AS_METHOD
-		(
-			"TimeDiffAsParts",
-			PyTimeDiffAsParts,
-			"Takes in two times and returns a list specifying the number of years, months, days, hours, minutes, seconds, ms\n" 
-			":param t1: first time\n"
-			":type t1: long\n"
-			":param t2: second time\n"
-			":type t2: long\n"
-			":rtype: (int, int, int, int, int, int, int)"
-		)
 
 		MAP_METHOD_AS_METHOD
 		(
@@ -424,25 +458,6 @@ const Be::ClassInfo* BlueOS::ExposeToBlue()
 			"DEPRECATED!\nReturns CPU clock values\n" 
 			":raises RuntimeError: always!"
 		)
-
-#ifdef _WIN32
-		MAP_METHOD_AS_METHOD
-		(
-			"HeapCompact",
-			PyHeapCompact,
-			"Attempt to compact the system heap.\n" 
-			":rtype: None"
-		)
-		
-		MAP_METHOD_AS_METHOD
-		(
-			"GlobalMemoryStatus",
-			PyGlobalMemoryStatus,
-			"Obtains information about the system's current usage of both"
-			"physical and virtual memory.\n" 
-			":rtype: (list, list)"
-		)
-#endif
 
 		MAP_METHOD_AS_METHOD
 		(
@@ -453,26 +468,7 @@ const Be::ClassInfo* BlueOS::ExposeToBlue()
 			":type title: str\n"
 			":rtype: None"
 		)
-		MAP_METHOD_AS_METHOD
-		(
-			"GetAppTitle",
-			PyGetAppTitle,
-			"Get text in titlebar.\n" 
-			":rtype: str"
-		)
 
-#ifdef _WIN32
-		MAP_METHOD_AS_METHOD
-		(
-			"ApplyPatch",
-			PyApplyPatch,
-			"Apply patch file and kill current process\n"
-			":param patchFile: path to patch executable\n"
-			":type patchFile: basestring\n"
-			":param parameter: program arguments for the patch executable\n"
-			":type parameter: basestring\n"
-			":rtype: None"
-		)
 		MAP_METHOD_AS_METHOD
 		(
 			"ShellExecute",
@@ -484,7 +480,6 @@ const Be::ClassInfo* BlueOS::ExposeToBlue()
 			":type parameter: Optional[basestring]\n"
 			":rtype: None"
 		)
-#endif
 
 		MAP_METHOD_AND_WRAP
 		(
@@ -511,7 +506,6 @@ const Be::ClassInfo* BlueOS::ExposeToBlue()
 		)
 #endif
 
-#ifdef _WIN32
 		MAP_METHOD
 		(
 			"GetExeFilePids",
@@ -519,7 +513,6 @@ const Be::ClassInfo* BlueOS::ExposeToBlue()
 			"Returns a list of process ids for any ExeFile instances running\n"
 			":rtype: list[long]"
 		)
-#endif
 
 		MAP_METHOD_AND_WRAP
 		(

@@ -12,8 +12,8 @@ public:
 
 	void Watch( BlueAsyncRes* resource );
 protected:
-	virtual void ReleaseCachedData( BlueAsyncRes* resource );
-	virtual void RebuildCachedData( BlueAsyncRes* resource );
+	void ReleaseCachedData( BlueAsyncRes* resource ) override;
+	void RebuildCachedData( BlueAsyncRes* resource ) override;
 private:
 	BlueAsyncResPtr m_resource;
 	BlueScriptCallback m_onLoaded;

@@ -11,6 +11,7 @@
 
 #include "BlueResManBackgroundCall.h"
 BLUE_DECLARE( MemStream );
+BLUE_DECLARE_INTERFACE( IBlueStream );
 
 class BackgroundReader : public IBlueResManBackgroundCall
 {

@@ -125,13 +125,13 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////
 	// ICacheable
-	bool IsMemoryUsageKnown();
-	size_t GetMemoryUsage();
+	bool IsMemoryUsageKnown() override;
+	size_t GetMemoryUsage() override;
 
 protected:
-	bool DoOpenStream();
-	LoadingResult DoLoad();
-	bool DoPrepare();
+	bool DoOpenStream() override;
+	LoadingResult DoLoad() override;
+	bool DoPrepare() override;
 
 	bool m_ex;
 };

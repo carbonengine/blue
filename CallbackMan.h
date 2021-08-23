@@ -33,59 +33,59 @@ public:
 	// can be used to cancel the request later, if necessary.
 	// A separate queue is maintained for urgent requests - urgent requests are always handled
 	// before regular requests.
-	bool Add( CallbackFunc pCb, void* pContext, uint32_t flags, CcpAtomic<uint32_t>* id );
+	bool Add( CallbackFunc pCb, void* pContext, uint32_t flags, CcpAtomic<uint32_t>* id ) override;
 
 	// Cancels a previously requested callback. If the callback is already in progress, the
 	// calling thread is blocked until the callback finishes.
-	void Cancel( uint32_t id );
+	void Cancel( uint32_t id ) override;
 
 	// Creates a thread and sits in a loop, processing callbacks one at a time until stopped.
-	void Run();
+	void Run() override;
 
-    void Pause();
-    void Resume();
-    bool IsPaused();
+    void Pause() override;
+    void Resume() override;
+    bool IsPaused() override;
 
     // This is called in the Run loop. To Throttle it back, inherit from this class,
     // override this function to Pause when needed, Resuming from somewhere else.
-    virtual void Throttle() {}
+    void Throttle() override {}
 
 	// This should be called regularly to Resume the thread in case it has been Paused
 	// by Throttle (see above).
-	virtual void Unthrottle() {}
+	void Unthrottle() override {}
 
 	// Stops the callback manager's thread, as created by Run.
-	void Stop();
+	void Stop() override;
 
 	// Processes the next callback on the queue. Returns true if a callback was processed,
 	// false otherwise (indicating an empty queue).
-	bool Update();
+	bool Update() override;
 
-	bool IsEmpty() const;
+	bool IsEmpty() const override;
 
-	uint32_t GetNextId() const;
+	uint32_t GetNextId() const override;
 
-	unsigned int GetSize() const;
+	unsigned int GetSize() const override;
 
 	// Maximum time any entry spent in the queue since last call to ResetQueueStats (or from the start).
 	// Time is measured in seconds.
-	float GetTimeInQueueMax() const;
+	float GetTimeInQueueMax() const override;
 
 	// Average time for entries spent in the queue since last call to ResetQueueStats (or from the start).
 	// Time is measured in seconds.
-	float GetTimeInQueueAverage() const;
+	float GetTimeInQueueAverage() const override;
 
 	// Resets the values for GetTimeInQueueMax() and GetTimeInQueueAverage().
-	void ResetQueueStats();
+	void ResetQueueStats() override;
 
 	// Sets the thread priority.
 	// Positive values boost the priority higher than normal,
 	// negative values set the priority lower than normal.
-	void SetPriority( int prio );
+	void SetPriority( int prio ) override;
 
-	void SetThreadCount( unsigned int threadCount );
+	void SetThreadCount( unsigned int threadCount ) override;
 
-	void SetName( const char* name );
+	void SetName( const char* name ) override;
 	//
 	//////////////////////////////////////////////////////////////////////////
 

@@ -9,9 +9,6 @@
 
 #include "BlueMemoryTracker.h"
 
-#ifdef _WIN32
-#include <Psapi.h>
-#endif
 
 extern bool g_isCallstackCaptureEnabled;
 
@@ -29,11 +26,6 @@ CCP_STATS_DECLARE( pageFileUsage,				"Blue/Memory/PageFileUsage", false, CST_MEM
 CCP_STATS_DECLARE( processHeap,					"Blue/Memory/ProcessHeap", false, CST_MEMORY, "The amount of memory allocated in the process heap" );
 CCP_STATS_DECLARE( crtHeap,						"Blue/Memory/CrtHeap", false, CST_MEMORY, "The amount of memory allocated in the crt heap" );
 CCP_STATS_DECLARE( crtHeapUnaccounted,			"Blue/Memory/CrtHeapUnaccounted", false, CST_MEMORY, "The amount of memory allocated in the crt heap that is not accounted for" );
-CCP_STATS_DECLARE( d3dHeap1,					"Blue/Memory/D3DHeap1", false, CST_MEMORY, "The amount of memory allocated in the first D3D heap" );
-CCP_STATS_DECLARE( d3dHeap2,					"Blue/Memory/D3DHeap2", false, CST_MEMORY, "The amount of memory allocated in the second D3D heap" );
-CCP_STATS_DECLARE( customHeap1,					"Blue/Memory/CustomHeap1", false, CST_MEMORY, "The amount of memory allocated in the first custom heap" );
-CCP_STATS_DECLARE( customHeap2,					"Blue/Memory/CustomHeap2", false, CST_MEMORY, "The amount of memory allocated in the second custom heap" );
-CCP_STATS_DECLARE( customHeap3,					"Blue/Memory/CustomHeap3", false, CST_MEMORY, "The amount of memory allocated in the third custom heap" );
 CCP_STATS_DECLARE( trackingHeap,				"Blue/Memory/TrackingHeap", false, CST_MEMORY, "The amount of memory allocated for tracking memory allocations" );
 CCP_STATS_DECLARE( allHeaps,					"Blue/Memory/AllHeaps", false, CST_MEMORY, "The amount of memory allocated in all heaps owned by the process" );
 CCP_STATS_DECLARE( unknownHeaps,				"Blue/Memory/UnknownHeaps", false, CST_MEMORY, "The amount of memory allocated in all unidentified heaps owned by the process" );
@@ -42,13 +34,6 @@ CCP_STATS_DECLARE( unknownHeaps,				"Blue/Memory/UnknownHeaps", false, CST_MEMOR
 static CcpLogChannel_t s_ch = CCP_LOG_DEFINE_CHANNEL( "Memory" );
 
 MemoryTracker::MemoryTracker( IRoot* lockobj /*= NULL */ ) :
-#ifdef _WIN32
-	m_d3dHeap1( NULL ),
-	m_d3dHeap2( NULL ),
-	m_customHeap1( NULL ),
-	m_customHeap2( NULL ),
-	m_customHeap3( NULL ),
-#endif
 	m_lastLoggedWorkingSet( 0 ),
 	m_lastLoggedPageFileUsage( 0 ),
 #if CCP_STACKLESS
@@ -127,168 +112,6 @@ void MemoryTracker::Update()
 #endif
 }
 
-#ifdef _WIN32
-bool MemoryTracker::IsKnownHeap( HANDLE heap )
-{
-	if( heap == ::GetProcessHeap() )
-	{
-		return true;
-	}
-
-	if( heap == (HANDLE)_get_heap_handle() )
-	{
-		return true;
-	}
-
-	if( heap == (HANDLE)m_d3dHeap1 )
-	{
-		return true;
-	}
-
-	if( heap == (HANDLE)m_d3dHeap2 )
-	{
-		return true;
-	}
-
-	if( heap == (HANDLE)m_customHeap1 )
-	{
-		return true;
-	}
-
-	if( heap == (HANDLE)m_customHeap2 )
-	{
-		return true;
-	}
-
-	if( heap == (HANDLE)m_customHeap3 )
-	{
-		return true;
-	}
-
-	return false;
-}
-
-static int FindLargestHeapIx( HANDLE* heaps, size_t* sizes, int count )
-{
-	size_t largest = 0;
-	int largestIx = 0;
-	for( int i = 0; i < count; ++i )
-	{
-		if( sizes[i] > largest )
-		{
-			largest = sizes[i];
-			largestIx = i;
-		}
-	}
-
-	return largestIx;
-}
-
-void MemoryTracker::SetCustomHeapsToLargestHeaps()
-{
-	HANDLE heaps[256];
-	size_t sizes[256];
-
-	DWORD count = ::GetProcessHeaps( 256, heaps );
-
-	for( DWORD i = 0; i < count; ++i )
-	{
-		HANDLE heap = heaps[i];
-		size_t size = GetHeapSizeWithHeapWalk( heap );
-
-		if( size == (size_t)-1 )
-		{
-			size = 0;
-		}
-
-		sizes[i] = size;
-	}
-
-	int largestIx = FindLargestHeapIx( heaps, sizes, count );
-	m_customHeap1 = (intptr_t)heaps[largestIx];
-	sizes[largestIx] = 0;
-
-	largestIx = FindLargestHeapIx( heaps, sizes, count );
-	m_customHeap2 = (intptr_t)heaps[largestIx];
-	sizes[largestIx] = 0;
-
-	largestIx = FindLargestHeapIx( heaps, sizes, count );
-	m_customHeap3 = (intptr_t)heaps[largestIx];
-}
-
-void MemoryTracker::DumpModulesAsText( const char* filename )
-{
-	HMODULE modules[1024];
-	DWORD spaceNeeded = 0;
-
-	HANDLE curProcess = GetCurrentProcess();
-
-	if( EnumProcessModules( curProcess, modules, sizeof( modules ), &spaceNeeded ) )
-	{
-		int numModules = spaceNeeded / sizeof( HMODULE );
-		long totalSize = 0;
-
-		FILE* file;
-		fopen_s( &file, filename, "w" );
-		fprintf( file, "Module, Size, Full name\n" );
-
-		for( int i = 0; i < numModules; ++i )
-		{
-			MODULEINFO moduleInfo;
-			char baseName[256];
-			char fullName[256];
-
-			if( !GetModuleBaseName( curProcess, modules[i], baseName, _countof( baseName )))
-			{
-				CCP_LOGWARN( "DumpModulesAsText: Failed to get module base name - skipping it" );
-				continue;
-			}
-
-			if( !GetModuleInformation( curProcess, modules[i], &moduleInfo, sizeof( MODULEINFO )) )
-			{
-				CCP_LOGWARN( "DumpModulesAsText: Failed to get module information for %s - skipping it", baseName );
-				continue;
-			}
-
-			if( !GetModuleFileName( modules[i], fullName, _countof( fullName )) )
-			{
-				CCP_LOGWARN( "DumpModulesAsText: Failed to get module file name for %s - skipping it", baseName );
-				continue;
-			}
-
-			totalSize += moduleInfo.SizeOfImage;
-
-			fprintf( file, "%s, %d, %s\n", baseName, moduleInfo.SizeOfImage, fullName );
-		}
-
-		fprintf( file, "\n\n%d modules\n%ld bytes", numModules, totalSize );
-		fclose( file );
-	}
-}
-
-uint32_t MemoryTracker::GetProcessHeapsCount()
-{
-	return uint32_t( ::GetProcessHeaps( 0, NULL ) );
-}
-
-size_t MemoryTracker::GetHeapSize( size_t heap )
-{
-	return GetHeapSizeWithHeapWalk( reinterpret_cast<HANDLE>( heap ) );
-}
-
-size_t MemoryTracker::GetMainProcessHeap()
-{
-	return reinterpret_cast<size_t>( ::GetProcessHeap() );
-}
-
-size_t MemoryTracker::GetBlueHeap()
-{
-	extern HANDLE s_heap;
-	return reinterpret_cast<size_t>( s_heap );
-}
-
-#endif
-
 void MemoryTracker::SetFullCapture( bool b )
 {
 	m_isFullCapture = b;
@@ -324,8 +147,6 @@ void MemoryTracker::SummaryReport( const char* filename )
 	{
 		size_t processHeapSize = 0;
 		size_t crtHeapSize = 0;
-		size_t d3dHeap1Size = 0;
-		size_t d3dHeap2Size = 0;
 		size_t trackingHeapSize = 0;
 
 		HANDLE heaps[256];
@@ -363,14 +184,6 @@ void MemoryTracker::SummaryReport( const char* filename )
 			{
 				crtHeapSize = size;
 			}
-			else if( heap == (HANDLE)m_d3dHeap1 )
-			{
-				d3dHeap1Size = size;
-			}
-			else if( heap == (HANDLE)m_d3dHeap2 )
-			{
-				d3dHeap2Size = size;
-			}
 			else if( heap == MemoryTrackerGetHeapForTracking() )
 			{
 				trackingHeapSize = size;
@@ -385,8 +198,6 @@ void MemoryTracker::SummaryReport( const char* filename )
 		PrintFieldToFile( file, "Process heap", processHeapSize );
 		PrintFieldToFile( file, "CRT heap", crtHeapSize );
 		PrintFieldToFile( file, "CRT heap unaccounted", unaccountedSize );
-		PrintFieldToFile( file, "D3D heap 1", d3dHeap1Size );
-		PrintFieldToFile( file, "D3D heap 2", d3dHeap2Size );
 		PrintFieldToFile( file, "Tracking heap", trackingHeapSize );
 	}
 #endif
@@ -430,11 +241,6 @@ void MemoryTracker::UpdateDetailedTracking()
 #ifdef _WIN32
 		size_t processHeapSize = 0;
 		size_t crtHeapSize = 0;
-		size_t d3dHeap1Size = 0;
-		size_t d3dHeap2Size = 0;
-		size_t customHeap1Size = 0;
-		size_t customHeap2Size = 0;
-		size_t customHeap3Size = 0;
 		size_t trackingHeapSize = 0;
 
 		HANDLE heaps[256];
@@ -474,31 +280,6 @@ void MemoryTracker::UpdateDetailedTracking()
 				crtHeapSize = size;
 				CCP_STATS_SET( crtHeap, crtHeapSize );
 			}
-			else if( heap == (HANDLE)m_d3dHeap1 )
-			{
-				d3dHeap1Size = size;
-				CCP_STATS_SET( d3dHeap1, d3dHeap1Size );
-			}
-			else if( heap == (HANDLE)m_d3dHeap2 )
-			{
-				d3dHeap2Size = size;
-				CCP_STATS_SET( d3dHeap2, d3dHeap2Size );
-			}
-			else if( heap == (HANDLE)m_customHeap1 )
-			{
-				customHeap1Size = size;
-				CCP_STATS_SET( customHeap1, customHeap1Size );
-			}
-			else if( heap == (HANDLE)m_customHeap2 )
-			{
-				customHeap2Size = size;
-				CCP_STATS_SET( customHeap2, customHeap2Size );
-			}
-			else if( heap == (HANDLE)m_customHeap3 )
-			{
-				customHeap3Size = size;
-				CCP_STATS_SET( customHeap3, customHeap3Size );
-			}
 			else if( heap == MemoryTrackerGetHeapForTracking() )
 			{
 				trackingHeapSize = size;
@@ -513,11 +294,6 @@ void MemoryTracker::UpdateDetailedTracking()
 		size_t unknownSize = totalSize;
 		unknownSize -= processHeapSize;
 		unknownSize -= crtHeapSize;
-		unknownSize -= d3dHeap1Size;
-		unknownSize -= d3dHeap2Size;
-		unknownSize -= customHeap1Size;
-		unknownSize -= customHeap2Size;
-		unknownSize -= customHeap3Size;
 		unknownSize -= trackingHeapSize;
 
 		CCP_STATS_SET( unknownHeaps, unknownSize );

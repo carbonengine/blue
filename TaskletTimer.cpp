@@ -60,7 +60,7 @@ typedef TrackableStdMap<const char*, CcpStaticStatisticsEntry*> CcpStatisticsEnt
 typedef CcpStatisticsEntryMap_t::iterator CcpStatisticsEntryMap_i;
 CcpStatisticsEntryMap_t s_statsMap( "TaskletTimer/s_statsMap" );
 
-static void AddToStat( PyObject * newContext, Times elapsed )
+static void AddToStat( PyObject * newContext, Times elapsed, double frequency )
 {
 	if( PyString_Check( newContext ) )
 	{
@@ -76,7 +76,7 @@ static void AddToStat( PyObject * newContext, Times elapsed )
 		}
 
 		CcpStaticStatisticsEntry* stat = it->second;
-		stat->Add( TimeAsDouble( elapsed ) );
+		stat->Add( elapsed * frequency );
 	}
 }
 
@@ -218,7 +218,7 @@ PyObject *TaskletTimer::EnterTaskletEx(PyObject *newContext, TASKLETFLAGS flags)
 		Times elapsed = Mark(now);
 		of->mTimes += elapsed;
 
-		AddToStat( newContext, elapsed );
+		AddToStat( newContext, elapsed, mIFreq * 0.001 );
 
 	}
 
@@ -287,7 +287,7 @@ bool TaskletTimer::ReturnFromTasklet(PyObject *backContext)
 	Be::Time realElapsed = now.mHires - stack->EntryTime();
 	of->mRealTime += realElapsed;
 
-	AddToStat( backContext, elapsed );
+	AddToStat( backContext, elapsed, mIFreq * 0.001 );
 
 	if (mSliceWarning)
 		WarnSlice(now, stack, 0, false);
@@ -516,14 +516,10 @@ bool TaskletTimer::Reset()
 	mMaxWarn.Clear();
 	
 	//Get the thread times.
-#if !PORTING_TO_LINUX
-	FILETIME dummy;
-	GetThreadTimes(GetCurrentThread(), &dummy, &dummy, (FILETIME*)&mResetKTime, (FILETIME*)&mResetUTime);
-	GetProcessTimes(GetCurrentProcess(), &dummy, &dummy, (FILETIME*)&mResetKTimeP, (FILETIME*)&mResetUTimeP);
-	ULARGE_INTEGER filetime;
-	GetSystemTimeAsFileTime((LPFILETIME)&filetime);
-	mResetTime = filetime.QuadPart;
-#endif
+	CcpGetThreadTimes( mResetKTime, mResetUTime );
+	CcpGetProcessTimes( mResetKTimeP, mResetUTimeP );
+	mResetTime = TimeNow();
+
 	//And the timestamp for benchmarking
 	mLastTime = now;
 
@@ -654,50 +650,40 @@ PyObject *TaskletTimer::PyGetTasklets(PyObject* args)
 
 PyObject *TaskletTimer::PyGetThreadTimes(PyObject* args)
 {
-#if PORTING_TO_LINUX
-    return nullptr;
-#else
 	if (!PyArg_UnpackTuple(args, "GetThreadTimes", 0, 0))
 		return 0;
-	Be::Time creat, kernel, user;
-	FILETIME dummy;
-	GetThreadTimes(GetCurrentThread(), (FILETIME*)&creat, &dummy, (FILETIME*)&kernel, (FILETIME*) &user);
-	ULARGE_INTEGER filetime;
-	GetSystemTimeAsFileTime((LPFILETIME)&filetime);
+	Be::Time kernel, user;
+	CcpGetThreadTimes( kernel, user );
+	Be::Time now = TimeNow();
+
 	BluePyDict r(1);
 	r.Set("reset", BluePy(PyLong_FromLongLong(mResetTime)));
-	r.Set("wallclock", BluePy(PyLong_FromLongLong(filetime.QuadPart-mResetTime)));
+	r.Set("wallclock", BluePy(PyLong_FromLongLong( now - mResetTime )));
 	r.Set("kernel", BluePy(PyLong_FromLongLong(kernel-mResetKTime)));
 	r.Set("user", BluePy(PyLong_FromLongLong(user-mResetUTime)));
 	r.Set("cpu", BluePy(PyLong_FromLongLong(user-mResetUTime + kernel-mResetKTime)));
 	r.Set("timerFreq", BluePy(PyLong_FromLongLong(mTime.GetUnitsPerSecond())));
 	r.Set("BlueOSTickCountAtStart", BluePy(PyLong_FromLong(m_BlueOSPumpCountAtStart)));
 	return r.Detach();
-#endif
 }
 
 
 PyObject *TaskletTimer::PyGetProcessTimes(PyObject* args)
 {
-#if PORTING_TO_LINUX
-    return nullptr;
-#else
 	if (!PyArg_UnpackTuple(args, "GetProcessTimes", 0, 0))
 		return 0;
-	Be::Time creat, kernel, user;
-	FILETIME dummy;
-	GetProcessTimes(GetCurrentProcess(), (FILETIME*)&creat, &dummy, (FILETIME*)&kernel, (FILETIME*) &user);
-	ULARGE_INTEGER filetime;
-	GetSystemTimeAsFileTime((LPFILETIME)&filetime);
+	Be::Time kernel, user;
+	CcpGetProcessTimes( kernel, user );
+	Be::Time now = TimeNow();
+
 	BluePyDict r(1);
 	r.Set("reset", BluePy(PyLong_FromLongLong(mResetTime)));
-	r.Set("wallclock", BluePy(PyLong_FromLongLong(filetime.QuadPart-mResetTime)));
+	r.Set("wallclock", BluePy(PyLong_FromLongLong(now-mResetTime)));
 	r.Set("kernel", BluePy(PyLong_FromLongLong(kernel-mResetKTimeP)));
 	r.Set("user", BluePy(PyLong_FromLongLong(user-mResetUTimeP)));
 	r.Set("cpu", BluePy(PyLong_FromLongLong(user-mResetUTimeP + kernel-mResetKTimeP)));
 	r.Set("timerFreq", BluePy(PyLong_FromLongLong(mTime.GetUnitsPerSecond())));
 	return r.Detach();
-#endif
 }
 
 PyObject *TaskletTimer::PyGetOverhead(PyObject *args)

@@ -5,6 +5,10 @@
 #include "Include/IBlueObjectMetadata.h"
 #include "BlueMemStream.h"
 #include <yaml.h>
+#ifndef _WIN32
+#include <locale>
+#include <codecvt>
+#endif
 
 YamlWriter::YamlWriter()
 {
@@ -225,12 +229,15 @@ void YamlWriter::WriteWChar( const wchar_t* value )
 	if( value )
 	{
 #ifdef _WIN32
-		//TODO: implement for non-win32
 		int requiredSize = WideCharToMultiByte( CP_UTF8, 0, value, -1, NULL, 0, NULL, NULL );
 		char* buffer = CCP_NEW("YamlWriter/MultiByte") char[ requiredSize ];
 		WideCharToMultiByte( CP_UTF8, 0, value, -1, buffer, requiredSize, NULL, NULL );
 		AddScalarEvent( buffer, YAML_DOUBLE_QUOTED_SCALAR_STYLE );
 		CCP_DELETE [] buffer;
+#else
+        std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
+        auto str = conv.to_bytes( value );
+        AddScalarEvent( str.c_str(), YAML_DOUBLE_QUOTED_SCALAR_STYLE );
 #endif
 	}
 	else

@@ -4,13 +4,10 @@
 #include "StdAfx.h"
 
 #include "Include/Blue.h"
-#include "Include/Blue.cxx"
-#include "BlueExposure/include/InterfaceDefinitions.cxx"
 #include "BluePaths.h"
 #include "BlueOS.h"
-#include "logger/Logger.h"
+#include "Logger/Logger.h"
 #include "ResourceLoading.h"
-#include "BlueExposure/BlueLuaThunkers.h"
 #include "BlueSocketLogger.h"
 #if BLUE_WITH_PYTHON
 #include "CcpUtils/PyCpp.h"
@@ -54,25 +51,6 @@ typedef BlueDict<IRoot> GenericDict;
 TYPEDEF_BLUECLASS( GenericDict );
 BLUE_DEFINE(  GenericDict );
 
-#ifdef _WIN32
-
-namespace
-{
-	CcpMutex s_logMutex( g_moduleName, "s_logMutex" );
-	void LogToLogServer( CcpLogChannel_t& logObject, CCP::LogType type, unsigned long userData, const char* message )
-	{
-		CcpAutoMutex guard( s_logMutex );
-
-		if( userData == 0 )
-		{
-			userData = LogTypeToTLOGFLAG( type );
-		}
-
-		Log__global( *(TLOGOBJECT*)&logObject, (TLOGFLAG)userData, message );
-	}
-}
-
-#endif
 
 bool AttachToLogServer()
 {
@@ -93,26 +71,6 @@ bool AttachToLogServer()
 		CCP_LOG( "Failed to attach to socket logger" );
 		result = false;
 	}
-#ifdef _WIN32
-	if( Log__IsLogging() )
-	{
-		CCP_LOG( "LogServer can't reattach" );
-	}
-	else
-	{
-		Log__InitLibrary( (LONG_PTR)s_instance, CW2A( s_logDeviceName.c_str() ) );
-		if ( Log__IsLogging() )
-		{
-			// Instruct the CCP logging system to echo to the LogServer as well
-			CCP::RegisterLogEcho( &LogToLogServer, CCP::LOGTYPE_INFO, true, CCP::LOG_ECHO_REQUIRES_PRIVILEGE_CHECK );
-			CCP_LOG( "LogServer has been attached" );
-		}
-		else
-		{
-			CCP_LOG( "Failed to attach to LogServer" );
-		}
-	}
-#endif
 	return result;
 }
 
@@ -216,13 +174,16 @@ HERR:
 	{
 		Ccp::PyAllowThreads _allow;
         f = open( filenameStr, O_RDONLY | O_SHLOCK );
-		if( f < 0 )
+		if( f >= 0 )
 		{
-			return PyErr_SetFromErrnoWithFilename( PyExc_OSError, filenameStr );
-		}
-		fileSize = lseek( f, 0, SEEK_END );
-		lseek( f, 0, SEEK_SET );
+            fileSize = lseek( f, 0, SEEK_END );
+            lseek( f, 0, SEEK_SET );
+        }
 	}
+    if( f < 0 )
+    {
+        return PyErr_SetFromErrnoWithFilename( PyExc_OSError, filenameStr );
+    }
 
 	BluePy r( PyString_FromStringAndSize( nullptr, Py_ssize_t( fileSize ) ) );
 	if( !r )
@@ -332,11 +293,11 @@ HERR:
 	{
 		Ccp::PyAllowThreads _allow;
 		f = open( filenameStr, O_WRONLY | O_EXLOCK | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR );
-		if( f < 0 )
-		{
-			return PyErr_SetFromErrnoWithFilename( PyExc_OSError, filenameStr );
-		}
-	}
+    }
+    if( f < 0 )
+    {
+        return PyErr_SetFromErrnoWithFilename( PyExc_OSError, filenameStr );
+    }
 	ON_BLOCK_EXIT( [&] { close( f ); } );
 	Py_ssize_t segcount = buffer->bf_getsegcount( dataO, 0 );
 	for( Py_ssize_t i = 0; i < segcount; i++ )
@@ -448,40 +409,6 @@ MAP_FUNCTION(
 #endif
 #endif
 
-
-#ifdef _WIN32
-
-#ifdef _WINDLL
-BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID)
-{
-	s_instance = instance;
-
-	if (reason == DLL_PROCESS_ATTACH)
-	{
-		//turn off heap checking
-		int oldFlag = _CrtSetDbgFlag(_CRTDBG_REPORT_FLAG);
-		int newFlag = (oldFlag & 0xffff) | _CRTDBG_CHECK_DEFAULT_DF;
-		newFlag &= ~_CRTDBG_CHECK_ALWAYS_DF;
-		_CrtSetDbgFlag(newFlag);
-    
-		DisableThreadLibraryCalls(instance);
-	}
-	else if (reason == DLL_PROCESS_DETACH)
-	{
-	}
-	else if (reason == DLL_THREAD_ATTACH)
-	{
-	}
-	else if (reason == DLL_THREAD_DETACH)
-	{
-	}
-
-	return TRUE;
-}
-#endif
-
-#endif
-
 void BlueInitializeSocketLogger()
 {
     CCP_LOG( "Connecting to socket logger" );
@@ -495,6 +422,16 @@ void BlueInitializeSocketLogger()
 	{
 		CCP_LOG( "Failed to attach to socket logger" );
 	}
+}
+
+void BlueSetCrashReporter( ICrashReporter* crashReporter )
+{
+	BeCrashes = crashReporter;
+}
+
+void BlueLogFuncChannel( CcpLogChannel_t& logObject, CCP::LogType type, unsigned long userData, const char* format, va_list args )
+{
+	LogFuncChannel_v( logObject, type, userData, format, args );
 }
 
 void BlueModuleStartup()
@@ -535,16 +472,6 @@ void BlueModuleStartup()
             memoryLoad = atoi( CW2A( arg.substr( 12 ).c_str() ) );
         }
     }
-    
-#ifdef _WIN32
-    Log__InitLibrary( (LONG_PTR)s_instance, CW2A( s_logDeviceName.c_str()));
-    if( Log__IsLogging() )
-    {
-        // Instruct the CCP logging system to echo to the LogServer as well
-        CCP::RegisterLogEcho( &LogToLogServer, CCP::LOGTYPE_INFO, true, CCP::LOG_ECHO_REQUIRES_PRIVILEGE_CHECK );
-		CCP_LOG( "Shared memory logger has been attached" );
-    }
-#endif
 
     CCP_LOG( "Blue module starting" );
     
@@ -695,26 +622,4 @@ PyMODINIT_FUNC
 	PatchPythonExit();
 }
 
-#elif BLUE_WITH_LUA
-
-extern "C" int DLLEXPORT luaopen_blue( lua_State* ls )
-{
-	// Inform the logging system of the main thread
-	CCP::SetLogMainThreadId();
-
-	// Instruct the CCP logging system to echo to the debugger output window.
-	CCP::RegisterLogEcho( &CCP::LogToDebugger, CCP::LOGTYPE_LOWEST, true );
-
-	BlueRegisterClasses( ls, g_moduleName, BlueRegistration::GetClassRegs() );
-	BlueRegisterFunctions( ls, g_moduleName, BlueRegistration::GetFuncRegs() );
-	BlueRegisterInterfaceMethods( ls, BlueRegistration::GetThunkerRegs() );
-
-	BlueInitializeResourceLoading();
-
-	BlueRegisterObjectsToModule( ls, g_moduleName, BlueRegistration::GetObjectRegs() );
-
-	BeOS->Startup(0, IGNORE_MANIFEST);
-
-	return 1;
-}
 #endif

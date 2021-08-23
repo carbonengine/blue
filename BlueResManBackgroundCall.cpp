@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 
+#include "include/IBlueOS.h"
 #include "BlueResManBackgroundCall.h"
 #include "BlueResFile.h"
 #include "Include/IBlueResMan.h"

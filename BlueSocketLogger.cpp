@@ -104,7 +104,7 @@ public:
 			m_stop = 1;
 			m_queueSignal.Signal();
 			uint32_t result;
-			CcpJoinThread( m_thread, &result );
+			CcpJoinThread( m_thread, result );
 		}
 		if( m_socket != InvalidSocket )
 		{
@@ -142,6 +142,25 @@ public:
 		CcpAutoMutex lock( m_queueMutex );
 		m_messages.push_back( message );
 		m_queueSignal.Signal();
+	}
+
+	void Flush()
+	{
+		while( true )
+		{
+			if( !IsConnected() )
+			{
+				break;
+			}
+			{
+				CcpAutoMutex lock( m_queueMutex );
+				if( m_messages.empty() )
+				{
+					break;
+				}
+			}
+			m_queueProcessedSignal.Wait();
+		}
 	}
 private:
 	void GatherProcessInfo()
@@ -299,6 +318,7 @@ private:
 				}
 				RecycleMessage( message );
 			}
+			m_queueProcessedSignal.Signal();
 		}
 	}
 
@@ -312,6 +332,7 @@ private:
 	TrackableStdDeque<Message*> m_messages;
 	CcpMutex m_queueMutex;
 	CcpSemaphore m_queueSignal;
+	CcpSemaphore m_queueProcessedSignal;
 	Socket m_socket;
 	CcpThreadHandle_t m_thread;
 	TrackableStdVector<Message*> m_availableMessages;
@@ -357,6 +378,14 @@ void StopSocketLogger()
 	s_logger = nullptr;
 }
 
+void FlushSocketLogger()
+{
+	if( s_logger )
+	{
+		s_logger->Flush();
+	}
+}
+
 void LogToSocketLogger( CcpLogChannel_t& logObject, CCP::LogType type, unsigned long userData, const char* message )
 {
 	if( !s_logger || !s_logger->IsConnected() )
@@ -364,15 +393,7 @@ void LogToSocketLogger( CcpLogChannel_t& logObject, CCP::LogType type, unsigned 
 		return;
 	}
 
-#ifdef _WIN32
-	FILETIME ft;
-	GetSystemTimeAsFileTime( &ft );
-	uint64_t t = ( uint64_t( ft.dwLowDateTime ) + ( uint64_t( ft.dwHighDateTime ) << 32 ) - 116444736000000000LL ) / 10000;
-#else
-	struct timeval tp;
-	gettimeofday(&tp, NULL);
-	uint64_t t = uint64_t( tp.tv_sec ) * 1000 + uint64_t( tp.tv_usec ) / 1000;
-#endif
+	uint64_t t = ( TimeNow() - 116444736000000000LL ) / 10000;
 
 	auto length = strlen( message );
 	for( size_t i = 0; i < length; i += TextMessage::TEXT_SIZE - 1 )

@@ -32,15 +32,15 @@ public:
 
 	/////////////////////////////////////////
 	// IBlueStream interface
-	ptrdiff_t Read( void* dest, ptrdiff_t count );
-	ptrdiff_t Write( const void* source, size_t count	);
-	ptrdiff_t Seek( ptrdiff_t distance, SeekOrigin method	);
+	ptrdiff_t Read( void* dest, ptrdiff_t count ) override;
+	ptrdiff_t Write( const void* source, size_t count	) override;
+	ptrdiff_t Seek( ptrdiff_t distance, SeekOrigin method	) override;
 	bool SetSize( size_t newsize );
 	ssize_t CopyFrom( IBlueStream* source, size_t count	);
-	ptrdiff_t GetPosition();
-	ptrdiff_t GetSize();
-	bool LockData( void** data,	size_t size	);
-	bool UnlockData();
+	ptrdiff_t GetPosition() override;
+	ptrdiff_t GetSize() override;
+	bool LockData( void** data,	size_t size	) override;
+	bool UnlockData() override;
 
 private:
 	// File descriptor

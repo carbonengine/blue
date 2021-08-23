@@ -1071,23 +1071,24 @@ PyObject * Marshal::ReadObjectUtf8( ReadStream * stream, bool isShared )
 
 PyObject * Marshal::ReadObjectUnicode1( ReadStream * stream, bool isShared )
 {
-	wchar_t code;
+    int byteorder = -1;
+	char16_t code;
 	if( !stream->Read( code ) ) return 0;
-	return PyUnicode_FromWideChar( &code, 1 );
+    return PyUnicode_DecodeUTF16((const char*) &code, sizeof(char16_t), NULL, &byteorder);
 }
 
 PyObject * Marshal::ReadObjectUnicode0( ReadStream * stream, bool isShared )
 {
-	wchar_t code = 0; //need this for the api
-	return PyUnicode_FromWideChar( &code, 0 );
+    return PyUnicode_FromString("");
 }
 
 PyObject * Marshal::ReadObjectUnicode( ReadStream * stream, bool isShared )
 {
 	int len;
-	const wchar_t *buff;
+	int byteorder = -1;
+	const char16_t *buff;
 	if( !stream->ReadInteger( len ) || !stream->GetBuffer( buff, len ) ) return 0;
-	return PyUnicode_FromWideChar( buff, len );
+	return PyUnicode_DecodeUTF16( (const char*)buff, sizeof(char16_t), NULL, &byteorder );
 }
 
 PyObject * Marshal::ReadObjectStrTable( ReadStream * stream, bool isShared )
@@ -1761,7 +1762,7 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 	case  'i':
 		if (PyInt_CheckExact(o))
 		{
-			int i = int( PyInt_AS_LONG(o) );
+			long i = PyInt_AS_LONG(o);
 
 			switch(i)
 			{
@@ -1778,18 +1779,28 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 				if (i >= CHAR_MIN && i <= CHAR_MAX)
 				{
 					RETFAIL(WriteType(stream, TY_INT8));
-					RETFAIL(stream->Write<int8_t>(i));
+					RETFAIL(stream->Write<int8_t>(int8_t(i)));
 				}
 				else if (i >= SHRT_MIN && i <= SHRT_MAX)
 				{
 					RETFAIL(WriteType(stream, TY_INT16));
-					RETFAIL(stream->Write<int16_t>(i));
+					RETFAIL(stream->Write<int16_t>(int16_t(i)));
 				}
-				else
+				else if (i >= INT_MIN && i <= INT_MAX)
 				{
 					RETFAIL(WriteType(stream, TY_INT32));
 					RETFAIL(stream->Write<int32_t>(i));
 				}
+				else
+                {
+				    PyObject* tmp = PyLong_FromLong(i);
+				    if(!tmp) {
+				        return false;
+				    }
+				    auto success = WriteLong(stream, tmp);
+				    Py_XDECREF(tmp);
+				    return success;
+                }
 				return true;
 			}
 		}
@@ -1888,26 +1899,41 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 	case  'u':
 		if (PyUnicode_CheckExact(o))
 		{
-			Py_ssize_t size = PyUnicode_GET_SIZE(o);
-			const wchar_t *data = (const wchar_t*)PyUnicode_AS_UNICODE(o);
+		    PyObject* utf16 = PyUnicode_AsUTF16String(o);
+
+		    // Check to see if we received a null pointer and return early.
+		    if(!utf16) {
+		        Py_XDECREF(utf16);
+		        return false;
+		    }
+
+			Py_ssize_t size = PyString_GET_SIZE(utf16);
+			const char16_t *data = (const char16_t*)PyString_AS_STRING(utf16);
 			if (!size) {
+			    Py_XDECREF(utf16);
 				return WriteType(stream, TY_UNICODE_0);
 			} else if (size == 1) {
-				return WriteType(stream, TY_UNICODE_1) && stream->Write(*data);
+				bool success =  WriteType(stream, TY_UNICODE_1) && stream->Write(*data);
+				Py_XDECREF(utf16);
+				return success;
 			} else {
 				//we want to try UTF8 encoding
 				BluePy s(PyUnicode_AsUTF8String(o));
 				if (s) {
 					Py_ssize_t ssize = PyString_GET_SIZE(s.o);
-					if (ssize < size*(int)sizeof(wchar_t)) {
+					if (ssize < size*(int)sizeof(char16_t)) {
 						//yes, utf8 is shorter
-						return WriteType(stream, TY_UTF8) && stream->WriteInteger((int)ssize) &&
-							   stream->WriteBuffWoSize(PyString_AS_STRING(s.o), ssize);	
+						bool success = WriteType(stream, TY_UTF8) && stream->WriteInteger((int)ssize) &&
+							   stream->WriteBuffWoSize(PyString_AS_STRING(s.o), ssize);
+						Py_XDECREF(utf16);
+						return success;
 					}
 				} else
 					PyErr_Clear();
-				return WriteType(stream, TY_UNICODE) &&	stream->WriteInteger((int)size) &&
-					stream->WriteBuffWoSize(data, size*sizeof(wchar_t));
+				bool success = WriteType(stream, TY_UNICODE) &&	stream->WriteInteger((int)size) &&
+					stream->WriteBuffWoSize(data, size*sizeof(char16_t));
+				Py_XDECREF(utf16);
+				return success;
 			}
 		}
 		break;

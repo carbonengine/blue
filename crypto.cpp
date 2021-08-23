@@ -40,7 +40,7 @@
 
 std::string GetLastSSLError()
 {
-	return ERR_error_string( ERR_get_error(), NULL );
+	return ERR_error_string( ERR_get_error(), nullptr );
 }
 
 bool InitCrypto()
@@ -92,11 +92,11 @@ Be::Result<std::string> SymmetricCipher::LoadKey( const std::string& key, const 
 
 	if( key.length() != 32 )
 	{
-		return "Key must be 32 bytes long";
+		return std::string("Key must be 32 bytes long");
 	}
 	else if( iv.length() != 16 )
 	{
-		return "IV must be 16 bytes long";
+		return std::string("IV must be 16 bytes long");
 	}
 
 	m_encryptCtx = EVP_CIPHER_CTX_ptr( EVP_CIPHER_CTX_new(), ::EVP_CIPHER_CTX_free );
@@ -113,7 +113,7 @@ Be::Result<std::string> SymmetricCipher::Encrypt( const std::string& plainText, 
 {
 	BE_RETURN_ON_ERROR( IsValid() );
 
-	SSL_RETURN_ON_ERROR( EVP_EncryptInit_ex( m_encryptCtx.get(), EVP_aes_256_cbc(), NULL, reinterpret_cast<const unsigned char*>( m_key.c_str() ), reinterpret_cast<const unsigned char*>( m_iv.c_str() ) ) );
+	SSL_RETURN_ON_ERROR( EVP_EncryptInit_ex( m_encryptCtx.get(), EVP_aes_256_cbc(), nullptr, reinterpret_cast<const unsigned char*>( m_key.c_str() ), reinterpret_cast<const unsigned char*>( m_iv.c_str() ) ) );
 
 	std::vector<unsigned char> buffer( plainText.length() + EVP_CIPHER_CTX_block_size( m_encryptCtx.get() ) * 2 );
 	int length, totalLength;
@@ -133,7 +133,7 @@ Be::Result<std::string> SymmetricCipher::Decrypt( const std::string& encryptedTe
 {
 	BE_RETURN_ON_ERROR( IsValid() );
 
-	SSL_RETURN_ON_ERROR( EVP_DecryptInit_ex( m_decryptCtx.get(), EVP_aes_256_cbc(), NULL, reinterpret_cast<const unsigned char*>( m_key.c_str() ), reinterpret_cast<const unsigned char*>( m_iv.c_str() ) ) );
+	SSL_RETURN_ON_ERROR( EVP_DecryptInit_ex( m_decryptCtx.get(), EVP_aes_256_cbc(), nullptr, reinterpret_cast<const unsigned char*>( m_key.c_str() ), reinterpret_cast<const unsigned char*>( m_iv.c_str() ) ) );
 
 	std::vector<unsigned char> buffer( encryptedText.length() + EVP_CIPHER_CTX_block_size( m_decryptCtx.get() ) * 2 );
 	int length, totalLength;
@@ -309,7 +309,7 @@ Be::Result<std::string> AsymmetricCipher::Encrypt( const std::string& plainText,
 	BE_RETURN_ON_ERROR( IsValid() );
 
 	size_t outlen;
-	SSL_RETURN_ON_ERROR( EVP_PKEY_encrypt( m_encryptCtx.get(), NULL, &outlen, reinterpret_cast<const unsigned char*>( plainText.c_str() ), plainText.length() ) );
+	SSL_RETURN_ON_ERROR( EVP_PKEY_encrypt( m_encryptCtx.get(), nullptr, &outlen, reinterpret_cast<const unsigned char*>( plainText.c_str() ), plainText.length() ) );
 
 	std::vector<unsigned char> buffer( outlen );
 	SSL_RETURN_ON_ERROR( EVP_PKEY_encrypt( m_encryptCtx.get(), &buffer[0], &outlen, reinterpret_cast<const unsigned char*>( plainText.c_str() ), plainText.length() ) );
@@ -337,7 +337,7 @@ Be::Result<std::string> AsymmetricCipher::Sign( const std::string& text, std::st
 	BE_RETURN_ON_ERROR( IsValid() );
 
 	EVP_MD_CTX_ptr sign( EVP_MD_CTX_create(), ::EVP_MD_CTX_free );
-	SSL_RETURN_ON_ERROR( EVP_DigestSignInit( sign.get(), NULL, EVP_sha256(), NULL, m_key.get() ) );
+	SSL_RETURN_ON_ERROR( EVP_DigestSignInit( sign.get(), nullptr, EVP_sha256(), nullptr, m_key.get() ) );
 
 	size_t outlen;
 	SSL_RETURN_ON_ERROR( EVP_DigestSign( sign.get(), nullptr, &outlen, reinterpret_cast<const unsigned char*>( text.c_str() ), text.length() ) );
@@ -356,7 +356,7 @@ Be::Result<std::string> AsymmetricCipher::VerifySignature( const std::string& te
 	BE_RETURN_ON_ERROR( IsValid() );
 
 	EVP_MD_CTX_ptr verify( EVP_MD_CTX_create(), ::EVP_MD_CTX_free );
-	SSL_RETURN_ON_ERROR( EVP_DigestVerifyInit( verify.get(), NULL, EVP_sha256(), NULL, m_key.get() ) );
+	SSL_RETURN_ON_ERROR( EVP_DigestVerifyInit( verify.get(), nullptr, EVP_sha256(), nullptr, m_key.get() ) );
 	int result = EVP_DigestVerify( verify.get(), reinterpret_cast<const unsigned char*>( signature.c_str() ), signature.length(), reinterpret_cast<const unsigned char*>( text.c_str() ), text.length() );
 	
 	if( result < 0 )

@@ -21,6 +21,11 @@ BLUE_REGISTER_GLOBAL_AS_MODULE_OBJECT( "paths", BePaths );
 
 static CcpLogChannel_t s_ch = CCP_LOG_DEFINE_CHANNEL( "BePaths" );
 
+BLUEIMPORT IBluePaths* BlueGetBluePaths()
+{
+	return BePaths;
+}
+
 BLUEIMPORT bool BlueInitializePaths(const std::wstring& initialPath)
 {
 	return BluePaths::Initialize(initialPath);

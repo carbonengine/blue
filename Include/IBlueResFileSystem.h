@@ -9,6 +9,8 @@
 #ifndef IBlueResFileSystem_h
 #define IBlueResFileSystem_h
 
+BLUE_DECLARE_INTERFACE( IBlueStream );
+
 BLUE_INTERFACE( IBlueResFileSystem ) : public IRoot
 {
 	virtual bool FileExists( const std::wstring& filename ) = 0;

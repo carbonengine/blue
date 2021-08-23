@@ -297,8 +297,6 @@ public:
 	LOAD("kernel32.dll", GetProcessIoCounters);
 	LOAD("kernel32.dll", GetNativeSystemInfo);
 	LOAD("kernel32.dll", GlobalMemoryStatusEx);
-	LOAD("WtsApi32.dll", WTSRegisterSessionNotification);
-	LOAD("WtsApi32.dll", WTSUnRegisterSessionNotification);
 	LOAD("Psapi.dll", GetProcessMemoryInfo);
 	LOAD("Iphlpapi.dll", GetPerTcpConnectionEStats);
 	LOAD("Iphlpapi.dll", SetPerTcpConnectionEStats);
@@ -324,8 +322,6 @@ typedef BOOL (WINAPI *SetProcessWorkingSetSize_t)(HANDLE, SIZE_T, SIZE_T);
 typedef BOOL (WINAPI *GetProcessIoCounters_t)(HANDLE, PIO_COUNTERS);
 typedef void (WINAPI *GetNativeSystemInfo_t)(LPSYSTEM_INFO);
 typedef BOOL (WINAPI *GlobalMemoryStatusEx_t)(LPMEMORYSTATUSEX);
-typedef BOOL (WINAPI *WTSRegisterSessionNotification_t)(HWND, DWORD);
-typedef BOOL (WINAPI *WTSUnRegisterSessionNotification_t)(HWND);
 typedef DWORD (WINAPI *GetExtendedTcpTable_t)(PVOID, PDWORD, BOOL, ULONG, TCP_TABLE_CLASS, ULONG);    
 typedef ULONG (WINAPI *SetPerTcpConnectionEStats_t)(PMIB_TCPROW, DWORD, PUCHAR, ULONG, ULONG, ULONG);
 typedef ULONG (WINAPI *GetPerTcpConnectionEStats_t) (PMIB_TCPROW, DWORD, PUCHAR, ULONG, ULONG,
@@ -343,8 +339,6 @@ DEF(SetProcessWorkingSetSize)
 DEF(GetProcessIoCounters)
 DEF(GetNativeSystemInfo)
 DEF(GlobalMemoryStatusEx)
-DEF(WTSRegisterSessionNotification)
-DEF(WTSUnRegisterSessionNotification)
 DEF(GetExtendedTcpTable)
 DEF(SetPerTcpConnectionEStats)
 DEF(GetPerTcpConnectionEStats)
@@ -357,16 +351,8 @@ SoftLoader *loader = 0;
 #define PROTO(N) PyObject *Py##N(PyObject *self, PyObject *args);
 PROTO(GetFileVersionInfo)
 
-//clipboard functions
-PROTO(GetClipboardData)
-PROTO(GetClipboardUnicode)
-PROTO(SetClipboardData)
-
 //registry stuff
 PROTO(RegistryGetValue)
-
-//custom routines
-PROTO(ShellExecute)
 
 //memory and time queries
 PROTO(GlobalMemoryStatus)
@@ -390,21 +376,13 @@ PROTO(GetAdaptersInfo)
 //a single test function
 PROTO(Test)
 
-//Windows session change notification
-PROTO(WTSRegisterSessionNotification)
-PROTO(WTSUnRegisterSessionNotification)
-
 #undef PROTO
 
 //pythoh method definitions
 PyMethodDef methods[] = {
 #define DEF(N) {#N, Py##N, METH_VARARGS},
 DEF(GetFileVersionInfo)
-DEF(GetClipboardData)
-DEF(GetClipboardUnicode)
-DEF(SetClipboardData)
 DEF(RegistryGetValue)
-DEF(ShellExecute)
 DEF(GlobalMemoryStatus)
 DEF(GetProcessMemoryInfo)
 DEF(GetProcessWorkingSetSize)
@@ -418,8 +396,6 @@ DEF(GetNativeSystemInfo)
 DEF(GetAdaptersInfo)
 
 DEF(Test)
-DEF(WTSRegisterSessionNotification)
-DEF(WTSUnRegisterSessionNotification)
 #undef DEF
 {0}
 };
@@ -491,135 +467,6 @@ PyObject *PyGetFileVersionInfo(PyObject *self, PyObject *args)
 	}
 	CCP_DELETE[] buffer;
 	return d.Detach();
-}
-
-
-//--------------------------------------------------------------------
-// GetClipboardData
-//--------------------------------------------------------------------
-PyObject* PyGetClipboardData(PyObject *self, PyObject* args)
-{
-	int format = CF_TEXT;
-	if (!PyArg_ParseTuple(args, "|i", &format))
-		return NULL;
-
-	if (!OpenClipboard(NULL))
-		return PyWin32Error();
-
-	if (!IsClipboardFormatAvailable(format)) {
-		CloseClipboard();
-		Py_INCREF(Py_None);
-		return Py_None;
-	}
-	
-	char* string;
-	SIZE_T size;
-	HANDLE hdata = GetClipboardData(format);
-	if (!hdata) goto error;
-
-	size = GlobalSize(hdata);
-	if (!size) goto error;
-		
-	string = (char*)GlobalLock(hdata);
-	if (!string) goto error;
-		
-	PyObject *result;
-	if (format == CF_TEXT)
-		result = PyString_FromString(string);
-	else
-		result = PyString_FromStringAndSize(string, size);
-	GlobalUnlock(string);
-	CloseClipboard();
-	return result;
-
-error:
-	CloseClipboard();
-	return PyWin32Error();
-}
-
-
-PyObject* PyGetClipboardUnicode(PyObject *self, PyObject *args)
-{
-	const int format = CF_UNICODETEXT;
-	if (!PyArg_ParseTuple(args, ""))
-		return NULL;
-
-	if (!OpenClipboard(NULL))
-		return PyWin32Error();
-
-	if (!IsClipboardFormatAvailable(format)) {
-		CloseClipboard();
-		Py_INCREF(Py_None);
-		return Py_None;
-	}
-	
-	WCHAR* string;
-	PyObject *result;
-	HANDLE hdata = GetClipboardData(format);
-	if (!hdata) goto error;
-	
-	string = (WCHAR*)GlobalLock(hdata);
-	if (!string) goto error;
-		
-	result = PyUnicode_FromWideChar(string, wcslen(string));
-	GlobalUnlock(string);
-	CloseClipboard();
-	return result;
-
-error:
-	CloseClipboard();
-	return PyWin32Error();
-}
-
-//--------------------------------------------------------------------
-// SetClipboardData
-//--------------------------------------------------------------------
-PyObject* PySetClipboardData(PyObject *self, PyObject* args)
-{
-	PyObject *data;
-	int format = CF_TEXT;
-
-	if (!PyArg_ParseTuple(args, "O|i", &data, &format))
-		return NULL;
-	if (!PyString_Check(data) && !PyUnicode_Check(data))
-		return PyErr_SetString(PyExc_TypeError, "string or unicode object required"), 0;
-
-	HGLOBAL hdata;
-	if (PyString_Check(data)) {
-		char *str;
-		Py_ssize_t len;
-		PyString_AsStringAndSize(data, &str, &len);
-
-		hdata= GlobalAlloc(GMEM_MOVEABLE, len+1);
-		if (!hdata)
-			return PyWin32Error();
-		char* dest = (char*)GlobalLock(hdata);
-		memcpy(dest, str, len);
-		dest[len] = '\0';
-		GlobalUnlock(dest);
-	} else {
-		format = CF_UNICODETEXT;
-		Py_ssize_t len = PyUnicode_GET_SIZE(data);
-		hdata= GlobalAlloc(GMEM_MOVEABLE, (len+1)*sizeof(WCHAR));
-		if (!hdata)
-			return PyWin32Error();
-
-		WCHAR* dest = (WCHAR*)GlobalLock(hdata);
-		PyUnicode_AsWideChar((PyUnicodeObject*)data, dest, len);
-		dest[len] = 0;
-		GlobalUnlock(dest);
-	}
-	
-	if (!OpenClipboard(NULL)) {
-		GlobalDiscard(hdata);
-		return PyWin32Error();
-	}
-	EmptyClipboard();
-	SetClipboardData(format, hdata);
-	CloseClipboard();
-
-	Py_INCREF(Py_None);
-	return Py_None;
 }
 
 
@@ -779,85 +626,6 @@ PyObject *PyTest(PyObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "O|O(OO)(O)", &a, &b, &c, &d, &e))
 		return 0;
 	return Py_BuildValue("OO(OO)(O)", a, b, c, d, e);
-}
-	
-
-
-PyObject *PyShellExecute(PyObject *self, PyObject *args)
-{
-	size_t ir;
-	HINSTANCE r;
-	std::string msg;
-	HWND hwnd = 0;
-	int show=0;
-	PyObject *verb, *file, *params=0, *dir=0;
-	if (!PyArg_ParseTuple(args, "iOO!|O!O!i:ShellExecute", 
-						  &hwnd, &verb, &PyBaseString_Type, &file, &PyBaseString_Type, &params,
-						  &PyBaseString_Type, &dir, &show))
-		return 0;
-	if (verb == Py_None)
-		verb = 0;
-	else {
-		verb = PyUnicode_FromObject(verb);
-		if (!verb) return 0;
-	}
-	file = PyUnicode_FromObject(file);
-	if (!file) goto BADARG;
-	if (params) {
-		if (params != Py_None) {
-			params = PyUnicode_FromObject(params);
-			if (!params) goto BADARG;
-		} else
-			params = 0;
-	}
-	if (dir) {
-		if (dir != Py_None) {
-			dir = PyUnicode_FromObject(dir);
-			if (!dir) goto BADARG;
-		} else
-			dir = 0;
-	}
-	r = ShellExecuteW(hwnd,
-		verb?PyUnicode_AsUnicode(verb):0,
-		PyUnicode_AsUnicode(file),
-		params?PyUnicode_AsUnicode(params):0,
-		dir?PyUnicode_AsUnicode(dir):0,
-		show);
-	Py_XDECREF(verb);
-	Py_DECREF(file);
-	Py_XDECREF(params);
-	Py_XDECREF(dir);
-
-	ir = (size_t)r;
-
-	if (ir > 32) {
-		Py_INCREF(Py_None);
-		return Py_None;
-	}
-	const char *es;
-	switch (ir) {
-		case 0: es = "The operating system is out of memory or resources"; break;
-		case ERROR_BAD_FORMAT: es = "The .exe file is invalid (non-Microsoft Win32 .exe or error in .exe image)"; break;
-		case SE_ERR_ACCESSDENIED: es = "The operating system denied access to the specified file"; break;
-		case SE_ERR_ASSOCINCOMPLETE: es = "The file name association is incomplete or invalid"; break;
-		case SE_ERR_DDEBUSY: es = "The Dynamic Data Exchange (DDE) transaction could not be completed because other DDE transactions were being processed"; break;
-		case SE_ERR_DDEFAIL: es = "The DDE transaction failed"; break;
-		case SE_ERR_DDETIMEOUT: es = "The DDE transaction could not be completed because the request timed out"; break;
-		case SE_ERR_DLLNOTFOUND: es = "The specified dynamic-link library (DLL) was not found"; break;
-		case SE_ERR_FNF: es = "The specified file was not found"; break;
-		case SE_ERR_NOASSOC: es = "There is no application associated with the given file name extension. This error will also be returned if you attempt to print a file that is not printable"; break;
-		case SE_ERR_OOM: es = "There was not enough memory to complete the operation"; break;
-		case SE_ERR_PNF: es = "The specified path was not found"; break;
-		case SE_ERR_SHARE: es = "A sharing violation occurred"; break;
-		default: es = "Unknown error"; break;
-	}
-	return PyErr_Format(PyExc_WindowsError, "ShellExecute failed with error %d: %s", ir, es), 0;
-BADARG:
-	Py_XDECREF(verb);
-	Py_XDECREF(file);
-	Py_XDECREF(params);
-	Py_XDECREF(dir);
-	return 0;
 }
 
 
@@ -1372,43 +1140,6 @@ PyObject *PyGetNativeSystemInfo(PyObject *self, PyObject *args)
 	else
 		GetSystemInfo(&si);
 	return PackSystemInfo(si);
-}
-
-/****************************
- * Session Notifications
- */
-PyObject *PyWTSRegisterSessionNotification(PyObject *self, PyObject *args)
-{
-	HWND hwnd;
-	DWORD flags;
-	if ( !PyArg_ParseTuple(args, "ii", &hwnd, &flags ) )
-		return 0;
-
-	if (!loader->WTSRegisterSessionNotification())
-		return PyWin32Error("WTSRegisterSessionNotification could not be loaded");
-
-	BOOL ok = loader->WTSRegisterSessionNotification()(hwnd, flags);
-	if (!ok)
-		return PyWin32Error("WTSRegisterSessionNotification");
-	Py_INCREF(Py_None);
-	return (Py_None);
-}
-
-PyObject *PyWTSUnRegisterSessionNotification(PyObject *self, PyObject *args)
-{
-	HWND hwnd;
-	if ( !PyArg_ParseTuple(args, "i", &hwnd ) )
-		return 0;
-
-	if (!loader->WTSUnRegisterSessionNotification())
-		return PyWin32Error("WTSUnRegisterSessionNotification could not be loaded",0);
-
-	BOOL ok = loader->WTSUnRegisterSessionNotification()( hwnd );
-	if (!ok)
-		return PyWin32Error("WTSUnRegisterSessionNotification",0);
-
-	Py_INCREF(Py_None);
-	return (Py_None);
 }
 
 

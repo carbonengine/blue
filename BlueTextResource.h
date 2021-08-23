@@ -22,12 +22,12 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////
 	// ICacheable
-	bool IsMemoryUsageKnown();
-	size_t GetMemoryUsage();
+	bool IsMemoryUsageKnown() override;
+	size_t GetMemoryUsage() override;
 
 protected:
-	LoadingResult DoLoad();
-	bool DoPrepare();
+	LoadingResult DoLoad() override;
+	bool DoPrepare() override;
 
 	std::string m_text;
 };

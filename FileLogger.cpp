@@ -205,9 +205,7 @@ namespace CCP
 		strncpy_s( msg->facility, 32, logObject.facility, _TRUNCATE );
 		strncpy_s( msg->message, MAX_MESSAGE_SIZE, message, _TRUNCATE ); 
 
-		#ifdef _WIN32
-		GetSystemTime(&msg->systemtime);
-		#endif
+		TimeAsDateTime( msg->systemtime, TimeNow() );
 
 		msg->type = (int) type;
 		msg->id = s_logID;
@@ -245,21 +243,14 @@ namespace CCP
 				// make sure we are logging to the correct file
 				char filename[256];
 
-#ifdef _WIN32
 				sprintf_s( filename, "%s\\%s-%04d.%02d.%02d.%02d-%d.log", 
 					s_logDirectory, 
 					s_role,
-					msg->systemtime.wYear, 
-					msg->systemtime.wMonth, 
-					msg->systemtime.wDay, 
-					msg->systemtime.wHour, 
+					msg->systemtime.year, 
+					msg->systemtime.month, 
+					msg->systemtime.day, 
+					msg->systemtime.hour, 
 					CcpGetCurrentProcessId() );
-#else
-				sprintf_s( filename, "%s/%s-%d.log", 
-					s_logDirectory, 
-					s_role,
-					CcpGetCurrentProcessId() );
-#endif
 				if (strcmp( filename, s_currentLogPath) != 0)
 				{
 					// rolling to a new file
@@ -288,19 +279,18 @@ namespace CCP
 				}
 				int logLevel = s_logType2syslog[ msg->type];
 
-#ifdef _WIN32
 				char timestamp[64];
 				sprintf_s( timestamp, "[%04d-%02d-%02d %02d:%02d:%02d:%03dZ]", 
-					msg->systemtime.wYear, 
-					msg->systemtime.wMonth, 
-					msg->systemtime.wDay, 
-					msg->systemtime.wHour, 
-					msg->systemtime.wMinute, 
-					msg->systemtime.wSecond, 
-					msg->systemtime.wMilliseconds
+					msg->systemtime.year, 
+					msg->systemtime.month, 
+					msg->systemtime.day, 
+					msg->systemtime.hour, 
+					msg->systemtime.minute, 
+					msg->systemtime.second, 
+					msg->systemtime.milliseconds
 					);
 				s_outstream << timestamp << "\t";
-#endif
+
 				s_outstream << msg->id << "\t";
 				s_outstream << logLevel << "\t";
 				s_outstream << CcpGetCurrentProcessId() << "\t";

@@ -16,6 +16,10 @@
 #include <CcpUtils/RWSpinLock.h>
 #include <CcpUtils/ScopedLocks.h>
 
+#if __APPLE__
+#include <dispatch/dispatch.h>
+#endif
+
 //------------------------------------------------------------------------------
 //#define BN_DEBUG_LOG
 #define BN_CCP_DEBUG_LOG
@@ -162,7 +166,13 @@ public:
 	unsigned int FlushToCharList( const unsigned long long* charList, const int listLen );
 
 	// kick off the ping/pong buffer batch transmit thread
+#if _WIN32
 	void TransmitBatch() { SetEvent( m_singleton.m_batchReadyEvent ); }
+#elif __APPLE__
+	void TransmitBatch() { dispatch_semaphore_signal( m_singleton.m_batchReadyEvent ); }
+#else
+#error "Missing implementation"
+#endif
 
 	//---------------------
 	enum Mode
@@ -208,8 +218,8 @@ private:
 	~BlueNet();
 
 	// python interface
-	static PyObject* PySetMyNodeID( PyObject *self, PyObject *args ); 
-	static PyObject* PySetTransportNodeID( PyObject *self, PyObject *args ); 
+	static PyObject* PySetMyNodeID( PyObject *self, PyObject *args );
+	static PyObject* PySetTransportNodeID( PyObject *self, PyObject *args );
 	static PyObject* PySetMinPingFrequency( PyObject *self, PyObject *args );
 	static PyObject* PySetAggregateThreadFrequency( PyObject *self, PyObject *args );
 	static PyObject* PySetMinScheduledIOInterval( PyObject *self, PyObject *args ); // Minimum time the communications engine will wake up Blue with a packet event <default 15ms>
@@ -241,7 +251,7 @@ private:
 	static PyObject* PyDumpStringTable( PyObject* module, PyObject* args );
 	static PyObject* PyDumpNewStringTable( PyObject* module, PyObject* args );
 	static PyObject* PyDumpTransportTable( PyObject* module, PyObject* args );
-	
+
 	//---------------------
 	enum CallbackStyle
 	{
@@ -261,7 +271,7 @@ private:
 
 	bool ParseHeader( const char* data, const int len, BlueNetHeader *header );
 	void PurgeTransport( long long transportID );
-	
+
 	static PyMethodDef m_methods[];
 	static BlueNet m_singleton;
 	static int m_constNoneKey;
@@ -270,9 +280,9 @@ private:
 	time_t m_fastTime; // updated once per frame rather than for every packet
 
 	unsigned int m_aggregateSendIntervalMilliseconds; // the maximum time all blue-aggregate transports must be visited
-	
+
 	// Using Ccp::LinkHash instead of STL HashSet because we need the speed here
-	Ccp::LinkHash<TransportRepr*> m_transportsBySocket; 
+	Ccp::LinkHash<TransportRepr*> m_transportsBySocket;
 	Ccp::LinkHash<TransportRepr*> m_transportsByTransportID;
 	Ccp::LinkHash<TransportRepr*> m_transportsByNodeID;
 	Ccp::LinkHash<TransportRepr*> m_transportsByClientID;
@@ -312,10 +322,10 @@ private:
 	DataCallbackJob* m_callbackTail;
 	DataCallbackJob* m_callbackHead_C;
 	DataCallbackJob* m_callbackTail_C;
-	CRITICAL_SECTION m_callbackJobLock;
+	CcpMutex m_callbackJobLock;
 	DataCallbackJob* m_callbackPool;
-	CRITICAL_SECTION m_callbackPoolLock;
-	
+	CcpMutex m_callbackPoolLock;
+
 	DataCallbackJob* GetDataCallbackJob();
 	void FreeDataCallbackJob( DataCallbackJob* callback );
 
@@ -347,9 +357,15 @@ private:
 
 	BlueNetPacketBatch *m_batchPing;
 	BlueNetPacketBatch *m_batchPong;
-	CRITICAL_SECTION m_batchLock;
+	CcpMutex m_batchLock;
+#if _WIN32
 	HANDLE m_batchReadyEvent;
-	static void BatchThread( void *arg );
+#elif __APPLE__
+	dispatch_semaphore_t m_batchReadyEvent;
+#else
+#error "Missing implementation!"
+#endif
+	static uint32_t BatchThread( void *arg );
 
 	int m_blueNetHandlerPacketKey;
 	bool m_batchingEnabled;
@@ -381,7 +397,7 @@ private:
 	Ccp::LinkHash<StringEntry> m_stringTable; // existing strings, preloaded and static
 	Ccp::LinkHash<StringEntry> m_newStrings; // any new string get plugged in here for dump/add offline
 	unsigned int m_NewStringMaxLen;
-	
+
 	static void LogStatus( const char* msg );
 	static void LogError( const char* msg );
 };

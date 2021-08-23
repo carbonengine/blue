@@ -24,7 +24,7 @@
 
  The two interfaces are BitPacker and BitPackerManaged, both provide
  similiar setup/constructor functions:
-  
+
  BitPacker( const void* stream, const unsigned int maxLength );
  BitPackerManaged()
 
@@ -56,18 +56,16 @@ public:
 	inline unsigned int Finalize( char **start =0 );
 	inline void GetPosition( unsigned int& bytePos, unsigned int& bitPos ) { bitPos = m_bitsConsumed; bytePos = (unsigned int)(m_bitStream - m_firstBlock); }
 	inline unsigned int GetBitPosition() { return m_bitsConsumed + ((sizeof(char)*8) * (unsigned int)(m_bitStream - m_firstBlock)); }
-	
+
 	inline bool Pack( const bool value );
-	inline bool Pack( const unsigned int value );
-	inline bool Pack( const int value );
-	inline bool Pack( const unsigned long value ) { return Pack((const unsigned int)value); }
-	inline bool Pack( const long value ) { return Pack((const int)value); }
-	inline bool Pack( const unsigned long long value );
-	inline bool Pack( const long long value );
+	inline bool Pack( const uint32_t value );
+	inline bool Pack( const int32_t value );
+	inline bool Pack( const uint64_t value );
+	inline bool Pack( const int64_t value );
 	inline bool Pack( const char *string, const unsigned int len =0 );
 	inline bool Pack( const std::string& string );
-	inline bool Pack( const unsigned char c );
-	inline bool Pack( const char c );
+	inline bool Pack( const uint8_t c );
+	inline bool Pack( const int8_t c );
 	inline bool Pack( const wchar_t *wstring );
 	inline bool Pack( const float value );
 	inline bool Pack( const float value, unsigned int places );
@@ -75,16 +73,14 @@ public:
 	inline bool Pack( const double value, unsigned int places );
 
 	inline bool Unpack( bool &value );
-	inline bool Unpack( unsigned int &value );
-	inline bool Unpack( int &value );
-	inline bool Unpack( unsigned long &value ) { return Unpack((unsigned int &)value); }
-	inline bool Unpack( long &value ) { return Unpack((int &)value); }
-	inline bool Unpack( unsigned long long &value );
-	inline bool Unpack( long long &value );
+	inline bool Unpack( uint32_t &value );
+	inline bool Unpack( int32_t &value );
+	inline bool Unpack( uint64_t &value );
+	inline bool Unpack( int64_t &value );
 	inline bool Unpack( char *string, unsigned int *len =0, unsigned int maxLen =-1 );
 	inline bool Unpack( std::string& string );
-	inline bool Unpack( unsigned char &c );
-	inline bool Unpack( char &c );
+	inline bool Unpack( uint8_t &c );
+	inline bool Unpack( int8_t &c );
 	inline bool Unpack( wchar_t *wstring, unsigned int *len =0, unsigned int maxLen =-1 );
 	inline bool Unpack( float &value );
 	inline bool Unpack( float &value, unsigned int places );
@@ -95,7 +91,7 @@ public:
 	unsigned int WordsPacked() const { return (unsigned int)(m_bitStream - m_firstBlock); }
 
 	bool Valid() { return !m_lastBlock || (m_lastBlock >= m_bitStream) || ((m_lastBlock == m_bitStream + 1) && m_bitsConsumed==0); }
-	
+
 protected:
 
 	BitPackerCore( const void* stream, const unsigned int maxLength );
@@ -105,7 +101,7 @@ protected:
 private:
 
 	inline bool GrowOwnedMemory();
-			
+
 	unsigned int m_ownedBufferSize;
 	unsigned int m_bitsConsumed;
 	unsigned char *m_lastBlock;
@@ -133,13 +129,10 @@ public:
 //------------------------------------------------------------------------------
 inline BitPackerCore::BitPackerCore( const void* stream, const unsigned int maxLength )
 {
-	assert( sizeof(int) == 4 );
-	assert( sizeof(char) == 1 );
-	assert( sizeof(long long) == 8 );
-	assert( sizeof(long) == 4 );
-	
+	static_assert( sizeof(char) == 1 );
+
 	m_bitsConsumed = 0;
-		
+
 	if ( stream )
 	{
 		m_ownedBufferSize = 0;
@@ -284,7 +277,7 @@ bool BitPackerCore::DeQueueAlignedBlock( char** target, int numberOfBytes )
 	{
 		return false;
 	}
-	
+
 	if ( m_bitsConsumed )
 	{
 		// first move the pointer up to the nearest boundry
@@ -303,7 +296,7 @@ bool BitPackerCore::DeQueueAlignedBlock( char** target, int numberOfBytes )
 	// NOT equal-to, since this might be the last piece of data and
 	// legally point to the end of the buffer, the next de-queue will
 	// fail if this is the case
-	return !(m_lastBlock && (m_bitStream > m_lastBlock)); 
+	return !(m_lastBlock && (m_bitStream > m_lastBlock));
 }
 
 //------------------------------------------------------------------------------
@@ -313,7 +306,7 @@ bool BitPackerCore::GrowOwnedMemory()
 	{
 		return false;
 	}
-	
+
 	unsigned int offset = (unsigned int)(m_bitStream - m_firstBlock);
 	unsigned char *newbuf = new unsigned char[(m_ownedBufferSize * 2) + 1];
 	memcpy( newbuf, m_firstBlock, m_ownedBufferSize );
@@ -334,7 +327,7 @@ bool BitPackerCore::QueueBits( char const* source, int numberOfBits )
 		m_bitStream = m_lastBlock + 1;
 		return false;
 	}
-	
+
 	int bitsRemaining = numberOfBits;
 	unsigned char const* buf = (unsigned char *)source;
 
@@ -419,7 +412,7 @@ bool BitPackerCore::QueueBits( char const* source, int numberOfBits )
 				bitsRemaining -= m_bitsConsumed;
 				buf++;
 			}
-		} 
+		}
 	}
 
 	return true;
@@ -479,7 +472,7 @@ unsigned int BitPackerCore::ReserveAlignedBlock( int numberOfBytes )
 		m_bitStream = m_lastBlock + 1;
 		return 0;
 	}
-	
+
 	return offset;
 }
 
@@ -511,9 +504,9 @@ bool BitPackerCore::Pack( const bool value )
 }
 
 //------------------------------------------------------------------------------
-bool BitPackerCore::Pack( const unsigned int value )
+bool BitPackerCore::Pack( const uint32_t value )
 {
-	unsigned int j = 1;
+	uint32_t j = 1;
 
 	if ( value == 0 ) // zero is special case, queue the 3 bits and be done
 	{
@@ -524,7 +517,7 @@ bool BitPackerCore::Pack( const unsigned int value )
 	{
 		for( ; j<7 ; j++ )
 		{
-			if ( value < (unsigned int)(0x1 << (j*4)) )
+			if ( value < (uint32_t)(0x1 << (j*4)) )
 			{
 				QueueBits( (char*)&j, 3 );
 				QueueBits( (char*)&value, (j*4) );
@@ -539,22 +532,22 @@ bool BitPackerCore::Pack( const unsigned int value )
 }
 
 //------------------------------------------------------------------------------
-bool BitPackerCore::Pack( const int value )
+bool BitPackerCore::Pack( const int32_t value )
 {
 	if ( value == 0 )
 	{
 		QueueBits( (char*)&value, 1 );
-		Pack( (unsigned int)0 );
+		Pack( (uint32_t)0 );
 	}
 	else if ( value > 0 )
 	{
-		unsigned int val = 0;
+		uint32_t val = 0;
 		QueueBits( (char*)&val, 1 );
-		Pack( (unsigned int)value );
+		Pack( (uint32_t)value );
 	}
 	else
 	{
-		unsigned int val = 1;
+		uint32_t val = 1;
 		QueueBits( (char*)&val, 1 );
 		val = -value;
 		Pack( val );
@@ -564,9 +557,9 @@ bool BitPackerCore::Pack( const int value )
 }
 
 //------------------------------------------------------------------------------
-bool BitPackerCore::Pack( const unsigned long long value )
+bool BitPackerCore::Pack( const uint64_t value )
 {
-	unsigned long long j = 1;
+	uint64_t j = 1;
 
 	if ( value == 0 ) // zero is special case, queue the 3 bits and be done
 	{
@@ -593,22 +586,22 @@ bool BitPackerCore::Pack( const unsigned long long value )
 }
 
 //------------------------------------------------------------------------------
-bool BitPackerCore::Pack( const long long value )
+bool BitPackerCore::Pack( const int64_t value )
 {
 	if ( value == 0 )
 	{
 		QueueBits( (char*)&value, 1 );
-		Pack( (unsigned long long)0 );
+		Pack( 0ULL );
 	}
 	else if ( value > 0 )
 	{
-		unsigned long long val = 0;
+		uint64_t val = 0;
 		QueueBits( (char*)&val, 1 );
-		Pack( (unsigned long long)value );
+		Pack( (uint64_t)value );
 	}
 	else
 	{
-		unsigned long long val = 1;
+		uint64_t val = 1;
 		QueueBits( (char*)&val, 1 );
 		val = -value;
 		Pack( val );
@@ -648,13 +641,13 @@ bool BitPackerCore::Pack( const std::string& string )
 }
 
 //------------------------------------------------------------------------------
-bool BitPackerCore::Pack( const char c )
+bool BitPackerCore::Pack( const int8_t c )
 {
-	return QueueBits( &c, 8 );
+	return QueueBits( (const char *)&c, 8 );
 }
 
 //------------------------------------------------------------------------------
-bool BitPackerCore::Pack( const unsigned char c )
+bool BitPackerCore::Pack( const uint8_t c )
 {
 	return QueueBits( (const char *)&c, 8 );
 }
@@ -668,7 +661,7 @@ bool BitPackerCore::Pack( const wchar_t *string )
 	}
 
 	char temp[64001];
-	
+
 	int len = (unsigned int)wcstombs( temp, string, 64000 );
 	Pack( len );
 	if ( len != 0 )
@@ -687,14 +680,14 @@ bool BitPackerCore::Pack( const float value )
 	// 0x1 - positive, pack follows
 	// 0x2 - negative, pack follows
 	// 0x3 - 32 literal bits follow
-	
+
 	// mark zero with a single bit
 	if ( value == 0 )
 	{
 		QueueBits( (char*)&value, 2 );
 		return Valid();
 	}
-	
+
 	const unsigned int *f = (unsigned int*)&value;
 
 	unsigned int sign = *f & 0x80000000 ? 1 : 0;
@@ -739,7 +732,7 @@ bool BitPackerCore::Pack( const float value )
 			QueueBits( (char *)&i, 3 );
 			int temp = mantissa >> i*4;
 			QueueBits( (char *)&temp, 23 - (i * 4) );
-			
+
 			return Valid();
 		}
 	}
@@ -769,7 +762,7 @@ bool BitPackerCore::Pack( const float value, unsigned int places )
 //------------------------------------------------------------------------------
 bool BitPackerCore::Pack( const double value )
 {
-	QueueBits( (char*)&value, 64 );	
+	QueueBits( (char*)&value, 64 );
 	return Valid();
 }
 
@@ -878,18 +871,18 @@ bool BitPackerCore::Unpack( char *string, unsigned int *len, unsigned int maxLen
 	{
 		return false;
 	}
-	
+
 	if ( len )
 	{
 		*len = tlen;
 	}
-	
+
 	for( unsigned int i=0; i<tlen; i++ )
 	{
 		DeQueueBits( string++, 8 );
 	}
 	*string = 0; // terminate
-	
+
 	return Valid();
 }
 
@@ -916,7 +909,7 @@ bool BitPackerCore::Unpack( std::string& string )
 bool BitPackerCore::Unpack( wchar_t *string, unsigned int *len, unsigned int maxLen )
 {
 	unsigned int tlen;
-	
+
 	Unpack( *(int *)&tlen );
 	if ( tlen == 0 )
 	{
@@ -941,19 +934,19 @@ bool BitPackerCore::Unpack( wchar_t *string, unsigned int *len, unsigned int max
 	{
 		*len = tlen;
 	}
-		
+
 	return (tlen != (unsigned int)-1) && Valid();
 }
 
 //------------------------------------------------------------------------------
-bool BitPackerCore::Unpack( unsigned char &c )
+bool BitPackerCore::Unpack( uint8_t &c )
 {
 	DeQueueBits( (char*)&c, 8 );
 	return Valid();
 }
 
 //------------------------------------------------------------------------------
-bool BitPackerCore::Unpack( char &c )
+bool BitPackerCore::Unpack( int8_t &c )
 {
 	DeQueueBits( (char*)&c, 8 );
 	return Valid();
@@ -1008,7 +1001,7 @@ bool BitPackerCore::Unpack( float &value, unsigned int places )
 {
 	unsigned int val = 0;
 	DeQueueBits( (char*)&val, 1 );
-	
+
 	if ( val == 0 )
 	{
 		value = 0.f;

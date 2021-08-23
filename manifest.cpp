@@ -11,14 +11,10 @@
 #include "crypto.h"
 #include "BlueResFile.h"
 #include "Include/IBluePaths.h"
+#include "ErrorMessage.h"
 
 #include <vector>
 #include <string>
-#include <filesystem>
-
-#ifdef _WIN32
-#include "resource.h"
-#endif
 
 
 constexpr uint32_t MANIFEST_VERSION = 4;
@@ -64,7 +60,7 @@ private:
 	{
 		if( s > m_buf.size() - m_pos )
 		{
-			return "InBuf::Read: Trying to read too many bytes";
+			return std::string("InBuf::Read: Trying to read too many bytes");
 		}
 
 		memcpy( r, &m_buf[m_pos], s );
@@ -86,63 +82,32 @@ struct ManifestEntry_t
 	std::string m_name;
 	std::string m_hash;
 };
-typedef std::vector<ManifestEntry_t> Manifest_t;
-
-
-// Look up a string in the string tables and translate, optionally injecting a string argument
-//   def - the default value for the string, will be used if lookup is not successful
-//   id - the id for the string to look up
-std::string TranslateString( const std::string& def, unsigned id ) // TODO: Fix these strings for non-windows and in general
-{
-	std::string text( def );
-
-#ifdef _WIN32
-	HMODULE blue = GetModuleHandle( "blue" );
-	if( !blue )
-	{
-		blue = GetModuleHandle( "blueD" );
-	}
-
-	wchar_t buf[256];
-	if( blue && LoadStringW( blue, id, buf, _countof( buf ) ) )
-	{
-		text = std::string( std::begin( buf ), std::end( buf ) );
-	}
-#endif
-
-	return text;
-}
-
-
-std::wstring AbsolutePath( const std::string& fileName )
-{
-	return std::filesystem::absolute( BePaths->ResolvePathW( std::wstring( std::begin( fileName ), std::end( fileName ) ) ) ).wstring();
-}
+using Manifest_t = std::vector<ManifestEntry_t>;
 
 
 Be::Result<std::string> VerifyManifestEntry( const ManifestEntry_t& m )
 {
-	IResFilePtr file;	
+	IResFilePtr file;
 	if( !file.CreateInstance( GetResFileClsid() ) )
 	{
-		return "VerifyManifestEntry: Could not create IResFilePtr instance";
+		return std::string("VerifyManifestEntry: Could not create IResFilePtr instance");
 	}
 
 	if( !file->Open( m.m_name.c_str(), true ) )
 	{
-		return TranslateString( "File not found: ", IDS_VERIFYFAIL_NOTFOUND ) + m.m_name + "\n";
+		return TranslateErrorMessage( "File not found: ", IDS_VERIFYFAIL_NOTFOUND ) + std::string( m.m_name ) + std::string( "\n" );
 	}
 
 	ssize_t fileSize = file->GetSize();
 	if( fileSize < 0 )
 	{
-		return "VerifyManifestEntry: fileSize < 0";
+		return std::string("VerifyManifestEntry: fileSize < 0");
 	}
 
 	void *buf;
 	if( !file->LockData( &buf, 0 ) )
 	{
-		return "VerifyManifestEntry: Could not lock tmp stream";
+		return std::string("VerifyManifestEntry: Could not lock tmp stream");
 	}
 	
 	std::string hash;
@@ -150,7 +115,7 @@ Be::Result<std::string> VerifyManifestEntry( const ManifestEntry_t& m )
 
 	if( m.m_hash != hash )
 	{
-		return "VerifyManifestEntry: Invalid manifest entry hash";
+		return std::string("VerifyManifestEntry: Invalid manifest entry hash");
 	}
 
 	CCP_LOG_CH( s_ch, "Verification passed: \"%s\"", m.m_name.c_str() );
@@ -222,7 +187,7 @@ Be::Result<std::string> UnpackManifest( Manifest_t& m, directives_t& directives,
 	}
 	if( !returnValue )
 	{
-		return "UnpackManifest: Invalid key";
+		return std::string("UnpackManifest: Invalid key");
 	}
 
 	std::string hash, signature;
@@ -231,7 +196,7 @@ Be::Result<std::string> UnpackManifest( Manifest_t& m, directives_t& directives,
 
 	if( !BeIsSuccess( verCipher.VerifySignature( hash, signature, returnValue ) ) || !returnValue )
 	{
-		return "UnpackManifest: Invalid manifest signature";
+		return std::string("UnpackManifest: Invalid manifest signature");
 	}
 
 	return std::string();
@@ -243,7 +208,7 @@ Be::Result<std::string> VerifyManifestFile( const std::string& name, directives_
 	IResFilePtr tmp;	
 	if( !tmp.CreateInstance( GetResFileClsid() ) )
 	{
-		return "VerifyManifestFile: Could not create IResFilePtr instance";
+		return std::string("VerifyManifestFile: Could not create IResFilePtr instance");
 	}
 
 	if( !tmp->Open( name.c_str(), true ) )
@@ -254,35 +219,36 @@ Be::Result<std::string> VerifyManifestFile( const std::string& name, directives_
 	ssize_t fileSize = tmp->GetSize();
 	if( fileSize < 0 )
 	{
-		return "VerifyManifestFile: fileSize < 0";
+		return std::string("VerifyManifestFile: fileSize < 0");
 	}
 
 	InBuf ib( fileSize );
 	if( tmp->Read( ib.GetData(), fileSize ) != fileSize )
 	{
-		return "VerifyManifestFile: Read problem";
+		return std::string("VerifyManifestFile: Read problem");
 	}
 
 	Manifest_t manifest;
 	BE_RETURN_ON_ERROR( UnpackManifest( manifest, directives, ib, *GetSharedAsymmetricCipher() ) );
 
-	std::wstring executablePath = CcpExecutablePath();
+	std::wstring executablePath = CcpGetAbsolutePath( CcpExecutablePath() );
 	bool executableChecked = false;
 
-	for( ManifestEntry_t entry : manifest )
+	for( const ManifestEntry_t& entry : manifest )
 	{
 		BE_RETURN_ON_ERROR( VerifyManifestEntry( entry ) );
 
-		if( AbsolutePath( entry.m_name ) == executablePath )
+		std::wstring entryName = BePaths->ResolvePathW( std::wstring( CA2W( entry.m_name.c_str() ) ) );
+		if( CcpGetAbsolutePath( entryName ) == executablePath )
 		{
 			executableChecked = true;
 		}
 	}
 	if( !executableChecked && !manifest.empty() )
 	{
-		return "Executable path not included in manifest file";
+		return std::string("Executable path not included in manifest file");
 	}
-
+    
 	CCP_LOG_CH( s_ch, "Successfully verified manifest file %s", name.c_str() );
 	return std::string();
 }

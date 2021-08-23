@@ -21,15 +21,6 @@ public:
 	void SetFullCapture( bool b );
 	void Update();
 
-#ifdef _WIN32
-	bool IsKnownHeap( HANDLE heap );
-	void SetCustomHeapsToLargestHeaps();
-	void DumpModulesAsText( const char* filename );
-	uint32_t GetProcessHeapsCount();
-	size_t GetHeapSize( size_t heap );
-	size_t GetMainProcessHeap();
-	size_t GetBlueHeap();
-#endif
 	void SummaryReport( const char* filename );
 	void DumpReportAsText( const char* filename );
 	void DumpReportAsBinary( const char* filename );
@@ -43,14 +34,6 @@ private:
 	void PrintFieldToFile( FILE* file, const char* name, size_t totalSize );
 
 private:
-#ifdef _WIN32
-	intptr_t m_d3dHeap1;
-	intptr_t m_d3dHeap2;
-	intptr_t m_customHeap1;
-	intptr_t m_customHeap2;
-	intptr_t m_customHeap3;
-#endif
-
 	int64_t m_lastLoggedWorkingSet;
 	int64_t m_lastLoggedPageFileUsage;
 

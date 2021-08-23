@@ -24,7 +24,7 @@ public:
 
 	uint32_t GetCurrentVersion() const;
 
-	virtual Be::Result<std::string> WriteObjectToStream( const IRoot* obj, IBlueStream* stream );
+	Be::Result<std::string> WriteObjectToStream( const IRoot* obj, IBlueStream* stream ) override;
 
 	const std::vector<std::string> GetStrings() { return m_strings; }
 	const std::vector<std::wstring> GetWStrings() { return m_wstrings; }
@@ -34,29 +34,29 @@ protected:
 	// Implementations of functions required by IRootWriter
 	//
 
-	virtual void WriteMemberName( const char* key );
+	void WriteMemberName( const char* key ) override;
 
-	virtual void WriteInt8( int8_t value );
-	virtual void WriteInt16( int16_t value );
-	virtual void WriteInt32( int32_t value );
-	virtual void WriteInt64( int64_t value );
-	virtual void WriteFloat( float value );
-	virtual void WriteFloatArray( float* values, size_t numValues );
-	virtual void WriteFloatMatrix( float* values, size_t numRows, size_t numColumns );
-	virtual void WriteBinaryBlock( ICustomPersist* cPersist, const char* propertyName );
-	virtual void WriteDouble( double value );
+	void WriteInt8( int8_t value ) override;
+	void WriteInt16( int16_t value ) override;
+	void WriteInt32( int32_t value ) override;
+	void WriteInt64( int64_t value ) override;
+	void WriteFloat( float value ) override;
+	void WriteFloatArray( float* values, size_t numValues ) override;
+	void WriteFloatMatrix( float* values, size_t numRows, size_t numColumns );
+	void WriteBinaryBlock( ICustomPersist* cPersist, const char* propertyName ) override;
+	void WriteDouble( double value ) override;
 
-	virtual void WriteWChar( const wchar_t* value );
-	virtual void WriteChar( const char* value );
+	void WriteWChar( const wchar_t* value ) override;
+	void WriteChar( const char* value ) override;
 
-	virtual void WriteIRoot( const IRoot& instance, IRoot* defaultInstance );
-	virtual void WriteIRoot( const IRoot* instance );
+	void WriteIRoot( const IRoot& instance, IRoot* defaultInstance ) override;
+	void WriteIRoot( const IRoot* instance ) override;
 
-	virtual void WriteVectorBegin( size_t size );
-	virtual void WriteVectorEnd( size_t size );
+	void WriteVectorBegin( size_t size ) override;
+	void WriteVectorEnd( size_t size ) override;
 
 #if BLUE_WITH_PYTHON
-	virtual void WriteStructureList( IBlueStructureList* structureList );
+	void WriteStructureList( IBlueStructureList* structureList ) override;
 #endif
 
 	//

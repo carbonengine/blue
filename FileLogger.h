@@ -20,10 +20,7 @@ namespace CCP
 		char facility[32];
 		char object[32];
 		int type;
-#ifdef _WIN32
-		SYSTEMTIME systemtime;
-		// TODO: Timestamp for non-Win32
-#endif
+		CcpDateTime systemtime;
 		char message[MAX_MESSAGE_SIZE];
 		unsigned long long id;
 	};

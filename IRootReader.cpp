@@ -1,6 +1,6 @@
 #include "StdAfx.h"
 #include "IRootReader.h"
-#include "blue/include/IBluePersist.h"
+#include "blue/Include/IBluePersist.h"
 
 BLUE_DEFINE_INTERFACE( IRootReader );
 

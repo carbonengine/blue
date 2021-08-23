@@ -23,12 +23,6 @@ BackgroundReader::~BackgroundReader()
 
 void BackgroundReader::Perform()
 {
-	if( !m_contents.CreateInstance() )
-	{
-		m_result = Be::Result<std::string>( "Couldn't create MemStream object" );
-		return;
-	}
-
 	ResFilePtr resFile;
 	if( !resFile.CreateInstance() )
 	{
@@ -50,6 +44,12 @@ void BackgroundReader::Perform()
 		return;
 	}
 
+	if( !m_contents.CreateInstance() )
+	{
+		resFile->UnlockData();
+		m_result = Be::Result<std::string>( "Couldn't create MemStream object" );
+		return;
+	}
 	m_contents->Write( data, dataSize );
 	m_contents->Seek( 0, ICcpStream::SO_BEGIN );
 

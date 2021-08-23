@@ -6,6 +6,7 @@
 //
 
 #include "StdAfx.h"
+#include "include/IBlueOS.h"
 
 static CBlueStatistics s_statisticsInstance;
 BlueStatistics* g_statistics = &s_statisticsInstance;

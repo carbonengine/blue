@@ -13,11 +13,6 @@
 #include "Include/IBlueOS.h"
 #include "Include/IBluePaths.h"
 
-#if BLUE_WITH_PYTHON
-#ifdef _WIN32
-#include "CcpUtils/PyCpp.h"
-#endif
-#endif
 #include "Include/BlueFileUtil.h"
 #include "RemoteFileCache.h"
 

@@ -140,18 +140,6 @@ BLUE_INTERFACE(IBlueOS) : public IRoot
 		void* cookie
 		) = 0;
 
-	virtual void RegisterForCatchupTicks(
-		ICatchupTicks *cb,
-		void* cookie,
-		Be::Time tickMS,
-		Be::Time perFrameBudget
-		) = 0;
-
-	virtual void UnregisterForCatchupTicks(
-		ICatchupTicks *cb,
-		void* cookie
-		) = 0;
-
 	virtual void RegisterForSimTimeRebase( ISimTimeRebaseNotify* cb ) = 0;
 
 	virtual void UnregisterForSimTimeRebase( ISimTimeRebaseNotify* cb ) = 0;
@@ -169,14 +157,19 @@ BLUE_INTERFACE(IBlueOS) : public IRoot
 		...
 		) = 0;
 
-	
+#if _WIN32
+    typedef DWORD OsErrorType;
+#else
+    typedef errno_t OsErrorType;
+#endif
+    
 	struct Error
 	{
 		long mError;
 		const Be::Clsid* mSource;
 		const char* mDescription;
 		Be::Time mTimestamp;
-		unsigned long mWinError; //)DWORD), set if mError is BE32
+		OsErrorType mOsError; // set if mError is BE32
 	};
 	
 	
@@ -235,12 +228,10 @@ BLUE_INTERFACE(IBlueOS) : public IRoot
 	// Returns the value associated with the command line argument.
 	// If /arg=value is on the command line, this method returns value.
 	virtual std::wstring GetStartupArgValue( const std::wstring& arg ) const = 0;
-
-	virtual bool IsUsingTheSimpleCatchupLoop() = 0;
-	
 };
 
 extern BLUEIMPORT IBlueOS* BeOS;
+extern "C" BLUEIMPORT IBlueOS* BlueGetBeOS();
 
 struct IBlueEvents
 {

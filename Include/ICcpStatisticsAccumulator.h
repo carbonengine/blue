@@ -9,7 +9,7 @@
 #ifndef ICcpStatisticsAccumulator_h
 #define ICcpStatisticsAccumulator_h
 
-BLUE_INTERFACE( ICcpStatisticsAccumulator ) : public IRoot
+BLUE_INTERFACE_EXPORT( ICcpStatisticsAccumulator ) : public IRoot
 {
 	virtual void Add( double val ) = 0;
 };

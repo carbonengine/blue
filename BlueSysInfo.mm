@@ -1,7 +1,11 @@
 #include "StdAfx.h"
+
+#if __APPLE__
+
 #include <string>
 #include "BlueSysInfo.h"
 #include "BlueExposure/include/BlueExposure.h"
+#include "pdm.h"
 #include <sys/sysctl.h>
 #include <sys/times.h>
 #include <mach/mach_time.h>
@@ -12,20 +16,7 @@
 
 namespace
 {
-    struct BlueImportTime
-    {
-        BlueImportTime()
-        {
-            time_t t;
-            time( &t );
-            
-            m_time = uint64_t( t ) * 10000000 + 116444736000000000;
-        }
-        
-        uint64_t m_time;
-    };
-    
-    const BlueImportTime s_startTime;
+    const int64_t s_startTime = TimeNow();
 }
 
 
@@ -70,7 +61,18 @@ std::wstring BlueSysInfo::GetSharedFontsDirectory() const
     NSURL* url = [fileManager URLForDirectory:NSLibraryDirectory inDomain:NSLocalDomainMask appropriateForURL:nil create:false error:nil];
     if( url )
     {
-        return std::wstring( CA2W( [[url path] UTF8String] ) );
+        return std::wstring( CA2W( [[url path] UTF8String] ) ).append( L"/Fonts" );
+    }
+    return L"";
+}
+
+std::wstring BlueSysInfo::GetSystemFontsDirectory() const
+{
+    NSFileManager* fileManager = [NSFileManager defaultManager];
+    NSURL* url = [fileManager URLForDirectory:NSLibraryDirectory inDomain:NSSystemDomainMask appropriateForURL:nil create:false error:nil];
+    if( url )
+    {
+        return std::wstring( CA2W( [[url path] UTF8String] ) ).append( L"/Fonts" );
     }
     return L"";
 }
@@ -91,22 +93,7 @@ uint32_t BlueSysInfo::GetSystemBitCount() const
 
 uint64_t BlueSysInfo::GetProcessStartTime() const
 {
-    return s_startTime.m_time;
-}
-
-bool BlueSysInfo::IsWine() const
-{
-    return false;
-}
-
-std::wstring BlueSysInfo::GetWineVersion() const
-{
-    return L"";
-}
-
-std::wstring BlueSysInfo::GetWineHostOs() const
-{
-    return L"";
+    return s_startTime;
 }
 
 std::string BlueSysInfo::GetMachineUuid() const
@@ -120,46 +107,80 @@ std::string BlueSysInfo::GetMachineUuid() const
     return buffer;
 }
 
+std::string BlueSysInfo::GetMachineName() const
+{
+    char buffer[256];
+    buffer[0] = 0;
+    gethostname( buffer, 256 );
+    if( auto dot = strchr( buffer, '.' ) )
+    {
+        *dot = 0;
+    }
+    return buffer;
+}
 
-BlueSysInfoCpu::BlueSysInfoCpu()
+std::string BlueSysInfo::GetDomainName() const
+{
+    char buffer[256];
+    buffer[0] = 0;
+    gethostname( buffer, 256 );
+    char* start = buffer;
+    if( auto dot = strchr( buffer, '.' ) )
+    {
+        start = dot + 1;
+        dot = strchr( start, '.' );
+        if( dot )
+        {
+            *dot = 0;
+        }
+    }
+    return start;
+}
+
+
+BlueSysInfoCpu::BlueSysInfoCpu() :
+	m_extensions( PDM::GetCPUInfo().extensions )
 {
     char buffer[512] = { 0 };
     size_t size = sizeof( buffer );
     sysctlbyname( "machdep.cpu.brand_string", buffer, &size, nullptr, 0 );
     m_brand = buffer;
-    
+
     int family = 0;
     size = sizeof( family );
     sysctlbyname( "machdep.cpu.family", &family, &size, nullptr, 0 );
     m_family = family;
-    
+
     int model = 0;
     int stepping = 0;
     size = sizeof( model );
     sysctlbyname( "machdep.cpu.model", &model, &size, nullptr, 0 );
     sysctlbyname( "machdep.cpu.stepping", &stepping, &size, nullptr, 0 );
     m_revision = ( model << 8 ) | stepping;
-    
+
     int count = 0;
     size = sizeof( count );
     sysctlbyname( "hw.logicalcpu", &count, &size, nullptr, 0 );
     m_logicalCpuCount = count;
-    
+
     int arch = 0;
     size = sizeof( arch );
     sysctlbyname( "hw.cpu64bit_capable", &arch, &size, nullptr, 0 );
     m_bitCount = arch ? 64 : 32;
-    
+
     size = sizeof( buffer );
     sysctlbyname( "machdep.cpu.vendor", buffer, &size, nullptr, 0 );
-    
+
     const char* platform;
+#if __i386__ || __x86_64__
     if( m_bitCount == 32 )
     {
+        m_architecture = "x86";
         platform = "x86";
     }
     else
     {
+        m_architecture = "AMD64";
         if( strstr( buffer, "Intel" ) )
         {
             platform = "Intel64";
@@ -169,7 +190,13 @@ BlueSysInfoCpu::BlueSysInfoCpu()
             platform = "AMD64";
         }
     }
-    
+#elif __aarch64__
+    m_architecture = "ARM64";
+    platform = "Apple";
+#else
+#error "Unsupported architecture"
+#endif
+
     sprintf_s( buffer, "%s Family %i Model %i Stepping %i, %s", platform, family, model, stepping, buffer );
     m_identifier = buffer;
 }
@@ -179,9 +206,9 @@ BlueSysInfoOs::BlueSysInfoOs()
 {
     m_platform = OSX;
 
-    
+
     NSProcessInfo* processInfo = [NSProcessInfo processInfo];
-    
+
     NSOperatingSystemVersion osVersion = [processInfo operatingSystemVersion];
     m_majorVersion = int32_t( osVersion.majorVersion );
     m_minorVersion = int32_t( osVersion.minorVersion );
@@ -196,7 +223,7 @@ BlueSysInfoMemory::BlueSysInfoMemory()
     CcpGetProcessMemoryInfo( workingSetMemory, pageFileMemory );
     m_workingSet = uint64_t( workingSetMemory );
     m_pageFile = uint64_t( pageFileMemory );
-    
+
     int64_t memsize = 0;
     size_t size = sizeof( memsize );
     sysctlbyname( "hw.memsize", &memsize, &size, nullptr, 0 );
@@ -204,3 +231,5 @@ BlueSysInfoMemory::BlueSysInfoMemory()
     // could not find a way to get it:
     m_availablePhysical = m_totalPhysical / 2;
 }
+
+#endif

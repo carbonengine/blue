@@ -17,11 +17,11 @@ public:
 	BlueObjectBuilderPython();
 	~BlueObjectBuilderPython();
 
-	virtual IRoot* CreateObjectWithYield( unsigned int objectMarker, IRoot* callingProxy );
-	virtual IRoot* CreateObject( unsigned int objectMarker, IRoot* callingProxy );
-	virtual void OnObjectDestroyed( unsigned objectMarker, IRoot* callingProxy );
-	virtual void OnSelected( unsigned objectMarker, IRoot* callingProxy );
-	virtual void GetErrorMessage( std::string& msg );
+	IRoot* CreateObjectWithYield( unsigned int objectMarker, IRoot* callingProxy ) override;
+	IRoot* CreateObject( unsigned int objectMarker, IRoot* callingProxy ) override;
+	void OnObjectDestroyed( unsigned objectMarker, IRoot* callingProxy ) override;
+	void OnSelected( unsigned objectMarker, IRoot* callingProxy ) override;
+	void GetErrorMessage( std::string& msg ) override;
 
 protected:
 	PyObject* m_createMethod;

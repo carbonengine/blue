@@ -134,7 +134,7 @@ bool BlueCallbackMan::Add( CallbackFunc pCb, void* pContext, uint32_t flags, Ccp
 
 	if( m_isRunningOwnThreads )
 	{
-		CCP_STATS_ZONE( __FUNCTION__ " signal");
+		CCP_STATS_ZONE( CCP_STRINGIZE( __FUNCTION__ ) " signal");
 
 		m_alarm.Signal();
 	}
@@ -256,7 +256,8 @@ void BlueCallbackMan::Stop()
 	for( unsigned int i = 0; i < m_threads.size(); ++i )
 	{
 		ThreadData* td = m_threads[i];
-		CcpJoinThread( td->m_threadHandle, nullptr );
+		uint32_t result;
+		CcpJoinThread( td->m_threadHandle, result );
 
 		CCP_DELETE( td );
 	}
@@ -470,23 +471,20 @@ bool BlueCallbackMan::IsEmpty() const
 
 void BlueCallbackMan::SetPriority( int prio )
 {
-	// TODO: Thread priorities on non-win32
-#ifdef _WIN32
-	if( prio > THREAD_PRIORITY_HIGHEST )
+	if( prio > CCP_THREAD_PRIORITY_HIGHEST )
 	{
-		prio = THREAD_PRIORITY_HIGHEST;
+		prio = CCP_THREAD_PRIORITY_HIGHEST;
 	}
-	else if( prio < THREAD_PRIORITY_LOWEST )
+	else if( prio < CCP_THREAD_PRIORITY_LOWEST )
 	{
-		prio = THREAD_PRIORITY_LOWEST;
+		prio = CCP_THREAD_PRIORITY_LOWEST;
 	}
 	m_threadPriority = prio;
 
 	for( unsigned int i = 0; i < m_threads.size(); ++i )
 	{
-		SetThreadPriority( m_threads[i]->m_threadHandle, m_threadPriority );
+		CcpSetThreadPriority( m_threads[i]->m_threadHandle, CcpThreadPriority_t( m_threadPriority ) );
 	}
-#endif
 }
 
 void BlueCallbackMan::SetName( const char* name )

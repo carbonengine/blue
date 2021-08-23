@@ -49,8 +49,8 @@ public:
 	~BlueOS();
 	
 	void SetTime(Be::Time time = 0);
-	Be::Time GetActualTime();
-	Be::Time GetCurrentFrameTime() const { return mSimTime; }
+	Be::Time GetActualTime() override;
+	Be::Time GetCurrentFrameTime() const override { return mSimTime; }
 
 	bool IsOnMainTasklet();
 
@@ -59,11 +59,11 @@ public:
 #endif
 
 	Be::Time GetSmoothedTime();
-	void NextScheduledEvent(int millisec);
+	void NextScheduledEvent(int millisec) override;
 	
 	typedef TrackableStdVector<TerminationCallback*> TerminationCallbacks;
 	TerminationCallbacks mIndispensableTerminationSteps;
-	void RegisterIndispensableTerminationStep( TerminationCallback* callback );
+	void RegisterIndispensableTerminationStep( TerminationCallback* callback ) override;
 
 	ManifestVerification mManifestVerification;
 
@@ -106,14 +106,12 @@ public:
 	void DoSlug( float deltaTime );
 
 	// Variable Delta-T Support
-	bool mUseSimpleCatchupLoop;
 	bool mUseNominalDeltaT;
 	bool mUseSmoothedDeltaT;
 	float mNominalDeltaTSec;
 	float mTimeScaler;
 	void InitVariableTicking();
 	void ComputeTimeValues(Be::Time* ptrActualTime, float* ptrDeltaT_sec);
-	void RunSimpleCatchupLoop(float deltaT_sec);
 
 	struct Ticker
 	{
@@ -130,44 +128,6 @@ public:
 	typedef Tickers::iterator TickIt;
 	Tickers mTickers;
 
-	struct CatchupTicker
-	{
-		CatchupTicker(ICatchupTicks *cb, void* cookie, Be::Time tickTime, Be::Time perFrameBudget);
-		bool operator < (const CatchupTicker &other) const;
-		bool operator == (const CatchupTicker &other) const;
-
-
-		ICatchupTicks *mCb;
-		const char* mCookie;
-
-		Be::Time mNextTickTime;
-		Be::Time mTimeBetweenTicks;
-		Be::Time mBudgetLeft;
-		Be::Time mPerFrameTimeBudget;
-
-		bool mNeedsPostFrameTick;
-	};
-
-	// We use an array here, because the order of registered tickers matters!
-	// no vector, since vector iterators may invalidate when vector grows
-	// during recursion.
-	typedef TrackableStdList<CatchupTicker *> CatchupTickerList;
-	typedef TrackableStdVector<CatchupTicker *> CatchupTickerVector;
-
-	struct CatchUpTickerComparator{
-			bool operator()(const CatchupTicker *s1, const CatchupTicker *s2)
-			{
-				if (s1->mNextTickTime == s2->mNextTickTime)
-				{
-					return strcmp(s1->mCookie, s2->mCookie) < 0;
-				}
-				
-				return (s1->mNextTickTime > s2->mNextTickTime);
-			}
-	};
-
-	CatchupTickerVector mCatchUpTickerHeap;
-
 	// framerate bookkeeping
 	Be::Time mTimeStamps[nTimeStamps];  //for the running fps average
 	int mTimeStampIdx;
@@ -181,7 +141,7 @@ public:
 	// class registration stuff
 private:
 
-	Be::Time m_startupTime;
+	uint64_t m_startupTime;
 	
 	IBlueCallbackManPtr m_callbackManager;
 
@@ -267,7 +227,6 @@ public:
 
 	PyObject* PyGetTimeParts( PyObject* args );
 	PyObject* PyGetTimeFromParts( PyObject* args );
-	PyObject* PyTimeDiffAsParts( PyObject* args );
 
 	PyObject* PyGetCpuTime( PyObject* args );
 
@@ -275,13 +234,7 @@ public:
 	PyObject* PyRegisterClientIDForSimTimeUpdates( PyObject* args );
 	PyObject* PyUnregisterClientIDForSimTimeUpdates( PyObject* args );
 
-	PyObject* PyHeapCompact( PyObject* args );
-	PyObject* PyGlobalMemoryStatus( PyObject* args );
-
 	PyObject* PySetAppTitle( PyObject* args );
-	PyObject* PyGetAppTitle( PyObject* args );
-
-	PyObject* PyApplyPatch( PyObject* args );
 	
 	PyObject* PyShellExecute( PyObject* args );
 
@@ -298,11 +251,11 @@ public:
 	bool Startup(
 		int pyOptimizeVersion,
 		ManifestVerification manifestVerification
-		);
+		) override;
 
-	bool RunStackless();
+	bool RunStackless() override;
 
-	void Terminate( int retCode );
+	void Terminate( int retCode ) override;
 	
 	bool ShouldVerifyManifest() const override;
 
@@ -310,28 +263,16 @@ public:
 	void RegisterForTicks(
 		IBlueEvents *cb,
 		void* cookie
-		);
+		) override;
 
 	void UnregisterForTicks(
 		IBlueEvents *cb,
 		void* cookie
-		);
+		) override;
 
-	void RegisterForCatchupTicks(
-		ICatchupTicks *cb,
-		void* cookie,
-		Be::Time tickMS,
-		Be::Time perFrameBudget
-		);
+	void RegisterForSimTimeRebase( ISimTimeRebaseNotify* cb ) override;
 
-	void UnregisterForCatchupTicks(
-		ICatchupTicks *cb,
-		void* cookie
-		);
-
-	void RegisterForSimTimeRebase( ISimTimeRebaseNotify* cb );
-
-	void UnregisterForSimTimeRebase( ISimTimeRebaseNotify* cb );
+	void UnregisterForSimTimeRebase( ISimTimeRebaseNotify* cb ) override;
 
 
 	// Error reporting facility
@@ -340,52 +281,48 @@ public:
 		const Be::Clsid* reporter,	// optional class id
 		const char* format,
 		...
-		);
+		) override;
 
 	const Error* GetError(
 		long index
-		);
+		) override;
 
 	void FormatError(
 		char** errorstring
-		);
+		) override;
 
-	const wchar_t* GetLanguageId();
+	const wchar_t* GetLanguageId() override;
 
 	// put here temporarily
 	void PumpOS(
-		);
+		) override;
 
 	BeInfo* GetInfo(
-		);
+		) override;
 	
 	// Used by ExeFile to pass along the startup arguments. ExeFile may expand
 	// arguments from a file so we can't rely on GetCommandLineW to get the
 	// arguments.
-	virtual void SetStartupArgs( const std::vector<std::wstring>& args );
+	void SetStartupArgs( const std::vector<std::wstring>& args ) override;
 
 	// Get the list of arguments passed on the command line, after any
 	// expansion of arguments coming from a file with the @ convention.
-	virtual const std::vector<std::wstring>& GetStartupArgs() const;
+	const std::vector<std::wstring>& GetStartupArgs() const override;
 
 	// Returns true if <arg> is in the list of command line arguments.
-	virtual bool HasStartupArg( const std::wstring& arg ) const;
+	bool HasStartupArg( const std::wstring& arg ) const override;
 
 	// Returns the value associated with the command line argument.
 	// If /arg=value is on the command line, this method returns value.
-	virtual std::wstring GetStartupArgValue( const std::wstring& arg ) const;
-
-	virtual bool IsUsingTheSimpleCatchupLoop()
-	{
-		return mUseSimpleCatchupLoop;
-	}
+	std::wstring GetStartupArgValue( const std::wstring& arg ) const override;
     
     void ShowErrorMessageBox( const wchar_t* title, const wchar_t* message );
 
 private:
+    void PumpOSInternal();
+    
 	void DoSleep();
 	void TickTickers();
-	void RunCatchUpTicks( float deltaT_sec );
 	void CaptureLogCountsToStats();
 
 };

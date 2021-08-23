@@ -2,10 +2,8 @@
 
 #if BLUE_WITH_PYTHON
 
-#include "logger/Logger.h"
-#if _WIN32
-#include "logger/LogServer.h"
-#endif
+#include "Logger/Logger.h"
+
 
 //A few thunker objects
 template <class C, PyObject *(C::*pFunc)() >
@@ -152,25 +150,6 @@ struct LogChannel :
 		int flags = -1;
 		if (!PyArg_ParseTuple(args, "|i", &flags))
 			return NULL;
-
-#if _WIN32
-		if (flags != -1 && channel)
-		{
-			extern TLOGBUFFHEADER	*theSharedMemory;
-			if( theSharedMemory )
-			{
-				TLOGCHANNELINFO *ch = theSharedMemory->logchannels.channels + channel-1;
-				if( ch )
-				{
-					if( ch->flagsuppress & TLOGFLAG(flags) )
-					{
-						return PyInt_FromLong(0);
-					}
-				}
-			}
-		}
-#endif
-
 		return PyInt_FromLong(CCP::IsLogging( TLOGFLAGToLogType( TLOGFLAG(flags) ) ) && oktocall);
 	}
 

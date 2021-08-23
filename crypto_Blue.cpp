@@ -153,7 +153,7 @@ PyMethodDef CryptoMethods[] =
 		METH_NOARGS,
 		"Gets a shared asymmetric cipher which should be initialized with the manifest key.\n"
 	},
-	{0}
+	{nullptr}
 };
 
 bool InitCryptoModule()

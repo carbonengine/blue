@@ -93,6 +93,8 @@ void BlueAsyncRes::LoadAsync()
 		}
 
 		load = DoLoad();
+
+		CloseStream();
 	}
 	bool loadSucceeded = load != LR_FAILED;
 
@@ -147,7 +149,7 @@ void BlueAsyncRes::PrepareAsync()
 
 	REPORT_TIME1( "PREP: %5.5f sec '%S'\n", t, GetPath() );
 
-	CloseStream();
+	CleanupLoadData();
 
 	m_prepareCbId = 0;
 	m_isPrepared = TRUE;
@@ -178,7 +180,7 @@ void BlueAsyncRes::StaticFailedLoadNotify( void* pContext )
 	pThis->m_isPrepared = TRUE;
 	pThis->m_loadSucceeded = FALSE;
 	pThis->m_isLoading = FALSE;
-	pThis->CloseStream();
+	pThis->CleanupLoadData();
 	
 	pThis->NotifyRebuildCachedData();
 }
@@ -198,7 +200,7 @@ void BlueAsyncRes::InitializeImpl( const wchar_t* name, const wchar_t* ext )
 	CW2A asciiName( name );
 	CCP_LOG( "BlueAsyncRes::Initialize: %s", (const char*)asciiName );
 #if CCP_TELEMETRY_ENABLED
-	tmAlloc( TMCM_GENERAL, this, 1111111, "%s", tmDynamicString( TMCM_GENERAL, (char*)asciiName ) );
+	tmAlloc( TMCM_GENERAL, this, 1111111, "%s", tmDynamicString( TMCM_GENERAL, (const char*)asciiName ) );
 #endif
 
 	m_ext = ext;
@@ -248,7 +250,7 @@ void BlueAsyncRes::CancelPendingLoad()
 		m_isLoading = FALSE;
 	}
 
-	CloseStream();
+	CleanupLoadData();
 }
 
 inline size_t GetListCapacity( size_t count )
@@ -398,7 +400,6 @@ void BlueAsyncRes::CloseStream()
 	if( m_dataStream )
 	{
 		m_dataStream.Unlock();
-		OnCloseStream();
 	}
 }
 
@@ -458,10 +459,10 @@ std::wstring BlueAsyncRes::GetQuery() const
 	auto query = m_path.find( L'?' );
 	if( query != std::wstring::npos )
 	{
-		return std::move( m_path.substr( query + 1 ) );
+		return m_path.substr( query + 1 );
 	}
 	else
 	{
-		return std::move( std::wstring() );
+		return std::wstring();
 	}
 }

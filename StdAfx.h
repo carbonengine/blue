@@ -4,7 +4,9 @@
 #ifndef Blue_StdAfx_H
 #define Blue_StdAfx_H
 
+#ifndef BLUEBUILD
 #define BLUEBUILD /* dll linkage of blue functions */
+#endif
 
 #ifdef _WIN32
 #define STRICT
@@ -43,9 +45,11 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#include <Psapi.h>
 #endif
 
 #include "BlueExposure/include/BlueExposure.h"
+#include "include/Blue.h"
 #include "Include/BlueStatistics.h"
 
 #endif

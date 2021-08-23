@@ -15,6 +15,7 @@
 #include "BluePaths.h"
 #include "BlueThreadMonitor.h"
 #include "BlueObjectMetadata.h"
+#include "BlueSysInfo.h"
 
 #include "curl/curl.h"
 
@@ -47,13 +48,10 @@ int GetStartupArgAsInt( const wchar_t* key )
 
 unsigned int GetDefaultThreadCount()
 {
-#ifdef _WIN32
 	// Set up a callback managers with threads for each extra hw thread available to us.
 	// These are used by the resource manager, texture compression and other
 	// background tasks.
-	SYSTEM_INFO systemInfo;
-	GetSystemInfo( &systemInfo );
-	unsigned int threadCount = (systemInfo.dwNumberOfProcessors - 1) * 8;
+	unsigned int threadCount = ( BlueSysInfo::GetSysInfo().GetCpuInfo().m_logicalCpuCount - 1 ) * 8;
 	if( threadCount < 4 )
 	{
 		threadCount = 4;
@@ -63,10 +61,6 @@ unsigned int GetDefaultThreadCount()
 	{
 		threadCount = 24;
 	}
-#else
-	unsigned int threadCount = 8;
-#endif
-
 	return threadCount;
 }
 

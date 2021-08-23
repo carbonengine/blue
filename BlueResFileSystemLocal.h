@@ -21,11 +21,11 @@ public:
 	//////////////////////////////////////////////////////////////////////////
 	// IBlueResFileSystem
 
-	virtual bool FileExists( const std::wstring& filename );
-	virtual bool IsDirectory( const std::wstring& dir );
-	virtual void GetDirectoryContents( const wchar_t* dir, std::set<std::wstring>& results );
-	virtual bool GetStreamFromPathW( const wchar_t* resPath, IBlueStream** stream );
-	virtual bool ResolvePathW( const std::wstring& path, std::wstring& resolvedPath );
+	bool FileExists( const std::wstring& filename ) override;
+	bool IsDirectory( const std::wstring& dir ) override;
+	void GetDirectoryContents( const wchar_t* dir, std::set<std::wstring>& results ) override;
+	bool GetStreamFromPathW( const wchar_t* resPath, IBlueStream** stream ) override;
+	bool ResolvePathW( const std::wstring& path, std::wstring& resolvedPath ) override;
 
 	//////////////////////////////////////////////////////////////////////////
 

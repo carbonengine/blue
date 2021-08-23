@@ -66,30 +66,6 @@ public:
 	PyObject* mPySynchro;
 #endif
 
-#ifdef _WIN32
-	// spying
-	struct SpyEntry
-	{
-		SpyEntry( PyObject* dir, PyObject* notify = 0 ) :
-			mDir( BluePy( dir, true ) ),
-			mNotify( notify, true )
-		{
-		}
-		bool operator==( const SpyEntry& o ) const
-		{
-			return PyObject_Compare( mDir, o.mDir ) == 0;
-		}
-
-		BluePy mDir;
-		BluePy mNotify;
-	};
-	std::vector<SpyEntry> mSpyDirs;
-	std::vector<HANDLE> mSpyHandles;
-
-	// Process info header
-	PyObject* mProcessInfoHeader;
-#endif
-
 #if CCP_STACKLESS
 	// debug
 	struct Thread
@@ -104,7 +80,7 @@ public:
 
 	void ProcessLibDirectives( const directives_t& directives, std::vector<std::wstring>& zips );
 	bool VerifyManifestAndGatherDirectives( directives_t & directives );
-	void ShowMessageBoxForVerificationFailure( int type, const std::wstring& errmsg );
+	void ShowMessageBoxForVerificationFailure( const std::string& errmsg );
 
 	// init funcs and corresponding fini functions
 	bool InitBasicModuleSupport();
@@ -114,7 +90,6 @@ public:
 
 	void BuildConcatenatedPathFromPathlist( const std::vector<std::wstring>& pathlist, std::wstring& path );
 
-	void ProcessSpyHandles();
 	void LogCpuUsageAndOtherStats();
 
 	PyObject* mExceptionHandler;
@@ -194,7 +169,7 @@ private:
 #endif
 
 public:
-	void OnTaskletSwitch( PyObject * from, PyObject * to );
+	void OnTaskletSwitch( PyObject *from, PyObject *to ) override;
 
 	bool RecurseFolder(
 		PyObject * result,
@@ -208,29 +183,25 @@ private:
 public:
 	EXPOSE_TO_BLUE();
 
-	PyObject* PyAddExitProc( PyObject * args );
-	PyObject* PyGetArg( PyObject * args );
-	PyObject* PyGetEnv( PyObject * args );
-	PyObject* PyDumpState( PyObject * args );
-	PyObject* Py_EnableTrace( PyObject * args );
-	PyObject* Py_GetWrapperList( PyObject * args );
-	PyObject* Py_GetObjectState( PyObject * args );
-	PyObject* Pywrite( PyObject * args );
-	PyObject* PyGetThunkers( PyObject * args );
-	PyObject* PyCreateTasklet( PyObject * args );
-	PyObject* PySpyDirectory( PyObject * args );
-	PyObject* PyNextScheduledEvent( PyObject * args );
-	PyObject* PyGetClipboardData( PyObject * args );
-	PyObject* PySetClipboardData( PyObject * args );
-	PyObject* PyGetThreadTimes( PyObject * args );
-	PyObject* PyProbeStuff( PyObject * args );
-	PyObject* PyGetTimeSinceSwitch( PyObject * args );
-	PyObject* PyBeNice( PyObject * args );
-	PyObject* PyXUtil_Index( PyObject * args );
-	PyObject* PyXUtil_Filter( PyObject * args );
-	PyObject* PyGetMaxRunTime( PyObject * args );
-	PyObject* PySetMaxRunTime( PyObject * args );
-
+	PyObject* PyAddExitProc( PyObject* args );
+	PyObject* PyGetArg( PyObject* args );
+	PyObject* PyGetEnv( PyObject* args );
+	PyObject* PyDumpState( PyObject* args );
+	PyObject* Py_EnableTrace( PyObject* args );
+	PyObject* Py_GetWrapperList( PyObject* args );
+	PyObject* Py_GetObjectState( PyObject* args );
+	PyObject* Pywrite( PyObject* args );
+	PyObject* PyGetThunkers( PyObject* args );
+	PyObject* PyCreateTasklet( PyObject* args );
+	PyObject* PyNextScheduledEvent( PyObject* args );
+	PyObject* PySetClipboardData( PyObject* args );
+	PyObject* PyGetTimeSinceSwitch( PyObject* args );
+	PyObject* PyBeNice( PyObject* args );
+	PyObject* PyXUtil_Index( PyObject* args );
+	PyObject* PyXUtil_Filter( PyObject* args );
+	PyObject* PyGetMaxRunTime( PyObject* args );
+	PyObject* PySetMaxRunTime( PyObject* args );
+	
 
 	//--------------------------------------------------------------------
 	// IBluePyOS interface
@@ -240,7 +211,7 @@ public:
 
 	// returns a pyobject representation of 'object'
 	BluePythonObject* WrapBlueObject(
-		IRoot * object );
+		IRoot * object ) override;
 
 	const PyMethodDef* GetGenericThunker(
 		const char* name,
@@ -254,18 +225,18 @@ public:
 	// the startup.
 	// will pump python automatically in the context
 	// of the callers thread
-	bool Startup();
+	bool Startup() override;
 
 	// the shutdown
 	void Shutdown(
-		int level );
+		int level ) override;
 
 	// the pumping
 	int PumpPython(
-		bool quit );
+		bool quit ) override;
 
 	void SetEventHandler(
-		IPythonEvents * handler );
+		IPythonEvents * handler ) override;
 
 
 	//--------------------------------------------------------------------
@@ -273,54 +244,54 @@ public:
 	//--------------------------------------------------------------------
 
 	PyObject* PyError(
-		PyObject* exception = NULL );
+		PyObject* exception = NULL ) override;
 
 	bool PyFlushError(
-		const char* whence );
+		const char* whence ) override;
 
-	PyObject* PyErr_BlueError();
+	PyObject* PyErr_BlueError() override;
 
-	void RebaseSimClock( Be::Time oldTime, Be::Time newTime );
+	void RebaseSimClock( Be::Time oldTime, Be::Time newTime ) override;
 
 	//Turn a python exception into a string
-	void FormatException( char** result );
+	void FormatException( char** result ) override;
 
-	bool IsPackaged()
+	bool IsPackaged() override
 	{
 		return mPackaged;
 	}
-	bool IsInterpreterMode()
+	bool IsInterpreterMode() override
 	{
 		return mInterpreterMode;
 	}
 
-	bool CanYield();
-	bool Yield();
+	bool CanYield() override;
+	bool Yield() override;
 
 	void GetSchedulerStats(
 		int& inQueue1,
 		int& inQueue2,
 		float& lastTime,
-		float& maxTime );
+		float& maxTime ) override;
 
 	void DoStackTrace(
-		PyObject* frame = 0 );
+		PyObject* frame = 0 ) override;
 
 	PyObject* GetStackTrace(
-		PyObject* frame = 0 );
+		PyObject* frame = 0 ) override;
 
-	ITaskletTimer* GetTaskletTimer(); //Get the tasklet timer object
+	ITaskletTimer* GetTaskletTimer() override; //Get the tasklet timer object
 
 	//blocktrapping call methods
-	PyObject* CallMethodWithTrap( PyObject * target, const char* method, const char* ctxt, const char* format, ... );
+	PyObject* CallMethodWithTrap( PyObject * target, const char* method, const char* ctxt, const char* format, ... ) override;
 
-	bool PythonEvent( const char* event, PyObject* arg );
+	bool PythonEvent( const char* event, PyObject* arg ) override;
 
 public:
 	PyObject* CreateTasklet(
 		PyObject * meth,
 		PyObject * args,
-		PyObject * kw );
+		PyObject * kw ) override;
 
 	// --------------------------------------------------------------------
 	// Event dispatching
@@ -340,21 +311,21 @@ public:
 		const char* eventName,
 		PyObject** pRetval = NULL,
 		const char* format = NULL,
-		... );
+		... ) override;
 
 	bool PostEvent(
 		IRoot * caller,
 		const char* context,
 		const char* eventName,
 		const char* format = NULL,
-		... );
+		... ) override;
 
 	//--------------------------------------------------------------------
 	// IPythonEvents interface
 	//--------------------------------------------------------------------
 	void OnWrite(
 		PYPORT port,
-		const char* text );
+		const char* text ) override;
 };
 
 TYPEDEF_BLUECLASS_WR( BluePyOS ); //need weakref support for the singleton factory
@@ -412,6 +383,15 @@ static void PureVirtualCall()
 	PureVirtualCallHelper pureVirtualCallHelper;
 }
 MAP_FUNCTION_AND_WRAP( "PureVirtualCall", PureVirtualCall, "Induces a C++ pure virtual call that is supposed to crash the process." );
+
+
+PyObject* LoadPythonExtension( PyObject*, PyObject* args );
+MAP_FUNCTION(
+	"LoadExtension",
+	LoadPythonExtension,
+	"Loads a CCP python extension with the current Blue build flavor. Throws an ImportError if the extension can't be loaded.\n"
+	":param name: The extension to load\n"
+	":returns: A PyModule object" );
 
 
 // Callbacks for python to call when it starts and stops GC

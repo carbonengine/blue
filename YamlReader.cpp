@@ -8,7 +8,10 @@
 #include "BlueMemStream.h"
 #include "Include/IBluePaths.h"
 #include "Include/IBlueObjectMetadata.h"
-
+#ifndef _WIN32
+#include <locale>
+#include <codecvt>
+#endif
 
 namespace 
 {
@@ -775,13 +778,17 @@ const wchar_t* YamlReader::ReadWString()
 	}
 
 #ifdef _WIN32
-	// TODO: implement for non-win32
 	const char* asString = (const char*)m_event->data.scalar.value;
 	int sizeReq = MultiByteToWideChar( CP_UTF8, 0, asString, -1, NULL, 0 );
 	wchar_t* ret = (wchar_t*)CCP_MALLOC( (const char*)m_event->data.scalar.tag, sizeReq * sizeof( wchar_t ) );
 	MultiByteToWideChar( CP_UTF8, 0, asString, -1, ret, sizeReq );
 #else
-	wchar_t* ret = nullptr;
+    std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
+    auto str = conv.from_bytes( (const char*)m_event->data.scalar.value );
+    
+    wchar_t* ret = (wchar_t*)CCP_MALLOC( (const char*)m_event->data.scalar.tag, ( str.length() + 1 ) * sizeof( wchar_t ) );
+    std::copy( begin( str ), end( str ), ret );
+    ret[str.length()] = 0;
 #endif
 	m_allocatedStrings.push_back( ret );
 
@@ -1699,8 +1706,8 @@ Be::Result<std::string> YamlReader::CreateObjectFromFile( const std::wstring& fi
 	return CreateObjectFromStream( stream, obj );
 }
 
-// TODO: remove ifdef once libyaml on mac is recompiled without alloc functions
-#ifndef __clang__
+// TODO: Remove block once we stop using _yaml.c
+#if !CCP_CMAKE
 
 extern "C"
 {

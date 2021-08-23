@@ -18,6 +18,7 @@ public:
 	uint32_t m_bitCount;
 	std::string m_brand;
 	std::string m_identifier;
+	std::string m_architecture;
 	std::vector<std::string> m_extensions;
 };
 
@@ -28,7 +29,7 @@ BLUE_CLASS( BlueSysInfoTaskTimes ): public IRoot
 {
 public:
     EXPOSE_TO_BLUE();
-    
+
     double m_userTime;
     double m_systemTime;
 };
@@ -55,7 +56,7 @@ public:
 		WORKSTATION,
 		SERVER,
 	};
-    
+
 	Platform m_platform;
 	int32_t m_majorVersion;
 	int32_t m_minorVersion;
@@ -105,25 +106,34 @@ BLUE_CLASS( BlueSysInfo ): public IRoot
 {
 public:
     EXPOSE_TO_BLUE();
-    
+
     std::wstring GetUserDocumentsDirectory() const;
     std::wstring GetSharedApplicationDataDirectory() const;
     std::wstring GetUserApplicationDataDirectory() const;
 	std::wstring GetSharedFontsDirectory() const;
+	std::wstring GetSystemFontsDirectory() const;
     uint32_t GetProcessBitCount() const;
     uint32_t GetSystemBitCount() const;
-    
+
     BlueSysInfoTaskTimesPtr GetProcessTimes() const;
     BlueSysInfoTaskTimesPtr GetThreadTimes() const;
 	BlueSysInfoMemoryPtr GetMemory() const;
     uint64_t GetProcessStartTime() const;
 
+    bool IsRosetta() const;
 	bool IsWine() const;
 	std::wstring GetWineVersion() const;
 	std::wstring GetWineHostOs() const;
 	std::vector<BlueSysInfoNetworkAdapterPtr> GetNetworkAdapters() const;
 
 	std::string GetMachineUuid() const;
+	std::string GetMachineName() const;
+	std::string GetDomainName() const;
+
+	const BlueSysInfoCpu& GetCpuInfo() const;
+	const BlueSysInfoOs& GetOsInfo() const;
+
+	static const BlueSysInfo& GetSysInfo();
 private:
     CBlueSysInfoCpu m_cpu;
 	CBlueSysInfoOs m_os;

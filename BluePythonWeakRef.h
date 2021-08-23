@@ -33,7 +33,7 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////
 	// IWeakRef
-	void WeakRefNotify( IWeakObject* ptr );
+	void WeakRefNotify( IWeakObject* ptr ) override;
 
 private:
 	IWeakObject* m_object;

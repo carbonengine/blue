@@ -17,6 +17,8 @@
 #include "Marshal.h"
 #include "PyRowset.h"
 #include "crypto.h"
+#include "BlueClipboard.h"
+#include "ErrorMessage.h"
 
 #if _WIN32
 #include "win32.h"
@@ -29,18 +31,12 @@
 #include "Synchro.h"
 #endif
 
-#ifdef _WIN32
-#include <Psapi.h>
-#include <shellapi.h>
-#endif
-
-#include "resource.h"
-
 #if CCP_STACKLESS
-#if !PORTING_TO_LINUX
 #include "Include/BlueNet.h"
+#include "stacklessio_api.h"
+#ifndef NO_CARBONIO
+#include "CarbonIO/CarbonIO.h"
 #endif
-#include <stacklessio_api.h>
 #endif
 
 #include "Include/ScopedBlockTrap.h"
@@ -64,12 +60,6 @@ static const char* PORTNAMES[] =
 	"logerr",
 	"logfatal"
 };
-
-#ifdef _WIN32
-extern "C" HANDLE _crtheap;
-#define CHECKHEAP() \
-	HeapValidate(_crtheap, 0, NULL);
-#endif
 
 
 struct TimerString
@@ -153,9 +143,6 @@ BluePyOS::BluePyOS(IRoot*) :
 	mThreads( "BluePyOS/mThreads" ),
 	mScheduler(0.25), //initialize to min 4 fps
 #endif
-#ifdef _WIN32
-	mProcessInfoHeader( nullptr ),
-#endif
 	mMarkupZonesInPython(false),
 	mExceptionHandler( nullptr ),
 	mCpuUsage( nullptr ),
@@ -167,7 +154,7 @@ BluePyOS::BluePyOS(IRoot*) :
 	mExitProcs = 0;
 
 	mContextHooks = 0;
-	
+
 	mInit = 0;
 	mSoftspace = 0;
 	mPackaged = false;
@@ -193,7 +180,7 @@ bool BluePyOS::InitBasicModuleSupport()
 	mBlueModule = Py_InitModule( "blue", 0);
 	PyObject* dict = PyModule_GetDict(mBlueModule); //borrowed ref
 
-	BlueRegisterToModule( mBlueModule, BlueRegistration::GetClassRegs(), 
+	BlueRegisterToModule( mBlueModule, BlueRegistration::GetClassRegs(),
 									   BlueRegistration::GetFuncRegs(),
 									   BlueRegistration::GetEnumRegs(),
 									   BlueRegistration::GetTestRegs(),
@@ -202,7 +189,7 @@ bool BluePyOS::InitBasicModuleSupport()
 
 	BlueRegisterObjectsToModule( mBlueModule, BlueRegistration::GetObjectRegs() );
 	BlueRegisterExceptionsToModule( mBlueModule, BlueRegistration::GetExceptionRegs() );
-	
+
 		// Initialize error exception
     PyDict_SetItemString(dict, "error", PyExc_BlueError);
 
@@ -221,11 +208,11 @@ bool BluePyOS::InitBasicModuleSupport()
 		return false;
 
 	InitHeapq();
-	 
+
     // Add the DBRowsetStuff
     if( !DBRowsetInit( mBlueModule ) )
         return false;
-    
+
 #if _WIN32
 	//init the submodules blue.win32 and blue.heapq.  The latter is required for the Marshal::New()
 	initwin32();
@@ -247,10 +234,15 @@ bool BluePyOS::InitBasicModuleSupport()
 
 
 #if CCP_STACKLESS
-#if _WIN32
-	BeNet->Init(); // c-routing support
+#ifndef NO_CARBONIO
+	initcarbonio();
 #endif
-    
+	initstacklessio();
+	init_slsocket();
+	initslselect();
+
+	BeNet->Init(); // c-routing support
+
 	// Insert synchro
 	mSynchro = CCP_NEW( "BluePyOS/mSyncro" ) Synchro;
 	mPySynchro = mSynchro;
@@ -284,19 +276,19 @@ bool BluePyOS::InitBasicModuleSupport()
     PyObject *m = PyImport_ImportModule("blue.heapq");
     if (m)
         PyModule_AddObject(mBlueModule, "heapq", m);
-#if !PORTING_TO_LINUX
+#if _WIN32
 	//init the submodules into the blue module
 	m = PyImport_ImportModule("blue.win32");
 	if (m)
 		PyModule_AddObject(mBlueModule, "win32", m);
+#endif
 	m = PyImport_ImportModule("blue.crypto");
 	if (m)
 		PyModule_AddObject(mBlueModule, "crypto", m);
-	#if CCP_STACKLESS
-		m = PyImport_ImportModule("blue.net");
-		if (m)
-			PyModule_AddObject(mBlueModule, "net", m);
-	#endif
+#if CCP_STACKLESS
+    m = PyImport_ImportModule("blue.net");
+    if (m)
+        PyModule_AddObject(mBlueModule, "net", m);
 #endif
 
 	return true;
@@ -319,9 +311,9 @@ bool BluePyOS::FiniBasicModuleSupport()
 	PySys_SetObject("stdout", PySys_GetObject("__stdout__"));
 	PySys_SetObject("stderr", PySys_GetObject("__stderr__"));
 #endif
-	
+
 #if CCP_STACKLESS
-	
+
 	//synchro and pysynchro share a reference
 	//Todo, this should go somewhere else
 	mPySynchro = 0;
@@ -338,7 +330,7 @@ bool BluePyOS::FiniBasicModuleSupport()
 
 	// clear the module dict
 	PyDict_Clear(dict);
-	
+
 	Py_DECREF(PyExc_BlueError);
 	PyExc_BlueError = 0;
 
@@ -346,7 +338,7 @@ bool BluePyOS::FiniBasicModuleSupport()
 	dict = PyModule_GetDict(sysmodule);
 	PyObject *modules = PyDict_GetItemString(dict, "modules");
 	Py_DECREF(sysmodule);
-	
+
 	//and delete the "blue" module (by replacing it with None)
 	PyDict_SetItemString(modules, "blue", Py_None);
 
@@ -472,13 +464,14 @@ static PyMethodDef clockthis[] = {
 	{0}
 };
 
-#ifdef _WIN32
 //
 // Block allocator
 //
 static size_t s_pythonBlockSize = 0;
 static int s_pythonBlockCount = 0;
 CCP_STATS_DECLARE( pythonBlockAlloc, "Blue/Memory/PythonBlockAlloc", false, CST_MEMORY, "Amount of memory allocated by Python block allocator" );
+
+#ifdef _WIN32
 
 void* PyCCP_BlockMalloc( size_t size, void *arg, const char *file, int line, const char *msg )
 {
@@ -527,9 +520,6 @@ bool BluePyOS::Startup()
 
 	mSliceWarning = 200;
 	mBeNiceSlice = 15;
-#ifdef _WIN32
-	mProcessInfoHeader = NULL;
-#endif
     mPerformanceUpdateFrequency = 100000000;
 
 	mLastThreadCpuUsage = mLastProcessCpuUsage = 0;
@@ -541,7 +531,7 @@ bool BluePyOS::Startup()
 	mInterpreterMode = BeOS->HasStartupArg( L"py" );
 
 	mExceptionHandler = NULL;
-	
+
 	sPyEventHandler = static_cast<IPythonEvents*>( this );  //We are the event handler initially.
 
 #if CCP_STACKLESS
@@ -550,8 +540,15 @@ bool BluePyOS::Startup()
 		mMarkupZonesInPython = true;
 	}
 
+	// We always disable the user site directory - even in interpreter mode.
+	// The reason for this is that any C extension in the user's site directory
+	// won't be compatible with us in any case. Additionally, we seem to have an
+	// issue treating the corresponding configuration flag correctly, so we cannot
+	// just add `-s` or set `PYTHONNOUSERSITE=1` in the pythonInterpreter scipts.
+	Py_NoUserSiteDirectory++;
+
 	if ( !mInterpreterMode ) {
-		// initialize python engine	
+		// initialize python engine
 		Py_DebugFlag = 0; //debugs python , outputs heaps of gunk
 		Py_VerboseFlag = 0; //verbosity about module loading
 
@@ -566,7 +563,7 @@ bool BluePyOS::Startup()
 		Py_IgnoreEnvironmentFlag++; //ignore PYTHONPATH and like
 		Py_DontWriteBytecodeFlag++; // Do not read or write .pyc ro .pyo files
 	}
-	
+
 	PySys_AddWarnOption( const_cast<char*>( "d" ) ); //default warning level
 
 	static std::wstring path;
@@ -577,7 +574,7 @@ bool BluePyOS::Startup()
 #ifdef _WIN32
 	//Initialize, using the path we computed
 	Py_GetPathWData = (wchar_t *)path.c_str();
-	
+
 	// Set block allocator to use for Python. Regular allocator is set with
 	// a static initializer in PyMemory.cpp
 	if( BeOS->HasStartupArg( L"pythonUseVirtualAlloc" ) )
@@ -602,7 +599,7 @@ bool BluePyOS::Startup()
 	//Python turns off assertions for the C runtime!  Undo that
 	_CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_WNDW);
 #endif
-	
+
 	// Need to set sys.argv
 	char *dummy = 0;
 	PySys_SetArgvEx(0, &dummy, 0);
@@ -611,7 +608,7 @@ bool BluePyOS::Startup()
 	for (unsigned int i = 0; i < sizeof TIMERS / sizeof *TIMERS; i++)
 		TIMERS[i].mContext = PyString_InternFromString(TIMERS[i].mName);
 
-	
+
 	// insert clockthis utility functions
 	for (PyMethodDef* md = clockthis; md->ml_meth != NULL; md++)
 	{
@@ -620,7 +617,7 @@ bool BluePyOS::Startup()
 		Py_DECREF(fn);
 	}
 #endif
-	
+
 	mCpuUsage = PyList_New(0);
 	mLastCpuUpdate = 0;
 
@@ -640,7 +637,7 @@ bool BluePyOS::Startup()
 	mrunTime_str = BluePy(PyString_FromString("runTime"));
 	PyString_InternInPlace(&mrunTime_str.o);
 #endif
-	
+
 
 	if (!InitBasicModuleSupport())
 	{
@@ -655,8 +652,8 @@ bool BluePyOS::Startup()
 	mTTimer.Reset();
 	PyStackless_SetScheduleFastcallback(::OnTaskletSwitch);
 #endif
-	
-	mInit = true;	
+
+	mInit = true;
 	return true;
 }
 
@@ -683,7 +680,7 @@ void BluePyOS::Shutdown(int level)
 		if (bluepy) {
 			CCP_LOG_CH( s_chPy, "Running bluepy.Shutdown");
 			BluePy res(BluePy(PyObject_CallMethod(bluepy, const_cast<char*>( "Shutdown" ), const_cast<char*>( "O" ), mExitProcs?mExitProcs:Py_None)));
-			Py_CLEAR(mExitProcs);				
+			Py_CLEAR(mExitProcs);
 			if (!res)
 				HandleException("BluePyOS::Shutdown::bluepy.Shutdown");
 			CCP_LOG_CH( s_chPy, "Finished running bluepy.Shutdown");
@@ -699,21 +696,9 @@ void BluePyOS::Shutdown(int level)
 	// Detach app exception handler
 	Py_XDECREF(mExceptionHandler);
 	mExceptionHandler = NULL;
-	
-#ifdef _WIN32
-	// Release spying handlers
-	for(std::vector<HANDLE>::iterator it = mSpyHandles.begin(); it!=mSpyHandles.end(); ++it)
-		FindCloseChangeNotification(*it);
-	mSpyHandles.clear();
-	mSpyDirs.clear();
-	
+
 	//We are the event handler during shutdown
 	sPyEventHandler = static_cast<IPythonEvents*>( this );
-	
-	// Release processinfo header
-	Py_XDECREF(mProcessInfoHeader);
-	mProcessInfoHeader = NULL;
-#endif
 
 	// Finish basic module support
 	FiniBasicModuleSupport();
@@ -724,7 +709,7 @@ void BluePyOS::Shutdown(int level)
 	Py_XDECREF(mContextHooks);
 	mrunTime_str.Release();
 	mstoredContext_str.Release();
-	
+
 	ssize_t i;
 
 	for (i = 0; i < sizeof TASKLETS / sizeof TASKLETS[0]; i++) {
@@ -744,15 +729,15 @@ void BluePyOS::Shutdown(int level)
 		Py_DECREF(TIMERS[i].mContext);
 		TIMERS[i].mContext = 0;
 	}
-		
+
 #endif
 
 	// Shut down python now!
 	Py_Finalize();
-	
+
 	// Now, all python references to the blue wrappers should be gone.
 	// todo: BlueWrapper::Shutdown();
-	
+
 	// python has stopped running.  Release stuff with no python consequences.
 	//This is currently set to us, a static object. unlocking just sets to 0.
 	sPyEventHandler.Unlock();
@@ -802,13 +787,13 @@ void BluePyOS::OnTaskletSwitch(PyObject* _from, PyObject* _to)
 
 	//time for simple tasklet timing;
 	double elapsed = GetTimeSinceSwitch(true);
-	
+
 	//We need to preserve any error state:
 	PyObject *etype, *evalue, *etraceback;
 	PyErr_Fetch(&etype, &evalue, &etraceback);
-	
+
 	PyObject *prev = mTTimer.SwitchStack((intptr_t)to);
-	
+
 	//Store the context we came from in our tasklet extension object.
 	bool fromNotMain = from && !PyTasklet_IsMain(from);
 	if (fromNotMain && PyObject_SetAttr((PyObject*)from, mstoredContext_str, prev) < 0)
@@ -820,7 +805,7 @@ void BluePyOS::OnTaskletSwitch(PyObject* _from, PyObject* _to)
 		if (!UpdateTaskletRunTime((PyObject*)from, elapsed))
 			PyErr_Clear();
 	}
-	
+
 	//Call the other context hooks
 	if (!from)
 		from = (PyTaskletObject*)Py_None;
@@ -912,8 +897,6 @@ int BluePyOS::	PumpPython(bool quit)
 
 		CCP_STATS_SET( runnablesLeftOver, PyStackless_GetRunCount() - 1 );
 	}
-	
-	ProcessSpyHandles();
 
 	LogCpuUsageAndOtherStats();
 
@@ -1011,7 +994,7 @@ void BluePyOS::FormatException(char **result)
 		PyErr_Restore(type, val, tb);
 		return;
 	}
-ERR: 
+ERR:
 	// Silly failure.  Can happen if we have not initialized traceback module yet.
 	PyErr_Clear();
 	*result = CCP_STRDUP( "FormatException", FormatExceptionFallback(type, val, tb).c_str() );
@@ -1020,7 +1003,7 @@ ERR:
 	PyErr_Print();
 	PyErr_Clear();
 }
-	
+
 
 //--------------------------------------------------------------------
 // BluePyOS::PyError.  This is used to turn python exceptions into blue errors
@@ -1033,7 +1016,7 @@ PyObject* BluePyOS::PyError(
 		return exception;  //this is not an exception!
 
 	SafeAutoTasklet _at(GetTaskletTimer(), TIMERS[TIMER_PYERROR].mContext);
-	if (!PyErr_Occurred()) {		
+	if (!PyErr_Occurred()) {
 		BeOS->SetError(BEDEF, Clsid(), "Trying to report a python exception with none pending.");
 		return 0;
 	}
@@ -1044,7 +1027,7 @@ PyObject* BluePyOS::PyError(
 
 //--------------------------------------------------------------------
 // BluePyOS::PyFlushError.  This is used to turn python exceptions into blue errors
-// Similar to PyError, but accepts a "whence" message, and is okay for there to 
+// Similar to PyError, but accepts a "whence" message, and is okay for there to
 // be no error.  Use this to periodically check for leaking errors, or to report
 // known errors with a proper "whence" message.  Returns true if an error was found
 //--------------------------------------------------------------------
@@ -1071,7 +1054,7 @@ void BluePyOS::HandleException(const char *message)
 
 	if (!message)
 		message = "";
-	
+
 	bool handled = false;
 	bool failed = false;
 	if (mExceptionHandler) {
@@ -1110,7 +1093,7 @@ void BluePyOS::HandleException(const char *message)
 		Py_XDECREF(traceback);
 		CCP_LOG_CH(s_chPy, "Python handled exception: %s", message);
 	}
-	
+
 	PyErr_Clear();
 }
 
@@ -1259,7 +1242,7 @@ PyObject* BluePyOS::CreateTasklet(
 
 	PyObject* ret = CreateTaskletImpl(meth, args, kw, ctx);
 	Py_DECREF(ctx);
-	
+
 	return ret;
 }
 
@@ -1306,7 +1289,7 @@ PyObject* BluePyOS::CreateTaskletImpl(
 	return result.Detach();
 
 #else
-	
+
 	return nullptr;
 
 #endif
@@ -1334,7 +1317,7 @@ PyObject *BluePyOS::CallPyObjectWithTrap(
 		ret = BluePy(PyObject_CallObject(callable, args));
 	} else
 		ret = BluePy(PyObject_CallObject(callable, args));
-	
+
 	//restore block trap
 	if (current)
 		PyTasklet_SetBlockTrap((PyTaskletObject*)(PyObject*)current, oldTrap);
@@ -1362,6 +1345,9 @@ bool BluePyOS::DispatchEvent(
 	bool post
 	)
 {
+	auto gil = PyGILState_Ensure();
+	ON_BLOCK_EXIT( [&gil] { PyGILState_Release( gil ); } );
+
 	// Check naming convention, must be "DoXXX" or "OnXXX"
 	if (
 		(!post && eventName[0] != 'D' && eventName[1] != 'o') ||
@@ -1397,7 +1383,7 @@ bool BluePyOS::DispatchEvent(
 	BluePy bound(ld->mPythonKlass->GetAttr(eventName, &handled, targetSelf));
 	if (!handled)
 		return true;
-	
+
 	// Cook up arguments
 	BluePy args;
 	if (format != NULL)
@@ -1558,7 +1544,7 @@ void BluePyOS::DoStackTrace(
 	)
 {
 	CCP_LOGWARN_CH( s_chPy, "BluePyOS::DoStackTrace <begin>");
-	BluePyStr str = BluePy(GetStackTrace(fo)); 
+	BluePyStr str = BluePy(GetStackTrace(fo));
 	if (str) {
 		const char *data = str.Str();
 		while (data && *data) {
@@ -1576,7 +1562,7 @@ void BluePyOS::DoStackTrace(
 	}
 	CCP_LOGWARN_CH( s_chPy, "BluePyOS::DoStackTrace <end>");
 }
-    		
+
 
 //--------------------------------------------------------------------
 // IPythonEvents::OnWrite
@@ -1652,7 +1638,7 @@ PyObject* BluePyOS::PyGetArg(PyObject* args)
 		const wchar_t *arg = argv[i].c_str();
 		PyList_SET_ITEM(list, i, PyUnicode_FromWideChar(arg, argv[i].size()));
 	}
-	
+
 	return list;
 }
 
@@ -1662,7 +1648,14 @@ PyObject* BluePyOS::PyGetArg(PyObject* args)
 //--------------------------------------------------------------------
 PyObject* BluePyOS::PyGetEnv(PyObject* args)
 {
-#ifdef _WIN32
+#if PY_MAJOR_VERSION > 2
+    // Python 3 supports unicode for os.environ, so let's deprecate this
+    if (PyErr_WarnEx(PyExc_DeprecationWarning, "blue.pyos.GetEnv is deprecated, please use os.environ instead!", 2) == -1) {
+        return nullptr;
+    }
+#endif
+
+#if _WIN32
 	PyObject *key = 0;
 	if (!PyArg_ParseTuple(args, "|O!:GetEnv", PyBaseString_Type, &key))
 		return NULL;
@@ -1745,8 +1738,15 @@ PyObject* BluePyOS::PyGetEnv(PyObject* args)
 	}
 
 	return dict;
-#else
+#elif __APPLE__ || __linux__
+    PyObject* osModule = PyImport_ImportModule("os");
+    if (!osModule) {
         return nullptr;
+    }
+
+    return PyObject_GetAttrString(osModule, (char*)"environ");
+#else
+#error Unsupported platform!
 #endif
 }
 
@@ -1835,62 +1835,6 @@ PyObject* BluePyOS::PyCreateTasklet(PyObject* _args)
 	return CreateTasklet(meth, args, kw);
 }
 
-#ifdef _WIN32
-//--------------------------------------------------------------------
-// SpyDirectory
-//--------------------------------------------------------------------
-PyObject* BluePyOS::PySpyDirectory(PyObject* args)
-{
-	PyObject* directory = NULL;
-	PyObject* notify = NULL;
-
-	if (!PyArg_ParseTuple(args, "|O!O:SpyDirectory", &PyBaseString_Type, &directory, &notify))
-		return NULL;
-	
-	if (!directory) {
-		//Clear all spies
-		for(std::vector<HANDLE>::iterator i = mSpyHandles.begin(); i!= mSpyHandles.end(); ++i)
-			FindCloseChangeNotification(*i);
-		mSpyHandles.clear();
-		mSpyDirs.clear();
-	} else {
-		PyObject *udirectory = PyUnicode_FromObject(directory);
-		if (!udirectory)
-			return NULL;
-
-		SpyEntry spy(directory, notify);
-		std::vector<SpyEntry>::iterator i = std::find(mSpyDirs.begin(), mSpyDirs.end(), spy);
-		if (i != mSpyDirs.end()) {
-			// found it.
-			if (notify) {
-				*i = spy; //change the notification
-			} else {
-				// remove notification.
-				int n = (int)(i - mSpyDirs.begin());
-				FindCloseChangeNotification(mSpyHandles[n]);
-				mSpyHandles.erase(mSpyHandles.begin()+n);
-				mSpyDirs.erase(i);
-			}
-		} else {
-			// Aha, a new watch!
-			std::wstring realdir = BePaths->ResolvePathW(PyUnicode_AsUnicode(udirectory));
-
-			HANDLE h = FindFirstChangeNotificationW( realdir.c_str(), TRUE, FILE_NOTIFY_CHANGE_LAST_WRITE);
-			if (h == INVALID_HANDLE_VALUE) {
-				Py_DECREF(udirectory);
-				return PyErr_SetFromWindowsErr(0);
-			}				
-			mSpyHandles.push_back(h);
-			mSpyDirs.push_back(spy);
-		}
-		Py_DECREF(udirectory);
-	}
-	
-	Py_INCREF(Py_None);
-	return Py_None;
-}
-#endif
-
 //--------------------------------------------------------------------
 // NextScheduledEvent
 //--------------------------------------------------------------------
@@ -1907,115 +1851,17 @@ PyObject* BluePyOS::PyNextScheduledEvent(PyObject* args)
 }
 
 
-#ifdef _WIN32
 //--------------------------------------------------------------------
-// GetClipboardData.  Thunks to the win32 module
-//--------------------------------------------------------------------
-PyObject* BluePyOS::PyGetClipboardData(PyObject* args)
-{
-	PyObject *m = PyImport_ImportModule("blue.win32");
-	if (m) {
-		PyObject *r = PyObject_CallMethod(m, (char*)"GetClipboardData", (char*)"O", args);
-		Py_DECREF(m);
-		m = r;
-	}
-	return m;
-}
-		
-
-//--------------------------------------------------------------------
-// SetClipboardData.  Thunks to the win32 module
+// SetClipboardData.  Thunks to the BlueClipboard
 //--------------------------------------------------------------------
 PyObject* BluePyOS::PySetClipboardData(PyObject* args)
 {
-	PyObject *m = PyImport_ImportModule("blue.win32");
-	if (m) {
-		PyObject *r = PyObject_CallMethod(m, (char*)"SetClipboardData", (char*)"O", args);
-		Py_DECREF(m);
-		m = r;
-	}
-	return m;
-}
-
-
-//--------------------------------------------------------------------
-// _Bug_SetRecursionDepth
-//--------------------------------------------------------------------
-PyObject* BluePyOS::PyProbeStuff(PyObject* args)
-{
-	if (!PyArg_ParseTuple(args, ""))
-		return NULL;
-
-	PROCESS_MEMORY_COUNTERS mc;
-	if (!GetProcessMemoryInfo(GetCurrentProcess(), &mc, sizeof (mc)))
+	PyObject* data;
+	if( !PyArg_ParseTuple( args, "O", &data ) )
 	{
-		BeOS->SetError(BE32, Clsid(), "GetProcessMemoryInfo() failed");
 		return nullptr;
 	}
-
-	if (mProcessInfoHeader == NULL)
-	{
-		int i = 0;
-		mProcessInfoHeader = PyTuple_New(9);
-		PyTuple_SET_ITEM(mProcessInfoHeader, i++, PyString_FromString("pageFaultCount"));
-		PyTuple_SET_ITEM(mProcessInfoHeader, i++, PyString_FromString("peakWorkingSetSize"));
-		PyTuple_SET_ITEM(mProcessInfoHeader, i++, PyString_FromString("workingSetSize"));
-		PyTuple_SET_ITEM(mProcessInfoHeader, i++, PyString_FromString("quotaPeakPagedPoolUsage"));
-		PyTuple_SET_ITEM(mProcessInfoHeader, i++, PyString_FromString("quotaPagedPoolUsage"));
-		PyTuple_SET_ITEM(mProcessInfoHeader, i++, PyString_FromString("quotaPeakNonPagedPoolUsage"));
-		PyTuple_SET_ITEM(mProcessInfoHeader, i++, PyString_FromString("quotaNonPagedPoolUsage"));
-		PyTuple_SET_ITEM(mProcessInfoHeader, i++, PyString_FromString("pagefileUsage"));
-		PyTuple_SET_ITEM(mProcessInfoHeader, i++, PyString_FromString("peakPagefileUsage"));
-	}
-
-	PyObject* li = PyList_New(9);
-	int i = 0;
-	PyList_SET_ITEM(li, i++, PyInt_FromLong(mc.PageFaultCount));
-	PyList_SET_ITEM(li, i++, PyLong_FromLongLong(mc.PeakWorkingSetSize));
-	PyList_SET_ITEM(li, i++, PyLong_FromLongLong(mc.WorkingSetSize));
-	PyList_SET_ITEM(li, i++, PyLong_FromLongLong(mc.QuotaPeakPagedPoolUsage));
-	PyList_SET_ITEM(li, i++, PyLong_FromLongLong(mc.QuotaPagedPoolUsage));
-	PyList_SET_ITEM(li, i++, PyLong_FromLongLong(mc.QuotaPeakNonPagedPoolUsage));
-	PyList_SET_ITEM(li, i++, PyLong_FromLongLong(mc.QuotaNonPagedPoolUsage));
-	PyList_SET_ITEM(li, i++, PyLong_FromLongLong(mc.PagefileUsage));
-	PyList_SET_ITEM(li, i++, PyLong_FromLongLong(mc.PeakPagefileUsage));
-
-	PyObject* ret = Py_BuildValue("OO", mProcessInfoHeader, li);
-	Py_DECREF(li);
-	return ret;
-}
-
-
-//--------------------------------------------------------------------
-PyObject* BluePyOS::PyGetThreadTimes(PyObject* args)
-{
-	if (!PyArg_ParseTuple(args, ""))
-		return NULL;
-
-	__int64 created, _dummy, kernel, user;
-
-	GetThreadTimes(
-		GetCurrentThread(),
-		(FILETIME*)&created, (FILETIME*)&_dummy, (FILETIME*)&kernel, (FILETIME*)&user
-		);
-
-	PyObject* ti = PyList_New(7);
-	PyList_SET_ITEM(ti, 0, PyLong_FromLongLong(created));
-	PyList_SET_ITEM(ti, 1, PyLong_FromLongLong(kernel));
-	PyList_SET_ITEM(ti, 2, PyLong_FromLongLong(user));
-	PyList_SET_ITEM(ti, 3, PyLong_FromLongLong(0));
-	PyList_SET_ITEM(ti, 4, PyLong_FromLongLong(0));
-	PyList_SET_ITEM(ti, 5, PyLong_FromLongLong(0));
-	PyList_SET_ITEM(ti, 6, PyLong_FromLongLong(BeTimer::GetFreq()));
-
-	PyObject* ret = Py_BuildValue(
-		"[sssssss]O",
-		"created", "kernel", "user", "lastTime", "lastKernel", "lastUser", "cpuFreq",
-		ti
-		);
-
-	Py_DECREF(ti);
-	return ret;
+	return BlueClipboard::GetInstance().PySetData( data );
 }
 
 
@@ -2026,8 +1872,6 @@ PyObject* BluePyOS::PyGetTimeSinceSwitch(PyObject *args)
 {
 	return PyFloat_FromDouble(GetTimeSinceSwitch(false));
 }
-#endif
-
 #endif
 
 
@@ -2095,7 +1939,7 @@ PyObject * BluePyOS::PySetMaxRunTime(PyObject *args)
 	Py_RETURN_NONE;
 }
 
-	
+
 PyObject * BluePyOS::CallMethodWithTrap(PyObject *target, const char *method, const char *ctxt, const char *format, ...)
 {
 #if CCP_STACKLESS
@@ -2129,7 +1973,7 @@ PyObject * BluePyOS::CallMethodWithTrap(PyObject *target, const char *method, co
 		else
 			ret = BluePy(PyObject_CallObject(target, args));
 	}
-		
+
 	//restore block trap
 	if (current)
 		PyTasklet_SetBlockTrap((PyTaskletObject*)(PyObject*)current, oldTrap);
@@ -2188,41 +2032,32 @@ bool BluePyOS::PythonEvent(const char *event, PyObject * arg)
 
 void BluePyOS::LogCpuUsageAndOtherStats()
 {
-#if CCP_STACKLESS && !PORTING_TO_LINUX
-	//Log cpu usage and other stats.
-	__int64 now;
-	GetSystemTimeAsFileTime((FILETIME*)&now);
-
+#if CCP_STACKLESS
+    Be::Time now = TimeNow();
 	if (mCpuUsage && now - mLastCpuUpdate >= mPerformanceUpdateFrequency)
 	{
 		// 10 secs. since last update
 		mLastCpuUpdate = now;
-		FILETIME _dummy;
-		__int64 tkrn, tusr;
-		__int64 pkrn, pusr;
+		int64_t tkrn, tusr;
+		int64_t pkrn, pusr;
 
-		GetThreadTimes(
-			GetCurrentThread(), &_dummy, &_dummy,
-			(FILETIME*)&tkrn, (FILETIME*)&tusr
-			);
-		GetProcessTimes(
-			GetCurrentProcess(), &_dummy, &_dummy,
-			(FILETIME*)&pkrn, (FILETIME*)&pusr
-			);
-
+        CcpGetThreadTimes( tkrn, tusr );
+        CcpGetProcessTimes( pkrn, pusr );
 
 		// Update mem usage stats
 		size_t memusage = 0;
 		size_t workingset = 0;
-		DWORD pagefaults = 0;
-
+		uint32_t pagefaults = 0;
+#ifdef _WIN32
 		PROCESS_MEMORY_COUNTERS mc;
 		if (GetProcessMemoryInfo(GetCurrentProcess(), &mc, sizeof (mc))) {
 			memusage = mc.PagefileUsage;
 			workingset = mc.WorkingSetSize;
 			pagefaults = mc.PageFaultCount;
 		}
-
+#else
+        CcpGetProcessMemoryInfo( workingset, memusage );
+#endif
 		BluePy sys(PyImport_ImportModule("sys"));
 		BluePy pymem;
 		if (sys)
@@ -2245,7 +2080,7 @@ void BluePyOS::LogCpuUsageAndOtherStats()
 			pkrn - mLastProcessKernelUsage,
 
 			PyInt_FromSize_t(memusage),
-			pymem,
+			static_cast<PyObject*>( pymem ),
 			PyInt_FromSize_t(workingset),
 			pagefaults,
 			PyInt_FromSize_t(CCPMallocUsage() + s_pythonBlockSize * s_pythonBlockCount),
@@ -2270,57 +2105,13 @@ void BluePyOS::LogCpuUsageAndOtherStats()
 #endif
 }
 
-void BluePyOS::ProcessSpyHandles()
+void BluePyOS::ShowMessageBoxForVerificationFailure( const std::string& errmsg )
 {
-#ifdef _WIN32
-	// any file change?
-	if (mSpyHandles.size()) {
-		// no need to relinquish the GIL here for a poll
-		DWORD res = WaitForMultipleObjects((DWORD)mSpyHandles.size(), &mSpyHandles[0], FALSE, 0);
-		int found = (int)res - WAIT_OBJECT_0;
-		if (found >=0 && found < (int)mSpyHandles.size()) {
-			PyObject* ret = CallPyObjectWithTrap(mSpyDirs[found].mNotify);
-			if (!ret)
-				PyFlushError("PumpPython::spy");
-			else
-				Py_DECREF(ret);
-			FindNextChangeNotification(mSpyHandles[found]);
-		}
-	}
-#endif
-}
+	std::string msg = TranslateErrorMessage( "Your EVE client installation may have modified, damaged or corrupt files.", IDS_VERIFYFAIL_M );
+	std::string caption = TranslateErrorMessage( "Verification Failure", IDS_VERIFYFAIL_C );
 
-void BluePyOS::ShowMessageBoxForVerificationFailure( int type, const std::wstring& errmsg )
-{
-#if !PORTING_TO_LINUX
-	const wchar_t *text = L"Your EVE client installation may have modified, damaged or corrupt files.";
-	const wchar_t *text1 = L"Your EVE client installation appears to have some extra files.  Make sure to reboot after patching.";
-	const wchar_t *caption = L"Verification Failure";
-	if (type == 1)
-		text = text1;
-
-	wchar_t caption_buf[256], text_buf[1024];
-	//load resources and put up a message box.
-	HMODULE blue = GetModuleHandle("blue");
-	if (!blue)
-		blue = GetModuleHandle("blue_d");
-	if (blue) {
-		if (LoadStringW(blue, IDS_VERIFYFAIL_C, caption_buf, sizeof(caption_buf)/sizeof(*caption_buf)))
-			caption = caption_buf;
-		if (type == 1) {
-			//extra files in folder
-			if (LoadStringW(blue, IDS_VERIFYFAIL_M1, text_buf, sizeof(text_buf)/sizeof(*text_buf)))
-				text = text_buf;
-		} else {
-			//any other failure
-			if (LoadStringW(blue, IDS_VERIFYFAIL_M, text_buf, sizeof(text_buf)/sizeof(*text_buf)))
-				text = text_buf;
-		}
-	}
-	std::wstring msg(text);
-	msg += L"\n" + errmsg;
-	MessageBoxW(0, msg.c_str(), caption, MB_ICONERROR | MB_OK);
-#endif
+	msg += "\n\n" + errmsg;
+	DisplayErrorMessageBox( caption.c_str(), msg.c_str() );
 }
 
 bool BluePyOS::VerifyManifestAndGatherDirectives( directives_t& directives )
@@ -2333,7 +2124,7 @@ bool BluePyOS::VerifyManifestAndGatherDirectives( directives_t& directives )
 		if( !BeIsSuccess( result ) )
 		{
 			BeOS->SetError( BEFLUSH );
-			ShowMessageBoxForVerificationFailure( 0, std::wstring( result.value.begin(), result.value.end() ) );
+			ShowMessageBoxForVerificationFailure( result.value );
 			return false;
 		}
 	}
@@ -2371,17 +2162,19 @@ void BluePyOS::BuildConcatenatedPathFromPathlist( const std::vector<std::wstring
 	// and as such we kind of need to re-implement a part of `calculate_path()` in stackless' getpathp.c.
 	if( mInterpreterMode )
 	{
-#ifdef _WIN32
-		// in case you're wondering about the maximum length of an environment variable on Windows:
-		// https://devblogs.microsoft.com/oldnewthing/20100203-00/?p=15083
-		wchar_t pythonpath[4096];
-		GetEnvironmentVariableW(L"PYTHONPATH", pythonpath, 4096);
-		path = pythonpath;
-		path += separator;
-#else
-#error "Missing implementation!"
-#endif
+        // in case you're wondering about the maximum length of an environment variable on Windows:
+        // https://devblogs.microsoft.com/oldnewthing/20100203-00/?p=15083
+        // And for posix, see "Limits on size of arguments and environment here:
+        // https://man7.org/linux/man-pages/man2/execve.2.html
+        wchar_t pythonpath[4096] = {'\0'};
+        auto pythonpath_env = std::getenv("PYTHONPATH");
+        if (pythonpath_env) {
+            mbstowcs(pythonpath, pythonpath_env, sizeof(pythonpath)/sizeof(wchar_t));
+            path = pythonpath;
+            path += separator;
+        }
 	}
+
 	for(size_t i = 0; i<pathlist.size(); i++) {
 		std::wstring elem = pathlist[i];
 		while (elem[elem.size()-1] == L'/' || elem[elem.size()-1] == L'\\')
@@ -2421,5 +2214,30 @@ extern "C" BOOL WINAPI GetProcessMemoryInfo(
 }
 
 #endif
+
+PyObject* LoadPythonExtension( PyObject* self, PyObject* args )
+{
+	char* name;
+	if( !PyArg_ParseTuple( args, "s", &name ) )
+	{
+		return nullptr;
+	}
+
+	std::string flavor{ CCP_STRINGIZE( CCP_BUILD_FLAVOR ) };
+	std::string importName = name + flavor;
+
+	CCP_LOGNOTICE( "Trying to load python extension '%s' with flavor '%s'", name, flavor.c_str() );
+
+	PyObject* module = PyImport_ImportModule( importName.c_str() );
+
+	// An import exception will be propogated up, no need to worry about failures here
+	if (!module) {
+        CCP_LOGERR( "Failed to load python extension '%s' with flavor '%s'", name, flavor.c_str() );
+	} else {
+        CCP_LOGNOTICE( "Successfully loaded python extension '%s' with flavor '%s'", name, flavor.c_str() );
+	}
+
+	return module;
+}
 
 #endif

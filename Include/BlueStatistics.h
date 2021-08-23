@@ -11,8 +11,6 @@
 #define BlueStatistics_h
 
 #include "ICcpStatisticsAccumulator.h"
-#include "IBlueOS.h"
-extern BLUEIMPORT IBlueOS* BeOS;
 
 BLUE_DECLARE( CcpStatisticsEntry );
 
@@ -163,7 +161,7 @@ void tmTaskletAppendText( uint32_t ctx, const char* appendText );
 	tmTaskletZone zone_##_COUNTER_( TMCM_CPP, name )
 #else
 
-#define CCP_STATS_SCOPED_TIME( identifier )
+#define CCP_STATS_SCOPED_TIME( identifier ) CcpStatisticsStopwatch ccpStatsStopwatch_##identifier( g_ccpStatistics_##identifier )
 #undef CCP_STATS_ZONE
 #define CCP_STATS_ZONE( name )
 

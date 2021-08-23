@@ -374,7 +374,7 @@ bool BlueRemoteStream::Open( const char* resUrl, size_t expectedSize, const wcha
 	CURLcode res;
 	
 	{
-		CCP_STATS_ZONE( __FUNCTION__ " curl_easy_perform");
+		CCP_STATS_ZONE( CCP_STRINGIZE( __FUNCTION__ ) " curl_easy_perform");
 		res = curl_easy_perform( connection );
 	}
 

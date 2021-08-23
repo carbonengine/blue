@@ -18,7 +18,7 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////
 	// IBlueEventListener
-	void HandleEvent( const wchar_t* evtName );
+	void HandleEvent( const wchar_t* evtName ) override;
 
 private:
 	PyObject* m_handler;

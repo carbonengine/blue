@@ -4,9 +4,6 @@ import time
 import random
 
 sys.path.append("../../../../packages")
-import binbootstrapper
-
-binbootstrapper.update_binaries(__file__, binbootstrapper.DLL_BLUE)
 
 import blue
 import walk

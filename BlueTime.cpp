@@ -55,46 +55,15 @@
 // The SysTickTime class is assumed to give a highly reliable,
 // but slowly ticking system time.
 
-// Static members shared by all instances
-uint32_t SysTickTime::s_Prev = 0;
-Be::Time SysTickTime::s_High = 0;
-
 // ----------------------------------------------------------------------------
 // Description:
 //   Returns the current timer value, in the expected units.
 // ----------------------------------------------------------------------------
 Be::Time SysTickTime::Get()
 {
-#ifdef _WIN32
-	uint32_t now = GetTickCount();
-
-	// We need to manage timer wraparound ourselves, since it is only 32 bits. 
-	// The millisecond timer wraps around every 50 days.
-
-	if (now < s_Prev)
-	{
-		// assume timer has wrapped around
-		s_High = ((s_High>>32) + 1) << 32; //increment high word
-	}
-
-	s_Prev = now;
-	Be::Time r = (Be::Time)now | s_High;  //combine low and high part
-
-	// Now, convert from GTC's milliseconds into the declared unit scale
-	//
-	// NB: Unfortunately, calling GetUnitsPerSecond here can cause an access
-	//     violation at startup, apparently due to nasty ordering problems
-	//     between multiple static initialisers.
-	//
-	const Be::Time Scale = /*GetUnitsPerSecond()*/ 10000000
-						   / 1000;
-	r *= Scale;
-
-	return r;
-#else
-	const Be::Time scale = CcpGetTimestampFrequency() / 1e7;
-	return CcpGetTimestamp() / scale;
-#endif
+    const Be::Time Scale = /*GetUnitsPerSecond()*/ 10000000
+        / 1000;
+    return CcpGetTickCount() * Scale;
 }
 
 // ----------------------------------------------------------------------------
@@ -110,10 +79,6 @@ Be::Time SysTickTime::GetUnitsPerSecond()
 // =========
 // HiResTime
 // =========
-
-// Static members shared by all instances
-Be::Time HiResTime::s_Prev = 0; // Guard against back-sliding (e.g. on multicore)
-Be::Time HiResTime::s_Freq = 0;
 
 // ----------------------------------------------------------------------------
 // Description:

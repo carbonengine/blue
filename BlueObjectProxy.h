@@ -16,22 +16,22 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////
 	// IBlueObjectProxy
-	void SetBuilder( IBlueObjectBuilder* builder, unsigned int objectMarker );
-	IRoot* GetObject( );
-	bool IsResident() const;
-	void Freeze();
-	void ClearObject();
-	bool Update( Be::Time time, Be::Time timeout );
-	void SetObject( IRoot* obj );
+	void SetBuilder( IBlueObjectBuilder* builder, unsigned int objectMarker ) override;
+	IRoot* GetObject( ) override;
+	bool IsResident() const override;
+	void Freeze() override;
+	void ClearObject() override;
+	bool Update( Be::Time time, Be::Time timeout ) override;
+	void SetObject( IRoot* obj ) override;
 
 	// Methods to facilitate async updates
 	// Replace the object in the proxy without unlinking the builder
-	void SetObjectFromBuilder( IRoot* obj );
+	void SetObjectFromBuilder( IRoot* obj ) override;
 	// Set a flag that helps the user of the proxy realize that even though IsResident()
 	// may be true, the object is just a temporary placeholder.
-	void SetTemporary( bool isTemporary );
-	bool IsTemporary() const;
-	void OnSelected();
+	void SetTemporary( bool isTemporary ) override;
+	bool IsTemporary() const override;
+	void OnSelected() override;
 
 protected:
 	IBlueObjectBuilderPtr m_builder;

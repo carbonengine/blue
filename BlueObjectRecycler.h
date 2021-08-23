@@ -41,24 +41,24 @@ public:
 	// is called for any given path, the object is simply loaded. Once that instance
 	// is no longer in use, the recycler may decide to hang on to it for recycling
 	// for later calls to GetObject with the same path.
-	bool RecycleOrLoad( const wchar_t* resPath, IRoot** obj );
+	bool RecycleOrLoad( const wchar_t* resPath, IRoot** obj ) override;
 
 	// Recycles an object if possible, or makes a copy of the srcObj if no recyclable
 	// instance exists. When instances copied are no longer in use, the recycler may
 	// decide to hang on to them for recycling in later calls to this function with
 	// the same key.
-	bool RecycleOrCopy( const wchar_t* key, IRoot* srcObj, IRoot** obj );
+	bool RecycleOrCopy( const wchar_t* key, IRoot* srcObj, IRoot** obj ) override;
 
 	// Perform housekeeping, potentially releasing instances held onto for recycling
 	// purposes.
-	void Update( Be::Time time );
+	void Update( Be::Time time ) override;
 
 	// Clears any instances and history used to determine recycling policy.
-	void Clear();
+	void Clear() override;
 
 	//////////////////////////////////////////////////////////////////////////
 	// IWeakRef
-	void WeakRefNotify( IWeakObject *ptr );
+	void WeakRefNotify( IWeakObject *ptr ) override;
 	//////////////////////////////////////////////////////////////////////////
 
 private:

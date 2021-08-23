@@ -2,7 +2,7 @@
 #ifndef BLUERESMAN_H
 #define BLUERESMAN_H
 
-#include "Include/Blue.h"
+#include "Include/IBluePersist.h"
 #include "Include/IBlueResMan.h"
 #include "CallbackMan.h"
 #include "Include/IBlueOS.h"
@@ -46,60 +46,60 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////
 	// IBlueEvents
-	void OnTick( Be::Time realTime, Be::Time simTime, void* cookie );
+	void OnTick( Be::Time realTime, Be::Time simTime, void* cookie ) override;
 
 	//////////////////////////////////////////////////////////////////////////
 	// IBlueResMan
 	//
-	bool GetResourceW( const std::wstring& path, const std::wstring& ex, const Be::IID& iid, void** resource, IBlueResManNotifications* notifications = nullptr );
-	bool GetResource( const std::string& path, const std::string& ex, const Be::IID& iid, void** resource, IBlueResManNotifications* notifications = nullptr );
+	bool GetResourceW( const std::wstring& path, const std::wstring& ex, const Be::IID& iid, void** resource, IBlueResManNotifications* notifications = nullptr ) override;
+	bool GetResource( const std::string& path, const std::string& ex, const Be::IID& iid, void** resource, IBlueResManNotifications* notifications = nullptr ) override;
 
 	// Returns true if the caller is on the same thread as the main thread queue
-	bool IsOnMainThread();
+	bool IsOnMainThread() override;
 
 	// Adds a callback request to any of the queues managed by the resource manager
-	bool AddToQueue( BlueResManQueue q, IBlueCallbackMan::CallbackFunc pCb, void* pContext, uint32_t flags, CcpAtomic<uint32_t>* id );
+	bool AddToQueue( BlueResManQueue q, IBlueCallbackMan::CallbackFunc pCb, void* pContext, uint32_t flags, CcpAtomic<uint32_t>* id ) override;
 	
 	// Cancels a previous callback request
-	void CancelFromQueue( BlueResManQueue q, uint32_t id );
+	void CancelFromQueue( BlueResManQueue q, uint32_t id ) override;
 
 	// Gets the next id for the given queue. Useful to find out if anything was added
 	// to a queue (get the id, do something, get the id again and compare).
-	uint32_t GetNextIdForQueue( BlueResManQueue q );
+	uint32_t GetNextIdForQueue( BlueResManQueue q ) override;
 
 	// Process the next item from the main thread queue - returns false if the queue was empty
-	bool PumpMainThreadQueue();
+	bool PumpMainThreadQueue() override;
 
-	void PauseQueue( BlueResManQueue q );
-	void ResumeQueue( BlueResManQueue q );
+	void PauseQueue( BlueResManQueue q ) override;
+	void ResumeQueue( BlueResManQueue q ) override;
 
 	// For debugging/timing - no resources are actually cleared, but resource
 	// manager no longer knows about them so future requests will go out to disk.
 	void ForgetAllResources();
 
-	IRoot* LoadObject( const char* name, Be::LOADOBJECT_INIT_FLAG init = Be::LDOBJ_INITIALIZE );
-	IRoot* LoadObjectW( const wchar_t* name, Be::LOADOBJECT_INIT_FLAG init = Be::LDOBJ_INITIALIZE );
+	IRoot* LoadObject( const char* name, Be::LOADOBJECT_INIT_FLAG init = Be::LDOBJ_INITIALIZE ) override;
+	IRoot* LoadObjectW( const wchar_t* name, Be::LOADOBJECT_INIT_FLAG init = Be::LDOBJ_INITIALIZE ) override;
 
-	bool SaveObject( IRoot* obj, const char* name );
-	bool SaveObjectW( IRoot* obj, const wchar_t* name );
+	bool SaveObject( IRoot* obj, const char* name ) override;
+	bool SaveObjectW( IRoot* obj, const wchar_t* name ) override;
 
-	void SetUrgentResourceLoads( bool b );
-	bool IsUrgentResourceLoads();
+	void SetUrgentResourceLoads( bool b ) override;
+	bool IsUrgentResourceLoads() override;
 
 	// Notify manager of memory use. This function blocks if reserved memory exceeds
 	// limits - other threads must release memory before calling thread is allowed
 	// to continue.
-	void ReserveBackgroundLoadMemory( size_t size );
-	void ReleaseBackgroundLoadMemory( size_t size );
+	void ReserveBackgroundLoadMemory( size_t size ) override;
+	void ReleaseBackgroundLoadMemory( size_t size ) override;
 
-	unsigned int GetPendingLoads() const;
-	unsigned int GetPendingPrepares() const;
+	unsigned int GetPendingLoads() const override;
+	unsigned int GetPendingPrepares() const override;
 
 	void SetLoadingThreadPriority( int prio );
 
-	void RegisterResourceConstructor( const wchar_t* name, IBlueDynamicResourceConstructor* constructor );
+	void RegisterResourceConstructor( const wchar_t* name, IBlueDynamicResourceConstructor* constructor ) override;
 	void RegisterScriptResourceConstructor( const wchar_t* name, BlueScriptCallback constructor );
-	void UnregisterResourceConstructor( const wchar_t* name );
+	void UnregisterResourceConstructor( const wchar_t* name ) override;
 
 private:
 #if BLUE_WITH_PYTHON

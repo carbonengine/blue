@@ -671,16 +671,16 @@ PyObject *DBRowDescriptor::VirtualGet(int n, const PyObject *row) const
 bool DBRowDescriptor::VirtualSet(int n, PyObject *row, PyObject *val)
 {
 	if (!mVirtualGetSet || !PyList_Check(mVirtualGetSet.o))
-        return PyErr_SetString(PyExc_RuntimeError, "Internal error in VirtualSet"), nullptr;
+        return PyErr_SetString(PyExc_RuntimeError, "Internal error in VirtualSet"), false;
 	if (n < 0 || n >= PyList_GET_SIZE(mVirtualGetSet.o))
-        return PyErr_SetString(PyExc_RuntimeError, "Internal error in VirtualSet"), nullptr;
+        return PyErr_SetString(PyExc_RuntimeError, "Internal error in VirtualSet"), false;
 	PyObject *t = PyList_GET_ITEM(mVirtualGetSet.o, n);
 	if (!PyTuple_Check(t))
-        return PyErr_SetString(PyExc_RuntimeError, "Internal error in VirtualSet"), nullptr;
+        return PyErr_SetString(PyExc_RuntimeError, "Internal error in VirtualSet"), false;
 	if (PyTuple_GET_SIZE(t)<3)
 		return (PyErr_SetString(PyExc_AttributeError, "read only attribute")), false;
 	PyObject *res = PyObject_CallFunctionObjArgs(PyTuple_GET_ITEM(t, 2), row, val, 0);
-	if (!res) return 0;
+	if (!res) return false;
 	Py_DECREF(res);
 	return true;
 }

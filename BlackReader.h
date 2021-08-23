@@ -37,24 +37,24 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////
 	// IRootReader
-	IRoot* ReadFromStream( IBlueStream* stream );
-	bool ReadForCachingFromStream( IBlueStream* stream );
+	IRoot* ReadFromStream( IBlueStream* stream ) override;
+	bool ReadForCachingFromStream( IBlueStream* stream ) override;
 
-	void SetFileName( const wchar_t* name );
-	void SetDoInitialize( bool b );
-	void SetTimeSlice( float t );
+	void SetFileName( const wchar_t* name ) override;
+	void SetDoInitialize( bool b ) override;
+	void SetTimeSlice( float t ) override;
 
-	void GetErrorMessage( std::string& msg );
+	void GetErrorMessage( std::string& msg ) override;
 
 	//////////////////////////////////////////////////////////////////////////
 	// IBlueObjectBuilder
-	IRoot* CreateObjectWithYield( unsigned int objectMarker, IRoot * callingProxy );
-	IRoot* CreateObject( unsigned int objectMarker, IRoot * callingProxy );
+	IRoot* CreateObjectWithYield( unsigned int objectMarker, IRoot * callingProxy ) override;
+	IRoot* CreateObject( unsigned int objectMarker, IRoot * callingProxy ) override;
 
 	//////////////////////////////////////////////////////////////////////////
 	// ICacheable
-	bool IsMemoryUsageKnown();
-	size_t GetMemoryUsage();
+	bool IsMemoryUsageKnown() override;
+	size_t GetMemoryUsage() override;
 
 protected:
 	enum YR_YIELD_BEHAVIOR { YR_DONT_ALLOW_YIELD, YR_ALLOW_YIELD };
@@ -77,25 +77,25 @@ protected:
 
 protected:
 	// Virtual functions required by base:
-	virtual void ReadValue( int64_t& dst );
-	virtual void ReadValue( uint32_t& dst );
-	virtual void ReadValue( int32_t& dst );
-	virtual void ReadValue( uint16_t& dst );
-	virtual void ReadValue( uint8_t& dst );
-	virtual void ReadValue( bool& dst );
-	virtual void ReadValue( float& dst );
-	virtual void ReadValue( double& dst );
+	void ReadValue( int64_t& dst ) override;
+	void ReadValue( uint32_t& dst ) override;
+	void ReadValue( int32_t& dst ) override;
+	void ReadValue( uint16_t& dst ) override;
+	void ReadValue( uint8_t& dst ) override;
+	void ReadValue( bool& dst ) override;
+	void ReadValue( float& dst ) override;
+	void ReadValue( double& dst ) override;
 
-	virtual const char* ReadString();
-	virtual const wchar_t* ReadWString();
-	virtual void ReadBinaryBlock( ICustomPersist* instance, const char* propertyName );
+	const char* ReadString() override;
+	const wchar_t* ReadWString() override;
+	void ReadBinaryBlock( ICustomPersist* instance, const char* propertyName ) override;
 
-	virtual void ReadFloatArray( float* mFloat, size_t count );
-	virtual void ReadList( IList* list );
-	virtual void ReadDict( IBlueDict* dict );
-	virtual void ReadStructureList( IBlueStructureList* structureList );
-	virtual void ReadIRoot( IRoot& obj );
-	virtual IRoot* ReadIRootClass();
+	void ReadFloatArray( float* mFloat, size_t count ) override;
+	void ReadList( IList* list ) override;
+	void ReadDict( IBlueDict* dict ) override;
+	void ReadStructureList( IBlueStructureList* structureList ) override;
+	void ReadIRoot( IRoot& obj ) override;
+	IRoot* ReadIRootClass() override;
 	
 private:
 	void PatchStringsInStructureList( IBlueStructureList* structureList );

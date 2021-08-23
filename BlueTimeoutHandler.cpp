@@ -24,7 +24,8 @@ void BlueTimeoutHandler::NotifyOfTimeout()
 
 #if BLUE_WITH_PYTHON
 			auto pythonDiagnosticThread = CcpCreateThread( PythonDiagnosticFunction, nullptr, CCP_THREAD_PRIORITY_NORMAL );
-			CcpJoinThreadWithTimeout( pythonDiagnosticThread, 10000, nullptr );
+			uint32_t result;
+			CcpJoinThreadWithTimeout( pythonDiagnosticThread, 10000, result );
 #endif
 		}
 	}

@@ -7,7 +7,7 @@
 
 #include "StdAfx.h"
 
-#if CCP_STACKLESS && !PORTING_TO_LINUX
+#if CCP_STACKLESS
 
 #include "Include/BlueNet.h"
 #include "Include/StructPacker.h"
@@ -35,15 +35,15 @@ extern int MARSHAL_STRING_ARRAY_LEN;
 
 //------------------------------------------------------------------------------
 SP_START( BlueNetHeader )
-	SP_TYPE( long long, sourceID );
-	SP_TYPE( long long, destinationType );
-	SP_TYPE( long long, destinationID );
-	SP_TYPE( int, blueNetKey );
-	SP_TYPE( unsigned int, forkedAddresses );
-	SP_TYPE( unsigned int, serialNumber );
-	SP_TYPE( unsigned int, latencyAccumulator );
+	SP_TYPE( int64_t, sourceID );
+	SP_TYPE( int64_t, destinationType );
+	SP_TYPE( int64_t, destinationID );
+	SP_TYPE( int32_t, blueNetKey );
+	SP_TYPE( uint32_t, forkedAddresses );
+	SP_TYPE( uint32_t, serialNumber );
+	SP_TYPE( uint32_t, latencyAccumulator );
 	SP_TYPE( bool, priority ); // true == high
-	SP_TYPE( unsigned long long, timestamp ); // if non-zero, implied ping request
+	SP_TYPE( uint64_t, timestamp ); // if non-zero, implied ping request
 SP_END;
 
 const unsigned long long TIMESTAMP_PINGBACK_BIT = 0x8000000000000000ULL;
@@ -57,7 +57,7 @@ struct DataCallbackJob
 	BlueNet::DataCallback callback;
 	BlueNet::ExtendedDataCallback exCallback;
 	long long fromID;
-	char* data;	
+	char* data;
 	char smallData[BLUE_NET_SMALL_BUFFER_SIZE];
 	int len;
 	BlueNet::PacketInfo info;
@@ -67,22 +67,22 @@ struct DataCallbackJob
 //------------------------------------------------------------------------------
 struct TransportRepr
 {
-	long long descriptor; // the actual socket
-	long long ID; // transportID
-	char name[128]; // transport name
-	long long nodeID;
+	long long descriptor = 0; // the actual socket
+	long long ID = 0; // transportID
+	char name[128] = {'\0'}; // transport name
+	long long nodeID = 0;
 
-	time_t nextLatencyTimeCheck;
-	int latency; // approximate lag-time to this transport
+	time_t nextLatencyTimeCheck = 0;
+	int latency = 0; // approximate lag-time to this transport
 
-	bool isClientTransport; // proxy marks a client connection
-	long long clientID; // for proxies, what client is connected
+	bool isClientTransport = false; // proxy marks a client connection
+	long long clientID = 0; // for proxies, what client is connected
 
-	int sequence; // numerically continuous and contiguous numbering imposed on the hash list (forking optimization)
+	int sequence = 0; // numerically continuous and contiguous numbering imposed on the hash list (forking optimization)
 
-	CRITICAL_SECTION packetAggregateLock;
-	char packetAggregator[ BLUE_TRANSPORT_PACKET_AGGREGATOR_SIZE * 2 ];
-	int bytesAggregated;
+	CcpMutex packetAggregateLock = {"BlueNet/TransportRepr", "packetAggregateLock"};
+	char packetAggregator[ BLUE_TRANSPORT_PACKET_AGGREGATOR_SIZE * 2 ] = {'\0'};
+	int bytesAggregated = 0;
 };
 
 //------------------------------------------------------------------------------
@@ -163,7 +163,7 @@ enum
 static Ccp::SimpleLog s_log;
 //------------------------------------------------------------------------------
 #include <stdarg.h>
-static CRITICAL_SECTION s_logLock;
+static CcpMutex s_logLock = {"BlueNet", "s_logLock"};
 
 //------------------------------------------------------------------------------
 void bnlog( const char* format, ... )
@@ -180,9 +180,9 @@ void bnlog( const char* format, ... )
 	va_end ( arg );
 #endif
 #ifdef BN_DEBUG_LOG
-	EnterCriticalSection( &s_logLock );
+	s_logLock.Acquire();
 	s_log.out( "%s", temp );
-	LeaveCriticalSection( &s_logLock );
+	s_logLock.Release();
 #endif
 #ifdef BN_CCP_DEBUG_LOG
 	CCP_LOGWARN_CH( s_blueNetChannel, "%s", temp );
@@ -204,7 +204,7 @@ PyMethodDef BlueNet::m_methods[] =
 	{ "GetLatencyToFirstHop", PyGetLatencyToFirstHop, METH_NOARGS, "GetLatencyToFirstHop()\n\nValid for client only, reprots latency to the proxy" },
 	{ "GetWakeupMethod", PyGetWakeupMethod, METH_VARARGS, "GetWakeupMethod()\nread what underlying taklet wakeup methodology CarbonIO is using" },
 	{ "GetRoutingMode", PyGetRoutingMode, METH_NOARGS, "GetRoutingMode()\n\nreturns 'proxy', 'server', 'client' or 'none'" },
-	
+
 	{ "EnumerateTransport", PyEnumerateTransport, METH_VARARGS, "EnumerateTransports(descriptor, id, name, userID, nodeID)\n\nExpose to blue"
 																"the transport 'routing table' which will be used for auto-routing"
 																"if this is a proxy node (see setType())" },
@@ -234,7 +234,10 @@ PyMethodDef BlueNet::m_methods[] =
 };
 
 //------------------------------------------------------------------------------
-BlueNet::BlueNet()
+BlueNet::BlueNet() :
+	m_callbackJobLock( "BlueNet", "m_callbackJobLock" ), m_callbackPoolLock( "BlueNet", "m_callbackPoolLock" ),
+	m_batchLock( "BlueNet", "m_batchLock" ), m_transportLock( "BlueNet", "m_transportLock" ),
+	m_callbackListLock( "BlueNet", "m_callbackListLock" ), m_clientSessionCallbackListLock( "BlueNet", "m_clientSessionCallbackListLock" )
 {
 	BeNet = this;
 
@@ -247,25 +250,28 @@ BlueNet::BlueNet()
 	m_callbackHead_C = 0;
 	m_callbackTail_C = 0;
 
-	InitializeCriticalSection( &m_callbackJobLock );
-	InitializeCriticalSection( &m_callbackPoolLock );
 	m_callbackPool = 0;
-	
+
 	m_constPongKey = BlueNetKeyFromName( "BlueNet::pong" );
 	m_fastTime = time(0);
 
 	m_minScheduledIOInterval = MIN_SCHEDULED_IO_INTERVAL;
 	m_watchdogInterval = MIN_SCHEDULED_IO_INTERVAL / 2;
 
-	InitializeCriticalSection( &m_batchLock );
+#if _WIN32
 	m_batchReadyEvent = CreateEvent( 0, false, false, "BlueNet/m_batchReadyEvent" );
+#elif __APPLE__
+    m_batchReadyEvent = dispatch_semaphore_create(0);
+#else
+#error "Missing implementation"
+#endif
 	m_batchPing = CCP_NEW( "BlueNet/DestinyPacketBatch" ) BlueNetPacketBatch;
 	m_batchPong = CCP_NEW( "BlueNet/DestinyPacketBatch" ) BlueNetPacketBatch;
 
 	m_batchingEnabled = false; // DO NOT CHECK THIS IN TRUE=====================================<<<<<<<<< .. yet
 
 	m_NewStringMaxLen = 0;
-	
+
 	m_marshal = 0;
 
 	m_pendingCallPending = false;
@@ -276,11 +282,13 @@ BlueNet::BlueNet()
 //------------------------------------------------------------------------------
 BlueNet::~BlueNet()
 {
-	DeleteCriticalSection( &m_callbackJobLock );
-	DeleteCriticalSection( &m_callbackPoolLock );
-	DeleteCriticalSection( &m_batchLock );
-
+#if _WIN32
 	CloseHandle( m_batchReadyEvent );
+#elif __APPLE__
+	// dispatch_sempahore_t does not need to be destroyed
+#else
+#error "Missing implementation!"
+#endif
 
 	CCP_DELETE( m_batchPing );
 	CCP_DELETE( m_batchPong );
@@ -294,8 +302,6 @@ void BlueNet::Init()
 	sprintf( buf, "\\dev\\bn%d_log.txt", _getpid() );
 	s_log.init( buf );
 	printf("BlueNet logging as [%s]\n", buf );
-
-	InitializeCriticalSection( &s_logLock );
 #endif
 
 	Py_InitModule( "blue.net", m_methods );
@@ -349,14 +355,14 @@ void BlueNet::Init()
 	CioSetErrorLogCallback( LogError ); // always allow errors
 
 	m_singleton.m_aggregateSendIntervalMilliseconds = 0;
-	
+
 	memset( &m_singleton.m_stats, 0, sizeof(BlueNet::Stats) );
 
 	m_singleton.m_marshal = Marshal::New();
 
 	m_singleton.RegisterCallbackFromPython( BlueNetCallback, m_singleton.m_blueNetHandlerPacketKey );
 
-	_beginthread( BatchThread, 0, 0 );
+	CcpCreateThread( &BatchThread, nullptr, CCP_THREAD_PRIORITY_NORMAL );
 }
 
 //------------------------------------------------------------------------------
@@ -428,12 +434,12 @@ PyObject* BlueNet::PySetTransportNodeID( PyObject *self, PyObject *args )
 	}
 
 	BN_XNODEID(bnlog("set transport[%lld] to nodeID[%lld]", transportID, nodeID));
-	
+
 	m_singleton.m_transportsByNodeID.remove( transport->nodeID ); // delete old ref if it existed
 	m_singleton.m_transportsByNodeID.addItem( transport, nodeID ); // and re-index
 
 	transport->nodeID = nodeID;
-		
+
 	Py_RETURN_NONE;
 }
 
@@ -452,7 +458,7 @@ PyObject* BlueNet::PySetMinPingFrequency( PyObject *self, PyObject *args )
 PyObject* BlueNet::PySetAggregateThreadFrequency( PyObject *self, PyObject *args )
 {
 	bool startThread = m_singleton.m_aggregateSendIntervalMilliseconds == 0 ? true : false;
-	
+
 	if ( !PyArg_ParseTuple(args, "i", &m_singleton.m_aggregateSendIntervalMilliseconds) )
 	{
 		return NULL;
@@ -510,7 +516,7 @@ PyObject* BlueNet::PySetWakeupMethod( PyObject *self, PyObject *args )
 	{
 		return PyErr_Format( PyExc_RuntimeError, "Unknown CarbonIO wake-up method [%s]", buf );
 	}
-	
+
 	Py_RETURN_NONE;
 }
 
@@ -527,7 +533,7 @@ void BlueNet::RegisterCallback( DataCallback callback, const int blueNetKey, int
 	Ccp::RWSpinlockWriteScoped wlock( m_callbackListLock );
 
 	m_callbackList.remove( blueNetKey );
-	
+
 	DataCallbackRepr *repr = m_callbackList.add( blueNetKey );
 
 	memset( repr, 0, sizeof(DataCallbackRepr) );
@@ -567,11 +573,11 @@ void BlueNet::DeliverCPackets()
 
 	// get in get the list and get out, so none of the async activity is
 	// blocked by long callbacks
-	EnterCriticalSection( &m_callbackJobLock );
+	m_callbackJobLock.Acquire();
 	DataCallbackJob *jobs = m_callbackHead_C;
 	m_callbackHead_C = 0;
 	m_callbackTail_C = 0;
-	LeaveCriticalSection( &m_callbackJobLock );
+	m_callbackJobLock.Release();
 
 	DeliverJobs( jobs );
 }
@@ -649,7 +655,7 @@ bool BlueNet::SendPacketToClientList( const unsigned long long* clientList,
 
 	// single look-up pass to compute everything necessary
 	bool ret = true;
-	
+
 	int listIndex = 0;
 	while( listIndex < listLen )
 	{
@@ -695,21 +701,21 @@ bool BlueNet::SendPacketToClientList( const unsigned long long* clientList,
 				header.forkedAddresses = list[i].num;
 				header.priority = priority == PRIORITY_HIGH ? true : false;
 				header.Pack( packer );
-				
+
 				BN_SEND_LIST(bnlog("%d: packing[%d] addresses to transport[%lld]", i, list[i].num, list[i].transport->ID));
-				
+
 				for( int j=0; j<list[i].num; j++ ) // append in the targets
 				{
 					packer.Pack( list[i].recipients[j] );
 				}
-				
+
 				ret = SendPacketEx( list[i].transport, data, len, headerData, packer.Finalize(), PRIORITY_HIGH ) ? ret : false;
 			}
 		}
 	}
 
 	CCP_DELETE[] list;
-	
+
 	return ret;
 }
 
@@ -786,7 +792,7 @@ bool BlueNet::SendPacketToCharList( const unsigned long long* charList,
 									const int priority )
 {
 	// map to client IDs then invoke SendPacketToClientList()
-	
+
 	if ( !charList || !listLen )
 	{
 		return false;
@@ -841,7 +847,7 @@ unsigned long long BlueNet::CharIDFromClientID( const unsigned long long clientI
 bool BlueNet::SendPacketToNode( const unsigned long long nodeID,
 								const int blueNetKey,
 								const char *data,
-								const int len, 
+								const int len,
 								const int priority )
 {
 	BlueNetHeader header;
@@ -900,7 +906,7 @@ bool BlueNet::SendPacketToNode( const unsigned long long nodeID,
 	{
 		return false;
 	}
-	
+
 	header.timestamp = CheckForPing( target );
     header.latencyAccumulator = target->latency;
 	header.destinationType = m_constAddressTypeNode;
@@ -919,7 +925,7 @@ bool BlueNet::SendPacketToNode( const unsigned long long nodeID,
 unsigned long long BlueNet::GetProxyNodeIDByClientID( const unsigned long long clientID )
 {
 	Ccp::RWSpinlockReadScoped rlock( m_transportLock );
-	
+
 	TransportRepr *T = 0;
 
 	if ( m_routingMode == MODE_CLIENT )
@@ -988,7 +994,7 @@ bool BlueNet::IsClient( long long ID )
 		// by definition
 		return false;
 	}
-	
+
 	Ccp::RWSpinlockReadScoped rlock( m_transportLock );
 	TransportRepr *repr = m_transportsByTransportID.getItem( ID );
 	if ( !repr )
@@ -1158,7 +1164,7 @@ PyObject* BlueNet::PyAddProxyNode( PyObject *self, PyObject *args )
 	{
 		Py_RETURN_NONE;
 	}
-	
+
 	m_singleton.m_transportsByProxyID.remove( nodeID ); // delete old ref if it existed
 	m_singleton.m_transportsByProxyID.addItem( transport, nodeID ); // and re-index
 
@@ -1176,7 +1182,7 @@ PyObject* BlueNet::PyDelProxyNode( PyObject *self, PyObject *args )
 
 	Ccp::RWSpinlockWriteScoped wlock( m_singleton.m_transportLock );
 	m_singleton.m_transportsByProxyID.remove( nodeID );
-	
+
 	Py_RETURN_NONE;
 }
 
@@ -1206,8 +1212,8 @@ PyObject* BlueNet::PyAddSendEvent( PyObject* module, PyObject* args )
 	{
 		return PyErr_Format( PyExc_RuntimeError, "AddSendEvent third argument must be a tuple" );
 	}
-	
-	Ccp::CriticalLockScoped block( m_singleton.m_batchLock ); // this must all be done under lock of course
+
+	CcpAutoMutex block( m_singleton.m_batchLock ); // this must all be done under lock of course
 
 	BlueNetPacketBatch* batch = m_singleton.m_batchPing;
 
@@ -1387,7 +1393,7 @@ PyObject* BlueNet::PyGetNewStringMaxLen( PyObject* module, PyObject* args )
 PyObject* BlueNet::PyDumpStringTable( PyObject* module, PyObject* args )
 {
 	PyObject* stats = PyDict_New();
-	
+
 	for( StringEntry* entry = m_singleton.m_stringTable.getFirst(); entry; entry = m_singleton.m_stringTable.getNext() )
 	{
 		PyObject* val = PyLong_FromLongLong( entry->frequency );
@@ -1442,7 +1448,7 @@ unsigned int BlueNet::Flush()
 		{
 			BN_AGG(bnlog("transport[%lld] had[%d] bytes scheduled for transmit", transport->ID, transport->bytesAggregated));
 
-			Ccp::CriticalLockScoped tlock( transport->packetAggregateLock );
+			CcpAutoMutex tlock( transport->packetAggregateLock );
 			CioSendFormattedPacket( transport->descriptor, transport->packetAggregator, transport->bytesAggregated );
 			bytesFlushed += transport->bytesAggregated;
 			transport->bytesAggregated = 0;
@@ -1506,9 +1512,7 @@ unsigned int BlueNet::FlushToCharList( const unsigned long long* charList, const
 PyObject* BlueNet::PyEnumerateTransport( PyObject *self, PyObject *args )
 {
 	TransportRepr *transport = CCP_NEW("BllueNet/TransportRepr") TransportRepr;
-	memset( transport, 0, sizeof(TransportRepr) );
-	InitializeCriticalSection( &transport->packetAggregateLock );
-	
+
 	char *name;
 	long long userID;
 	if ( !PyArg_ParseTuple(args, "LLzLLL",
@@ -1528,17 +1532,17 @@ PyObject* BlueNet::PyEnumerateTransport( PyObject *self, PyObject *args )
 	{
 		transport->isClientTransport = true;
 	}
-	
+
 	m_singleton.m_transportLock.readLock();
 
 	bool added = true;
-	
+
 	TransportRepr *T = m_singleton.m_transportsBySocket.getItem( transport->descriptor );
 	if ( T )
 	{
 		added = false;
 		m_singleton.m_transportLock.unlock();
-		
+
 		CCP_LOGERR_CH( s_blueNetChannel, "Attempting to enumerate a transport more than once [%d]/[%lld]", T->ID, transport->descriptor );
 
 		// this should be extremely impossible, gracefully plod on..
@@ -1563,7 +1567,7 @@ PyObject* BlueNet::PyEnumerateTransport( PyObject *self, PyObject *args )
 	m_singleton.SequenceTransports(); // make sure they are numbered
 
 	m_singleton.m_transportLock.unlock();
-	
+
 	BN_ENUM(bnlog("added transport ID[%lld] name[%s] client[%lld] node[%lld]", transport->ID, transport->name, transport->clientID, transport->nodeID));
 
 	if ( added )
@@ -1599,7 +1603,7 @@ PyObject* BlueNet::PySendBlueNetPacket( PyObject *self, PyObject *args )
 	long long destinationType;
 	long long destinationID;
 	int priority;
-	
+
 	// pull args out into the header
 	if ( !PyArg_ParseTuple(args, "SLLzi|O",
 						   &pickle,
@@ -1660,7 +1664,7 @@ PyObject* BlueNet::PySetMode( PyObject *self, PyObject *args )
 		CCP_LOGERR_CH( s_blueNetChannel, "Tried to set the mode again, but its already [%d]", m_singleton.m_routingMode );
 		Py_RETURN_NONE;
 	}
-	
+
 	char *mode;
 	if ( !PyArg_ParseTuple(args, "s", &mode) )
 	{
@@ -1725,12 +1729,12 @@ PyObject* BlueNet::PyAddClient( PyObject *self, PyObject *args )
 		BN_CLIENTTRACKING(bnlog("transport[%lld] was not found to add client[%lld]", transportID, clientID));
 		Py_RETURN_FALSE;
 	}
-	
+
 	m_singleton.m_transportsByClientID.remove( clientID );
 	m_singleton.m_transportsByClientID.addItem( transport, clientID );
 
 	BN_CLIENTTRACKING(bnlog("transport[%lld] adding client[%lld]", transportID, clientID));
-	
+
 	Py_RETURN_TRUE;
 }
 
@@ -1750,7 +1754,7 @@ PyObject* BlueNet::PyMapCharToClient( PyObject *self, PyObject *args )
 	{
 		Py_RETURN_NONE;
 	}
-	
+
 	Ccp::RWSpinlockWriteScoped wlock( m_singleton.m_transportLock );
 
 	TransportRepr* transport = m_singleton.m_transportsByClientID.getItem( clientID );
@@ -1758,7 +1762,7 @@ PyObject* BlueNet::PyMapCharToClient( PyObject *self, PyObject *args )
 	{
 		Py_RETURN_NONE;
 	}
-	
+
 	m_singleton.m_clientMapByCharID.remove( charID );
 	ClientMapping *map = m_singleton.m_clientMapByCharID.add( charID );
 	map->transport = transport;
@@ -1775,7 +1779,7 @@ PyObject* BlueNet::PyMapCharToClient( PyObject *self, PyObject *args )
 		}
 		rlock.release();
 	}
-	
+
 	Py_RETURN_NONE;
 }
 
@@ -1822,7 +1826,7 @@ PyObject* BlueNet::PyPurgeClient( PyObject *self, PyObject *args )
 		}
 		rlock.release();
 	}
-	
+
 	BN_CLIENTTRACKING(bnlog("purged client[%lld]", clientID));
 	Py_RETURN_TRUE;
 }
@@ -1901,11 +1905,11 @@ bool BlueNet::OnPostDecompress( long long descriptor, const char* data, const in
 	if ( header.blueNetKey == m_constPongKey )
 	{
 		// dedicated ping answer
-		
+
 		unsigned long long timestamp = header.timestamp & ~TIMESTAMP_PINGBACK_BIT;
-		int newLatency = (int)(GetTickCount() - timestamp) / 2; // assume symetric ping times
+		int newLatency = (int)(CcpGetTickCount() - timestamp) / 2; // assume symetric ping times
 		BN_PING(bnlog("computing newlatency[%d] = ([%d] - [0x%016llX]) / 2", newLatency, GetTickCount(), header.timestamp));
-		
+
 		if ( !source->latency )
 		{
 			source->latency = newLatency;
@@ -1932,11 +1936,11 @@ bool BlueNet::OnPostDecompress( long long descriptor, const char* data, const in
 			BN_PING(bnlog("latency accumulator non-zero, answering[%lld] as ping", source->ID));
 			m_singleton.AnswerPing( source, header.latencyAccumulator );
 		}
-		
+
 		// by definition this packet exists atomically from any payload, consume it
 		return true;
 	}
-	
+
 	if ( header.timestamp ) // was there a piggybacked ping request?
 	{
 		BN_DELIVER(bnlog("timestamp piggybacked"));
@@ -1958,7 +1962,7 @@ bool BlueNet::OnPostDecompress( long long descriptor, const char* data, const in
 			BN_DELIVER(bnlog("<2> plugging in id[%lld] was[%lld]", source->nodeID, header.sourceID));
 			header.sourceID = source->nodeID;
 		}
-		
+
 		if ( header.destinationID != m_singleton.m_myNodeID )
 		{
 			BN_DELIVER(bnlog("id[%lld] was NOT my id[%lld] so I'm routing it"));
@@ -1982,7 +1986,7 @@ void BlueNet::PurgeTransport( long long transportID )
 	Ccp::RWSpinlockWriteScoped wlock( m_singleton.m_transportLock );
 
 	BN_PURGETRANSPORT(bnlog("Purging transportID[%lld]", transportID));
-	
+
 	TransportRepr *T = m_transportsByTransportID.getItem( transportID );
 	if ( !T )
 	{
@@ -2022,8 +2026,6 @@ void BlueNet::PurgeTransport( long long transportID )
 		}
 	}
 
-	DeleteCriticalSection( &T->packetAggregateLock );
-
 	CCP_DELETE T;
 
 	m_singleton.SequenceTransports();
@@ -2053,7 +2055,7 @@ DataCallbackJob* BlueNet::GetDataCallbackJob()
 	}
 	else
 	{
-		EnterCriticalSection( &m_callbackPoolLock );
+		m_callbackPoolLock.Acquire();
 		if ( !m_callbackPool )
 		{
 			ret = CCP_NEW("BlueNet/DataCallbackJob") DataCallbackJob;
@@ -2063,7 +2065,7 @@ DataCallbackJob* BlueNet::GetDataCallbackJob()
 			ret = m_callbackPool;
 			m_callbackPool = m_callbackPool->next;
 		}
-		LeaveCriticalSection( &m_callbackPoolLock );
+		m_callbackPoolLock.Release();
 	}
 
 	return ret;
@@ -2072,10 +2074,10 @@ DataCallbackJob* BlueNet::GetDataCallbackJob()
 //------------------------------------------------------------------------------
 void BlueNet::FreeDataCallbackJob( DataCallbackJob* callback )
 {
-	EnterCriticalSection( &m_callbackPoolLock );
+	m_callbackPoolLock.Acquire();
 	callback->next = m_callbackPool;
 	m_callbackPool = callback;
-	LeaveCriticalSection( &m_callbackPoolLock );
+	m_callbackPoolLock.Release();
 }
 
 //------------------------------------------------------------------------------
@@ -2138,7 +2140,7 @@ void BlueNet::Route( BlueNetHeader* header,
 	}
 
 	// if there is a timestamp push it through
-	
+
 	char rebuiltHeader[ BLUE_HEADER_SCRATCH_SIZE ];
 	BitPacker repacker( rebuiltHeader, BLUE_HEADER_SCRATCH_SIZE );
 
@@ -2182,7 +2184,7 @@ void BlueNet::Route( BlueNetHeader* header,
 				if ( target )
 				{
 					BN_ROUTE(bnlog("fork target[%d:%lld] routing on transport[%lld]", i, forkTargetClientID, target->ID));
-					
+
                     header->latencyAccumulator += target->latency;
                     header->Pack( repacker );
                     int rebuiltHeaderSize = repacker.Finalize();
@@ -2192,7 +2194,7 @@ void BlueNet::Route( BlueNetHeader* header,
 						// otherwise.. we don't really care. let other clients get a shot at not failing
 					}
 					header->latencyAccumulator -= target->latency; // Restore the value for the next fork
-				}	
+				}
 				else
 				{
 					CCP_LOG_CH( s_blueNetChannel, "Could not locate forked transport for target [%lld] for message type[0x%08X]. Client might have disconnected before the source found out about it.", forkTargetClientID, header->blueNetKey );
@@ -2227,7 +2229,7 @@ bool BlueNet::Deliver( BlueNetHeader* header,
 					   long long TransportIdArrivedOn )
 {
 	Ccp::RWSpinlockReadScoped rlock( m_singleton.m_callbackListLock );
-	
+
 	DataCallbackRepr *callback = m_singleton.m_callbackList.get( header->blueNetKey );
 	if ( !callback )
 	{
@@ -2250,7 +2252,7 @@ bool BlueNet::Deliver( BlueNetHeader* header,
 		// temp space and release the lock
 		DataCallback tempDataCallback = callback->callback;
 		ExtendedDataCallback tempExCallback = callback->exCallback;
-		rlock.release(); 
+		rlock.release();
 
 		if ( tempDataCallback )
 		{
@@ -2267,7 +2269,7 @@ bool BlueNet::Deliver( BlueNetHeader* header,
 
 		return true;
 	}
-	
+
 	BN_DELIVER(bnlog("found owner for type[0x%08X] len[%d]", header->blueNetKey, len));
 
 	DataCallbackJob *job = GetDataCallbackJob();
@@ -2290,11 +2292,11 @@ bool BlueNet::Deliver( BlueNetHeader* header,
 
 	job->callback = callback->callback;
 	job->exCallback = callback->exCallback;
-	
+
     m_singleton.m_fastTime = time(0); // update here so we are not hammering it per-packet, accuracy is not essential
 
 	// and queue it
-	EnterCriticalSection( &m_singleton.m_callbackJobLock );
+	m_singleton.m_callbackJobLock.Acquire();
 	if ( callback->style == CALLBACK_PYTHON )
 	{
 		if ( m_singleton.m_callbackTail )
@@ -2312,17 +2314,17 @@ bool BlueNet::Deliver( BlueNetHeader* header,
 		{
 			BN_DELIVER(bnlog("pending call false, adding callback"));
 			m_pendingCallPending = true;
-			LeaveCriticalSection( &m_singleton.m_callbackJobLock );
+			m_singleton.m_callbackJobLock.Release();
 
 			while( Py_AddPendingCall(&DeliverEx, 0) == -1 )
 			{
-				Sleep(0);
+				CcpThreadYield();
 			}
 		}
 		else
 		{
 			BN_DELIVER(bnlog("pending call true"));
-			LeaveCriticalSection( &m_singleton.m_callbackJobLock );
+			m_singleton.m_callbackJobLock.Release();
 		}
 	}
 	else
@@ -2338,17 +2340,17 @@ bool BlueNet::Deliver( BlueNetHeader* header,
 		job->next = 0;
 		m_singleton.m_callbackTail_C = job;
 
-		LeaveCriticalSection( &m_singleton.m_callbackJobLock );
+		m_singleton.m_callbackJobLock.Release();
 	}
 
 	return true;
-}				
+}
 
 //------------------------------------------------------------------------------
 int BlueNet::DeliverEx( void* arg )
 {
 	BN_DELIVER(bnlog("Python delivery"));
-	
+
 	// trivial call?
 	if ( !m_singleton.m_callbackHead )
 	{
@@ -2357,12 +2359,12 @@ int BlueNet::DeliverEx( void* arg )
 
 	// get in get the list and get out, so none of the async activity is
 	// blocked by long callbacks
-	EnterCriticalSection( &m_singleton.m_callbackJobLock );
+	m_singleton.m_callbackJobLock.Acquire();
 	DataCallbackJob *jobs = m_singleton.m_callbackHead;
 	m_singleton.m_callbackHead = 0;
 	m_singleton.m_callbackTail = 0;
 	m_singleton.m_pendingCallPending = false;
-	LeaveCriticalSection( &m_singleton.m_callbackJobLock );
+	m_singleton.m_callbackJobLock.Release();
 
 	DeliverJobs( jobs );
 
@@ -2400,7 +2402,7 @@ unsigned long long BlueNet::CheckForPing( TransportRepr* transport )
 {
 	if ( transport->nextLatencyTimeCheck < m_fastTime )
 	{
-		unsigned long long ret = GetTickCount();
+		unsigned long long ret = CcpGetTickCount();
 		if ( transport->nextLatencyTimeCheck == 0 )
 		{
 			// it's our first (or renegotiated) ping, signal reciever to also ping us
@@ -2412,7 +2414,7 @@ unsigned long long BlueNet::CheckForPing( TransportRepr* transport )
 
 		BN_PING(bnlog("transport [%lld] ping expired, sending timestamp[0x%016llX]", transport->ID, ret));
 		return ret;
-	}	
+	}
 
 	return 0;
 }
@@ -2434,7 +2436,7 @@ bool BlueNet::SendPacketEx( TransportRepr *transport,
 
 	int maxPacketsize = CioGetMaxPacketsize( len, headerLen );
 
-	Ccp::CriticalLockScoped tlock( transport->packetAggregateLock );
+	CcpAutoMutex tlock( transport->packetAggregateLock );
 
 	if ( priority == PRIORITY_NORMAL
 		 && ((maxPacketsize + transport->bytesAggregated) < BLUE_TRANSPORT_PACKET_AGGREGATOR_SIZE) )
@@ -2446,12 +2448,12 @@ bool BlueNet::SendPacketEx( TransportRepr *transport,
 	}
 
 	// would overflow the buffer or needs immediate send, flush some/all
-	
+
 	// enough room to format the whole lot and shift it out? then do so
 	if ( (maxPacketsize + transport->bytesAggregated) < (BLUE_TRANSPORT_PACKET_AGGREGATOR_SIZE*2) )
 	{
 		BN_AGG(bnlog("shifting out[%d] appended with[%d]", maxPacketsize, transport->bytesAggregated ));
-		
+
 		// enough room to send the whole lot, append it to the end and do so
 		transport->bytesAggregated += CioFormatPacket( transport->packetAggregator + transport->bytesAggregated, data, len, headerData, headerLen );
 		bool ret = CioSendFormattedPacket( transport->descriptor, transport->packetAggregator, transport->bytesAggregated );
@@ -2475,7 +2477,7 @@ unsigned int BlueNet::FlushTransport( TransportRepr* transport )
 		return 0;
 	}
 
-	Ccp::CriticalLockScoped tlock( transport->packetAggregateLock );
+	CcpAutoMutex tlock( transport->packetAggregateLock );
 
 	unsigned int bytes = transport->bytesAggregated;
 	bool ret = CioSendFormattedPacket( transport->descriptor, transport->packetAggregator, transport->bytesAggregated );
@@ -2548,40 +2550,46 @@ Callback_release:
 }
 
 //------------------------------------------------------------------------------
-void BlueNet::BatchThread( void *arg )
+uint32_t BlueNet::BatchThread( void *arg )
 {
 	int ret = 0;
 	int waitTime = 0;
 	do
 	{
-		if ( ret == WAIT_OBJECT_0 ) // actually woken up by an event?
+#if _WIN32
+		if( ret == WAIT_OBJECT_0 ) // actually woken up by an event?
+#elif __APPLE__
+		if( ret == 0 )
+#else
+#error "Missing implementation!"
+#endif
 		{
 			// we have been kicked, swap the buffers so a new one can begin
 			// accumulating
-			EnterCriticalSection( &m_singleton.m_batchLock );
-			BlueNetPacketBatch *batch = m_singleton.m_batchPing;
+			m_singleton.m_batchLock.Acquire();
+			BlueNetPacketBatch* batch = m_singleton.m_batchPing;
 			m_singleton.m_batchPing = m_singleton.m_batchPong;
 			m_singleton.m_batchPong = batch;
-			LeaveCriticalSection( &m_singleton.m_batchLock );
+			m_singleton.m_batchLock.Release();
 
 			// we are now "off the clock" on a separate CPU so do as much
 			// work here as possible
-			for( int i=0; i<batch->m_numberOfEntries; i++ )
+			for( int i = 0; i < batch->m_numberOfEntries; i++ )
 			{
 				BlueNetPacket* packet = batch->m_list[i];
 				char* buf;
 				unsigned int len = packet->payload.Finalize( &buf );
-				if ( !buf || !len )
+				if( !buf || !len )
 				{
-					BN_BATCH(bnlog("entry[%d] had problems buf[%p] len[%d] entries[%d]", i, buf, len, packet->listEntries));
+					BN_BATCH( bnlog( "entry[%d] had problems buf[%p] len[%d] entries[%d]", i, buf, len, packet->listEntries ) );
 					continue;
 				}
 
-				BN_BATCH(bnlog("sending entry[%d] len[%d] entries[%d]", i, len, packet->listEntries));
+				BN_BATCH( bnlog( "sending entry[%d] len[%d] entries[%d]", i, len, packet->listEntries ) );
 
-				if ( packet->listEntries )
+				if( packet->listEntries )
 				{
-					m_singleton.SendPacketToClientList( packet->recipientList, packet->listEntries,	m_singleton.m_blueNetHandlerPacketKey, buf,	len );
+					m_singleton.SendPacketToClientList( packet->recipientList, packet->listEntries, m_singleton.m_blueNetHandlerPacketKey, buf, len );
 				}
 				else
 				{
@@ -2595,10 +2603,18 @@ void BlueNet::BatchThread( void *arg )
 		m_singleton.Flush(); // in any case flush
 
 		waitTime = m_singleton.m_aggregateSendIntervalMilliseconds ? m_singleton.m_aggregateSendIntervalMilliseconds : 500;
-
-	} while ( (ret = WaitForSingleObject(m_singleton.m_batchReadyEvent, waitTime)) != WAIT_FAILED );
+#if _WIN32
+	} while( ( ret = WaitForSingleObject( m_singleton.m_batchReadyEvent, waitTime ) ) != WAIT_FAILED );
+	// FIXME the above assignment-followed-by-comparison looks very odd.
 
 	CCP_LOGERR_CH( s_blueNetChannel, "BlueNet:Destiny error in BatchThread wait[%d]", GetLastError() );
+#elif __APPLE__
+	    ret = dispatch_semaphore_wait( m_singleton.m_batchReadyEvent, dispatch_time( DISPATCH_TIME_NOW, int64_t( waitTime ) * 1000000 ) );
+    } while ( true );  // FIXME: is this really correct?
+#else
+#error "Missing implementation"
+#endif
+	return 0;
 }
 
 //-------------------------------------------------------------------------------
@@ -2682,21 +2698,22 @@ bool BlueNet::SerializeObject( PyObject* object, BitPackerManaged& packer )
 	}
 	else if ( PyInt_CheckExact(object) )
 	{
-		packer.Pack( (unsigned int)PYOBJECT_INT );
-		packer.Pack( (long)PyInt_AS_LONG(object) );
+		packer.Pack( (uint32_t)PYOBJECT_INT );
+		static_assert( sizeof(int64_t) >= sizeof(long) );
+		packer.Pack( (int64_t)PyInt_AS_LONG(object) );
 		BN_SERIALIZE(bnlog("packing Int[%d:0x%08X]", PyInt_AS_LONG(object), (unsigned long)PyInt_AS_LONG(object) ));
 		m_singleton.m_stats.numberTotal;
 	}
 	else if ( PyLong_CheckExact(object) )
 	{
-		packer.Pack( (unsigned int)PYOBJECT_LONG );
-		packer.Pack( (long long)PyLong_AsLongLong(object) );
+		packer.Pack( (uint32_t)PYOBJECT_LONG );
+		packer.Pack( (int64_t)PyLong_AsLongLong(object) );
 		BN_SERIALIZE(bnlog("packing Long[%lld:0x%016llX]", PyLong_AsLongLong(object), (unsigned long long)PyLong_AsLongLong(object) ));
 		m_singleton.m_stats.numberTotal;
 	}
 	else if ( PyFloat_CheckExact(object) )
 	{
-		packer.Pack( (unsigned int)PYOBJECT_DOUBLE );
+		packer.Pack( (uint32_t)PYOBJECT_DOUBLE );
 		packer.Pack( (double)PyFloat_AS_DOUBLE(object) );
 		BN_SERIALIZE(bnlog("packing Float[%f]", PyFloat_AS_DOUBLE(object)));
 		m_singleton.m_stats.numberTotal;
@@ -2814,11 +2831,11 @@ PyObject* BlueNet::UnserializeObject( BitPacker& packer )
 			Py_INCREF( Py_None );
 			break;
 		}
-		
+
 		case PYOBJECT_STRING:
 		{
 			BN_UNSERIALIZE(bnlog("PYOBJECT_STRING"));
-			
+
 			unsigned int len;
 			char* buf;
 			if ( !m_singleton.UnpackString( &buf, &len, packer ) )
@@ -2833,7 +2850,7 @@ PyObject* BlueNet::UnserializeObject( BitPacker& packer )
 		{
 			BN_UNSERIALIZE(bnlog("PYOBJECT_INT"));
 
-			long val;
+			int32_t val;
 			packer.Unpack( val );
 			return PyInt_FromLong( val );
 		}
@@ -2842,7 +2859,7 @@ PyObject* BlueNet::UnserializeObject( BitPacker& packer )
 		{
 			BN_UNSERIALIZE(bnlog("PYOBJECT_LONG"));
 
-			long long val;
+			int64_t val;
 			packer.Unpack( val );
 			return PyLong_FromLongLong( val );
 		}
@@ -3025,7 +3042,7 @@ bool BlueNet::UnpackString( char** string, unsigned int* len, BitPacker& packer 
 {
 	bool indexed;
 	packer.Unpack( indexed );
-	
+
 	if ( indexed )
 	{
 		unsigned int index;
@@ -3036,7 +3053,7 @@ bool BlueNet::UnpackString( char** string, unsigned int* len, BitPacker& packer 
 			CCP_LOGERR_CH( s_blueNetChannel, "string index out of range [%d]", index );
 			return false;
 		}
-		
+
 		*string = const_cast<char *>(MARSHAL_STRINGS[index]);
 		*len = (unsigned int)strlen(MARSHAL_STRINGS[index]);
 
@@ -3046,7 +3063,7 @@ bool BlueNet::UnpackString( char** string, unsigned int* len, BitPacker& packer 
 	{
 		packer.Unpack( *len );
 		packer.DeQueueAlignedBlock( string, *len );
-		
+
 //		BN_PACKSTRING(char str[10000]; memcpy(str,*string,*len); str[*len]=0);
 //		BN_PACKSTRING(bnlog("unpacked MISSED [%d][%s]", *len, str));
 	}

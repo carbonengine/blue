@@ -4,6 +4,8 @@
 #include <CoreFoundation/CoreFoundation.h>
 #endif
 
+#include <inttypes.h>
+
 #include "BlueOS.h"
 #include "Include/IBluePersist.h"
 #include "Include/IBlueCallbackMan.h"
@@ -15,6 +17,8 @@
 #include "BlueLogInMemory.h"
 #include "BluePaths.h"
 #include "BlueResFile.h"
+#include "BlueSocketLogger.h"
+#include "crypto.h"
 
 #if BLUE_WITH_PYTHON
 #include "Include/ITaskletTimer.h"
@@ -23,17 +27,16 @@
 
 #ifdef _WIN32
 #include "win32.h"
-#include "crypto.h"
-#include "Logger/Logger.h"
+#include <shellapi.h>
+#else
+#include <codecvt>
 #endif
 
 #if CCP_STACKLESS
 #include "Include/BitPacker.h"
-#if !PORTING_TO_LINUX
 #include "Include/BlueNet.h"
 #include "Include/BlueNetTypes.h"
 #include "CcpUtils/PyCpp.h"
-#endif
 #include <stacklessio_api.h>
 #endif
 
@@ -48,6 +51,11 @@ static CcpLogChannel_t s_chErr = CCP_LOG_DEFINE_CHANNEL( "ERR" );
 IBlueOS* BeOS = nullptr;
 BLUE_REGISTER_GLOBAL_AS_MODULE_OBJECT( "os", BeOS );
 
+IBlueOS* BlueGetBeOS()
+{
+	return BeOS;
+}
+
 CCP_STATS_DECLARE( logInfo,			"Blue/logInfo",			false,	CST_COUNTER_LOW, "Count of info logs" );
 CCP_STATS_DECLARE( logNotice,		"Blue/logNotice",		false,	CST_COUNTER_LOW, "Count of notice logs" );
 CCP_STATS_DECLARE( logWarn,			"Blue/logWarn",			false,	CST_COUNTER_LOW, "Count of warning logs" );
@@ -58,7 +66,7 @@ bool g_carbonIoFastWakeup = false;
 
 bool g_carbonIoManualWakeup = true;
 
-#if CCP_STACKLESS && !PORTING_TO_LINUX
+#if CCP_STACKLESS
 
 const int BNT_SIMCLOCK_SYNC_INIT = BlueNet::BlueNetKeyFromName( "SimClock::SycInit" );
 const int BNT_SIMCLOCK_SYNC_UPDATE = BlueNet::BlueNetKeyFromName( "SimClock::SycUpdate" );
@@ -111,69 +119,87 @@ HANDLE gBreakSleep;
 HANDLE gBreakCarbonIo;
 static unsigned int sNextScheduledIOWakeup = 0; // when the watchdog will wakeup
 static bool sPendingWakeup = false; // is there a wakeup event outstanding?
+#endif
 
 // A class to format and create a windows error message.
-class BlueWinError
+class BlueOsError
 {
 public:
-	BlueWinError();	//gets code from GetLastError()
-	BlueWinError(unsigned long errorcode);	//(DWORD)you supply the code
-	~BlueWinError();
+	BlueOsError( IBlueOS::OsErrorType errorcode );
+	~BlueOsError();
 
 	operator const char* () const {return message?message:"Unknown";}
 private:
-	void Format(unsigned long code);
+	void Format( unsigned long code );
 	char *message;
 };
 
-//BlueWinError class members
-BlueWinError::BlueWinError()
+#ifdef _WIN32
+
+BlueOsError::BlueOsError( IBlueOS::OsErrorType error )
 {
-	Format(GetLastError());
+    message = 0;
+    DWORD res = FormatMessage(
+        FORMAT_MESSAGE_ALLOCATE_BUFFER |
+        FORMAT_MESSAGE_FROM_SYSTEM |
+        FORMAT_MESSAGE_IGNORE_INSERTS,
+        0,
+		error,
+        0, //MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
+        (LPTSTR)&message,
+        0,
+        0);
+    if (!res) {
+        if (message)
+            LocalFree(message);
+        message = 0;
+    } else {
+        // remove trailing newlines
+        size_t i = strlen(message);
+        while(i-- > 0 && (message[i] == '\n' || message[i]=='\r'))
+            message[i] = 0;
+    }
 }
-BlueWinError::BlueWinError(DWORD error)
-{
-	Format(error);
-}
-BlueWinError::~BlueWinError()
+
+BlueOsError::~BlueOsError()
 {
 	if (message)
-		LocalFree(message);
+    {
+		LocalFree( message );
+    }
 }
-void BlueWinError::Format(DWORD errcode)
+
+#else
+
+BlueOsError::BlueOsError( IBlueOS::OsErrorType error )
 {
-	message = 0;
-	DWORD res = FormatMessage(
-		FORMAT_MESSAGE_ALLOCATE_BUFFER | 
-		FORMAT_MESSAGE_FROM_SYSTEM |
-		FORMAT_MESSAGE_IGNORE_INSERTS,
-		0,
-		errcode,
-		0, //MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
-		(LPTSTR)&message,
-		0,
-		0);
-	if (!res) {
-		if (message)
-			LocalFree(message);
-		message = 0;
-	} else {
-		// remove trailing newlines
-		size_t i = strlen(message);
-		while(i-- > 0 && (message[i] == '\n' || message[i]=='\r'))
-			message[i] = 0;
-	}
+    char buffer[128];
+    if( strerror_r( error, buffer, sizeof( buffer ) ) == 0 )
+    {
+        message = strdup( buffer );
+    }
+    else
+    {
+        message = nullptr;
+    }
 }
 
+BlueOsError::~BlueOsError()
+{
+    if (message)
+    {
+        free( message );
+    }
+}
 
-#endif // _WIN32
+#endif
 
 #if CCP_STACKLESS
 
 //------------------------------------------------------------------------------
 static void OnIOTaskletScheduled( bool force )
 {
-#if !PORTING_TO_LINUX
+#ifndef NO_CARBONIO
 	if( g_carbonIoFastWakeup )
 	{
 		SetEvent(gBreakCarbonIo);
@@ -198,7 +224,7 @@ static void OnIOTaskletScheduled( bool force )
 //------------------------------------------------------------------------------
 static void IOWakeupWatchdogThread( void *arg )
 {
-#if !PORTING_TO_LINUX
+#ifndef NO_CARBONIO
 	// periodically wake up and check to see if a pending wakeup was
 	// issued but never serviced, this will happen only when IO is unbusy.
 	for(;;)
@@ -224,15 +250,23 @@ int runPyMain( std::vector<std::wstring> &argv )
 {/*
 	This is so that we can have blue behave as a standard python interpreter.
  */
+    if (BeCrashes) {
+        // Signal to the crash reporting system that we're running in interpreter mode
+        BeCrashes->SetCrashKeyValue("interpreterMode", "true");
+        // And this allows us to filter for these kinds of crashes in sentry.io
+		// using snake_csae to be consistent with the other search able keys on sentry.
+        BeCrashes->SetCrashKeyValue("sentry", R"({"tags": {"interpreter_mode": "true"}})");
+    }
+
 	// We want vanilla python behaviour.
-	// Every argument after /py gets forwarded to Py_Main	
+	// Every argument after /py gets forwarded to Py_Main
 	unsigned int nPythonArgs;
 	unsigned int vanillaIndex = 0;
 	char** pythonArguments;
 	// PyMain actually fucks with the arguments
 	// so we need to backup the pointer to clean them up
-	char** backupPythonArguments; 
-		
+	char** backupPythonArguments;
+
 	// At what index is the vanilla marker
 	for( unsigned int i = 0; i < argv.size(); i++ )
 	{
@@ -266,13 +300,13 @@ int runPyMain( std::vector<std::wstring> &argv )
 
 	unsigned int index = 0;
 	unsigned int counter = 0;
-	do 
+	do
 	{
 		unsigned int slen = (unsigned int)argv[index].size() + 1; // Plus one for the null terminator
 		pythonArguments[counter] = (char*)CCP_MALLOC( "RunPyMain: Array Element",  slen*sizeof(char) );
 		if( pythonArguments[counter] == NULL )
 		{
-			CCP_LOGERR( "runPyMain() -> Couldn't allocate memory for one of the python parameters" );			
+			CCP_LOGERR( "runPyMain() -> Couldn't allocate memory for one of the python parameters" );
 			return 1;
 		}
 		strncpy_s( pythonArguments[counter], slen, CW2A(argv[index].c_str()), _TRUNCATE );
@@ -289,7 +323,7 @@ int runPyMain( std::vector<std::wstring> &argv )
 	// Success,... now lets hope the arguments make sense
 	int result = Py_Main( nPythonArgs, pythonArguments );
 
-	// Cleanup	
+	// Cleanup
 	for( unsigned int i = 0; i < nPythonArgs; i++ )
 	{
 		CCP_FREE( backupPythonArguments[i] );
@@ -307,8 +341,8 @@ struct TaskletSwitch
 	PyObject* mContext;
 };
 
-static TaskletSwitch TASKLETS[] = 
-{ 
+static TaskletSwitch TASKLETS[] =
+{
 	{"BeOS::System", NULL},
 	{"BeOS::Python", NULL},
 	{"BeOS::Host App", NULL},
@@ -346,7 +380,6 @@ BlueOS::BlueOS() :
 	mErrorLog( "BlueOS/mErrorLog" ),
 	mErrorLogMutex( "BlueOS", "mErrorLogMutex" ),
 	mTickers( "BlueOS/mTickers" ),
-	mCatchUpTickerHeap( "BlueOS/mCatchUpTickerHeap" ),
 	m_frameTimeWatchdog( "FrameTime" ),
 	m_frameTimeTimeout( 0 ),
 	mAdvanceTimeInPump( true ),
@@ -354,7 +387,7 @@ BlueOS::BlueOS() :
 	mLanguageID(L"EN")
 {
 	mPID = CcpGetCurrentProcessId();
-	m_startupTime = CcpGetTimestamp();
+	m_startupTime = CcpGetTickCount();
 
 	BeOS = this;  //Set global IBlueOS pointer to this static object
 
@@ -404,13 +437,12 @@ BlueOS::BlueOS() :
 
 	mMiniDump = false;
 
-#if CCP_STACKLESS && !PORTING_TO_LINUX
+#if CCP_STACKLESS && !defined(NO_CARBONIO)
 	gBreakSleep = CreateEvent(NULL, FALSE, FALSE, NULL);
 	gBreakCarbonIo = CreateEvent(NULL, FALSE, FALSE, NULL);
 
 	CioSetOnTaskletScheduledCallback( OnIOTaskletScheduled );
 	_beginthread( IOWakeupWatchdogThread, 0, 0 );
-
 #endif
 
 #if BLUE_WITH_PYTHON
@@ -431,7 +463,7 @@ BlueOS::~BlueOS()
 #if BLUE_WITH_PYTHON
 	Py_XDECREF(mFrameClock);
 #endif
-#if !PORTING_TO_LINUX
+#ifndef NO_CARBONIO
 	CloseHandle(gBreakSleep);
 #endif
 }
@@ -441,40 +473,6 @@ BlueOS::Ticker::Ticker( IBlueEvents *cb, void* cookie ) :
 	mCb( cb ),
 	mCookie( (const char*)cookie )
 {
-}
-
-
-BlueOS::CatchupTicker::CatchupTicker(
-	ICatchupTicks *cb, 
-	void* cookie, 
-	Be::Time tickTime, 
-	Be::Time perFrameBudget
-) :
-	mCb(cb),
-	mCookie((const char*)cookie),
-	mTimeBetweenTicks(tickTime),
-	mPerFrameTimeBudget(perFrameBudget),
-	mNeedsPostFrameTick(false)
-{
-}
-
-
-bool BlueOS::CatchupTicker::operator<(const CatchupTicker& other) const
-{
-	if( mCb == other.mCb )
-	{
-		return mCookie < other.mCookie;
-	}
-	else
-	{
-		return mCb < other.mCb;
-	}
-}
-
-
-bool BlueOS::CatchupTicker::operator == (const CatchupTicker& other) const
-{
-	return mCb == other.mCb && mCookie == other.mCookie;
 }
 
 
@@ -498,48 +496,7 @@ void BlueOS::UnregisterForTicks( IBlueEvents *cb, void* cookie )
 	TickIt it = std::find( mTickers.begin(), mTickers.end(), Ticker(cb, cookie) );
 	if( it != mTickers.end() )
 	{
-		mTickers.erase(it); 
-	}
-}
-
-
-void BlueOS::RegisterForCatchupTicks(
-	ICatchupTicks *cb, 
-	void* cookie, 
-	Be::Time tickMS, 
-	Be::Time perFrameBudget )
-{
-	// Check if its already in here? If so then return
-	for( unsigned int i = 0; i < mCatchUpTickerHeap.size(); i++ )
-	{
-		if( mCatchUpTickerHeap[i]->mCb == cb && mCatchUpTickerHeap[i]->mCookie == cookie)
-		{
-			return;
-		}
-	}
-
-	CatchupTicker *ticker = CCP_NEW("BlueOS::RegisterForCatchupTicks::CatchupTicker")
-		CatchupTicker(cb, cookie, tickMS*10000, perFrameBudget);
-
-	ticker->mNextTickTime = mRealTime + ticker->mTimeBetweenTicks;
-	mCatchUpTickerHeap.push_back(ticker);
-	push_heap( mCatchUpTickerHeap.begin(), mCatchUpTickerHeap.end(), CatchUpTickerComparator() );
-}
-
-
-void BlueOS::UnregisterForCatchupTicks( ICatchupTicks *cb, void* cookie )
-{
-	for( unsigned int i = 0; i < mCatchUpTickerHeap.size(); i++ )
-	{
-		if( mCatchUpTickerHeap[i]->mCb == cb && mCatchUpTickerHeap[i]->mCookie == cookie )
-		{
-			// Swap the back to this position, pop back, and reheapify
-			CCP_DELETE mCatchUpTickerHeap[i];
-			mCatchUpTickerHeap[i] = mCatchUpTickerHeap[mCatchUpTickerHeap.size()-1];
-			mCatchUpTickerHeap.pop_back();
-			make_heap(mCatchUpTickerHeap.begin(), mCatchUpTickerHeap.end(), CatchUpTickerComparator());
-			return;
-		}
+		mTickers.erase(it);
 	}
 }
 
@@ -551,7 +508,7 @@ void Py_FatalError( char *msg )
 	RaiseException( 0xE0000011, EXCEPTION_NONCONTINUABLE, 0, NULL );
 	TerminateProcess( GetCurrentProcess(), -3 ); // shouldn't get here
 #else
-	exit(1);
+    kill( getpid(), SIGKILL );
 #endif
 }
 
@@ -562,7 +519,7 @@ void Py_FatalError( char *msg )
 void BlueOS::DoSleep()
 {
 #if CCP_STACKLESS
-#if PORTING_TO_LINUX
+#ifdef NO_CARBONIO
     if( mNextScheduledEvent <= 0 )
     {
         return;
@@ -577,7 +534,7 @@ void BlueOS::DoSleep()
 	}
 
 	// Mark this as an idle timer
-	SafeAutoTasklet _at2(PyOS->GetTaskletTimer(),TASKLETS[IDLETASKLET].mContext, true, IDLE); 
+	SafeAutoTasklet _at2(PyOS->GetTaskletTimer(),TASKLETS[IDLETASKLET].mContext, true, IDLE);
 
 	HANDLE handles[3];
 	handles[0] = PyStacklessIoGetWakeupEventHandle();
@@ -681,15 +638,6 @@ CCP_STATS_DECLARE( STAT_usedDeltaT, "Blue/usedDeltaT", true, CST_COUNTER_HIGH,
 #define ONE_SECOND_F (ONE_MILLISECOND_F * 1000)
 
 
-// UGLY: Using a global to support convenient access to the variable delta, without having to change
-//       lots of function signatures. Eventually, it should be possible to remove this, but it makes
-//       life easier to retain it for now.
-#ifdef _WIN32
-__declspec(dllexport) 
-#endif
-float g_deltaT_sec = 0.0f;
-
-
 void BlueOS::InitVariableTicking()
 {
 	// If we aren't using a measured delta, use this nominal value instead
@@ -700,13 +648,11 @@ void BlueOS::InitVariableTicking()
 	if( START_WITH_CONSTANT_TICKS )
 	{
 		// The original behaviour is equivalent to this...
-		mUseSimpleCatchupLoop = false;
 		mUseNominalDeltaT = true;
 	}
 	else
 	{
 		// Full variable-tick support is enabled by this...
-		mUseSimpleCatchupLoop = true;
 		mUseNominalDeltaT = false;
 	}
 
@@ -842,12 +788,12 @@ void BlueOS::ComputeTimeValues(Be::Time* ptrActualTime, float* ptrDeltaT_sec)
 				BlueOS::PendingDilationEvent newEvent = mPendingDilationEvents.top();
 				mPendingDilationEvents.pop();
 
-				CCP_LOG_CH( s_chOS, "TIDI New sync base - %f, %I64d", newEvent.mNextDilationFactor, mRealTime);
+				CCP_LOG_CH( s_chOS, "TIDI New sync base - %f, %" PRId64, newEvent.mNextDilationFactor, mRealTime);
 				// The event now becomes our current sync base
 				mSimDilation = newEvent.mNextDilationFactor;
 				mDilationSyncFactor = newEvent.mNextDilationFactor;
 				mDilationSyncBaseSimTime = newEvent.mNextDilationEventSimTime;
-				mDilationSyncBaseWallclockTime = newEvent.mNextDilationEventWallclockTime;			
+				mDilationSyncBaseWallclockTime = newEvent.mNextDilationEventWallclockTime;
 			}
 			else
 			{
@@ -905,11 +851,8 @@ void BlueOS::ComputeTimeValues(Be::Time* ptrActualTime, float* ptrDeltaT_sec)
 		CCP_LOGERR( "ERROR: deltaT_sec < 0 --- value is %f", deltaT_sec );
 	}
 
-	// Update the global version of deltaT (which is just a temporary convenience for now)
-	g_deltaT_sec = deltaT_sec;
-
 	// NB: I'm putting these timer stats into a millisecond scale, and must multiply accordingly
-	CCP_STATS_SET( STAT_usedDeltaT, g_deltaT_sec * 1000 );
+	CCP_STATS_SET( STAT_usedDeltaT, deltaT_sec * 1000 );
 
 
 	// Set the formal outputs of this function
@@ -917,73 +860,26 @@ void BlueOS::ComputeTimeValues(Be::Time* ptrActualTime, float* ptrDeltaT_sec)
 	*ptrDeltaT_sec = deltaT_sec;
 }
 
-void BlueOS::RunSimpleCatchupLoop(float deltaT_sec)
-{
-	// In future, if we remove CatchupTicks, I would expect to replace them with something like this...
-	/*
-	for (VariableTickIt ticker = mVariableTickers.begin();
-		 ticker != mVariableTickers.end(); ticker++)
-	{
-		CCP_STATS_ZONE( "BlueOS/PumpOS/VariableTickers" );
-
-		const char* taskname = ticker->mCookie;
-		// Switch to appropriate ticker
-		AutoTasklet _at2(PyOS->GetTaskletTimer(), taskname ? taskname : "(null ticker?)");		
-		ticker->mCb->OnTick(mTime, deltaT_sec, (void*)taskname);
-
-        PyOS->PyFlushError(taskname);
-
-		if (mDebugLevel > 0 && HeapScrewed())
-			CCP_LOGERR_CH( s_osChannel, "Heap corrupt after ticking %s", taskname);
-	}
-	*/
-
-	// While we still have CatchupTickers, use this simple iteration to treat them as VariableTickers
-	for( CatchupTickerVector::iterator iter = mCatchUpTickerHeap.begin();
-		iter != mCatchUpTickerHeap.end(); ++iter )
-	{
-		CCP_STATS_ZONE( "BlueOS/PumpOS/VariableTickers" );
-
-		CatchupTicker* ticker = *iter;
-
-		const char* taskname = ticker->mCookie;
-		// Switch to appropriate ticker
-#if BLUE_WITH_PYTHON
-		AutoTasklet _at2(PyOS->GetTaskletTimer(), taskname ? taskname : "(null ticker?)");		
-#endif
-		ticker->mCb->OnTick(mRealTime, deltaT_sec, (void*)taskname);
-		ticker->mCb->OnPostFrameTick(mRealTime, (void *)taskname);
-
-#if BLUE_WITH_PYTHON
-		PyOS->PyFlushError(taskname);
-#endif
-
-		if( mDebugLevel > 0 && HeapScrewed() )
-		{
-			CCP_LOGERR_CH( s_chOS, "Heap corrupt after ticking %s", taskname);
-		}
-	}
-}
-
+#if !__APPLE__
 void BlueOS::PumpOS()
 {
-	CCP_STATS_ZONE( "BlueOS/PumpOS" );
+    PumpOSInternal();
+}
+#endif
 
-#ifdef _WIN32
+void BlueOS::PumpOSInternal()
+{
+	CCP_STATS_ZONE( "BlueOS/PumpOS" );
 	if( BeCrashes )
 	{
-		auto time = CcpGetTimestamp();
 		char timeStr[64];
-		float interval = float( double( time - m_startupTime ) / CcpGetTimestampFrequency() );
+		float interval = float( double( CcpGetTickCount() - m_startupTime ) / 1000 );
 		sprintf_s( timeStr, "%.1f", interval );
 
 		BeCrashes->SetCrashKeyValue( "timeSinceStartup", timeStr );
 	}
-#endif
 
-#ifdef _WIN32
-	if( IsDebuggerPresent() )
-#endif
+	if( CcpIsDebuggerPresent() )
 	{
 		m_frameTimeWatchdog.Stop();
 	}
@@ -1025,12 +921,12 @@ void BlueOS::PumpOS()
 		DoSleep();
 		mNextScheduledEvent = int( mSleepTime );
 	}
-#if !PORTING_TO_LINUX
+#ifndef NO_CARBONIO
 	// alert the IO watchdog that events have been delivered recently
 	sNextScheduledIOWakeup = GetTickCount() + MIN_SCHEDULED_IO_INTERVAL;
+#endif
 
 	BeNet->DeliverCPackets(); // dispatch any waiting callbacks
-#endif
 #endif
 
 
@@ -1058,7 +954,7 @@ void BlueOS::PumpOS()
 #if BLUE_WITH_PYTHON
 	// Switch to python as soon as possible, since we woke up to service python tasklets.
 	{
-		SafeAutoTasklet _at2(PyOS->GetTaskletTimer(),TASKLETS[PYTHONTASKLET].mContext); 
+		SafeAutoTasklet _at2(PyOS->GetTaskletTimer(),TASKLETS[PYTHONTASKLET].mContext);
 		PyOS->PumpPython(false);
 		PyOS->PyFlushError("PumpOS::end PumpPython");
 	}
@@ -1067,15 +963,6 @@ void BlueOS::PumpOS()
 	EvaluateTimeDilation();
 
 	TickTickers();
-
-	if( mUseSimpleCatchupLoop )
-	{
-		RunSimpleCatchupLoop(deltaT_sec);
-	}
-	else
-	{
-		RunCatchUpTicks(deltaT_sec);
-	}
 
 	// Mark timestamp in rotating timestamps array
 	m_pumpTicksTotal++;
@@ -1090,7 +977,7 @@ void BlueOS::PumpOS()
 	}
 	else if( steps < 1 )
 	{
-		steps = 1; 
+		steps = 1;
 	}
 	int last = mTimeStampIdx - steps;
 	if( last < 0 )
@@ -1137,7 +1024,7 @@ bool BlueOS::Startup( int pyOptimizeFlag, ManifestVerification manifestVerificat
 
 	//start up crypto
 	if( !InitCrypto() )
-	{ 
+	{
 		SetError( BEDEF, Clsid(), "BlueOS::Startup(): InitCrypto failed" );
 		return false;
 	}
@@ -1274,7 +1161,7 @@ PyObject* BlueOS::PyStacklessMain( PyObject* args )
 
 	//autoexec can reside in a .zip lib
 	PyObject *module = PyImport_ImportModule( "autoexec" );
-	if( !module ) 
+	if( !module )
 	{
 		// PyErr_SetString( PyExc_RuntimeError, "autoexec module not found" );
 		return NULL;
@@ -1306,12 +1193,12 @@ PyObject* BlueOS::PyStacklessMain( PyObject* args )
 	{
 		{
 			CCP_STATS_ZONE( "Main loop");
-#if !PORTING_TO_LINUX
+#if _WIN32
 			MSG msg;
 			while(PeekMessageW(&msg, 0, 0, 0, PM_REMOVE))
 			{
 				if (msg.message ==	WM_QUIT)
-				{				
+				{
 					quit = true;
 					BlueLogInMemory::GetInstance()->ExecuteSaveLogCallback();
 					break;
@@ -1333,24 +1220,21 @@ PyObject* BlueOS::PyStacklessMain( PyObject* args )
 
 void BlueOS::Terminate( int retCode )
 {
-#if CCP_STACKLESS
-	fprintf(stderr, "Terminating process by request - returning %d", retCode );
-#endif
-	CCP_LOG_CH( s_chOS, "Terminating process by request - returning %d", retCode );
+	CCP_LOG_CH( s_chOS, "Terminating process by request - returning %d\n", retCode );
 
 	for( unsigned int ix = 0; ix < mIndispensableTerminationSteps.size(); ++ix)
 	{
 		#ifdef _WIN32
 			__try
 			{
-				mIndispensableTerminationSteps[ix]();	
+				mIndispensableTerminationSteps[ix]();
 			}
 			__except( EXCEPTION_EXECUTE_HANDLER )
 			{
 				CCP_LOGERR_CH( s_chOS, "Exception thrown when executing a shutdown step" );
 			}
 		#else
-			mIndispensableTerminationSteps[ix]();	
+			mIndispensableTerminationSteps[ix]();
 		#endif
 	}
 
@@ -1362,12 +1246,12 @@ void BlueOS::Terminate( int retCode )
 	fflush( stderr );
 	fflush( stdout );
 
-#ifdef _WIN32
 	// This should ensure that the in-memory logs are flushed
 	// ensuring that any exceptions right before the terminate are still sent out!
 	// This only handles the in memory logging, not the other handlers
-	Log__Flush();
+	FlushSocketLogger();
 
+#if _WIN32
 	BOOL result = TerminateProcess( GetCurrentProcess(), retCode );
 	if( !result )
 	{
@@ -1393,13 +1277,16 @@ void BlueOS::Terminate( int retCode )
 			CCP_LOGERR_CH( s_chOS, "Waiting for process termination returned %d", waitResult );
 			break;
 	}
-	Log__Flush();
+	FlushSocketLogger();
 
 	// If we ever get here something has gone horribly wrong - induce a crash so
 	// we learn about this via the crash dumps.
 	CcpCrashOnPurpose();
 #else
-    kill( getpid(), SIGKILL );
+	// The exit() handler does cleanup which causes a crash on macOS because we are
+	// bad citizens and have memory issues which we haven't taken care of yet
+	// in the meantime we use _exit which quits without cleanup
+	_exit( retCode );
 #endif
 }
 
@@ -1417,30 +1304,16 @@ void BlueOS::SetTime(Be::Time time)
 {
 	if( !time )
 	{
-#ifdef _WIN32
-		//Get the time, as precisely as we can (it's updated very rarely)
-		FILETIME ft0, ft1;
-		GetSystemTimeAsFileTime(&ft0);
-		for(;;)
-		{
-			GetSystemTimeAsFileTime(&ft1);
-			if( memcmp(&ft0, &ft1, sizeof(ft0)) )
-			{
-				break; //it just changed!  okay, we are all set.
-			}
-		}
-		LARGE_INTEGER li;
-		li.LowPart = ft1.dwLowDateTime;
-		li.HighPart = ft1.dwHighDateTime;
-		time = li.QuadPart;
-#else
-        struct timeval tv;
-        gettimeofday( &tv, nullptr );
-        time = tv.tv_sec;
-        time *= 1000000;
-        time += tv.tv_usec;
-        time *= 10;
-#endif
+        //Get the time, as precisely as we can (it's updated very rarely)
+        auto t0 = TimeNow();
+        for (;;)
+        {
+            time = TimeNow();
+            if( t0 != time )
+            {
+                break; //it just changed!  okay, we are all set.
+            }
+        }
 	}
 	Be::Time wc = mWallclock.Get();
 	mUTCAdj = time - wc;
@@ -1469,7 +1342,7 @@ void SetBlueTime(Be::Time time)
 
 
 Be::Time BlueOS::GetActualTime()
-{	
+{
 	static CcpMutex s_getActualTimeMutex( "GetActualTime", "BeOS" );
 	CcpAutoMutex locker( s_getActualTimeMutex );
 	return mUTCAdj + mWallclock.Get(); // Adjust for server sync
@@ -1478,7 +1351,7 @@ Be::Time BlueOS::GetActualTime()
 Be::Time BlueOS::GetSmoothedTime()
 {
 #if BLUE_WITH_PYTHON
-	if( !mFrameClock ) 
+	if( !mFrameClock )
 #endif
 	{
 		return GetActualTime();
@@ -1508,10 +1381,13 @@ Be::Time BlueOS::GetSmoothedTime()
 
 void BlueOS::NextScheduledEvent(int millisec)
 {
+	if ( millisec > 10 ) {
+		millisec = 10;
+	}
 #if CCP_STACKLESS
 	if( millisec <= 0 )
 	{
-#if !PORTING_TO_LINUX
+#ifndef NO_CARBONIO
 		SetEvent(gBreakSleep); //If we are sleeping (this could be an async window message we're in, wake up!)
 #endif
 		mNextScheduledEvent = -1;
@@ -1539,7 +1415,7 @@ void BlueOS::SetError( long error,	const Be::Clsid* reporter, const char* format
 		return;
 	}
 
-	if( error == BEFLUSH ) 
+	if( error == BEFLUSH )
 	{
 		//Put out the stuff to the logger!
 		char* str;
@@ -1549,10 +1425,10 @@ void BlueOS::SetError( long error,	const Be::Clsid* reporter, const char* format
 			CCP_LOGERR_CH( s_chErr, "%s", str);
 		}
 		CCP_FREE( str );
-	} 
+	}
 
 
-	if( error == BEFLUSH || error == BECLEAR ) 
+	if( error == BEFLUSH || error == BECLEAR )
 	{
 		for( ErrIt i = mErrorLog.begin(); i != mErrorLog.end(); ++i )
 		{
@@ -1563,7 +1439,7 @@ void BlueOS::SetError( long error,	const Be::Clsid* reporter, const char* format
 	}
 
 	//Emergency vent.  We don't want to fill the memory with errors, oh no.
-	if( mErrorLog.size() > 256 ) 
+	if( mErrorLog.size() > 256 )
 	{
 		CCP_LOGERR_CH( s_chErr, "Autoflushing blue error log:");
 		SetError(BEFLUSH, 0, "");
@@ -1573,14 +1449,16 @@ void BlueOS::SetError( long error,	const Be::Clsid* reporter, const char* format
 	// Set up the error structure
 	IBlueOS::Error err;
 	err.mError = error;
-	err.mWinError = 0;
+	err.mOsError = 0;
 	if( error == BE32 )
 	{
 #ifdef _WIN32
-		err.mWinError = GetLastError();
-		BlueWinError winerr(err.mWinError);
-		CCP_LOGERR( winerr );
+		err.mOsError = GetLastError();
+#else
+        err.mOsError = errno;
 #endif
+		BlueOsError winerr( err.mOsError );
+		CCP_LOGERR( winerr );
 	}
 
 	err.mSource = reporter;
@@ -1642,15 +1520,12 @@ void BlueOS::FormatError( char** errorstring )
 		stream << (int)err->mTimestamp << " : ";
 
 		// prettyprint error code
-		if( err->mError == BE32 ) 
+		if( err->mError == BE32 )
 		{
-#ifdef _WIN32
-			// win 32 code
-			BlueWinError winerr(err->mWinError);
-			stream << '{' << err->mWinError << ':' << (const char*)winerr << '}';
-#endif
-		} 
-		else if( err->mError != BEDEF ) 
+			BlueOsError winerr( err->mOsError );
+			stream << '{' << err->mOsError << ':' << (const char*)winerr << '}';
+		}
+		else if( err->mError != BEDEF )
 		{
 			stream << "[Unknown]";
 		}
@@ -1675,10 +1550,10 @@ void BlueOS::FormatError( char** errorstring )
 		{
 			stream << ": ";
 		}
-		while( descriptionPtr && *descriptionPtr ) 
+		while( descriptionPtr && *descriptionPtr )
 		{
 			const char *newline = strchr(descriptionPtr, '\n');
-			if( newline ) 
+			if( newline )
 			{
 				const char *next = newline+1;
 				// Skip any whitespace after the newline
@@ -1695,8 +1570,8 @@ void BlueOS::FormatError( char** errorstring )
 				}
 
 				descriptionPtr = next;
-			} 
-			else 
+			}
+			else
 			{
 				stream << descriptionPtr << '\n';
 				descriptionPtr = NULL;
@@ -1936,10 +1811,9 @@ PyObject* BlueOS::PyGetTimeParts(PyObject* args)
 	Be::Time time = PyLong_AsLongLong(t);
 	if (time == -1 && PyErr_Occurred()) return 0;
 
-#ifdef _WIN32
-	SYSTEMTIME st;
+	CcpDateTime st;
 
-	if (!FileTimeToSystemTime((FILETIME*)&time, &st))
+	if( !TimeAsDateTime( st, time ) )
 	{
 		SetError(BE32, Clsid(), "Couldn't convert time.");
 		return nullptr;
@@ -1952,22 +1826,16 @@ PyObject* BlueOS::PyGetTimeParts(PyObject* args)
 		return nullptr;
 	}
 
-	PyList_SET_ITEM(list, 0, PyInt_FromLong(st.wYear));
-	PyList_SET_ITEM(list, 1, PyInt_FromLong(st.wMonth));
-	PyList_SET_ITEM(list, 2, PyInt_FromLong(st.wDayOfWeek));
-	PyList_SET_ITEM(list, 3, PyInt_FromLong(st.wDay));
-	PyList_SET_ITEM(list, 4, PyInt_FromLong(st.wHour));
-	PyList_SET_ITEM(list, 5, PyInt_FromLong(st.wMinute));
-	PyList_SET_ITEM(list, 6, PyInt_FromLong(st.wSecond));
-	PyList_SET_ITEM(list, 7, PyInt_FromLong(st.wMilliseconds));
+	PyList_SET_ITEM(list, 0, PyInt_FromLong(st.year));
+	PyList_SET_ITEM(list, 1, PyInt_FromLong(st.month));
+	PyList_SET_ITEM(list, 2, PyInt_FromLong(st.dayOfWeek));
+	PyList_SET_ITEM(list, 3, PyInt_FromLong(st.day));
+	PyList_SET_ITEM(list, 4, PyInt_FromLong(st.hour));
+	PyList_SET_ITEM(list, 5, PyInt_FromLong(st.minute));
+	PyList_SET_ITEM(list, 6, PyInt_FromLong(st.second));
+	PyList_SET_ITEM(list, 7, PyInt_FromLong(st.milliseconds));
 
 	return list;
-
-#else
-	// TODO: Implement for non-Win32
-	return nullptr;
-
-#endif
 }
 
 
@@ -1976,110 +1844,31 @@ PyObject* BlueOS::PyGetTimeFromParts( PyObject* args )
 	int i[8];
 
 	if( !PyArg_ParseTuple(
-		args, 
-		"iiiiiii", &i[0], &i[1], &i[2], &i[3], &i[4], &i[5], &i[6] 
+		args,
+		"iiiiiii", &i[0], &i[1], &i[2], &i[3], &i[4], &i[5], &i[6]
 	))
 	{
 		return NULL;
 	}
 
-#ifdef _WIN32
-	SYSTEMTIME st;
-	st.wYear = i[0];
-	st.wMonth = i[1];
-	st.wDay = i[2];
-	st.wHour = i[3];
-	st.wMinute = i[4];
-	st.wSecond = i[5];
-	st.wMilliseconds = i[6];
-
+	CcpDateTime dt = { 0 };
+	dt.year = uint16_t( i[0] );
+	dt.month = uint16_t( i[1] );
+	dt.day = uint16_t( i[2] );
+	dt.hour = uint16_t( i[3] );
+	dt.minute = uint16_t( i[4] );
+	dt.second = uint16_t( i[5] );
+	dt.milliseconds = uint16_t( i[6] );
 	Be::Time ft;
+    if( !TimeFromDateTime( ft, dt ) )
+    {
+        SetError(BE32, Clsid(), "Couldn't convert time.");
+        return nullptr;
+    }
 
-	if (!SystemTimeToFileTime(&st, (FILETIME*)&ft))
-	{
-		SetError(BE32, Clsid(), "Couldn't convert time.");
-		return nullptr;
-	}
-
-	return PyLong_FromLongLong(ft);
-
-#else
-
-	// TODO: Implement for non-Win32
-	return nullptr;
-
-#endif
-
+    return PyLong_FromLongLong( ft );
 }
 
-
-PyObject* BlueOS::PyTimeDiffAsParts( PyObject* args )
-{
-#ifdef _WIN32
-	PyObject* t1;
-	PyObject* t2 = NULL;
-
-	if( !PyArg_ParseTuple(args, "O!|O!", &PyLong_Type, &t1, &PyLong_Type, &t2) )
-	{
-		return NULL;
-	}
-
-	Be::Time time1 = PyLong_AsLongLong(t1);
-	if (time1 == -1 && PyErr_Occurred()) return 0;
-	Be::Time time2;
-	if (t2)
-	{
-		time2 = PyLong_AsLongLong(t2);
-		if( time2 == -1 && PyErr_Occurred() )
-		{
-			return 0;
-		}
-	}
-	else
-	{
-		time2 = mRealTime;  // TDTODO
-	}
-
-	Be::Time diff = time2 - time1;
-
-	SYSTEMTIME sdiff;	
-	if( !FileTimeToSystemTime((FILETIME*)&diff, &sdiff) )
-	{
-		SetError(BE32, Clsid(), "Couldn't convert time.");
-		return nullptr;
-	}
-	Be::Time n = 0;
-	SYSTEMTIME nullTime;
-	if( !FileTimeToSystemTime((FILETIME*)&n, &nullTime) )
-	{
-		SetError(BE32, Clsid(), "Couldn't convert time.");
-		return nullptr;
-	}
-
-	PyObject* list = PyList_New(7);
-
-	if( !list )
-	{
-		return NULL;
-	}
-
-	PyList_SET_ITEM(list, 0, PyInt_FromLong( sdiff.wYear - nullTime.wYear));
-	PyList_SET_ITEM(list, 1, PyInt_FromLong( sdiff.wMonth - nullTime.wMonth));	
-	PyList_SET_ITEM(list, 2, PyInt_FromLong( sdiff.wDay - nullTime.wDay));
-	PyList_SET_ITEM(list, 3, PyInt_FromLong( sdiff.wHour - nullTime.wHour));
-	PyList_SET_ITEM(list, 4, PyInt_FromLong( sdiff.wMinute - nullTime.wMinute));
-	PyList_SET_ITEM(list, 5, PyInt_FromLong( sdiff.wSecond - nullTime.wSecond));
-	PyList_SET_ITEM(list, 6, PyInt_FromLong( sdiff.wMilliseconds - nullTime.wMilliseconds));
-
-	return list;
-
-#else
-	
-	// TODO: Implement for non-Win32
-	return nullptr;
-
-#endif
-}
 
 PyObject* BlueOS::PyGetCpuTime( PyObject* args )
 {
@@ -2096,7 +1885,7 @@ PyObject* BlueOS::PyEnableSimDilation( PyObject* args )
 	}
 
 	mSimClockLockedToRealClock = false;
-	if( mDynamicSimDilationEnabled == false )   
+	if( mDynamicSimDilationEnabled == false )
 	{ //  Base the sim time some 100 years in the future if we haven't done this before.
 		//  REMOVE BEFORE RELEASE
 		mSimTime += simClockOffset;
@@ -2141,11 +1930,7 @@ PyObject* BlueOS::PyRegisterClientIDForSimTimeUpdates( PyObject* args )
 	packer.Pack( mRealTime );
 
 	int len = packer.Finalize();
-#if !PORTING_TO_LINUX
 	BeNet->SendPacketToClient(clientID, BNT_SIMCLOCK_SYNC_INIT, data, len);
-#else
-	CCP_UNUSED( len );
-#endif
 #endif
 
 	Py_INCREF(Py_None);
@@ -2177,11 +1962,9 @@ PyObject* BlueOS::PyUnregisterClientIDForSimTimeUpdates( PyObject* args )
 	{
 		// That's our last reference, erase and detatch them.
 		mSimDilationSyncClients.erase(clientID);
-#if !PORTING_TO_LINUX
 		// It doesn't look like BlueNet handles sending an empty payload, so send a 0.
 		char data = 0;
 		BeNet->SendPacketToClient(clientID, BNT_SIMCLOCK_SYNC_DETACH, &data, 1);
-#endif
 	}
 
 #endif
@@ -2222,12 +2005,8 @@ void BlueOS::SendDilationEvent( BlueOS::PendingDilationEvent newEvent )
 	CCP_LOG_CH( s_chOS, "TIDI Event send - %f", newEvent.mNextDilationFactor);
 
 	int len = packer.Finalize();
-#if !PORTING_TO_LINUX
 	// Shoot it home~
 	BeNet->SendPacketToClientList( clientList, numClients, BNT_SIMCLOCK_SYNC_UPDATE, data, len );
-#else
-	CCP_UNUSED( len );
-#endif
 	delete[] clientList;
 
 #endif
@@ -2235,7 +2014,7 @@ void BlueOS::SendDilationEvent( BlueOS::PendingDilationEvent newEvent )
 
 void BlueOS::RegisterForSimTimeRebase( ISimTimeRebaseNotify* cb )
 {
-	
+
 	std::vector<ISimTimeRebaseNotify*>::iterator it = std::find( m_simRebaseCallbacks.begin(), m_simRebaseCallbacks.end(), cb );
 	if( it == m_simRebaseCallbacks.end() )
 	{
@@ -2254,7 +2033,7 @@ void BlueOS::UnregisterForSimTimeRebase( ISimTimeRebaseNotify* cb )
 
 void BlueOS::SimClockPacketCallBack( const unsigned long long fromID, const int blueNetType, const char* data, const int len )
 {
-#if CCP_STACKLESS && !PORTING_TO_LINUX
+#if CCP_STACKLESS
 
 	// We recieved a TiDi packet, time to care about the sim clock
 	mSimClockLockedToRealClock = false;
@@ -2272,7 +2051,7 @@ void BlueOS::SimClockPacketCallBack( const unsigned long long fromID, const int 
 
 	if( blueNetType == BNT_SIMCLOCK_SYNC_INIT )
 	{
-		CCP_LOG_CH( s_chOS, "TIDI Init recv from %I64u", fromID);
+		CCP_LOG_CH( s_chOS, "TIDI Init recv from %" PRIu64, fromID);
 		// First up, inform folks that the sim clock is rebasing
 		PyObject *args = PyTuple_New( 2 );
 		PyTuple_SetItem( args, 0, PyLong_FromUnsignedLongLong( mSimTime ) );
@@ -2302,14 +2081,14 @@ void BlueOS::SimClockPacketCallBack( const unsigned long long fromID, const int 
 		// Update packet.  First check to make sure this is coming from our current master
 		if( fromID != mDilationSyncMaster )
 		{
-			CCP_LOGWARN_CH( s_chOS, "TIDI Event tossed because of master - %I64d %I64d", fromID, mDilationSyncMaster);
+			CCP_LOGWARN_CH( s_chOS, "TIDI Event tossed because of master - %" PRId64 "%" PRId64, fromID, mDilationSyncMaster);
 			return;
 		}
 
 		// If it's older than our current sync, it's stale and needs to go away
 		if( nextEventWallclock < mDilationSyncBaseWallclockTime )
 		{
-			CCP_LOGWARN_CH( s_chOS, "TIDI Event tossed because of time - %I64d %I64d", nextEventWallclock, mDilationSyncBaseWallclockTime);
+			CCP_LOGWARN_CH( s_chOS, "TIDI Event tossed because of time - %" PRId64 " %" PRId64, nextEventWallclock, mDilationSyncBaseWallclockTime);
 			return;
 		}
 
@@ -2319,17 +2098,17 @@ void BlueOS::SimClockPacketCallBack( const unsigned long long fromID, const int 
 		newEvent.mNextDilationEventWallclockTime = nextEventWallclock;
 		newEvent.mNextDilationFactor = nextDilationFactor;
 		mPendingDilationEvents.push(newEvent);
-		CCP_LOG_CH( s_chOS, "TIDI Event recv - %f %I64d", newEvent.mNextDilationFactor, newEvent.mNextDilationEventWallclockTime);
+		CCP_LOG_CH( s_chOS, "TIDI Event recv - %f %" PRId64, newEvent.mNextDilationFactor, newEvent.mNextDilationEventWallclockTime);
 	}
 	else
 	{
 		// Detach - if it's from our master, then we have no master.
 		if( fromID != mDilationSyncMaster )
 		{
-			CCP_LOGWARN_CH( s_chOS, "TIDI Detach tossed because of master - %I64d %I64d", fromID, mDilationSyncMaster);
+			CCP_LOGWARN_CH( s_chOS, "TIDI Detach tossed because of master - %" PRIu64 " %" PRId64, fromID, mDilationSyncMaster);
 			return;
 		}
-		CCP_LOG_CH( s_chOS, "TIDI Detach recv from %I64u", fromID);
+		CCP_LOG_CH( s_chOS, "TIDI Detach recv from %" PRIu64, fromID);
 
 		mDilationSyncMaster = 0;
 		while( !mPendingDilationEvents.empty() )
@@ -2353,7 +2132,6 @@ void SimClockPacketCallBackHelper( const unsigned long long fromID, const int bl
 void BlueOS::EvaluateTimeDilation()
 {
 #if CCP_STACKLESS
-#if !PORTING_TO_LINUX
 	// Needed a post-construction place to set up the packet handler.  This'll do.
 	static bool packetsHandled = false;
 	if( !packetsHandled )
@@ -2363,7 +2141,6 @@ void BlueOS::EvaluateTimeDilation()
 		BeNet->RegisterCallbackSync( SimClockPacketCallBackHelper, BNT_SIMCLOCK_SYNC_DETACH );
 		packetsHandled = true;
 	}
-#endif
 	// If I'm not in control of my own sim clock, there's nothing left to do.
 	if( !mDynamicSimDilationEnabled )
 	{
@@ -2419,7 +2196,7 @@ void BlueOS::EvaluateTimeDilation()
 				}
 			}
 		}
-		else 
+		else
 		{
 			// And the same for under-load
 			if( mSimDilation < mMaxSimDilation)
@@ -2452,145 +2229,25 @@ void BlueOS::EvaluateTimeDilation()
 
 
 #if BLUE_WITH_PYTHON
-#ifdef _WIN32
-PyObject* BlueOS::PyHeapCompact(PyObject* args)
-{
-	if (!PyArg_ParseTuple(args, ""))
-		return NULL;
-
-	_heapmin();
-
-	HANDLE dummy[1];
-	DWORD numheaps = GetProcessHeaps(1, dummy);
-	HANDLE* heaps = new HANDLE[numheaps+10];
-	DWORD got = GetProcessHeaps(numheaps, heaps);
-
-	if (got <= numheaps)
-	{
-		for (DWORD i = 0; i < got; i++)
-		{
-			HeapCompact(heaps[i], 0);
-		}
-	}
-
-	delete[] heaps;
-
-	Py_INCREF(Py_None);
-	return Py_None;
-}
-
-PyObject* BlueOS::PyGlobalMemoryStatus(PyObject* args)
-{
-	if( !PyArg_ParseTuple(args, "") )
-	{
-		return NULL;
-	}
-
-	MEMORYSTATUSEX status;
-	status.dwLength = sizeof(status);
-	GlobalMemoryStatusEx(&status);
-
-	return Py_BuildValue(
-		"[ssssssss][iKKKKKKK]",
-		"memoryLoad",
-		"totalPhys", "availPhys",
-		"totalPageFile", "availPageFile", 
-		"totalVirtual", "availVirtual",
-		"availExtendedVirtual",
-		status.dwMemoryLoad,
-		status.ullTotalPhys, status.ullAvailPhys,
-		status.ullTotalPageFile, status.ullAvailPageFile,
-		status.ullTotalVirtual, status.ullAvailVirtual,
-		status.ullAvailExtendedVirtual
-		);
-}
-#endif
 
 PyObject* BlueOS::PySetAppTitle(PyObject* args)
 {
-#ifdef _WIN32
 	const char* title;
 
 	if( !PyArg_ParseTuple(args, "s", &title) )
 	{
 		return NULL;
 	}
-
+#ifdef _WIN32
 	SetConsoleTitle(title);
-
-	Py_INCREF(Py_None);
-	return Py_None;
 #else
-
-	// TODO: Implement for non-Win32
-	return nullptr;
-
+    printf( "\033]2;%s\a", title );
 #endif
-}
 
-PyObject* BlueOS::PyGetAppTitle(PyObject* args)
-{
-#ifdef _WIN32
-	if( !PyArg_ParseTuple(args, "") )
-	{
-		return NULL;
-	}
-
-	const int titleSize = 512;
-	char title[ titleSize ];
-
-	GetConsoleTitle( title, titleSize);
-
-	return PyString_FromString( title );
-#else
-
-	// TODO: Implement for non-Win32
-	return nullptr;
-
-#endif
-}
-
-#ifdef _WIN32
-
-// For ShellExecute
-#include <shellapi.h>
-
-PyObject* BlueOS::PyApplyPatch(PyObject* args)
-{
-	PyObject *fileO, *paramO;
-	PyObject *fileU, *paramU;
-	const wchar_t* patchFile;
-	const wchar_t* parameter;
-
-	if( !PyArg_ParseTuple(args, "OO", &fileO, &paramO) )
-	{
-		return NULL;
-	}
-
-	fileU = PyUnicode_FromObject(fileO);
-	if (!fileU) return 0;
-	paramU = PyUnicode_FromObject(paramO);
-	if( !paramU )
-	{
-		Py_DECREF(fileU);
-		return 0;
-	}
-
-	patchFile = PyUnicode_AsUnicode(fileU);
-	parameter = PyUnicode_AsUnicode(paramU);
-
-	CCP_LOG_CH( s_chOS, "ApplyPatch: patchFile=%S parameter=%S",patchFile, parameter);
-
-	ShellExecuteW(NULL, NULL, patchFile, parameter, NULL, SW_SHOWNORMAL);
-
-	Py_DECREF(fileU);
-	Py_DECREF(paramU);
-	::TerminateProcess(::GetCurrentProcess(), 0);
-
-	// this will never happen, put it here to please the compiler.
-	Py_INCREF(Py_None);
+    Py_INCREF(Py_None);
 	return Py_None;
 }
+
 
 
 PyObject* BlueOS::PyShellExecute(PyObject* args)
@@ -2615,7 +2272,7 @@ PyObject* BlueOS::PyShellExecute(PyObject* args)
 		}
 	}
 
-	std::wstring file(PyUnicode_AsUnicode(fn));
+	std::wstring file( reinterpret_cast<const wchar_t*>( PyUnicode_AsUnicode( fn ) ) );
 	Py_DECREF(fn);
 	bool http = file.find(L"http://") == 0 || file.find(L"https://") == 0;
 
@@ -2625,6 +2282,7 @@ PyObject* BlueOS::PyShellExecute(PyObject* args)
 		file = BePaths->ResolvePathW( file.c_str() );
 	}
 
+#ifdef _WIN32
 	//since IE7, urls cannot be opened directly from multithreaded applications.  Instead, we must have
 	//rundll do it for us.
 
@@ -2656,12 +2314,14 @@ PyObject* BlueOS::PyShellExecute(PyObject* args)
 		CW2A filename(file.c_str());
 		return PyErr_SetFromWindowsErrWithFilename(GetLastError(), (char*)filename);
 	}
-
+#else
+    std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
+    std::string command = "open " + conv.to_bytes( file );
+    system( command.c_str() );
+#endif
 	Py_INCREF(Py_None);
 	return Py_None;
 }
-
-#endif
 
 PyObject* BlueOS::PyTerminate( PyObject* args )
 {
@@ -2747,106 +2407,6 @@ void BlueOS::SetFrameTimeTimeout( uint32_t val )
 	m_frameTimeWatchdog.Start( m_frameTimeTimeout, &s_timeoutHandler );
 }
 
-void BlueOS::RunCatchUpTicks( float deltaT_sec )
-{
-	// Run all of our catchup ticks if we have any
-	if( !mCatchUpTickerHeap.empty() )
-	{
-		Be::Time startTickTime, timeAfterTick, elapsedTime;
-
-		//Track our out of budget ticks here
-		CatchupTickerList outOfBudgetTickers("BlueOS::PumpOS::outOfBudgetTickers");  
-
-		// While we still have ticks to process
-		startTickTime = GetActualTime();
-		while( !mCatchUpTickerHeap.empty() && (mCatchUpTickerHeap.front()->mNextTickTime <= mRealTime) )
-		{
-			CCP_STATS_ZONE( "BlueOS/PumpOS/CatchupTickers" );
-
-			CatchupTicker *ticker = mCatchUpTickerHeap.front();
-
-			const char* taskname = ticker->mCookie;
-
-			// Switch to appropriate ticker
-#if BLUE_WITH_PYTHON
-			AutoTasklet _at2(PyOS->GetTaskletTimer(), taskname ? taskname : "(null ticker?)");
-#endif
-			ticker->mCb->OnTick(mRealTime, deltaT_sec, (void *)ticker->mCookie);
-			ticker->mNeedsPostFrameTick = true;
-
-			if( mDebugLevel > 0 && HeapScrewed() )
-			{
-				CCP_LOGERR_CH( s_chOS, "Heap corrupt after ticking %s", taskname);
-			}
-
-			// Determine the amount of elapsed time
-			timeAfterTick = GetActualTime();
-			elapsedTime = timeAfterTick - startTickTime;
-
-			// Remove the tick off the current heap we just ran
-			pop_heap( mCatchUpTickerHeap.begin(), mCatchUpTickerHeap.end(), CatchUpTickerComparator() );
-			mCatchUpTickerHeap.pop_back();
-
-			// Setup tick to do next tick
-			ticker->mNextTickTime += ticker->mTimeBetweenTicks;
-
-			// Is this tick not going to occur this frame? 
-			if( ticker->mNextTickTime>mRealTime )
-			{
-				// Reset the budget for the ticks
-				ticker->mBudgetLeft = ticker->mPerFrameTimeBudget;
-
-				// Push the tick onto the heap
-				mCatchUpTickerHeap.push_back(ticker);
-				push_heap(mCatchUpTickerHeap.begin(), mCatchUpTickerHeap.end(), CatchUpTickerComparator());
-			}
-			else if( ticker->mBudgetLeft>elapsedTime ) // Check the budget
-			{
-				// Decrement the time spent from the budget
-				ticker->mBudgetLeft -= elapsedTime;
-
-				// Push the tick onto the heap
-				mCatchUpTickerHeap.push_back(ticker);
-				push_heap(mCatchUpTickerHeap.begin(), mCatchUpTickerHeap.end(), CatchUpTickerComparator());
-			}
-			else
-			{
-				// Ran out of the budget for this catch up tick
-				ticker->mBudgetLeft = ticker->mPerFrameTimeBudget;
-				outOfBudgetTickers.push_back(ticker);
-			}
-
-			// Time after the tick becomes the start time for the next tick
-			startTickTime = timeAfterTick;
-		}
-
-		// Readd back to the heap all the ticks that ran out of budget
-		for( CatchupTickerList::iterator iter = outOfBudgetTickers.begin(); iter != outOfBudgetTickers.end(); ++iter )
-		{
-			// Push the tick onto the heap
-			mCatchUpTickerHeap.push_back(*iter);
-			push_heap(mCatchUpTickerHeap.begin(), mCatchUpTickerHeap.end(), CatchUpTickerComparator());
-		}
-
-		// Call all the post frame ticks on the catchup ticks that ran this frame
-		for( CatchupTickerVector::iterator iter=mCatchUpTickerHeap.begin(); iter!=mCatchUpTickerHeap.end(); ++iter )
-		{
-			CatchupTicker *ticker = *iter;
-			if( ticker->mNeedsPostFrameTick )
-			{
-				ticker->mCb->OnPostFrameTick(mRealTime, (void *)ticker->mCookie);
-				ticker->mNeedsPostFrameTick = false;
-			}
-		}
-
-		// Mark the next scheduled event based on the front catch tick
-		Be::Time timeTillNextTick = mCatchUpTickerHeap.front()->mNextTickTime - mRealTime;
-
-		// Set next time till tick in ms (doesn't matter if we are less than 0 since gets handled by NextScheduledEvent)
-		NextScheduledEvent((int)(timeTillNextTick/10000));
-	}
-}
-
 void BlueOS::TickTickers()
 {
 	//Tick tickers
@@ -2855,7 +2415,7 @@ void BlueOS::TickTickers()
 		const char* taskname = i->mCookie;
 		// Switch to appropriate ticker
 #if BLUE_WITH_PYTHON
-		AutoTasklet _at2(PyOS->GetTaskletTimer(), taskname ? taskname : "(null ticker?)");		
+		AutoTasklet _at2(PyOS->GetTaskletTimer(), taskname ? taskname : "(null ticker?)");
 #endif
 		i->mCb->OnTick(mRealTime, mSimTime, (void*)taskname);
 
@@ -2889,14 +2449,14 @@ void BlueOS::ShowErrorMessageBox( const wchar_t* title, const wchar_t* message )
 	MessageBoxW( nullptr, message, title, MB_ICONSTOP );
 #elif defined(__APPLE__)
     CFStringEncoding encoding = (CFByteOrderLittleEndian == CFByteOrderGetCurrent()) ? kCFStringEncodingUTF32LE : kCFStringEncodingUTF32BE;
-    
+
     CFStringRef titleRef = CFStringCreateWithBytes( nullptr, reinterpret_cast<const UInt8*>( title ), wcslen( title ) * sizeof( wchar_t ), encoding, false );
     CFStringRef messageRef = CFStringCreateWithBytes( nullptr, reinterpret_cast<const UInt8*>( message ), wcslen( message ) * sizeof( wchar_t ), encoding, false );
-    
+
     CFOptionFlags result;  //result code from the message box
-    
+
     CFUserNotificationDisplayAlert( 0, kCFUserNotificationStopAlertLevel, nullptr, nullptr, nullptr, titleRef, messageRef, nullptr, nullptr, nullptr, &result );
-    
+
 	CFRelease( titleRef );
 	CFRelease( messageRef );
 #endif

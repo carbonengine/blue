@@ -3,7 +3,7 @@
 
 	TaskletTimer.h
 
-	Author:    Kristján Valur Jónsson
+	Author:    Kristjï¿½n Valur Jï¿½nsson
 	Created:   Sept 2004
 	OS:        Win32
 	Project:   Yep
@@ -30,7 +30,7 @@
 
 #include "Include/IBlueOS.h" //for python decleration macros
 #include "Include/IBluePython.h" //for python decleration macros
-#include "bluetime.h"
+#include "BlueTime.h"
 
 #include <vector>
 #include <unordered_set>
@@ -310,18 +310,18 @@ public:
 	///////////////////////////////////////////////////////////
 	// ITaskletTimer interface.  See interface file for info
 	///////////////////////////////////////////////////////////
-	PyObject * GetCurrent();
-	float GetElapsed();
-	PyObject * EnterTasklet(PyObject *newContext);
-	PyObject * EnterTaskletEx(PyObject *newContext, TASKLETFLAGS flags);
-	PyObject * EnterTaskletStr(const char *newContext, TASKLETFLAGS flags);
-	bool ReturnFromTasklet(PyObject *prevContext);
-	PyObject * SwitchStack(intptr_t stackID);
-	void TimesliceReset();
-	bool Reset();
+	PyObject * GetCurrent() override;
+	float GetElapsed() override;
+	PyObject * EnterTasklet(PyObject *newContext) override;
+	PyObject * EnterTaskletEx(PyObject *newContext, TASKLETFLAGS flags) override;
+	PyObject * EnterTaskletStr(const char *newContext, TASKLETFLAGS flags) override;
+	bool ReturnFromTasklet(PyObject *prevContext) override;
+	PyObject * SwitchStack(intptr_t stackID) override;
+	void TimesliceReset() override;
+	bool Reset() override;
 	
 	// INotify interface
-	bool OnModified(Be::Var* value);
+	bool OnModified(Be::Var* value) override;
 		
 private:
 

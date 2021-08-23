@@ -66,32 +66,32 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////
 	// IBlueResource
-	void Initialize( const wchar_t* name, const wchar_t* ext )
+	void Initialize( const wchar_t* name, const wchar_t* ext ) override
 	{
 		InitializeImpl( name, ext );
 	}
 
-	const wchar_t* GetPath() const
+	const wchar_t* GetPath() const override
 	{
 		return m_path.c_str();
 	}
 
-	const wchar_t* GetExt() const
+	const wchar_t* GetExt() const override
 	{
 		return m_ext.c_str();
 	}
 
-	bool IsLoading() const
+	bool IsLoading() const override
 	{
 		return m_isLoading == 1;
 	}
 
-	bool IsPrepared() const
+	bool IsPrepared() const override
 	{
 		return m_isPrepared == 1;
 	}
 
-	bool IsGood() const
+	bool IsGood() const override
 	{
 		return m_isGood == 1;
 	}
@@ -125,8 +125,8 @@ protected:
 	virtual void OnShutdown() {}
 
 	// Subclasses can optionally provide an implementation for this function
-	// that gets called after DoPrepare, once the data stream has been closed.
-	virtual void OnCloseStream() {}
+	// that gets called after DoPrepare or on load failure.
+	virtual void CleanupLoadData() {}
 
 
 protected:

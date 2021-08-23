@@ -20,34 +20,34 @@ public:
 	YamlWriter();
 	~YamlWriter();
 
-	virtual Be::Result<std::string> WriteObjectToStream( const IRoot* root, IBlueStream* stream );
-	virtual Be::Result<std::string> WriteObjectToString( const IRoot* root, std::string& output );
+	Be::Result<std::string> WriteObjectToStream( const IRoot* root, IBlueStream* stream ) override;
+	Be::Result<std::string> WriteObjectToString( const IRoot* root, std::string& output );
 
 protected:
     //
     // Implementations of functions required by IRootWriter
     //
 
-    virtual void WriteMemberName( const char* key );
+    void WriteMemberName( const char* key ) override;
 
-	virtual void WriteInt8( int8_t value );
-	virtual void WriteInt16( int16_t value );
-	virtual void WriteInt32( int32_t value );
-    virtual void WriteInt64( int64_t value );
-	virtual void WriteFloat( float value );
-	virtual void WriteFloatArray( float* values, size_t numValues );
-	virtual void WriteFloatMatrix( float* values, size_t numRows, size_t numColumns );
-    virtual void WriteDouble( double value );
-	virtual void WriteBinaryBlock( ICustomPersist* cPersist, const char* propertyName );
-    virtual void WriteWChar( const wchar_t* value );
-	virtual void WriteChar( const char* value );
+	void WriteInt8( int8_t value ) override;
+	void WriteInt16( int16_t value ) override;
+	void WriteInt32( int32_t value ) override;
+    void WriteInt64( int64_t value ) override;
+	void WriteFloat( float value ) override;
+	void WriteFloatArray( float* values, size_t numValues ) override;
+	void WriteFloatMatrix( float* values, size_t numRows, size_t numColumns );
+    void WriteDouble( double value ) override;
+	void WriteBinaryBlock( ICustomPersist* cPersist, const char* propertyName ) override;
+    void WriteWChar( const wchar_t* value ) override;
+	void WriteChar( const char* value ) override;
 
-    virtual void WriteIRoot( const IRoot& instance, IRoot* defaultInstance );
-	virtual void WriteIRoot( const IRoot* instance );
+    void WriteIRoot( const IRoot& instance, IRoot* defaultInstance ) override;
+	void WriteIRoot( const IRoot* instance ) override;
 
-    virtual void WriteVectorBegin( size_t size );
-	virtual void WriteVectorEnd( size_t size );
-	virtual void WriteStructureList( IBlueStructureList* structureList );
+    void WriteVectorBegin( size_t size ) override;
+	void WriteVectorEnd( size_t size ) override;
+	void WriteStructureList( IBlueStructureList* structureList ) override;
 
 
 protected:
