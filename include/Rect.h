@@ -9,7 +9,7 @@
 #ifndef Rect_h
 #define Rect_h
 
-struct Rect
+struct Tr2Rect
 {
 	int32_t left;
 	int32_t top;
