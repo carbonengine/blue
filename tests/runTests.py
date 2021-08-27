@@ -1,41 +1,38 @@
-import sys
 import os
-import platform
-
-if sys.platform.startswith("linux"):
-    osName = "Linux64" if platform.architecture()[0] == "64bit" else "Linux32"
-    defaultPlatformToolset = "clang++"
-elif sys.platform.startswith("darwin"):
-    osName = "MacOsXx86_64" if platform.architecture()[0] == "64bit" else "MacOsXi386"
-    defaultPlatformToolset = "clang4.2"
-else:
-    osName = "Win32" if platform.architecture()[0] == "32bit" else "x64"
-    defaultPlatformToolset = "v100"
-
-try:
-    platformToolset = os.environ["PlatformToolset"]
-except KeyError:
-    platformToolset = defaultPlatformToolset
-
-binPath = "../../../autobuild/blue/python_27/%s/%s/" % (osName, platformToolset)
-
-print "Binaries from", binPath
-sys.path.append(binPath)
-
+import sys
 import unittest
-from test_blue import *
+
+sys.path.append(os.path.join('..', '..', 'packages', 'bluetests', 'test'))
 from test_blackpersistence import *
+from test_blue import *
 from test_blueexposure import *
+from test_bluelist import *
+from test_callbacks import *
 from test_copier import *
-#from test_dictpersistence import *
-from test_objectrecycler import *
-from test_structurelist import *
-from test_yamlpersistence import *
-from test_paths import *
-from test_resfile import *
+from test_dictpersistence import *
+from test_filestream import *
+from test_functions import *
+from test_marshal import *
+from test_md5 import *
 from test_memstream import *
-from test_resman import *
 from test_motherlode import *
+from test_objectrecycler import *
+from test_optionalargs import *
+from test_paths import *
+from test_percentile_accumulator import *
+from test_properties import *
+from test_remotefilecache import *
+from test_resfile import *
+from test_resman import *
+from test_standaloneblueexposure import *
+from test_structurelist import *
+from test_sysinfo import *
+from test_yamlpersistence import *
+
 
 if __name__ == "__main__":
-    unittest.main()
+    import uthread2
+    import blue
+    tasklet = uthread2.start_tasklet(unittest.main)
+    while tasklet.is_alive():
+        blue.os.Pump()
