@@ -220,7 +220,6 @@ IBlueResource* BlueResMan::GetResourceHelper( const std::wstring& path, const st
 		if( constructor == m_dynamicConstructors.end() )
 		{
 			CCP_LOGERR_CH( s_ch, "No dynamic constructor found for resource name, %S", key.c_str() );
-			CCP_ASSERT_M( false, "No dynamic constructor found for resource name" );
 			return NULL;
 		}
 
