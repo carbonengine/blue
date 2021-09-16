@@ -1088,7 +1088,7 @@ PyObject * Marshal::ReadObjectUnicode( ReadStream * stream, bool isShared )
 	int byteorder = -1;
 	const char16_t *buff;
 	if( !stream->ReadInteger( len ) || !stream->GetBuffer( buff, len ) ) return 0;
-	return PyUnicode_DecodeUTF16( (const char*)buff, sizeof(char16_t), NULL, &byteorder );
+	return PyUnicode_DecodeUTF16( (const char*)buff, sizeof(char16_t) * len, NULL, &byteorder );
 }
 
 PyObject * Marshal::ReadObjectStrTable( ReadStream * stream, bool isShared )
