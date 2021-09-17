@@ -68,6 +68,10 @@ const Be::ClassInfo* BlueSysInfo::ExposeToBlue()
 			GetProcessStartTime,
 			"Process start time as windows FILETIME (number of 100-nanosecond intervals since January 1, 1601).\n"
 			"On OSX it is an approximate value" );
+		MAP_METHOD_AND_WRAP(
+			"GetPDMData",
+			GetPDMData,
+			"Returns a unicode string containing all PDM data" )
     EXPOSURE_END()
 }
 

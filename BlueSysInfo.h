@@ -130,6 +130,8 @@ public:
 	std::string GetMachineName() const;
 	std::string GetDomainName() const;
 
+	std::wstring GetPDMData() const;
+
 	const BlueSysInfoCpu& GetCpuInfo() const;
 	const BlueSysInfoOs& GetOsInfo() const;
 

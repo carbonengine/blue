@@ -229,6 +229,11 @@ std::string BlueSysInfo::GetDomainName() const
 	return name;
 }
 
+std::wstring BlueSysInfo::GetPDMData() const
+{
+	return UTF8ToWide( PDM::PDMDataToFormattedString( PDM::RetrievePDMData( "EVE", "" ) ) );
+}
+
 
 
 BlueSysInfoCpu::BlueSysInfoCpu() :
