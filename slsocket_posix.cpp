@@ -1865,7 +1865,11 @@ protected:
             if (HasOobData())
                 HandleOobData(handle); // may reset the internal state, so just keep looping
         }
-        mSequence = xtra->RecvPacketSequence();
+        if (!mEOF) {
+            // do not increase mSequence when we received a closing packet, otherwise the bookkeeping on higher levels
+            // can get confused in the event of a forced disconnect.
+            mSequence = xtra->RecvPacketSequence();
+        }
         xtra->mStats.BytesReceived(mBytesRead);
         xtra->mStats.PacketReceived();
         return true;
