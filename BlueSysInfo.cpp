@@ -92,6 +92,11 @@ std::vector<BlueSysInfoNetworkAdapterPtr> BlueSysInfo::GetNetworkAdapters() cons
 	return adapters;
 }
 
+std::wstring BlueSysInfo::GetPDMData() const
+{
+	return UTF8ToWide( PDM::PDMDataToFormattedString( PDM::RetrievePDMData( "EVE", "" ) ) );
+}
+
 #ifdef _WIN32
 
 std::wstring BlueSysInfo::GetUserDocumentsDirectory() const
