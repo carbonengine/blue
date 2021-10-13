@@ -107,7 +107,7 @@ std::string BlueSysInfo::GetMachineUuid() const
     return buffer;
 }
 
-std::string BlueSysInfo::GetMachineName() const
+std::wstring BlueSysInfo::GetMachineName() const
 {
     char buffer[256];
     buffer[0] = 0;
@@ -116,10 +116,11 @@ std::string BlueSysInfo::GetMachineName() const
     {
         *dot = 0;
     }
-    return buffer;
+    std::string str( buffer );
+    return std::wstring( std::begin( str ), std::end( str ) );
 }
 
-std::string BlueSysInfo::GetDomainName() const
+std::wstring BlueSysInfo::GetDomainName() const
 {
     char buffer[256];
     buffer[0] = 0;
@@ -134,7 +135,9 @@ std::string BlueSysInfo::GetDomainName() const
             *dot = 0;
         }
     }
-    return start;
+
+    std::string str( start );
+    return std::wstring( std::begin( str ), std::end( str ));
 }
 
 

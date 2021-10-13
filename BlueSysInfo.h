@@ -127,8 +127,8 @@ public:
 	std::vector<BlueSysInfoNetworkAdapterPtr> GetNetworkAdapters() const;
 
 	std::string GetMachineUuid() const;
-	std::string GetMachineName() const;
-	std::string GetDomainName() const;
+	std::wstring GetMachineName() const;
+	std::wstring GetDomainName() const;
 
 	std::wstring GetPDMData() const;
 

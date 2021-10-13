@@ -207,30 +207,30 @@ std::string BlueSysInfo::GetMachineUuid() const
 	return guid;
 }
 
-std::string BlueSysInfo::GetMachineName() const
+std::wstring BlueSysInfo::GetMachineName() const
 {
-	char buffer[MAX_COMPUTERNAME_LENGTH + 1];
+	wchar_t buffer[MAX_COMPUTERNAME_LENGTH + 1];
 	buffer[0] = 0;
 	DWORD size = MAX_COMPUTERNAME_LENGTH + 1;
-	GetComputerNameA( buffer, &size );
+	GetComputerNameW( buffer, &size );
 	return buffer;
 }
 
-std::string BlueSysInfo::GetDomainName() const
+std::wstring BlueSysInfo::GetDomainName() const
 {
 	DWORD size = 0;
-	GetComputerNameExA( ComputerNamePhysicalDnsDomain, nullptr, &size );
+	GetComputerNameExW( ComputerNamePhysicalDnsDomain, nullptr, &size );
 
-	std::unique_ptr<char[]> buffer( new char[size] );
-	if( !GetComputerNameExA( ComputerNamePhysicalDnsDomain, buffer.get(), &size ) )
+	std::unique_ptr<wchar_t[]> buffer( new wchar_t[size] );
+	if( !GetComputerNameExW( ComputerNamePhysicalDnsDomain, buffer.get(), &size ) )
 	{
-		return "";
+		return {};
 	}
 
-	char name[MAX_COMPUTERNAME_LENGTH + 1];
+	wchar_t name[MAX_COMPUTERNAME_LENGTH + 1];
 	name[0] = 0;
 	size = MAX_COMPUTERNAME_LENGTH + 1;
-	DnsHostnameToComputerNameA( buffer.get(), name, &size );
+	DnsHostnameToComputerNameW( buffer.get(), name, &size );
 	return name;
 }
 
