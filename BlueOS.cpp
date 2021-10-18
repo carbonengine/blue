@@ -2409,23 +2409,25 @@ void BlueOS::SetFrameTimeTimeout( uint32_t val )
 
 void BlueOS::TickTickers()
 {
-	//Tick tickers
-	for( TickIt i = mTickers.begin(); i != mTickers.end(); ++i )
+	// Copy tickers, which can get mutated during ticks
+	auto tickers{ mTickers };
+
+	for( const auto& ticker : tickers )
 	{
-		const char* taskname = i->mCookie;
+		const char* taskname = ticker.mCookie;
 		// Switch to appropriate ticker
 #if BLUE_WITH_PYTHON
-		AutoTasklet _at2(PyOS->GetTaskletTimer(), taskname ? taskname : "(null ticker?)");
+		AutoTasklet _at2( PyOS->GetTaskletTimer(), taskname ? taskname : "(null ticker?)" );
 #endif
-		i->mCb->OnTick(mRealTime, mSimTime, (void*)taskname);
+		ticker.mCb->OnTick( mRealTime, mSimTime, (void*)taskname );
 
 #if BLUE_WITH_PYTHON
-		PyOS->PyFlushError(taskname);
+		PyOS->PyFlushError( taskname );
 #endif
 
 		if( mDebugLevel > 0 && HeapScrewed() )
 		{
-			CCP_LOGERR_CH( s_chOS, "Heap corrupt after ticking %s", taskname);
+			CCP_LOGERR_CH( s_chOS, "Heap corrupt after ticking %s", taskname );
 		}
 	}
 }
