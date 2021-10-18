@@ -92,4 +92,17 @@ PyObject* PythonEvents::Pyflush(PyObject* args)
 	Py_RETURN_NONE;
 }
 
+PyObject* PythonEvents::Pyisatty(PyObject* args)
+{
+    if (mPort == PYSTDOUT && isatty(fileno(stdout)))
+	{
+		Py_RETURN_TRUE;
+	}
+    else if (mPort == PYSTDERR && isatty(fileno(stderr))) {
+		Py_RETURN_TRUE;
+	} else {
+		Py_RETURN_FALSE;
+	}
+}
+
 #endif

@@ -21,20 +21,27 @@ const Be::ClassInfo* PythonEvents::ExposeToBlue()
 		MAP_METHOD_AS_METHOD
 		(
 			"write",
-			Pywrite, 
-			"Write text to port\n" 
+			Pywrite,
+			"Write text to port\n"
 			":param text: text to write\n"
 			":type text: str\n"
 			":rtype: None"
 		)
-		
+
 		MAP_METHOD_AS_METHOD
 		(
 			"flush",
-			Pyflush, 
-			"Flush the buffer\n" 
+			Pyflush,
+			"Flush the buffer\n"
 			":rtype: None"
 		)
+
+		MAP_METHOD_AS_METHOD
+        (
+            "isatty",
+            Pyisatty,
+            "isatty() -> true or false.  True if the file is connected to a tty device.\n"
+        )
 
 		MAP_PROPERTY_READONLY
 		(

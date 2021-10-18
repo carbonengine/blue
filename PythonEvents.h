@@ -12,7 +12,7 @@
 // PythonEvents class
 //
 //////////////////////////////////////////////////////////////////////
-class PythonEvents : 
+class PythonEvents :
 	public IRoot
 {
 public:
@@ -27,6 +27,7 @@ public:
 	PyObject* Pywrite ( PyObject* args );
 	PyObject* Pyflush ( PyObject* args );
 	PyObject* Pyencoding() { return mEncoding; };
+	PyObject* Pyisatty ( PyObject* args );
 
 };
 
