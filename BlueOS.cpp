@@ -2414,6 +2414,12 @@ void BlueOS::TickTickers()
 
 	for( const auto& ticker : tickers )
 	{
+		if( std::find( mTickers.begin(), mTickers.end(), ticker ) == mTickers.end() )
+		{
+			// ticker was removed during a different tick
+			continue;
+		}
+
 		const char* taskname = ticker.mCookie;
 		// Switch to appropriate ticker
 #if BLUE_WITH_PYTHON
