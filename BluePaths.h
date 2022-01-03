@@ -42,7 +42,7 @@ public:
 	// IBluePaths
 	void InitializeStdAppPaths() override;
 
-	void SetSearchPathW( const char* key, const wchar_t* value ) override;
+	Be::Result<std::string> SetSearchPathW( const char* key, const wchar_t* value ) override;
 	const wchar_t* GetSearchPathW( const char* key ) override;
 
 	std::wstring ResolvePathW( const std::wstring& path ) override;

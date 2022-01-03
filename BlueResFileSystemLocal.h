@@ -32,7 +32,7 @@ public:
 	bool Initialize(const std::wstring& initialPath);
 	void InitializeStdAppPaths();
 
-	void SetSearchPathW( const char* key, const wchar_t* value );
+	Be::Result<std::string> SetSearchPathW( const char* key, const wchar_t* value );
 	const wchar_t* GetSearchPathW( const char* key );
 	void ClearSearchPaths();
 	std::wstring ResolvePathForWritingW( const std::wstring& path );
@@ -62,7 +62,7 @@ private:
 	ExpandedSearchPathMap_t m_expandedSearchPaths;
 
 	// Helper function to expand search paths - called after any entry is changed
-	void ExpandSearchPaths();
+	bool ExpandSearchPaths();
 };
 
 TYPEDEF_BLUECLASS( BlueResFileSystemLocal );

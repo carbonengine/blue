@@ -17,7 +17,7 @@ BLUE_INTERFACE( IBluePaths ) : public IRoot
 {
 	virtual void InitializeStdAppPaths() = 0;
 
-	virtual void SetSearchPathW( const char* key, const wchar_t* value ) = 0;
+	virtual Be::Result<std::string> SetSearchPathW( const char* key, const wchar_t* value ) = 0;
 	virtual const wchar_t* GetSearchPathW( const char* key ) = 0;
 
 	virtual std::wstring ResolvePathW( const std::wstring& path ) = 0;

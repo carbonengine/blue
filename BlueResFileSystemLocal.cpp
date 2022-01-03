@@ -11,55 +11,31 @@
 #include "Include/IBluePaths.h"
 #include "Include/BlueFileUtil.h"
 
+#include <sstream>
+#include <optional>
+
 static CcpLogChannel_t s_ch = CCP_LOG_DEFINE_CHANNEL( "BlueResFileSystemLocal" );
 
 namespace
 {
-#ifdef __ANDROID__
-	int wcscasecmp( const wchar_t* s1, const wchar_t* s2 )
-	{
-		for( ; *s1; s1++, s2++ )
-		{
-			wchar_t c1 = towlower( *s1 );
-			wchar_t c2 = towlower( *s2 );
-			if( c1 != c2 )
-			{
-				return int( c1 - c2 );
-			}
-		}
-		return -*s2;
-	}
-#endif
+	std::optional<std::vector<std::wstring>> ExpandSearchPath( const std::wstring& path, const std::map<std::string, std::wstring>& searchPaths );
+	std::optional<std::vector<std::wstring>> ExpandSearchPath( const std::wstring& path, const std::map<std::string, std::wstring>& searchPaths, std::set<std::wstring>& currentExpansion );
+	std::optional<std::vector<std::wstring>> ExpandSearchPath( const std::vector<std::wstring>& components, const std::map<std::string, std::wstring>& searchPaths, std::set<std::wstring>& currentExpansion );
 
 	void ToLower( std::string &s )
 	{
-		for( size_t i = 0; i < s.size(); ++i )
+		for( char &i : s )
 		{
-			s[i] = tolower(s[i]);
+			i = tolower( i );
 		}
 	}
 
 	bool AreStringsEqualIgnoringCase( const std::wstring& a, const std::wstring& b )
 	{
 #ifdef _MSC_VER
-		size_t len = a.size();
-		if( _wcsnicmp( a.c_str(), b.c_str(), len ) == 0 )
-		{
-			return true;
-		}
-		else
-		{
-			return false;
-		}
+		return !_wcsnicmp( a.c_str(), b.c_str(), a.size() );
 #else
-		if( wcscasecmp( a.c_str(), b.c_str() ) == 0 )
-		{
-			return true;
-		}
-		else
-		{
-			return false;
-		}
+		return !wcscasecmp( a.c_str(), b.c_str() );
 #endif
 	}
 
@@ -199,20 +175,38 @@ bool BlueResFileSystemLocal::GetStreamFromPathW( const wchar_t* resPath, IBlueSt
 	return false;
 }
 
-void BlueResFileSystemLocal::SetSearchPathW( const char* key, const wchar_t* value )
+Be::Result<std::string> BlueResFileSystemLocal::SetSearchPathW( const char* key, const wchar_t* value )
 {
+	std::string lowerKey{ key };
+	ToLower( lowerKey );
+
 	if( !value || wcslen( value ) == 0 )
 	{
-		m_searchPaths.erase( key );
+		m_searchPaths.erase( lowerKey );
 	}
 	else
 	{
 		std::wstring s = value;
 		std::replace( s.begin(), s.end(), L'\\', L'/' );
-		m_searchPaths[key] = s;
+
+		SearchPathMap_t map = m_searchPaths;
+		map[lowerKey] = s;
+
+		std::set<std::wstring> currentExpansion;
+		if( !ExpandSearchPath( value, map, currentExpansion ).has_value() )
+		{
+			return { "Search paths contain a circular reference" };
+		}
+
+		m_searchPaths[lowerKey] = s;
 	}
 
-	ExpandSearchPaths();
+	if( !ExpandSearchPaths() )
+	{
+		return { "Unexpected error during search path expansion" };
+	}
+
+	return {};
 }
 
 const wchar_t* BlueResFileSystemLocal::GetSearchPathW( const char* key )
@@ -223,7 +217,7 @@ const wchar_t* BlueResFileSystemLocal::GetSearchPathW( const char* key )
 void BlueResFileSystemLocal::ClearSearchPaths()
 {
 	m_searchPaths.clear();
-	ExpandSearchPaths();
+	m_expandedSearchPaths.clear();
 }
 
 bool BlueResFileSystemLocal::ResolvePathW( const std::wstring& path, std::wstring& resolvedPath )
@@ -376,129 +370,131 @@ void BlueResFileSystemLocal::GetExpandedSearchPaths( const char* key, std::vecto
 	}
 }
 
-void BlueResFileSystemLocal::ExpandSearchPaths()
+namespace
 {
-	const wchar_t delimiter = L';';
+std::vector<std::wstring> split( const std::wstring& str, wchar_t splitBy )
+{
+	std::wstringstream ss( str );
+	std::vector<std::wstring> list;
 
-	// Start from scratch each time
+	while( ss.good() )
+	{
+		std::wstring substr;
+		std::getline( ss, substr, splitBy );
+		list.push_back( substr );
+	}
+
+	return list;
+}
+
+std::optional<std::vector<std::wstring>> ExpandSearchPath( const std::vector<std::wstring>& components, const std::map<std::string, std::wstring>& searchPaths, std::set<std::wstring>& currentExpansion )
+{
+	std::vector<std::wstring> newComponents;
+
+	for( const auto& component : components )
+	{
+		for( const auto& path : split( component, L';' ) )
+		{
+			auto expanded = ExpandSearchPath( path, searchPaths, currentExpansion );
+			if( !expanded.has_value() )
+			{
+				return expanded;
+			}
+
+			newComponents.insert( newComponents.end(), expanded->begin(), expanded->end() );
+		}
+	}
+
+	return newComponents;
+}
+
+std::optional<std::vector<std::wstring>> ExpandSearchPath( const std::wstring& path, const std::map<std::string, std::wstring>& searchPaths, std::set<std::wstring>& currentExpansion )
+{
+	size_t pos = path.find_first_of( L':' );
+
+	// The check for pos <= 1 is to handle drive letters
+	if( pos == std::wstring::npos || pos <= 1 )
+	{
+		return { { path } };
+	}
+
+	std::wstring keyW = path.substr( 0, pos );
+	std::string key = static_cast<const char*>( CW2A( keyW.c_str() ) );
+	ToLower( key );
+
+	auto found = searchPaths.find( key );
+	if( found == searchPaths.end() )
+	{
+		return { {} };
+	}
+
+	if( currentExpansion.find( keyW ) != currentExpansion.end() )
+	{
+		return {};
+	}
+
+	currentExpansion.insert( keyW );
+
+	std::vector<std::wstring> newComponents;
+	auto expanded = ExpandSearchPath( std::vector<std::wstring>{ found->second }, searchPaths, currentExpansion );
+	if( !expanded.has_value() )
+	{
+		return expanded;
+	}
+
+	currentExpansion.erase( keyW );
+
+	for( const auto& newComponent : expanded.value() )
+	{
+		auto pathPart = path.substr( pos + 1 );
+		if( !pathPart.empty() && pathPart[0] != L'/' &&
+			!newComponent.empty() && newComponent[newComponent.size() - 1] != L'/' )
+		{
+			pathPart = L'/' + pathPart;
+		}
+
+		auto newPath = newComponent + pathPart;
+		if( !newPath.empty() )
+		{
+			newComponents.push_back( newPath );
+		}
+	}
+
+	return newComponents;
+}
+
+std::optional<std::vector<std::wstring>> ExpandSearchPath( const std::wstring& path, const std::map<std::string, std::wstring>& searchPaths )
+{
+	std::set<std::wstring> currentExpansion;
+	return ExpandSearchPath( std::vector<std::wstring>{ path }, searchPaths, currentExpansion );
+}
+}
+
+bool BlueResFileSystemLocal::ExpandSearchPaths()
+{
 	m_expandedSearchPaths.clear();
-
-	// Expand the semi-colon delimited search path entries in m_searchPaths.
-	// Each component is added as a separate string in a list of entries
-	// stored under the same key as was used in m_searchPaths.
-	for( SearchPathMap_t::const_iterator it = m_searchPaths.begin(); it != m_searchPaths.end(); ++it )
+	for( const auto& searchPath : m_searchPaths )
 	{
-		std::string key = it->first;
-		ToLower( key );
-
-		const std::wstring& value = it->second;
-
-		std::vector<std::wstring> components;
-		size_t start = 0;
-		size_t end = value.find_first_of( delimiter );
-
-		while( end != std::wstring::npos )
+		auto expanded = ExpandSearchPath( searchPath.second, m_searchPaths );
+		if( !expanded.has_value() )
 		{
-			std::wstring s = value.substr( start, end - start );
-			components.push_back( s );
-
-			start = value.find_first_not_of( delimiter, end );
-			end = value.find_first_of( delimiter, end + 1 );
+			CCP_LOGERR( "Unexpected error during search path expansion" );
+			return false;
 		}
 
-		std::wstring s = value.substr( start, end - start );
-		components.push_back( s );
-
-		m_expandedSearchPaths[key] = components;
-	}
-
-	// Expand any entries in m_expandedSearchPaths that use a defined search
-	// path - i.e. where a ':' is found in the path. Keep doing this until
-	// nothing is found to expand.
-	bool continueExpanding = true;
-	while( continueExpanding )
-	{
-		continueExpanding = false;
-
-		ExpandedSearchPathMap_t::iterator it;
-		for( it = m_expandedSearchPaths.begin(); it != m_expandedSearchPaths.end(); ++it )
+		auto &paths = expanded.value();
+		for( std::wstring& path : paths )
 		{
-			bool somethingChanged = false;
-
-			std::vector<std::wstring>& components = it->second;
-			std::vector<std::wstring> newComponents;
-
-			std::vector<std::wstring>::iterator innerIt;
-			for( innerIt = components.begin(); innerIt != components.end(); ++innerIt )
+			if( !path.empty() && path[0] == L'.' )
 			{
-				const std::wstring& value = *innerIt;
-
-				size_t pos = value.find_first_of( L':' );
-
-				// The check for pos > 1 is to handle drive letters
-				if( (pos != std::wstring::npos) && (pos > 1) )
-				{
-					somethingChanged = true;
-
-					std::wstring keyW = value.substr( 0, pos );
-					std::string key = (const char*)CW2A( keyW.c_str() );
-					ToLower( key );
-
-					ExpandedSearchPathMap_t::iterator found = m_expandedSearchPaths.find( key );
-					if( found != m_expandedSearchPaths.end() )
-					{
-						std::wstring rest = value.substr( pos + 1 );
-						std::vector<std::wstring>& keyComponents = found->second;
-						std::vector<std::wstring>::iterator keyCompIt;
-						for( keyCompIt = keyComponents.begin(); keyCompIt != keyComponents.end(); ++keyCompIt )
-						{
-							std::wstring expandedValue = *keyCompIt;
-							if( !rest.empty() )
-							{
-								if( !expandedValue.empty() && expandedValue[expandedValue.length() - 1] != L'/' &&
-									!rest.empty() && rest[0] != L'/' )
-								{
-									expandedValue += L'/';
-								}
-								expandedValue += rest;
-							}
-							newComponents.push_back( expandedValue );
-						}
-					}
-				}
-				else
-				{
-					// Some other entry might get expanded, need to add the original
-					// value to the list here so it won't be lost if the list is
-					// replaced here below.
-					newComponents.push_back( value );
-				}
+				path = m_initialWorkingDirectory + L'/' + path;
 			}
-
-			if( somethingChanged )
-			{
-				// New entries were added
-				it->second = newComponents;
-				continueExpanding = true;
-			}
+			path = CcpGetAbsolutePath( path );
 		}
+		m_expandedSearchPaths[searchPath.first] = paths;
 	}
 
-	ExpandedSearchPathMap_t::iterator it;
-	for( it = m_expandedSearchPaths.begin(); it != m_expandedSearchPaths.end(); ++it )
-	{
-		std::vector<std::wstring>& components = it->second;
-		std::vector<std::wstring>::iterator innerIt;
-		for( innerIt = components.begin(); innerIt != components.end(); ++innerIt )
-		{
-			std::wstring& value = *innerIt;
-
-			if( value[0] == L'.' )
-			{
-				value = m_initialWorkingDirectory + L'/' + value;
-			}
-		}
-	}
+	return true;
 }
 
 void BlueResFileSystemLocal::LogPaths()
@@ -561,7 +557,7 @@ void BlueResFileSystemLocal::InitializeStdAppPaths()
 	if( m_searchPaths.find( "app" ) == m_searchPaths.end() )
 	{
 		//no app has been set.  By default, it is the same as root
-		m_searchPaths["app"] = L"root:/";
+		m_searchPaths["app"] = L"root:";
 	}
 
 	// fixup the rest.  cache and settings both point to root/cache originally.
@@ -615,7 +611,11 @@ void BlueResFileSystemLocal::InitializeStdAppPaths()
 			m_searchPaths[stdFolderNames[i]] = path;
 		}
 	}
-	ExpandSearchPaths();
+
+	if( !ExpandSearchPaths() )
+	{
+		m_searchPaths.clear();
+	}
 #endif
 }
 

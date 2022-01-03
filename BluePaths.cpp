@@ -66,9 +66,9 @@ bool BluePaths::InitializeHelper(const std::wstring& initialPath)
 	return true;
 }
 
-void BluePaths::SetSearchPathW( const char* key, const wchar_t* value )
+Be::Result<std::string> BluePaths::SetSearchPathW( const char* key, const wchar_t* value )
 {
-	m_localFileSystem->SetSearchPathW( key, value );
+	return m_localFileSystem->SetSearchPathW( key, value );
 }
 
 const wchar_t* BluePaths::GetSearchPathW( const char* key )
