@@ -290,7 +290,7 @@ target_link_libraries(Blue
         BlueExposure
     PRIVATE
         PDM::PDM
-        CURL::CURL
+        CURL::libcurl
         YAML::YAML
         ZLIB::ZLIB
         OpenSSL::Crypto
