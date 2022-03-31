@@ -88,6 +88,9 @@ bool GetWindowsVersionFromFile( OSVERSIONINFOEX& info )
 
 void GetWindowsVersionFromApi( OSVERSIONINFOEX &info )
 {
+#pragma warning( push )
+	// Mute deprecation warning for GetVersionEx - there's no clear alternative for it for Windows 7+
+#pragma warning( disable : 4996 )
 	memset( &info, 0, sizeof( info ) );
 	info.dwOSVersionInfoSize = sizeof( info );
 	if( !GetVersionEx( reinterpret_cast<OSVERSIONINFO*>( &info ) ) )
@@ -104,6 +107,7 @@ void GetWindowsVersionFromApi( OSVERSIONINFOEX &info )
 			}
 		}
 	}
+#pragma warning( pop )
 }
 
 #if BLUE_WITH_PYTHON
@@ -956,6 +960,9 @@ PyObject* PyGetProcessTcpEStats(PyObject* self, PyObject* args)
 
 		PyObject* tmp; // A temp item that will hold the objects we're adding to a dict just long enough to decriment the ref to them.
 		
+#pragma warning( push )
+		// Mute deprecation warning for inet_ntoa - there's no clear alternative for it for Windows 7+
+#pragma warning( disable : 4996 )
 		struct in_addr ipAddr;
 		ipAddr.S_un.S_addr = ( u_long ) tcpTable->table[i].dwLocalAddr;
 		PyDict_SetItemString( valueDictionary, "localAddr", tmp = PyString_FromString( inet_ntoa( ipAddr ) ) );  Py_DECREF( tmp );
@@ -964,6 +971,7 @@ PyObject* PyGetProcessTcpEStats(PyObject* self, PyObject* args)
 		ipAddr.S_un.S_addr = ( u_long ) tcpTable->table[i].dwRemoteAddr;
 		PyDict_SetItemString( valueDictionary, "remoteAddr", tmp = PyString_FromString( inet_ntoa( ipAddr ) ) );  Py_DECREF( tmp );
 		PyDict_SetItemString( valueDictionary, "remotePort", tmp = PyLong_FromLong( ntohs( ( u_short ) tcpTable->table[i].dwRemotePort ) ) );  Py_DECREF( tmp );
+#pragma warning( pop )
 
 		TCP_ESTATS_DATA_ROD_v0 connData = {};
 		retValue = loader->GetPerTcpConnectionEStats()( ( MIB_TCPROW* ) &tcpTable->table[i], TcpConnectionEstatsData,
