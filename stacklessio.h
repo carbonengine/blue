@@ -65,12 +65,6 @@
 #define STACKLESSIO_H
 
 #ifdef _WIN32
-#if !defined _WIN32_WINNT || _WIN32_WINNT < 0x0500
-#define _WIN32_WINNT 0x0500
-#define WINVER 0x0500
-#define NTDDI_VERSION 0x05000000
-#endif
-
 // We must be careful here with the order of includes.  Because some projects
 // have non-default struct packing, we must still use the default one when
 // talking to the windows api.  So, we must manually include windows early.

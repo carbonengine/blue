@@ -9,9 +9,12 @@
 #endif
 
 #ifdef _WIN32
+#ifndef STRICT
 #define STRICT
+#endif
+#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
-#define _WIN32_WINNT 0x0501		// We support Windows XP/Server 2003 and beyond (XP SP1, SP2, Vista, Win7 etc) 
+#endif
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
