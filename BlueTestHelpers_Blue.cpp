@@ -91,6 +91,14 @@ const Be::ClassInfo* BlueTestHelperAttributes::ExposeToBlue()
 			Be::READWRITE | Be::PERSIST
 		)
 
+		MAP_ATTRIBUTE
+		(
+			"sharedStringW",
+			m_sharedStringW,
+			"shared string test",
+			Be::READWRITE | Be::PERSIST 
+		)
+
 #if BLUE_WITH_PYTHON
 		MAP_ATTRIBUTE
 		(

@@ -34,6 +34,7 @@ public:
 		s_propertyHandlers[Be::BYTE] =			&IRootReaderBase::HandlePropertyByte;
 		s_propertyHandlers[Be::SHORT] =			&IRootReaderBase::HandlePropertyShort;
 		s_propertyHandlers[Be::SHAREDSTRING] =	&IRootReaderBase::HandlePropertySharedString;
+		s_propertyHandlers[Be::SHAREDSTRINGW] = &IRootReaderBase::HandlePropertySharedStringW;
 	}
 };
 
@@ -275,6 +276,13 @@ void IRootReaderBase::HandlePropertySharedString( Be::Var* var, const Be::VarEnt
 	BlueSharedString &s = *reinterpret_cast<BlueSharedString*>(var);
 	const char* charPtr = ReadString(); // We lose any /0 characters that are not actually string terminators here
 	s = BlueSharedString( charPtr );
+}
+
+void IRootReaderBase::HandlePropertySharedStringW( Be::Var* var, const Be::VarEntry* entry )
+{
+	BlueSharedStringW& s = *reinterpret_cast<BlueSharedStringW*>( var );
+	const wchar_t* charPtr = ReadWString(); // We lose any /0 characters that are not actually string terminators here
+	s = BlueSharedStringW( charPtr );
 }
 
 const Be::VarEntry* IRootReaderBase::FindEntry( const char* name, const Be::ClassInfo* type, ssize_t& offs )

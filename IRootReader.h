@@ -85,6 +85,7 @@ protected:
 	void HandlePropertyLong( Be::Var* var, const Be::VarEntry* entry );
 	void HandlePropertyBinaryBlock( Be::Var* var, const Be::VarEntry* entry );
 	void HandlePropertySharedString( Be::Var* var, const Be::VarEntry* entry );
+	void HandlePropertySharedStringW( Be::Var* var, const Be::VarEntry* entry );
 
 	// The property handlers are stored in a static table in the cpp file,
 	// need to make this class a friend so it can set up the table.

@@ -188,7 +188,14 @@ void IRootWriter::WriteMembers( const IRoot &instance, IRoot* defaultInstance )
 			}
 			break;
 
-        default:
+		case Be::SHAREDSTRINGW: 
+			{
+				const BlueSharedStringW& s = *reinterpret_cast<const BlueSharedStringW*>( var );
+				WriteWChar( s.c_str() );
+			}
+			break;
+
+		default:
             CCP_LOGERR( "Unknown blue type in member %s", it.Entry()->mName );
 
             ok = false;

@@ -54,6 +54,7 @@ private:
 	double m_myDouble;
 	int64_t m_myInt64;
 	BlueSharedString m_sharedString;
+	BlueSharedStringW m_sharedStringW;
 
 	PBlueTestHelperAttributesVector m_myVector;
 	PBlueTestHelperAttributesDict m_myDict;
