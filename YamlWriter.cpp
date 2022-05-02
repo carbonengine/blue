@@ -175,7 +175,7 @@ void YamlWriter::WriteBinaryBlock( ICustomPersist* cPersist, const char* propert
 		int res = yaml_scalar_event_initialize( AddEvent(), 
 			NULL, 
 			(yaml_char_t*)"!!binary",
-			(yaml_char_t*)outBuffer, -1, 1, 0, 
+			(yaml_char_t*)outBuffer, static_cast<int>( nLenOut ), 1, 0, 
 			YAML_ANY_SCALAR_STYLE );
 		CCP_ASSERT( res );
         CCP_UNUSED( res );

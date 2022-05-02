@@ -526,17 +526,9 @@ void YamlReader::ReadBinaryBlock( ICustomPersist* customPersist, const char* pro
 		// bytes = (string_length(encoded_string) - 814) / 1.37
 		// So the text string should be bigger than the original binary data		
 		size_t dataLength = strlen((const char*)m_event->data.scalar.value);
-		uint8_t* buffer = (uint8_t*)CCP_MALLOC("yaml_binary_base64", dataLength);
+		uint8_t* buffer = customPersist->AllocateReadBuffer( propertyName, dataLength );
 		dataLength = FromBase64( (const uint8_t*)m_event->data.scalar.value, dataLength, (char*)buffer,  dataLength );
-		if( dataLength == 0 )
-		{
-			CCP_FREE(buffer);
-		}
-		else
-		{
-			buffer = (uint8_t*)CCP_REALLOC("yaml_binary_base64", buffer, dataLength);
-			customPersist->SetBufferAndSize( propertyName, (unsigned char*)buffer, dataLength );
-		}
+		customPersist->SetBufferAndSize( propertyName, (unsigned char*)buffer, dataLength );
 	}
 }
 
