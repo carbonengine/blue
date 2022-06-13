@@ -112,14 +112,14 @@ Be::Result<std::string> RemoteFileCache::GetStreamFromPathW( const wchar_t* resP
 
 	*stream = nullptr;
 
-	FileInfo info;
-	if( !GetFileInfo( resPath, info ) )
+	FileInfo* info = GetFileInfo( resPath );
+	if( !info )
 	{
 		return Be::Result<std::string>( "File does not exist on remote server" );
 	}
 
 	// Does file exist in the cache folder? If so, open it as a file stream and return it
-	std::wstring resId = static_cast<const wchar_t*>( CA2W( info.cachedName.c_str() ) );
+	std::wstring resId = static_cast<const wchar_t*>( CA2W( info->cachedName.c_str() ) );
 	std::wstring cachedName = m_cacheFolder;
 	cachedName += L"/";
 	cachedName += resId;
@@ -127,13 +127,14 @@ Be::Result<std::string> RemoteFileCache::GetStreamFromPathW( const wchar_t* resP
 	if( BePaths->FileExistsLocally( cachedName.c_str() ) )
 	{
 		std::string checksum;
-		if( m_verifyContentsOnLoad )
+		if( m_verifyContentsOnLoad && !info->verified )
 		{
-			checksum = info.checksum;
+			checksum = info->checksum;
 		}
 		auto result = CreateFileStreamForCachedFile( cachedName, checksum, stream );
 		if( BeIsSuccess( result ) )
 		{
+			info->verified = true;
 			return result;
 		}
 
@@ -146,7 +147,7 @@ Be::Result<std::string> RemoteFileCache::GetStreamFromPathW( const wchar_t* resP
 	BlueRemoteStreamPtr remoteStream;
 	remoteStream.CreateInstance();
 
-	size_t expectedSize = static_cast<size_t>( info.size );
+	size_t expectedSize = static_cast<size_t>( info->size );
 	std::string filename( CW2A( resId.c_str() ) );
 	
 	bool isOK = TryDownload( m_server, filename, remoteStream, expectedSize, resPath);
@@ -171,7 +172,7 @@ Be::Result<std::string> RemoteFileCache::GetStreamFromPathW( const wchar_t* resP
 		++m_filesDownloaded;
 		m_bytesDownloaded += size;
 
-		if( size != info.size )
+		if( size != info->size )
 		{
 			CCP_STATS_INC( remoteFileCacheCorruptDownloads );
 			return Be::Result<std::string>( "Size does not match expected value" );
@@ -179,7 +180,7 @@ Be::Result<std::string> RemoteFileCache::GetStreamFromPathW( const wchar_t* resP
 
 		if( m_verifyContentsOnSave )
 		{
-			if( !remoteStream->VerifyContents( info.checksum.c_str() ) )
+			if( !remoteStream->VerifyContents( info->checksum.c_str() ) )
 			{
 				CCP_STATS_INC( remoteFileCacheCorruptDownloads );
 				return Be::Result<std::string>( "Checksum does not match expected value" );
@@ -253,8 +254,7 @@ Be::Result<std::string> RemoteFileCache::CreateFileStreamForCachedFile( const st
 
 bool RemoteFileCache::FileExists( const wchar_t* resPath )
 {
-	FileInfo info;
-	return GetFileInfo( resPath, info );
+	return GetFileInfo( resPath ) != nullptr;
 }
 
 bool RemoteFileCache::IsCachedLocally( const wchar_t* resPath )
@@ -264,13 +264,13 @@ bool RemoteFileCache::IsCachedLocally( const wchar_t* resPath )
 
 std::wstring RemoteFileCache::GetLocallyCachedName( const wchar_t* resPath )
 {
-	FileInfo info;
-	if( !GetFileInfo( resPath, info ) )
+	FileInfo* info = GetFileInfo( resPath );
+	if( !info )
 	{
 		return resPath;
 	}
 
-	std::wstring resId = static_cast<const wchar_t*>( CA2W( info.cachedName.c_str() ) );
+	std::wstring resId = static_cast<const wchar_t*>( CA2W( info->cachedName.c_str() ) );
 	std::wstring cachedName = m_cacheFolder;
 	cachedName += L"/";
 	cachedName += resId;
@@ -278,22 +278,21 @@ std::wstring RemoteFileCache::GetLocallyCachedName( const wchar_t* resPath )
 	return cachedName;
 }
 
-bool RemoteFileCache::GetFileInfo( const wchar_t* resPath, struct FileInfo& fileInfo )
+RemoteFileCache::FileInfo* RemoteFileCache::GetFileInfo( const wchar_t* resPath )
 {
 	std::string validatedPath;
 	if( !ValidateResPath( resPath, validatedPath ) )
 	{
-		return false;
+		return nullptr;
 	}
 
 	auto foundIt = m_fileIndex.find( validatedPath.c_str() );
 	if( foundIt == m_fileIndex.end() )
 	{
-		return false;
+		return nullptr;
 	}
 
-	fileInfo = foundIt->second;
-	return true;
+	return &foundIt->second;
 }
 
 void RemoteFileCache::AddFileIndexImpl( const char* contents, ssize_t size )
@@ -336,12 +335,11 @@ void RemoteFileCache::AddFileIndexImpl( const char* contents, ssize_t size )
 			commaPos = line.find( ',', start );
 			sizeAsString = line.substr( start, commaPos - start );
 
-			FileInfo fi;
+			FileInfo& fi = m_fileIndex[resPath];
 			fi.cachedName = cachedName;
 			fi.checksum = checksumAsString;
 			fi.size = atoi( sizeAsString.c_str() );
-
-			m_fileIndex[resPath] = fi;
+			fi.verified = false;
 
 			AddResPathToFolderIndex( resPath );
 		}

@@ -48,6 +48,7 @@ private:
 		std::string cachedName;
 		std::string checksum;
 		uint64_t size;
+		std::atomic<bool> verified;
 	};
 
 	typedef std::map<std::string, FileInfo> FileIndex;
@@ -71,7 +72,7 @@ private:
 	void AddFileIndexImpl( const char* contents, ssize_t size );
 
 	Be::Result<std::string> CreateFileStreamForCachedFile( const std::wstring &cachedName, const std::string& checksum, IBlueStream** stream );
-	bool GetFileInfo(  const wchar_t* resPath, FileInfo& fileInfo );
+	FileInfo* GetFileInfo( const wchar_t* resPath );
 	void AddResPathToFolderIndex( const std::string& resPath );
 	bool ValidateResPath( const wchar_t* resPath, std::string& validatedPath );
 	void CacheContentsOfRemoteStream( class BlueRemoteStream* stream, const std::wstring& cachedName, const wchar_t* resPath );
