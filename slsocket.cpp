@@ -987,7 +987,7 @@ public:
 			Send(s, lpBuffers, dwBufCount, flags);
 			return;
 		}
-		toLen = std::min((unsigned long long)toLen, sizeof(mSockaddr));
+		toLen = (int)std::min((unsigned long long)toLen, sizeof(mSockaddr));
 		memcpy(&mSockaddr, to, toLen);
 		// Note: must provide a non-zero lpNumberOfBytesSent because it is required
 		// on Windows XP, in spite of what the documentation says.
@@ -1414,7 +1414,7 @@ class ConnectResult : public WSIOWorker
 {
 public:
 	ConnectResult(SocketXtra *xtra, const sock_addr_t *addr, int addrlen, double timeout) :
-		mXtra(xtra), mAddrLen(std::min(sizeof(mAddr), (unsigned long long)addrlen)), mTimeout(timeout), mTimedout(false)
+		mXtra(xtra), mAddrLen((int)std::min(sizeof(mAddr), (unsigned long long)addrlen)), mTimeout(timeout), mTimedout(false)
 	{
 		memcpy(&mAddr, addr, mAddrLen);
 	}
@@ -1832,7 +1832,7 @@ SOCKET_T slsock_socket(void **xtradata, int family, int type, int proto)
 		Socket sock;
 		{
 			PyAllowThreads _threads;
-			Socket(WSASocket(family, type, proto, 0, 0, WSA_FLAG_OVERLAPPED)).Swap(sock);
+			Socket(WSASocketW(family, type, proto, 0, 0, WSA_FLAG_OVERLAPPED)).Swap(sock);
 		}
 		if (!sock.Valid()) {
 			socket_set_error(WSAGetLastError());

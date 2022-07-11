@@ -931,7 +931,7 @@ void CarbonIO::decCompletionRefEx( SCompletionUnit* completion, int location )
 {
 	if ( completion->refCount <= 0 )
 	{
-		ciolog("Tried to dec refcount [%d] below zero!", (int)completion->workHandle);
+		ciolog("Tried to dec refcount [%p] below zero!", completion->workHandle);
 	}
 	else if ( !InterlockedDecrement(&completion->refCount) )
 	{
@@ -981,7 +981,7 @@ void CarbonIO::deleteCompletionUnit( SCompletionUnit* completion )
 #ifndef DESTROY_ON_DEC
 	CloseHandle( completion->refReachedZero );
 #endif
-	emitStatusMessage( "[%d] destroyed", (int)completion->workHandle );
+	emitStatusMessage( "[%p] destroyed", completion->workHandle );
 
 	delete completion;
 }

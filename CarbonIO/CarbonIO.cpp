@@ -221,7 +221,7 @@ bool CarbonIO::isSocketValid( SOCKET fd )
 //------------------------------------------------------------------------------
 SOCKET CarbonIO::socket( int family, int type, int proto )
 {
-	SOCKET k = WSASocket( family, type, proto, NULL, 0, WSA_FLAG_OVERLAPPED );
+	SOCKET k = WSASocketW( family, type, proto, NULL, 0, WSA_FLAG_OVERLAPPED );
 
 	// any special setup required for a connectionless/udp/datagram socket?
 	if ( type == SOCK_DGRAM )
@@ -247,7 +247,7 @@ int CarbonIO::connect( SOCKET fd, sock_addr_t *addr, int addrlen, bool &timeoutF
 
 	SJob *job = getJob();
 	job->socket = fd;
-	job->addrlen = std::min((unsigned long long)addrlen, sizeof(job->address));
+	job->addrlen = (int)std::min((unsigned long long)addrlen, sizeof(job->address));
 	memcpy( &job->address, &(addr->in), job->addrlen );
 	job->ret = -1;
 	job->param1 = (int)(timeout > 0 ? timeout : 0) * 1000000;
@@ -544,7 +544,7 @@ int CarbonIO::close( HANDLE fd )
 
 			if ( !completion->reap ) // check again to avoid a race
 			{
-				emitStatusMessage( "close/reap call for [%d]", (int)fd );
+				emitStatusMessage( "close/reap call for [%p]", fd );
 				D_REAPSOCKET(ciolog("reaping [%d] [%s]", (int)completion->workHandle, completion->sendRunning ? "true":"false" ));
 				
 				completion->reap = true;
@@ -576,7 +576,7 @@ int CarbonIO::close( HANDLE fd )
 	else
 	{
 		m_completionListLock.unlock();
-		emitStatusMessage( "close/reap call for [%d] but we do not manage it, performing blind ::closesocket()", (int)fd );
+		emitStatusMessage( "close/reap call for [%p] but we do not manage it, performing blind ::closesocket()", fd );
 		D_REAPSOCKET(ciolog("[%d] ineligible for reap, performing ::closesocket()", (int)fd ));
 		::closesocket( (SOCKET)fd );
 	}
@@ -730,7 +730,7 @@ hostent *CarbonIO::getHostByName( const char* name )
 hostent *CarbonIO::getHostByAddr(const char *addr, int len, int type )
 {
 	SJob *job = getJob();
-	job->len = std::min( sizeof( job->name1 ) - 1, (unsigned long long)len );
+	job->len = (int)std::min( sizeof( job->name1 ) - 1, (unsigned long long)len );
 	memcpy( job->name1, addr, job->len );
 	job->param1 = type;
 	job->result = 0;
@@ -1269,7 +1269,7 @@ bool CarbonIO::sendPacketEx( SOCKET fd, SPacket *packet, bool GILOwned )
 
 	if ( packet->packetLen > completion->maxPacketSize )
 	{
-		emitErrorMessage( "[%d] tried to send a packet that is too large [%d]>[%d]", (int)completion->workHandle, packet->packetLen, completion->maxPacketSize );
+		emitErrorMessage( "[%p] tried to send a packet that is too large [%d]>[%d]", completion->workHandle, packet->packetLen, completion->maxPacketSize );
 		if ( GILOwned )
 		{
 			setPyError( "tried to send packet that was too large", completion->dead );
@@ -1307,7 +1307,7 @@ bool CarbonIO::sendPacketEx( SOCKET fd, SPacket *packet, bool GILOwned )
 		completion->rawQueuedDataTail = packet;
 	}
 
-	emitStatusMessage( "initiated packet send of [%d] to [%d]", packet->packetLen, (int)completion->workHandle );
+	emitStatusMessage( "initiated packet send of [%d] to [%p]", packet->packetLen, completion->workHandle );
 
 	startSendRunning( completion );
 	slock.release();
@@ -1453,11 +1453,11 @@ void CarbonIO::workerThread( void *arg )
 		{
 			if ( size == 0 )
 			{
-				emitStatusMessage( "send loop kicked off for [%d]", (int)((SWriteOverlap *)completion)->parent->workHandle );
+				emitStatusMessage( "send loop kicked off for [%p]", ((SWriteOverlap *)completion)->parent->workHandle );
 			}
 			else
 			{
-				emitStatusMessage( "send completion size [%d] to [%d]", size, (int)((SWriteOverlap *)completion)->parent->workHandle );
+				emitStatusMessage( "send completion size [%d] to [%p]", size, ((SWriteOverlap *)completion)->parent->workHandle );
 			}
 			
 			if ( ((SWriteOverlap *)completion)->parent->sendRunning )
@@ -1476,7 +1476,7 @@ void CarbonIO::workerThread( void *arg )
 
 			if ( completion->reap || completion->dead ) // reaping or dead, we're done
 			{
-				emitStatusMessage( "[%d] bytes contained in completion message to [%d], but it is dead or reaping, ignored", size, (int)completion->workHandle );
+				emitStatusMessage( "[%d] bytes contained in completion message to [%p], but it is dead or reaping, ignored", size, completion->workHandle );
 
 				DEC_COMPLETION_REF( completion );
 				continue;
@@ -1514,7 +1514,7 @@ void CarbonIO::workerThread( void *arg )
 			{
 				// zero signals EOF
 
-				emitStatusMessage( "0-byte read for [%d], interpreting as graceful EOF", (int)completion->workHandle );
+				emitStatusMessage( "0-byte read for [%p], interpreting as graceful EOF", completion->workHandle );
 
 				Ccp::CriticalLockScoped ulock( completion->unitLock );
 
@@ -1537,7 +1537,7 @@ void CarbonIO::workerThread( void *arg )
 				continue;
 			}
 
-			emitStatusMessage( "[%d] bytes delivered by completion message for [%d]", size, (int)completion->workHandle );
+			emitStatusMessage( "[%d] bytes delivered by completion message for [%p]", size, completion->workHandle );
 
 			if ( completion->udpConnection )
 			{
@@ -2145,7 +2145,7 @@ int CarbonIO::recvEx( SOCKET fd,
 	INC_COMPLETION_REF( completion );
 	m_completionListLock.unlock();
 
-	emitStatusMessage( "RecvEx[%d] acquiring lock [%d]", (int)completion->workHandle, completion->readJobsUnscheduled );
+	emitStatusMessage( "RecvEx[%p] acquiring lock [%d]", completion->workHandle, completion->readJobsUnscheduled );
 	
 	Ccp::CriticalLockScoped ulock( completion->unitLock );
 
@@ -2198,11 +2198,11 @@ int CarbonIO::recvEx( SOCKET fd,
 	{
 		// no other reads are pending try popping a packet directly off the queue to avoid yielding
 		P = popHeadPacket( completion, len );
-		emitStatusMessage( "RecvEx tried to pop[%p] for[%d] {%d}", P, (int)completion->workHandle, thread );
+		emitStatusMessage( "RecvEx tried to pop[%p] for[%p] {%d}", P, completion->workHandle, thread );
 	}
 	else
 	{
-		emitStatusMessage( "RecvEx chain entry [%d] for[%d] {%d}", completion->readJobsUnscheduled, (int)completion->workHandle, thread );
+		emitStatusMessage( "RecvEx chain entry [%d] for[%p] {%d}", completion->readJobsUnscheduled, completion->workHandle, thread );
 	}
 
 	int ret;
@@ -2213,7 +2213,7 @@ int CarbonIO::recvEx( SOCKET fd,
 		{
 			int result;
 			D_RECVEX(ciolog( "recvEx dead, nothing here and nothing coming for [%d]", (int)completion->workHandle));
-			emitStatusMessage( "RecvEx found dead[%d] for[%d] {%d}", completion->dead, (int)completion->workHandle, thread );
+			emitStatusMessage( "RecvEx found dead[%d] for[%p] {%d}", completion->dead, completion->workHandle, thread );
 
 			if ( completion->dead == -1 )
 			{
@@ -2285,14 +2285,14 @@ int CarbonIO::recvEx( SOCKET fd,
 			}
 		}
 
-		emitStatusMessage( "RecvEx[%d] block IN[%d] {%d}", (int)completion->workHandle, completion->readJobsUnscheduled, thread );
+		emitStatusMessage( "RecvEx[%p] block IN[%d] {%d}", completion->workHandle, completion->readJobsUnscheduled, thread );
 		job->addrlen = thread;
 
 		// Sleep.  Count the number of jobs unresumed (out of sleep mode) so that we know when
 		// it is safe to return a ready incoming packet without queuing up
 		bool ok = blockCurrentTasklet( job );
 
-		emitStatusMessage( "RecvEx[%d] block [%d]OUT {%d}", (int)completion->workHandle, completion->readJobsUnscheduled, thread );
+		emitStatusMessage( "RecvEx[%p] block [%d]OUT {%d}", completion->workHandle, completion->readJobsUnscheduled, thread );
 
 		if ( track )
 		{
@@ -2361,7 +2361,7 @@ int CarbonIO::recvEx( SOCKET fd,
 					}
 					D_JOBFIFO(ciolog("[%p] not matching [%p]", completion->jobSequence, job));
 				}
-				emitStatusMessage( "Spining[%d] RecvEx[%d] block OUT[%d] want[%p] i am[%p] {%d}", tries, (int)completion->workHandle, completion->readJobsUnscheduled, completion->jobSequence, job, thread );
+				emitStatusMessage( "Spining[%d] RecvEx[%p] block OUT[%d] want[%p] i am[%p] {%d}", tries, completion->workHandle, completion->readJobsUnscheduled, completion->jobSequence, job, thread );
 
 				PyObject* ret = PyStackless_Schedule( Py_None, 0 );
 				Py_XDECREF( ret );
@@ -2391,7 +2391,7 @@ int CarbonIO::recvEx( SOCKET fd,
 		{
 			if ( completion->dead == -1 )
 			{
-				emitStatusMessage( "Graceful 1 RecvEx[%d] block OUT[%d] {%d}", (int)completion->workHandle, completion->readJobsUnscheduled, thread );
+				emitStatusMessage( "Graceful 1 RecvEx[%p] block OUT[%d] {%d}", completion->workHandle, completion->readJobsUnscheduled, thread );
 				D_RECVEX(ciolog("null P: graceful shutdown for [%d]", (int)completion->workHandle));
                 if ( obj )
                 {
@@ -2421,7 +2421,7 @@ int CarbonIO::recvEx( SOCKET fd,
 				return -1;
 			}
 		}
-		emitStatusMessage( "RecvEx[%d] block OUT[%d] len[%d] {%d}", (int)completion->workHandle, completion->readJobsUnscheduled, P->packetLen, thread );
+		emitStatusMessage( "RecvEx[%p] block OUT[%d] len[%d] {%d}", completion->workHandle, completion->readJobsUnscheduled, P->packetLen, thread );
 	}
 	else
 	{
@@ -2725,7 +2725,7 @@ void CarbonIO::dataReceived( SCompletionUnit *completion, const char* data, cons
 	if ( !completion->isPacketConnection )
 	{
 		D_HANDLEREAD(ciolog("[%d] not a packet connection, just copying[%d] to the tail now[%d]", (int)completion->workHandle, len, completion->packetListTail->packetLen + len));
-		emitStatusMessage( "[%d] not a packet connection, just copying[%d] to the tail now[%d]", (int)completion->workHandle, len, completion->packetListTail->packetLen + len);
+		emitStatusMessage( "[%p] not a packet connection, just copying[%d] to the tail now[%d]", completion->workHandle, len, completion->packetListTail->packetLen + len);
 
 		// receiving stream data, just copy it in and we're done
 		appendDataToPacket( completion->packetListTail, data, len );
@@ -2738,7 +2738,7 @@ void CarbonIO::dataReceived( SCompletionUnit *completion, const char* data, cons
 		// been consumed yet) create another one to fill in
 		
 		D_HANDLEREAD(ciolog("valid packet on the tail, adding for [%d] recieving [%d]", (int)completion->workHandle, len ));
-		emitStatusMessage( "valid packet on the tail, adding for [%d] recieving [%d]", (int)completion->workHandle, len );
+		emitStatusMessage( "valid packet on the tail, adding for [%p] recieving [%d]", completion->workHandle, len );
 		completion->packetListTail->next = m_singleton.getPacket();
 		completion->packetListTail = completion->packetListTail->next;
 	}
@@ -2755,7 +2755,7 @@ void CarbonIO::dataReceived( SCompletionUnit *completion, const char* data, cons
 		if ( (completion->packetListTail->packetLen + available) < sizeof(int) )
 		{
 			D_HANDLEREAD(ciolog("not enough[%d]+[%d] to get packet size on [%d]", completion->packetListTail->packetLen, available, (int)completion->workHandle ));
-			emitStatusMessage( "not enough[%d]+[%d] to get packet size on [%d]", completion->packetListTail->packetLen, available, (int)completion->workHandle );
+			emitStatusMessage( "not enough[%d]+[%d] to get packet size on [%p]", completion->packetListTail->packetLen, available, completion->workHandle );
 			appendDataToPacket( completion->packetListTail, indat, available );
 			break;
 		}
@@ -2769,7 +2769,7 @@ void CarbonIO::dataReceived( SCompletionUnit *completion, const char* data, cons
 				int deficit = sizeof(int) - completion->packetListTail->packetLen;
 
 				D_HANDLEREAD(ciolog("not enough for header[%d] appending[%d] to[%d]", completion->packetListTail->packetLen, deficit, (int)completion->workHandle ));
-				emitStatusMessage( "not enough for header[%d] appending[%d] to[%d]", completion->packetListTail->packetLen, deficit, (int)completion->workHandle );
+				emitStatusMessage( "not enough for header[%d] appending[%d] to[%p]", completion->packetListTail->packetLen, deficit, completion->workHandle );
 
 				appendDataToPacket( completion->packetListTail, indat, deficit );
 				indat += deficit;
@@ -2781,7 +2781,7 @@ void CarbonIO::dataReceived( SCompletionUnit *completion, const char* data, cons
 			need = packetSize - completion->packetListTail->packetLen;
 
 			D_HANDLEREAD(ciolog("working packet[%d:%d] need[%d] avail[%d] for [%d]", packetSize, completion->packetListTail->packetLen, need, available, (int)completion->workHandle ));
-			emitStatusMessage( "working packet[%d:%d] need[%d] avail[%d] for [%d]", packetSize, completion->packetListTail->packetLen, need, available, (int)completion->workHandle );
+			emitStatusMessage( "working packet[%d:%d] need[%d] avail[%d] for [%p]", packetSize, completion->packetListTail->packetLen, need, available, completion->workHandle );
 		}
 		else
 		{
@@ -2790,13 +2790,13 @@ void CarbonIO::dataReceived( SCompletionUnit *completion, const char* data, cons
 			need = packetSize;
 
 			D_HANDLEREAD(ciolog("not working packet, needing full amount[%d] for[%d] [0x%08X]:[0x%08X]", need, (int)completion->workHandle, *(unsigned int *)indat, ceHeaderSizeMask & *(int *)indat));
-			emitStatusMessage( "not working packet, needing full amount[%d] for[%d] [0x%08X]:[0x%08X]", need, (int)completion->workHandle, *(unsigned int *)indat, ceHeaderSizeMask & *(int *)indat );
+			emitStatusMessage( "not working packet, needing full amount[%d] for[%p] [0x%08X]:[0x%08X]", need, completion->workHandle, *(unsigned int *)indat, ceHeaderSizeMask & *(int *)indat );
 		}
 
 		// don't even try to receive a packet that claims to be too large, just flush
 		if ( packetSize > completion->maxPacketSize )
 		{
-			emitStatusMessage( "packet too large on [%d] [%d>%d]", (int)completion->workHandle, packetSize, completion->maxPacketSize );
+			emitStatusMessage( "packet too large on [%p] [%d>%d]", completion->workHandle, packetSize, completion->maxPacketSize );
 			completion->packetListTail->packetLen = 0; // eat it
 			return;
 		}
@@ -2820,7 +2820,7 @@ void CarbonIO::dataReceived( SCompletionUnit *completion, const char* data, cons
 				if ( completion->packetListTail->payloadOffset > completion->packetListTail->packetLen )
 				{
 					// impossible, packet is corrupt
-					emitErrorMessage( "Corrupt message received on [%d] [%d>%d]", (int)completion->workHandle, completion->packetListTail->payloadOffset, completion->packetListTail->packetLen );
+					emitErrorMessage( "Corrupt message received on [%p] [%d>%d]", completion->workHandle, completion->packetListTail->payloadOffset, completion->packetListTail->packetLen );
 					completion->packetListTail->packetLen = 0; // eat it
 					return;
 				}
@@ -2839,7 +2839,7 @@ void CarbonIO::dataReceived( SCompletionUnit *completion, const char* data, cons
 			}
 			if ( !completion->packetListTail->packetLen ) // compress fail?
 			{
-				emitErrorMessage( "Corrupt packet, unable to decompress for[%d] [%d:%d]", (int)completion->workHandle, completion->packetListTail->payloadOffset, completion->packetListTail->packetLen );
+				emitErrorMessage( "Corrupt packet, unable to decompress for[%p] [%d:%d]", completion->workHandle, completion->packetListTail->payloadOffset, completion->packetListTail->packetLen );
 				completion->packetListTail->packetLen = 0; // eat it
 				return;
 			}
@@ -2867,7 +2867,7 @@ void CarbonIO::dataReceived( SCompletionUnit *completion, const char* data, cons
 
 				if ( stop )
 				{
-					emitStatusMessage( "bluenet wanted the packet for[%d]", (int)completion->workHandle );
+					emitStatusMessage( "bluenet wanted the packet for[%p]", completion->workHandle );
 					freeAuxData( *completion->packetListTail );
 					completion->packetListTail->packetLen = 0;
 					break;
@@ -3201,7 +3201,7 @@ void CarbonIO::destroyCompletionUnit( SCompletionUnit *completion )
 	m_stats.totalSockets = m_completionList.count();
 	m_stats.activeSockets = m_completionList.count();
 
-	emitStatusMessage( "[%d] removed from completion list, moving on to final destruction", (int)completion->workHandle );
+	emitStatusMessage( "[%p] removed from completion list, moving on to final destruction", completion->workHandle );
 
 	// set to blocking so the connection is closed cleanly
 	unsigned long noblock = 0;
@@ -3222,7 +3222,7 @@ void CarbonIO::destroyCompletionUnit( SCompletionUnit *completion )
 		D_REF(ciolog("waiting for [%d] ref count to reach zero from [%d]", (int)completion->workHandle, completion->refCount));
 		while( WaitForSingleObject(completion->refReachedZero, 3000) == WAIT_TIMEOUT )
 		{
-			ciolog("[%d] taking longer than normal to free its last reference", (int)completion->workHandle );
+			ciolog("[%p] taking longer than normal to free its last reference", completion->workHandle );
 		}
 	}
 	
@@ -3529,8 +3529,8 @@ void CarbonIO::handleRead( int size, SCompletionUnit *completion )
 
 	if ( list )
 	{
-		emitStatusMessage( "[%d] readJobsWaiting[%p:%p] packets[%p:%p]",
-						   (int)completion->workHandle,
+		emitStatusMessage( "[%p] readJobsWaiting[%p:%p] packets[%p:%p]",
+						   completion->workHandle,
 						   completion->readJobsWaiting,
 						   completion->readJobsWaitingTail,
 						   completion->packetListHead,
@@ -3538,15 +3538,15 @@ void CarbonIO::handleRead( int size, SCompletionUnit *completion )
 
 		for( SJob *J = list ; J ; J = J->next )
 		{
-			emitStatusMessage( "packet len[%d] waking up[%d] {%d} job[%p]->[%p]",
+			emitStatusMessage( "packet len[%d] waking up[%p] {%d} job[%p]->[%p]",
 							   ((SPacket *)J->param1p)->packetLen,
-							   (int)completion->workHandle, J->addrlen, J, J->next );
+							   completion->workHandle, J->addrlen, J, J->next );
 		}
 	}
 	else
 	{
-		emitStatusMessage( "list was null[%d] readJobsWaiting[%p:%p] packets[%p:%p]",
-						   (int)completion->workHandle,
+		emitStatusMessage( "list was null[%p] readJobsWaiting[%p:%p] packets[%p:%p]",
+						   completion->workHandle,
 						   completion->readJobsWaiting,
 						   completion->readJobsWaitingTail,
 						   completion->packetListHead,

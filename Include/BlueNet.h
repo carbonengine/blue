@@ -68,7 +68,7 @@ class BlueNetPacketBatch;
 class Marshal;
 
 //------------------------------------------------------------------------------
-class BLUEIMPORT BlueNet
+class BlueNet
 {
 public:
 	static void Init();
@@ -423,4 +423,3 @@ int BlueNet::BlueNetKeyFromName( const char* name )
 }
 
 #endif
-

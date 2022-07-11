@@ -469,7 +469,7 @@ typedef Ccp::PyGenericObjectPtr<PyChannelObject> PyChannelObjectPtr;
 #pragma warning(push)
 #pragma warning(disable : 4231) //according to MSDN: http://support.microsoft.com/default.aspx?scid=kb;en-us;168958
 #endif
-PyAPI_TEMPLATEDEF template class BLUEIMPORT Ccp::PyGenericObjectPtr<PyChannelObject>;
+template class BLUEIMPORT Ccp::PyGenericObjectPtr<PyChannelObject>;
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif

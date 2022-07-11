@@ -18,8 +18,6 @@ Description: structure describing the statistics gathered from CarbonIO
 #include <string.h>
 #include <memory.h>
 
-#include <CcpUtils/LinkHash.h>
-
 //------------------------------------------------------------------------------
 void CioStats::reset()
 {

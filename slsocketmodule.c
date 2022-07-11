@@ -1140,7 +1140,7 @@ makebdaddr(bdaddr_t *bdaddr)
 
 /*ARGSUSED*/
 static PyObject *
-makesockaddr(int sockfd, struct sockaddr *addr, int addrlen, int proto)
+makesockaddr(SOCKET_T sockfd, struct sockaddr *addr, int addrlen, int proto)
 {
     if (addrlen == 0) {
         /* No address -- may be recvfrom() from known socket */
@@ -2053,7 +2053,7 @@ static PyObject* sock_issocketvalid( PySocketSockObject *sock )
 //------------------------------------------------------------------------------
 static PyObject* getSocketDescriptor( PySocketSockObject *sock )
 {
-#if defined(MSWINDOWS) && SIZEOF_SOCKET_T == 8
+#if defined(MS_WINDOWS) && SIZEOF_SOCKET_T == 8
 	return PyLong_FromUnsignedLongLong( sock->sock_fd );
 #else
     return PyInt_FromLong( sock->sock_fd );
