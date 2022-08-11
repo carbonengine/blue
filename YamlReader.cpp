@@ -13,29 +13,28 @@
 #include <codecvt>
 #endif
 
-namespace 
+namespace
 {
-	const char* s_event2string[] =
-	{
-		"NO_EVENT",
-		"STREAM_START_EVENT",
-		"STREAM_END_EVENT",
-		"DOCUMENT_START_EVENT",
-		"DOCUMENT_END_EVENT",
-		"ALIAS_EVENT",
-		"SCALAR_EVENT",
-		"SEQUENCE_START_EVENT",
-		"SEQUENCE_END_EVENT",
-		"MAPPING_START_EVENT",
-		"MAPPING_END_EVENT"
-	};
-
-	class TaskletKilledException
-	{
-	};
+const char* s_event2string[] = {
+	"NO_EVENT",
+	"STREAM_START_EVENT",
+	"STREAM_END_EVENT",
+	"DOCUMENT_START_EVENT",
+	"DOCUMENT_END_EVENT",
+	"ALIAS_EVENT",
+	"SCALAR_EVENT",
+	"SEQUENCE_START_EVENT",
+	"SEQUENCE_END_EVENT",
+	"MAPPING_START_EVENT",
+	"MAPPING_END_EVENT"
 };
 
-DEFINE_CACHED_ALLOCATOR( PoolAllocatedYamlEvent, 64*1024, 64*1024 );
+class TaskletKilledException
+{
+};
+};
+
+DEFINE_CACHED_ALLOCATOR( PoolAllocatedYamlEvent, 64 * 1024, 64 * 1024 );
 
 YamlReader::YamlReader() :
 	m_parser(),
@@ -79,30 +78,30 @@ YamlReader::~YamlReader()
 #endif
 }
 
-int YamlReader::YamlReadFromStreamStatic( void *data, unsigned char *buffer, size_t size, size_t *size_read )
+int YamlReader::YamlReadFromStreamStatic( void* data, unsigned char* buffer, size_t size, size_t* size_read )
 {
-    return static_cast<YamlReader*>( data )->YamlReadFromStream( buffer, size, size_read );
+	return static_cast<YamlReader*>( data )->YamlReadFromStream( buffer, size, size_read );
 }
 
-int YamlReader::YamlReadFromStream( unsigned char *buffer, size_t size, size_t *size_read )
+int YamlReader::YamlReadFromStream( unsigned char* buffer, size_t size, size_t* size_read )
 {
-    *size_read = m_dataStream->Read( buffer, size );
-    return 1;
+	*size_read = m_dataStream->Read( buffer, size );
+	return 1;
 }
 
 IRoot* YamlReader::ReadFromStream( IBlueStream* stream )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-    IRoot* ret = NULL;
+	IRoot* ret = NULL;
 
-    m_dataStream = stream;
+	m_dataStream = stream;
 
 	// Ensure state from previous runs is not interfering. It is not enough
 	// to clear this after parsing as errors are reported via exception handling
 
-	yaml_parser_initialize(&m_parser);
-    yaml_parser_set_input( &m_parser, YamlReadFromStreamStatic, (void*)this );
+	yaml_parser_initialize( &m_parser );
+	yaml_parser_set_input( &m_parser, YamlReadFromStreamStatic, (void*)this );
 
 	try
 	{
@@ -124,7 +123,6 @@ IRoot* YamlReader::ReadFromStream( IBlueStream* stream )
 		{
 			ReportError( "mapping start event not found" );
 		}
-
 	}
 	catch( const IRootReaderException& e )
 	{
@@ -141,7 +139,7 @@ IRoot* YamlReader::ReadFromStream( IBlueStream* stream )
 	m_dataStream = (IBlueStream*)nullptr;
 	yaml_parser_delete( &m_parser );
 
-    return ret;
+	return ret;
 }
 
 bool YamlReader::ReadForCachingFromStream( IBlueStream* stream )
@@ -152,7 +150,7 @@ bool YamlReader::ReadForCachingFromStream( IBlueStream* stream )
 
 	m_dataStream = stream;
 
-	yaml_parser_initialize(&m_parser);
+	yaml_parser_initialize( &m_parser );
 	yaml_parser_set_input( &m_parser, YamlReadFromStreamStatic, (void*)this );
 
 	int ok = 0;
@@ -205,7 +203,7 @@ bool YamlReader::ReadForCachingFromStream( IBlueStream* stream )
 		if( ok && !m_eventList.empty() )
 		{
 			m_currentEvent = m_eventList.begin();
-			while( (m_currentEvent != m_eventList.end()) && (*m_currentEvent)->type != YAML_MAPPING_START_EVENT )
+			while( ( m_currentEvent != m_eventList.end() ) && ( *m_currentEvent )->type != YAML_MAPPING_START_EVENT )
 			{
 				GetNextEvent();
 			}
@@ -240,7 +238,7 @@ IRoot* YamlReader::CreateObjectHelper( unsigned int objectMarker, IRoot* calling
 #if CCP_STACKLESS
 
 	PyTaskletObject* current = reinterpret_cast<PyTaskletObject*>( PyStackless_GetCurrent() );
-	Py_DECREF(current);
+	Py_DECREF( current );
 
 	bool taskletCantYield = !PyOS->CanYield();
 
@@ -258,7 +256,7 @@ IRoot* YamlReader::CreateObjectHelper( unsigned int objectMarker, IRoot* calling
 				// return NULL and rely on it to try again. This can happen with
 				// proxies used for LODs - they're supposed to handle NULL returns
 				// anyway.
-				CCP_LOGERR( 
+				CCP_LOGERR(
 					"Trying to create an object from '%S' on a non-yielding"
 					"tasklet while another tasklet is still creating an object from it.",
 					m_fileName.c_str() );
@@ -316,7 +314,7 @@ IRoot* YamlReader::CreateObjectHelper( unsigned int objectMarker, IRoot* calling
 	return ret;
 }
 
-IRoot* YamlReader::CreateObjectWithYield( unsigned int objectMarker, IRoot * callingProxy )
+IRoot* YamlReader::CreateObjectWithYield( unsigned int objectMarker, IRoot* callingProxy )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -392,9 +390,9 @@ bool YamlReader::VerifyEvent( yaml_event_type_t expectedType ) const
 	else
 	{
 		std::string message = "Expected event ";
-		message += s_event2string[ expectedType ];
+		message += s_event2string[expectedType];
 		message += " but got ";
-		message += s_event2string[ m_event->type ];
+		message += s_event2string[m_event->type];
 		ReportError( message.c_str() );
 		return false;
 	}
@@ -405,11 +403,11 @@ void YamlReader::GetNextEvent()
 	CCP_STATS_ZONE( __FUNCTION__ );
 
 #if CCP_STACKLESS
-	if( m_allowYield && (m_timeSinceYield.GetSeconds() > m_timeSlice) )
+	if( m_allowYield && ( m_timeSinceYield.GetSeconds() > m_timeSlice ) )
 	{
 		//This is a benice thing.  We want to wake up immediately, not just at leisure.
 		//Sleep(0)
-		BeOS->NextScheduledEvent(0);
+		BeOS->NextScheduledEvent( 0 );
 		if( !PyOS->Yield() )
 		{
 			throw TaskletKilledException();
@@ -437,10 +435,10 @@ void YamlReader::GetNextEvent()
 		else
 		{
 			m_event = new PoolAllocatedYamlEvent;
-            if( !m_event )
-            {
-                ReportError( "out of memory" );
-            }
+			if( !m_event )
+			{
+				ReportError( "out of memory" );
+			}
 			m_event->type = YAML_NO_EVENT;
 		}
 		int ok = yaml_parser_parse( &m_parser, m_event );
@@ -469,7 +467,7 @@ void YamlReader::PushEvent()
 	m_hasPushedEvent = true;
 }
 
-template< typename T >
+template <typename T>
 void YamlReader::ReadValueImpl( T& dst )
 {
 	GetNextEvent();
@@ -509,7 +507,7 @@ void YamlReader::ReadValue( bool& dst )
 {
 	int32_t tmp;
 	ReadValue( tmp );
-	dst = (tmp != 0);
+	dst = ( tmp != 0 );
 }
 
 void YamlReader::ReadBinaryBlock( ICustomPersist* customPersist, const char* propertyName )
@@ -524,10 +522,10 @@ void YamlReader::ReadBinaryBlock( ICustomPersist* customPersist, const char* pro
 	{
 		// the outputted size is roughly 1.37 the original size
 		// bytes = (string_length(encoded_string) - 814) / 1.37
-		// So the text string should be bigger than the original binary data		
-		size_t dataLength = strlen((const char*)m_event->data.scalar.value);
+		// So the text string should be bigger than the original binary data
+		size_t dataLength = strlen( (const char*)m_event->data.scalar.value );
 		uint8_t* buffer = customPersist->AllocateReadBuffer( propertyName, dataLength );
-		dataLength = FromBase64( (const uint8_t*)m_event->data.scalar.value, dataLength, (char*)buffer,  dataLength );
+		dataLength = FromBase64( (const uint8_t*)m_event->data.scalar.value, dataLength, (char*)buffer, dataLength );
 		customPersist->SetBufferAndSize( propertyName, (unsigned char*)buffer, dataLength );
 	}
 }
@@ -536,19 +534,19 @@ void YamlReader::ReadValue( int64_t& dst )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-    GetNextEvent();
+	GetNextEvent();
 
-    dst = 0;
-    if( VerifyEvent( YAML_SCALAR_EVENT ) )
-    {
+	dst = 0;
+	if( VerifyEvent( YAML_SCALAR_EVENT ) )
+	{
 		const char* start = (const char*)m_event->data.scalar.value;
 #ifdef _WIN32
 		dst = _atoi64_l( start, m_locale );
 #else
 		char* end = nullptr;
-        dst = strtoull( start, &end, 10 );
+		dst = strtoull( start, &end, 10 );
 #endif
-    }
+	}
 }
 
 void YamlReader::SkipValue()
@@ -570,7 +568,7 @@ void YamlReader::SkipValue()
 
 	// Other events should not need pumping.  Like alias, scalar,
 	// etc will all be consumed by the GetNextEvent() at the
-    // beginning of this function.
+	// beginning of this function.
 }
 
 void YamlReader::ReadValue( double& dst )
@@ -593,7 +591,7 @@ void YamlReader::ReadValue( double& dst )
 void YamlReader::ReadValue( float& dst )
 {
 	double tmp;
-    ReadValue( tmp );
+	ReadValue( tmp );
 	dst = (float)tmp;
 }
 
@@ -620,7 +618,7 @@ void YamlReader::ReadValue( Vector4& dst )
 void YamlReader::ReadFloat16( uint16_t& dst )
 {
 	double tmp;
-    ReadValue( tmp );
+	ReadValue( tmp );
 	dst = BlueFloat32To16( float( tmp ) );
 }
 
@@ -634,9 +632,9 @@ void YamlReader::ReadFloatArray( float* values, size_t count )
 	{
 		GetNextEvent();
 
-		for (unsigned i = 0; i < count; ++i )
+		for( unsigned i = 0; i < count; ++i )
 		{
-			if ( m_event->type == YAML_SCALAR_EVENT )
+			if( m_event->type == YAML_SCALAR_EVENT )
 			{
 #ifdef _WIN32
 				values[i] = (float)_atof_l( (const char*)m_event->data.scalar.value, m_locale );
@@ -644,7 +642,9 @@ void YamlReader::ReadFloatArray( float* values, size_t count )
 				values[i] = (float)atof( (const char*)m_event->data.scalar.value );
 #endif
 				GetNextEvent();
-			} else {
+			}
+			else
+			{
 				break;
 			}
 		}
@@ -659,7 +659,7 @@ void YamlReader::ReadFloatArray( float* values, size_t count )
 			const char* type = nullptr;
 			ReadClassType( type );
 
-			if( !type || strcmp( type, "TriVector") != 0 )
+			if( !type || strcmp( type, "TriVector" ) != 0 )
 			{
 				// Not a TriVector, can't make anything of this data
 				ReportError( "Expected a float sequence of 3 floats, or a fallback to TriVector" );
@@ -704,10 +704,10 @@ void YamlReader::ReadFloatArray( float* values, size_t count )
 			}
 
 			const char** componentNames = nullptr;
-			if( strcmp( type, "TriColor") == 0 )
+			if( strcmp( type, "TriColor" ) == 0 )
 			{
 				static const char* colorComponentNames[4] = { "r", "g", "b", "a" };
-				
+
 				values[0] = 0.0f;
 				values[1] = 0.0f;
 				values[2] = 0.0f;
@@ -775,18 +775,18 @@ const wchar_t* YamlReader::ReadWString()
 	wchar_t* ret = (wchar_t*)CCP_MALLOC( (const char*)m_event->data.scalar.tag, sizeReq * sizeof( wchar_t ) );
 	MultiByteToWideChar( CP_UTF8, 0, asString, -1, ret, sizeReq );
 #else
-    std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
-    auto str = conv.from_bytes( (const char*)m_event->data.scalar.value );
-    
-    wchar_t* ret = (wchar_t*)CCP_MALLOC( (const char*)m_event->data.scalar.tag, ( str.length() + 1 ) * sizeof( wchar_t ) );
-    std::copy( begin( str ), end( str ), ret );
-    ret[str.length()] = 0;
+	std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
+	auto str = conv.from_bytes( (const char*)m_event->data.scalar.value );
+
+	wchar_t* ret = (wchar_t*)CCP_MALLOC( (const char*)m_event->data.scalar.tag, ( str.length() + 1 ) * sizeof( wchar_t ) );
+	std::copy( begin( str ), end( str ), ret );
+	ret[str.length()] = 0;
 #endif
 	m_allocatedStrings.push_back( ret );
 
 	return ret;
 }
-		
+
 const char* YamlReader::ReadString()
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
@@ -811,7 +811,7 @@ const char* YamlReader::ReadString()
 	m_allocatedStrings.push_back( ret );
 	return ret;
 }
-	
+
 bool YamlReader::ReadClsid( Be::Clsid& clsid )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
@@ -832,8 +832,8 @@ bool YamlReader::ReadClsid( Be::Clsid& clsid )
 	{
 		// 'type' not found
 		std::string message = "Type '" + std::string( type ) + "' not found in Blue class registry";
-		ReportWarning( message.c_str() );	
-        return false;
+		ReportWarning( message.c_str() );
+		return false;
 	}
 
 	return true;
@@ -850,7 +850,7 @@ void YamlReader::ReadIRoot( IRoot& instance )
 	if( VerifyEvent( YAML_MAPPING_START_EVENT ) )
 	{
 		// Read the type
-        Be::Clsid clsid;
+		Be::Clsid clsid;
 		bool x = ReadClsid( clsid );
 		if( !x )
 		{
@@ -858,15 +858,14 @@ void YamlReader::ReadIRoot( IRoot& instance )
 			ParseUntilMatchingMappingEnd();
 			return;
 		}
-		
+
 		// assert that the types match:
-		if( !instance.ClassType()->mClassId->IsEqual( clsid  ) )
+		if( !instance.ClassType()->mClassId->IsEqual( clsid ) )
 		{
-			std::string message = "Expected type '" + std::string( instance.ClassType()->mClassId->GetName() ) 
-				+ "' but got object of type '" + std::string( clsid.GetName() ) + "' - skipping it";
+			std::string message = "Expected type '" + std::string( instance.ClassType()->mClassId->GetName() ) + "' but got object of type '" + std::string( clsid.GetName() ) + "' - skipping it";
 			ReportWarning( message.c_str() );
 			ParseUntilMatchingMappingEnd();
-            return;
+			return;
 		}
 
 		ReadMembers( &instance );
@@ -893,7 +892,7 @@ uint64_t YamlReader::ExtractAnchorFromMappingStart()
 	{
 		// convert anchor to id - support 8 characters in anchor
 		size_t count = strlen( anchor );
-		size_t anchorIDSize = sizeof(anchorID);
+		size_t anchorIDSize = sizeof( anchorID );
 		if( count > anchorIDSize )
 		{
 			count = anchorIDSize;
@@ -914,54 +913,66 @@ IRoot* YamlReader::ReadIRootClassInternal()
 	uint64_t anchorID = ExtractAnchorFromMappingStart();
 
 	// Read the type
-    Be::Clsid clsid;
+	Be::Clsid clsid;
 	bool x = ReadClsid( clsid );
 	if( !x )
-    {
-        ParseUntilMatchingMappingEnd();
-        return NULL;
-    }
-
-    // need to create our own using the factory
-    IRoot* instance = NULL;
-    BeClasses->CreateInstance( clsid, GetIRootIID(), (void**)&instance );
-
-	IBlueObjectProxyPtr proxy( BlueCastPtr( instance ) );
-	if(	!m_eventList.empty() && proxy )
 	{
-		std::string name;
+		ParseUntilMatchingMappingEnd();
+		return NULL;
+	}
 
-		if( ReadMemberName( name ) )
+	// need to create our own using the factory
+	IRoot* instance = NULL;
+	BeClasses->CreateInstance( clsid, GetIRootIID(), (void**)&instance );
+
+	try
+	{
+		IBlueObjectProxyPtr proxy( BlueCastPtr( instance ) );
+		if( !m_eventList.empty() && proxy )
 		{
-			if( name == "object" )
+			std::string name;
+
+			if( ReadMemberName( name ) )
 			{
-				unsigned int objectMarker = (unsigned int)m_objectMarkers.size();
-				m_objectMarkers.push_back( m_currentEvent );
-				proxy->SetBuilder( this, objectMarker );
-				// Check to see if there's an anchor
-				GetNextEvent();
-				uint64_t anchorID = ExtractAnchorFromMappingStart();
-				if( anchorID )
+				if( name == "object" )
 				{
-					// This is a proxy object so we insert a NULL which is safe
-					// and actually makes sense. <halldor 2009-09-07>
-					m_anchorClassMap[ anchorID ] = NULL;			
+					unsigned int objectMarker = (unsigned int)m_objectMarkers.size();
+					m_objectMarkers.push_back( m_currentEvent );
+					proxy->SetBuilder( this, objectMarker );
+					// Check to see if there's an anchor
+					GetNextEvent();
+					uint64_t anchorID = ExtractAnchorFromMappingStart();
+					if( anchorID )
+					{
+						// This is a proxy object so we insert a NULL which is safe
+						// and actually makes sense. <halldor 2009-09-07>
+						m_anchorClassMap[anchorID] = NULL;
+					}
+					PushEvent();
+					ParseUntilMatchingMappingEnd();
 				}
-				PushEvent();
-				ParseUntilMatchingMappingEnd();
-			}
-			else
-			{
-				char msg[256];
-				sprintf_s( msg, "Error handling property '%s' - skipping it", name.c_str() );
-				ReportError( msg );
+				else
+				{
+					char msg[256];
+					sprintf_s( msg, "Error handling property '%s' - skipping it", name.c_str() );
+					ReportError( msg );
+				}
 			}
 		}
+		else
+		{
+			// Read members
+			ReadMembers( instance );
+		}
 	}
-	else
+	catch( const IRootReaderException& )
 	{
-		// Read members
-		ReadMembers(instance);
+		if( m_isStrict && instance )
+		{
+			// in case we clean up using exceptions: release `instance` as it is not guaranteed to happen otherwise
+			instance->Unlock();
+		}
+		throw;
 	}
 
 	if( m_doInitialize )
@@ -977,7 +988,7 @@ IRoot* YamlReader::ReadIRootClassInternal()
 
 	if( anchorID )
 	{
-		m_anchorClassMap[ anchorID ] = instance;
+		m_anchorClassMap[anchorID] = instance;
 	}
 
 	return instance;
@@ -1030,7 +1041,7 @@ IRoot* YamlReader::ReadIRootClass()
 			AnchorClassMap_t::iterator it = m_anchorClassMap.find( anchorID );
 			if( it != m_anchorClassMap.end() )
 			{
-				instance = (*it).second;
+				instance = ( *it ).second;
 				if( instance )
 				{
 					instance->Lock();
@@ -1052,7 +1063,6 @@ IRoot* YamlReader::ReadIRootClass()
 				message += "' that hasn't been previously defined!";
 				ReportError( message.c_str() );
 			}
-
 		}
 		else
 		{
@@ -1132,7 +1142,7 @@ void YamlReader::ReadClassType( const char*& type )
 
 	const char* key;
 	ReadScalar( key );
-	if( key && (strcmp( key, "type" ) == 0) )
+	if( key && ( strcmp( key, "type" ) == 0 ) )
 	{
 		ReadScalar( type );
 	}
@@ -1148,10 +1158,10 @@ bool YamlReader::ReadMemberName( std::string& name )
 
 	// Pump YAML for scalar event
 	GetNextEvent();
-	
+
 	if( m_event->type == YAML_SCALAR_EVENT )
 	{
-		name = (const char*) m_event->data.scalar.value;
+		name = (const char*)m_event->data.scalar.value;
 		return true;
 	}
 	else
@@ -1168,10 +1178,10 @@ void YamlReader::ReadScalar( const char*& scalar )
 
 	// Pump YAML for scalar event
 	GetNextEvent();
-	
+
 	if( VerifyEvent( YAML_SCALAR_EVENT ) )
 	{
-		scalar = (const char*) m_event->data.scalar.value;
+		scalar = (const char*)m_event->data.scalar.value;
 	}
 	else
 	{
@@ -1181,11 +1191,11 @@ void YamlReader::ReadScalar( const char*& scalar )
 
 bool YamlReader::IsParserExhausted() const
 {
-	bool isDone = m_event ? (m_event->type == YAML_STREAM_END_EVENT) : false;
-	
+	bool isDone = m_event ? ( m_event->type == YAML_STREAM_END_EVENT ) : false;
+
 	if( m_parser.error != YAML_NO_ERROR )
 	{
-		ReportError(  "Cannot recover from previous errors, end of parsing." );
+		ReportError( "Cannot recover from previous errors, end of parsing." );
 		isDone = true;
 	}
 
@@ -1209,20 +1219,20 @@ void YamlReader::ParseUntilMatchingEnd( yaml_event_type_t start, yaml_event_type
 			--level;
 		}
 	}
-}	
+}
 
 void YamlReader::ParseUntilMatchingMappingEnd()
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-    ParseUntilMatchingEnd( YAML_MAPPING_START_EVENT, YAML_MAPPING_END_EVENT );
+	ParseUntilMatchingEnd( YAML_MAPPING_START_EVENT, YAML_MAPPING_END_EVENT );
 }
 
 void YamlReader::ParseUntilMatchingSequenceEnd()
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-    ParseUntilMatchingEnd( YAML_SEQUENCE_START_EVENT, YAML_SEQUENCE_END_EVENT );
+	ParseUntilMatchingEnd( YAML_SEQUENCE_START_EVENT, YAML_SEQUENCE_END_EVENT );
 }
 
 void YamlReader::ClearCachedEvents()
@@ -1314,7 +1324,7 @@ void YamlReader::ReadMembers( IRoot* instance )
 		{
 			HandleAttribute( name.c_str(), instance, notify );
 		}
-		catch ( InvalidAttributeException& )
+		catch( InvalidAttributeException& )
 		{
 			char msg[256];
 			sprintf_s( msg, "Error handling attribute '%s' - skipping it", name.c_str() );
@@ -1455,15 +1465,15 @@ void YamlReader::ReadStructureList( IBlueStructureList* structureList )
 			BlueStructureDefinition sd;
 
 			ReadVectorBegin();
-			
+
 			ReadVectorNext();
 			sd.m_name = ReadString();
-			
+
 			ReadVectorNext();
 			int32_t dataType;
 			ReadValue( dataType );
 			sd.m_dataType = (Be::BlueStructureDataType)dataType;
-			
+
 			ReadVectorNext();
 			ReadValue( sd.m_offset );
 
@@ -1517,7 +1527,7 @@ void YamlReader::ReadStructureList( IBlueStructureList* structureList )
 				ReadVectorNext();
 
 				ReadStructureListItem( &structureDef.front(), itemStorage );
-			
+
 				ReadVectorNext();
 				ReadVectorEnd();
 			}
@@ -1541,7 +1551,7 @@ void YamlReader::ReadStructureList( IBlueStructureList* structureList )
 				ReadStructureListItem( sdFromList, item.get() );
 
 				structureList->Append( item.get() );
-			
+
 				ReadVectorNext();
 				ReadVectorEnd();
 			}
@@ -1569,58 +1579,56 @@ void YamlReader::ReadStructureListItem( const BlueStructureDefinition* memberDef
 
 		switch( type )
 		{
-			// TODO: Support more types
-			case Be::DT_INT8:
-				if( memberDef->m_dataType & Be::DT_UNSIGNED_BIT )
-				{
-					ReadStructureListItemMember<uint8_t, sizeof( uint8_t )>( memberDef, item, &YamlReader::ReadValue );
-				}
-				else
-				{
-					ReadStructureListItemMember<int8_t, sizeof( int8_t )>( memberDef, item, &YamlReader::ReadValue );
-				}
-				break;
-			case Be::DT_INT16:
-				if( memberDef->m_dataType & Be::DT_UNSIGNED_BIT )
-				{
-					ReadStructureListItemMember<uint16_t, sizeof( uint16_t )>( memberDef, item, &YamlReader::ReadValue );
-				}
-				else
-				{
-					ReadStructureListItemMember<int16_t, sizeof( int16_t )>( memberDef, item, &YamlReader::ReadValue );
-				}
-				break;
-			case Be::DT_INT32:
-				if( memberDef->m_dataType & Be::DT_UNSIGNED_BIT )
-				{
-					ReadStructureListItemMember<uint32_t, sizeof( uint32_t )>( memberDef, item, &YamlReader::ReadValue );
-				}
-				else
-				{
-					ReadStructureListItemMember<int32_t, sizeof( int32_t )>( memberDef, item, &YamlReader::ReadValue );
-				}
-				break;
-			case Be::DT_FLOAT32:
-				ReadStructureListItemMember<float, sizeof( float )>( memberDef, item, &YamlReader::ReadValue );
-				break;
-			case Be::DT_FLOAT16:
-				ReadStructureListItemMember<uint16_t, sizeof( uint16_t )>( memberDef, item, &YamlReader::ReadFloat16 );
-				break;
-			case Be::DT_FLOAT32x4:
-				ReadStructureListItemMember<Vector4, sizeof( float ) * 4>( memberDef, item, &YamlReader::ReadValue );
-				break;
-			case Be::DT_BOOL8:
-				ReadStructureListItemMember<bool, sizeof( bool )>( memberDef, item, &YamlReader::ReadValue );
-				break;
-			case Be::DT_SHAREDSTRING:
-				ReadStructureListItemMember<BlueSharedString, sizeof( BlueSharedString )>( memberDef, item, &YamlReader::ReadValue );
-				break;
+		// TODO: Support more types
+		case Be::DT_INT8:
+			if( memberDef->m_dataType & Be::DT_UNSIGNED_BIT )
+			{
+				ReadStructureListItemMember<uint8_t, sizeof( uint8_t )>( memberDef, item, &YamlReader::ReadValue );
+			}
+			else
+			{
+				ReadStructureListItemMember<int8_t, sizeof( int8_t )>( memberDef, item, &YamlReader::ReadValue );
+			}
+			break;
+		case Be::DT_INT16:
+			if( memberDef->m_dataType & Be::DT_UNSIGNED_BIT )
+			{
+				ReadStructureListItemMember<uint16_t, sizeof( uint16_t )>( memberDef, item, &YamlReader::ReadValue );
+			}
+			else
+			{
+				ReadStructureListItemMember<int16_t, sizeof( int16_t )>( memberDef, item, &YamlReader::ReadValue );
+			}
+			break;
+		case Be::DT_INT32:
+			if( memberDef->m_dataType & Be::DT_UNSIGNED_BIT )
+			{
+				ReadStructureListItemMember<uint32_t, sizeof( uint32_t )>( memberDef, item, &YamlReader::ReadValue );
+			}
+			else
+			{
+				ReadStructureListItemMember<int32_t, sizeof( int32_t )>( memberDef, item, &YamlReader::ReadValue );
+			}
+			break;
+		case Be::DT_FLOAT32:
+			ReadStructureListItemMember<float, sizeof( float )>( memberDef, item, &YamlReader::ReadValue );
+			break;
+		case Be::DT_FLOAT16:
+			ReadStructureListItemMember<uint16_t, sizeof( uint16_t )>( memberDef, item, &YamlReader::ReadFloat16 );
+			break;
+		case Be::DT_FLOAT32x4:
+			ReadStructureListItemMember<Vector4, sizeof( float ) * 4>( memberDef, item, &YamlReader::ReadValue );
+			break;
+		case Be::DT_BOOL8:
+			ReadStructureListItemMember<bool, sizeof( bool )>( memberDef, item, &YamlReader::ReadValue );
+			break;
+		case Be::DT_SHAREDSTRING:
+			ReadStructureListItemMember<BlueSharedString, sizeof( BlueSharedString )>( memberDef, item, &YamlReader::ReadValue );
+			break;
 
-			default:
-				{
-					ReportError( "Unsupported type for structured lists" );
-				}
-
+		default: {
+			ReportError( "Unsupported type for structured lists" );
+		}
 		}
 
 		++memberDef;
@@ -1658,7 +1666,6 @@ Be::Result<std::string> YamlReader::CreateObjectFromString( const std::string& s
 	ms.CreateInstance();
 	ms->SetBuffer( (void*)s.c_str(), s.size() );
 	return CreateObjectFromStream( ms, obj );
-
 }
 
 Be::Result<std::string> YamlReader::CreateObjectFromStream( IBlueStream* stream, IRoot** obj )
