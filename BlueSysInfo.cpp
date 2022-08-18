@@ -348,10 +348,11 @@ BlueSysInfoOs::BlueSysInfoOs()
 
 BlueSysInfoMemory::BlueSysInfoMemory()
 {
-    size_t workingSetMemory, pageFileMemory;
-    CcpGetProcessMemoryInfo( workingSetMemory, pageFileMemory );
-	m_workingSet = uint64_t( workingSetMemory );
-	m_pageFile = uint64_t( pageFileMemory );
+	CcpProcessMemoryInfo info;
+	if ( CcpGetProcessMemoryInfo( info ) ) {
+		m_workingSet = uint64_t( info.workingSetSize );
+		m_pageFile = uint64_t( info.pageFileUsage );
+	}
 
 	MEMORYSTATUSEX status;
 	status.dwLength = DWORD( sizeof( status ) );

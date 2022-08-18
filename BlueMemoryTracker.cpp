@@ -64,11 +64,10 @@ void MemoryTracker::Update()
 	auto mallocMemory = CCPMallocUsage();
 	CCP_STATS_SET( beMemory, mallocMemory );
 
-	size_t workingSetMemory = 0;
-	size_t pageFileMemory = 0;
-    CcpGetProcessMemoryInfo( workingSetMemory, pageFileMemory );
-	CCP_STATS_SET( workingSetSize, workingSetMemory );
-	CCP_STATS_SET( pageFileUsage, pageFileMemory );
+	CcpProcessMemoryInfo info;
+    CcpGetProcessMemoryInfo( info );
+	CCP_STATS_SET( workingSetSize, info.workingSetSize );
+	CCP_STATS_SET( pageFileUsage, info.pageFileUsage );
 
 #if CCP_STACKLESS
 	auto pythonMemory = PySys_GetPyMalloced();
@@ -84,11 +83,11 @@ void MemoryTracker::Update()
 	{
 		logMemory = true;
 	}
-	if( IsAboveLoggingThreshold( workingSetMemory, m_lastLoggedWorkingSet ) )
+	if( IsAboveLoggingThreshold( info.workingSetSize, m_lastLoggedWorkingSet ) )
 	{
 		logMemory = true;
 	}
-	if( IsAboveLoggingThreshold( pageFileMemory, m_lastLoggedPageFileUsage ) )
+	if( IsAboveLoggingThreshold( info.pageFileUsage, m_lastLoggedPageFileUsage ) )
 	{
 		logMemory = true;
 	}
@@ -97,8 +96,8 @@ void MemoryTracker::Update()
 	{
 		m_lastLoggedPython = pythonMemory;
 		m_lastLoggedMalloc = mallocMemory;
-		m_lastLoggedWorkingSet = workingSetMemory;
-		m_lastLoggedPageFileUsage = pageFileMemory;
+		m_lastLoggedWorkingSet = info.workingSetSize;
+		m_lastLoggedPageFileUsage = info.pageFileUsage;
 
 		CCP_LOGNOTICE_CH( 
 			s_ch, 
@@ -134,12 +133,11 @@ void MemoryTracker::SummaryReport( const char* filename )
 #endif
 	PrintFieldToFile( file, "CCP Malloc usage", CCPMallocUsage() );
 
-    size_t workingSetMemory = 0;
-    size_t pageFileMemory = 0;
-    if( CcpGetProcessMemoryInfo( workingSetMemory, pageFileMemory ) )
+	CcpProcessMemoryInfo info;
+    if( CcpGetProcessMemoryInfo( info ) )
     {
-        PrintFieldToFile( file, "Working set size", workingSetMemory );
-        PrintFieldToFile( file, "Page file usage", pageFileMemory );
+        PrintFieldToFile( file, "Working set size", info.workingSetSize );
+        PrintFieldToFile( file, "Page file usage", info.pageFileUsage );
     }
     
 #ifdef _WIN32

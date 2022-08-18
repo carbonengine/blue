@@ -2048,16 +2048,13 @@ void BluePyOS::LogCpuUsageAndOtherStats()
 		size_t memusage = 0;
 		size_t workingset = 0;
 		uint32_t pagefaults = 0;
-#ifdef _WIN32
-		PROCESS_MEMORY_COUNTERS mc;
-		if (GetProcessMemoryInfo(GetCurrentProcess(), &mc, sizeof (mc))) {
-			memusage = mc.PagefileUsage;
-			workingset = mc.WorkingSetSize;
-			pagefaults = mc.PageFaultCount;
+
+		CcpProcessMemoryInfo memInfo;
+		if ( ! CcpGetProcessMemoryInfo( memInfo ) ) {
+			CCP_LOGWARN_CH( s_chMemory, "Failed retrieving memory info" );
 		}
-#else
-        CcpGetProcessMemoryInfo( workingset, memusage );
-#endif
+
+
 		BluePy sys(PyImport_ImportModule("sys"));
 		BluePy pymem;
 		if (sys)
@@ -2079,10 +2076,10 @@ void BluePyOS::LogCpuUsageAndOtherStats()
 			tkrn - mLastThreadKernelUsage,
 			pkrn - mLastProcessKernelUsage,
 
-			PyInt_FromSize_t(memusage),
+			PyInt_FromSize_t(memInfo.pageFileUsage),
 			static_cast<PyObject*>( pymem ),
-			PyInt_FromSize_t(workingset),
-			pagefaults,
+			PyInt_FromSize_t(memInfo.workingSetSize),
+			memInfo.pageFaultCount,
 			PyInt_FromSize_t(CCPMallocUsage() + s_pythonBlockSize * s_pythonBlockCount),
 
 			BeOS->GetInfo()->mFps,

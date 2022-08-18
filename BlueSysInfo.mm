@@ -222,10 +222,10 @@ BlueSysInfoOs::BlueSysInfoOs()
 
 BlueSysInfoMemory::BlueSysInfoMemory()
 {
-    size_t workingSetMemory, pageFileMemory;
-    CcpGetProcessMemoryInfo( workingSetMemory, pageFileMemory );
-    m_workingSet = uint64_t( workingSetMemory );
-    m_pageFile = uint64_t( pageFileMemory );
+    CcpProcessMemoryInfo memInfo;
+    CcpGetProcessMemoryInfo( memInfo);
+    m_workingSet = uint64_t( memInfo.workingSetSize );
+    m_pageFile = uint64_t( memInfo.pageFileUsage );
 
     int64_t memsize = 0;
     size_t size = sizeof( memsize );
