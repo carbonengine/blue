@@ -45,6 +45,38 @@
 PyObject* PySetLogEchoFunction( PyObject* self, PyObject* args );
 PyObject* PyGetLogEchoFunction( PyObject* self, PyObject* args );
 
+// FIXME need to update the call sites!
+BLUE_CLASS( BlueCpuUsage ) : public IRoot
+{
+public:
+	explicit BlueCpuUsage( IRoot* obj = nullptr ) {}
+	virtual ~BlueCpuUsage() = default;
+
+	EXPOSE_TO_BLUE();
+
+	Be::Time timestamp{0};
+	// CPU
+	uint64_t userThreadCpuUsage{0};
+	uint64_t userProcessCpuUsage{0};
+	uint64_t kernelThreadCpuUsage{0};
+	uint64_t kernelProcessCpuUsage{0};
+	// Memory
+	size_t pageFileUsage{0}; // also referred to as "Virtual Memory"
+	size_t pythonMemoryUsage{0};
+	size_t workingSetSize{0};
+	uint64_t pageFaultCount{0};
+	//	size_t blueMemory;
+	// Scheduler
+	double fps{0.0};
+	uint64_t taskletsProcessed{0};
+	size_t taskletsYielding{0};
+	size_t taskletsSleeping{0};
+	float taskletsSchedulerDuration{0.f};
+	uint64_t taskletsQueued{0};
+};
+BLUE_DECLARE_VECTOR( BlueCpuUsage );
+TYPEDEF_BLUECLASS( BlueCpuUsage );
+
 //////////////////////////////////////////////////////////////////////
 //
 // BluePyOS class
@@ -120,7 +152,7 @@ public:
 	uint64_t mLastThreadKernelUsage;
 	uint64_t mLastProcessCpuUsage;
 	uint64_t mLastProcessKernelUsage;
-	PyObject* mCpuUsage;
+	PBlueCpuUsageVector mCpuUsage;
 
 	// This flag is set based on a command line argument (/telemetryMarkup).
 	// This is used in bluepy.py to determine whether decorators  and metaclass
@@ -400,5 +432,6 @@ extern "C"
 	void* PyOS_GcStart( void );
 	void PyOS_GcStop( void* arg );
 }
+
 
 #endif // _BLUEPYTHON_H_

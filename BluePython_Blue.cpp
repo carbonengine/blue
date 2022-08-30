@@ -11,6 +11,29 @@
 
 #include "BluePython.h"
 
+BLUE_DEFINE_NONEXPOSED( BlueCpuUsage );
+
+const Be::ClassInfo* BlueCpuUsage::ExposeToBlue()
+{
+	EXPOSURE_BEGIN( BlueCpuUsage, "" )
+		MAP_ATTRIBUTE("timestamp", timestamp, "Point in time when the sample was taken", Be::READ)
+		MAP_ATTRIBUTE("userProcessCpuUsage", userProcessCpuUsage, "user-time spent in process", Be::READ)
+		MAP_ATTRIBUTE("userThreadCpuUsage", userThreadCpuUsage, "user-time spent in thread", Be::READ)
+		MAP_ATTRIBUTE("kernelProcessCpuUsage", kernelProcessCpuUsage, "kernel time spent in process", Be::READ)
+		MAP_ATTRIBUTE("kernelThreadCpuUsage", kernelThreadCpuUsage, "kernel time spent in thread", Be::READ)
+		MAP_ATTRIBUTE("virtualMemory", pageFileUsage, "Memory used by the process according to the OS", Be::READ)
+		MAP_ATTRIBUTE("pythonMemoryUsage", pythonMemoryUsage, "Amount of memory used by Python", Be::READ)
+		MAP_ATTRIBUTE("workingSetSize", workingSetSize, "", Be::READ)
+		MAP_ATTRIBUTE("pageFaultCount", pageFaultCount, "Number of page faults", Be::READ)
+		MAP_ATTRIBUTE("fps", fps, "Frames per second", Be::READ)
+		MAP_ATTRIBUTE("taskletsProcessed", taskletsProcessed, "Number of tasklets processed this frame", Be::READ)
+		MAP_ATTRIBUTE("taskletsYielding", taskletsYielding, "Number of tasklets that yielded this frame", Be::READ)
+		MAP_ATTRIBUTE("taskletsSleeping", taskletsSleeping, "Number of tasklets that slept this frame", Be::READ)
+		MAP_ATTRIBUTE("taskletsSchedulerDuration", taskletsSchedulerDuration, "Time spent processing tasklets this frame", Be::READ)
+		MAP_ATTRIBUTE("taskletsQueued", taskletsQueued, "Number of tasklets queued for execution", Be::READ)
+	EXPOSURE_END()
+}
+
 BLUE_DEFINE_NO_REGISTER( BluePyOS );
 BLUE_REGISTER_CLASS_EX( BluePyOS, DynamicSingletonFactory<OBluePyOS>::Create, Be::ClassRegistration::DISABLE_PYTHON_CONSTRUCTION );
 

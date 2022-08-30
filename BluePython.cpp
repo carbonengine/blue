@@ -136,7 +136,7 @@ static int OnTaskletSwitch(PyTaskletObject *from, PyTaskletObject *to)
 
 
 //--------------------------------------------------------------------
-BluePyOS::BluePyOS(IRoot*) :
+BluePyOS::BluePyOS(IRoot* lockobj) :
 #if CCP_STACKLESS
 	mSynchro( nullptr ),
 	mPySynchro( nullptr ),
@@ -145,7 +145,7 @@ BluePyOS::BluePyOS(IRoot*) :
 #endif
 	mMarkupZonesInPython(false),
 	mExceptionHandler( nullptr ),
-	mCpuUsage( nullptr ),
+	PARENTLOCK( mCpuUsage ),
 	mSliceWarning( 200 ),
 	mBeNiceSlice( 15 ),
 	mPerformanceUpdateFrequency( 100000000 )
@@ -524,7 +524,6 @@ bool BluePyOS::Startup()
 
 	mLastThreadCpuUsage = mLastProcessCpuUsage = 0;
 	mLastThreadKernelUsage = mLastProcessKernelUsage = 0;
-	mCpuUsage = NULL;
 
 	BeTimer timer("BluePyOS::Startup()");
 
@@ -618,7 +617,6 @@ bool BluePyOS::Startup()
 	}
 #endif
 
-	mCpuUsage = PyList_New(0);
 	mLastCpuUpdate = 0;
 
 	for (unsigned int i = 0; i < sizeof TASKLETS / sizeof TASKLETS[0]; i++)
@@ -716,9 +714,6 @@ void BluePyOS::Shutdown(int level)
 		Py_DECREF(TASKLETS[i].mContext);
 		TASKLETS[i].mContext = 0;
 	}
-
-	Py_DECREF(mCpuUsage);
-	mCpuUsage = 0;
 
 	// remove clockthis utility functions
 	for (PyMethodDef* md = clockthis; md->ml_meth != NULL; md++)
@@ -2034,7 +2029,7 @@ void BluePyOS::LogCpuUsageAndOtherStats()
 {
 #if CCP_STACKLESS
     Be::Time now = TimeNow();
-	if (mCpuUsage && now - mLastCpuUpdate >= mPerformanceUpdateFrequency)
+	if (now - mLastCpuUpdate >= mPerformanceUpdateFrequency)
 	{
 		// 10 secs. since last update
 		mLastCpuUpdate = now;
@@ -2066,33 +2061,28 @@ void BluePyOS::LogCpuUsageAndOtherStats()
 		float lastDuration;
 		int nr1, nr2;
 		mScheduler.GetStats(nr1, nr2, lastDuration);
-		BluePy stats;
-		if (pymem)
-			stats = BluePy(Py_BuildValue("L(LLLL)(NONIN)(fiiifi)",
-			now,
+		if (pymem) {
+			BlueCpuUsagePtr stats;
+			stats.CreateInstance();
+			stats->timestamp = now;
+			stats->userProcessCpuUsage = pkrn+pusr - mLastProcessCpuUsage;
+			stats->userThreadCpuUsage = tkrn+tusr - mLastThreadCpuUsage;
+			stats->kernelProcessCpuUsage = pkrn - mLastProcessKernelUsage;
+			stats->kernelThreadCpuUsage = tkrn - mLastThreadKernelUsage;
 
-			tkrn+tusr - mLastThreadCpuUsage,
-			pkrn+pusr - mLastProcessCpuUsage,
-			tkrn - mLastThreadKernelUsage,
-			pkrn - mLastProcessKernelUsage,
+			stats->pageFileUsage = memInfo.pageFileUsage;
+			stats->pythonMemoryUsage = PyInt_AsSsize_t( static_cast<PyObject*>( pymem ) );
+			stats->workingSetSize = memInfo.workingSetSize;
+			stats->pageFaultCount = memInfo.pageFaultCount;
 
-			PyInt_FromSize_t(memInfo.pageFileUsage),
-			static_cast<PyObject*>( pymem ),
-			PyInt_FromSize_t(memInfo.workingSetSize),
-			memInfo.pageFaultCount,
-			PyInt_FromSize_t(CCPMallocUsage() + s_pythonBlockSize * s_pythonBlockCount),
-
-			BeOS->GetInfo()->mFps,
-			nr1,
-			synchroStat.mYielders,
-			synchroStat.mSleepers,
-			lastDuration,
-			nr2));
-		int res = -1;
-		if (stats)
-			res = PyList_Append(mCpuUsage, stats);
-		if (res)
-			PyOS->PyFlushError("PyOS::Pump::Perf:");
+			stats->fps = BeOS->GetInfo()->mFps;
+			stats->taskletsProcessed = nr1 - nr2,
+			stats->taskletsYielding = synchroStat.mYielders;
+			stats->taskletsSleeping = synchroStat.mSleepers;
+			stats->taskletsSchedulerDuration = lastDuration,
+			stats->taskletsQueued = nr2;
+			mCpuUsage.Append(stats.Detach());
+		}
 
 		mLastThreadCpuUsage = tkrn+tusr;
 		mLastProcessCpuUsage = pkrn+pusr;
