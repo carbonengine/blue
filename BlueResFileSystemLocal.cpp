@@ -63,12 +63,7 @@ bool BlueResFileSystemLocal::Initialize(const std::wstring& initialPath)
 bool BlueResFileSystemLocal::FileExists( const std::wstring& filename )
 {
 	std::wstring filenameOnDisk;
-	if( ResolvePathW( filename, filenameOnDisk ) )
-	{
-		return CcpIsPathExistingFile( filenameOnDisk, filenameOnDisk );
-	}
-
-	return false;
+	return ResolvePathW( filename, filenameOnDisk );
 }
 
 bool BlueResFileSystemLocal::IsDirectory( const std::wstring& dir )

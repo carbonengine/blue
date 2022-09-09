@@ -31,7 +31,9 @@ BLUEIMPORT bool BlueInitializePaths(const std::wstring& initialPath)
 	return BluePaths::Initialize(initialPath);
 }
 
-BluePaths::BluePaths( IRoot* lockobj /*= NULL */ )
+BluePaths::BluePaths( IRoot* lockobj /*= NULL */ ) :
+	m_existingFilesMutex( "BluePaths", "m_existingFilesMutex" ),
+	m_cacheFileExistance( true )
 {
 }
 
@@ -147,27 +149,61 @@ bool BluePaths::FileExists( const std::wstring& filename )
 {
 	for( auto it = m_resFileSystems.begin(); it != m_resFileSystems.end(); ++it )
 	{
-		if( (*it)->FileExists( filename ) )
+		if( *it != m_localFileSystem && (*it)->FileExists( filename ) )
+		{
+			return true;
+		}
+	}
+	if( m_cacheFileExistance )
+	{
+		CcpAutoMutex lock( m_existingFilesMutex );
+		auto found = m_existingFiles.find( filename );
+		if( found != end( m_existingFiles ) )
+		{
+			return true;
+		}
+	}
+	auto exists = m_localFileSystem->FileExists( filename );
+	if( exists && m_cacheFileExistance )
+	{
+		CcpAutoMutex lock( m_existingFilesMutex );
+		m_existingFiles.insert( filename );
+	}
+	return exists;
+}
+
+bool BluePaths::FileExistsLocally( const wchar_t* filename )
+{
+	if( m_cacheFileExistance )
+	{
+		CcpAutoMutex lock( m_existingFilesMutex );
+		auto found = m_existingFiles.find( filename );
+		if( found != end( m_existingFiles ) )
 		{
 			return true;
 		}
 	}
 
-	return false;
-}
-
-bool BluePaths::FileExistsLocally( const wchar_t* filename )
-{
 	if( BeRemoteFileCache->FileExists( filename ) )
 	{
 		if( BeRemoteFileCache->IsCachedLocally( filename ) )
 		{
+			if( m_cacheFileExistance )
+			{
+				CcpAutoMutex lock( m_existingFilesMutex );
+				m_existingFiles.insert( filename );
+			}
 			return true;
 		}
 	}
 
 	if( m_localFileSystem->FileExists( filename ) )
 	{
+		if( m_cacheFileExistance )
+		{
+			CcpAutoMutex lock( m_existingFilesMutex );
+			m_existingFiles.insert( filename );
+		}
 		return true;
 	}
 

@@ -93,6 +93,10 @@ private:
 	BlueResFileSystemLocalPtr m_localFileSystem;
 
 	std::vector<IBlueResFileSystemPtr> m_resFileSystems;
+
+	std::unordered_set<std::wstring> m_existingFiles;
+	CcpMutex m_existingFilesMutex;
+	bool m_cacheFileExistance;
 };
 
 TYPEDEF_BLUECLASS( BluePaths );

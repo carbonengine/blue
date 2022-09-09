@@ -29,6 +29,16 @@ const Be::ClassInfo* BluePaths::ExposeToBlue()
 			GetInitialWorkingDirectory,
 			"The initial working directory, as it was when the module was initialized."
 		)
+
+		MAP_ATTRIBUTE
+		(
+			"cacheFileExistance",
+			m_cacheFileExistance,
+			"When this attribute is set, BluePaths will cache existance of local files (for methods\n"
+			"like exists or FileExistsLocally). Using this flags speeds up those methods considerably\n"
+			"at the expence of possible false positive results.",
+			Be::READWRITE
+		)
 		
 		MAP_METHOD_AND_WRAP
 		(
