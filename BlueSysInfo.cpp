@@ -239,6 +239,8 @@ std::wstring BlueSysInfo::GetDomainName() const
 BlueSysInfoCpu::BlueSysInfoCpu() :
 	m_extensions( PDM::GetCPUInfo().extensions )
 {
+	auto pdmCpu = PDM::GetCPUInfo();
+	m_mHz = pdmCpu.frequency;
 	SYSTEM_INFO info;
 	GetNativeSystemInfo( &info );
 

@@ -144,6 +144,8 @@ std::wstring BlueSysInfo::GetDomainName() const
 BlueSysInfoCpu::BlueSysInfoCpu() :
 	m_extensions( PDM::GetCPUInfo().extensions )
 {
+	auto pdmCpu = PDM::GetCPUInfo();
+	m_mHz = pdmCpu.frequency;
     char buffer[512] = { 0 };
     size_t size = sizeof( buffer );
     sysctlbyname( "machdep.cpu.brand_string", buffer, &size, nullptr, 0 );

@@ -20,6 +20,7 @@ public:
 	std::string m_identifier;
 	std::string m_architecture;
 	std::vector<std::string> m_extensions;
+	uint32_t m_mHz;
 };
 
 TYPEDEF_BLUECLASS( BlueSysInfoCpu );

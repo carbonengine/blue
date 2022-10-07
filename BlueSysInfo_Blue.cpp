@@ -90,6 +90,7 @@ const Be::ClassInfo* BlueSysInfoCpu::ExposeToBlue()
 		MAP_ATTRIBUTE( "identifier", m_identifier, "CPU identifier string", Be::READ );
 		MAP_ATTRIBUTE( "brand", m_brand, "CPU brand name", Be::READ );
 		MAP_ATTRIBUTE( "architecture", m_architecture, "CPU architecture label (x64, AMD64, etc.)", Be::READ );
+		MAP_ATTRIBUTE( "frequency", m_mHz, "CPU frequency in MHz", Be::READ );
 		MAP_METHOD_AND_WRAP( "GetExtensions", GetExtensions, "Get CPU extensions" );
 	EXPOSURE_END()
 }
