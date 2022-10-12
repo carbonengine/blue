@@ -11,6 +11,8 @@ BLUE_INTERFACE( IBlueObjectMetadata ): public IRoot
 	virtual const char* Get( IWeakObject* owner, const char* key, const char* defaultValue ) const = 0;
 	virtual BlueStdResult Delete( IWeakObject* owner, const char* key ) = 0;
 	virtual BlueStdResult DeleteObject( IWeakObject* owner ) = 0;
+	virtual BlueStdResult CopyShallow( IWeakObject* source, IWeakObject* target ) = 0;
+	virtual BlueStdResult CopyDeep( IWeakObject* source, IWeakObject* target ) = 0;
 };
 
 extern BLUEIMPORT IBlueObjectMetadata* BeObjectMetadata;

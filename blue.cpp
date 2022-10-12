@@ -375,6 +375,14 @@ MAP_FUNCTION(
 	":returns: list of objects that implements the given interface\n"
 	":rtype: list" );
 
+
+MAP_FUNCTION_AND_WRAP(
+	"FindReference",
+	FindReference,
+	"Checks if the given destination object is referenced by any object in the hierarhy of the source object.\n"
+	":param source: source object\n"
+	":param dest: destination object\n" );
+
 #ifdef _WIN32
 
 PyObject* PyEnableDebuggerLogging( PyObject* self, PyObject* args )

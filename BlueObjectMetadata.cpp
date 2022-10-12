@@ -1,5 +1,7 @@
 #include "StdAfx.h"
 #include "BlueObjectMetadata.h"
+#include "BlueExposure/Find.h"
+#include "BlueSmartPtr.h"
 
 IBlueObjectMetadata* BeObjectMetadata = nullptr;
 
@@ -147,3 +149,80 @@ void BlueObjectMetadata::WeakRefNotify( IWeakObject* weak )
 {
 	DeleteObject( weak );
 }
+
+BlueStdResult BlueObjectMetadata::CopyShallow( IWeakObject* source, IWeakObject* target )
+{
+	std::vector<std::string> keys;
+	GetKeys( source, keys );
+	for ( auto it = begin( keys ); it != end( keys ); ++it)
+	{
+		auto key = it->c_str();
+		auto value = Get( source, key, nullptr );
+		Set( target, key, value );
+	}
+
+	return BlueStdResult( BLUE_STD_RESULT_OK );
+}
+
+BlueStdResult BlueObjectMetadata::CopyDeep( IWeakObject* source, IWeakObject* target )
+{
+	auto interfaces = FindInterface( source, "IRoot" );
+	for( auto ifaceIt = begin( interfaces ); ifaceIt != end( interfaces ); ++ifaceIt )
+	{
+		IRoot* iroot = *ifaceIt;
+		IWeakObjectPtr weak( BlueCastPtr( iroot ) );
+
+		// Get the metadata keys for this IRoot, if there are any.
+		std::vector<std::string> keys;
+		GetKeys( weak, keys );
+		if( keys.empty() )
+		{
+			continue;
+		}
+
+		// Find the route from the source to this IRoot.
+		std::vector<RouteStep> route;
+		if( !FindFirstRoute( source, iroot, &route ) )
+		{
+			continue;
+		}
+
+		// Walk the same route through the target.
+		IRoot* dest = target;
+		for( auto routeIt = begin( route ); dest && routeIt != end( route ); ++routeIt )
+		{
+			dest = routeIt->GetNextObject( dest->GetRootObject() );
+		}
+
+		if( !dest )
+		{
+			// failed to find equivalent destination in target...
+			continue;
+		}
+
+		// Finally, copy all values for all keys to the destination object.
+		IWeakObjectPtr weakDest( BlueCastPtr( dest ) );
+		for ( auto it = begin( keys ); it != end( keys ); ++it)
+		{
+			auto key = it->c_str();
+			auto value = Get( weak, key, nullptr );
+			Set( weakDest, key, value );
+		}
+	}
+
+	return BlueStdResult( BLUE_STD_RESULT_OK );
+}
+
+void PostCopyMetadata( IRoot* source, IRoot** dest, ICopier* copier, void* context )
+{
+	BeObjectMetadata->CopyShallow( IWeakObjectPtr( BlueCastPtr( source ) ), IWeakObjectPtr( BlueCastPtr( *dest ) ) );
+}
+
+#if BLUE_WITH_PYTHON
+
+PyObject* PyCopyWithMetadata( PyObject* src )
+{
+	return BlueWrapObjectForPython( BlueCopy( BlueUnwrapObjectFromPython( src ), nullptr, nullptr, &PostCopyMetadata ) );
+}
+
+#endif

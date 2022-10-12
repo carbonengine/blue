@@ -65,6 +65,30 @@ const Be::ClassInfo* BlueObjectMetadata::ExposeToBlue()
 			":param obj: owner object\n"
 			":raises KeyError: if the object is not found"
 		)
+		MAP_METHOD_AND_WRAP( 
+			"CopyShallow", 
+			CopyShallow,
+			"Copies the metadata for one object - excluding it's children - to another.\n"
+			":param source: owner object to copy metadata from.\n"
+			":param target: owner object to copy metadata to.\n"
+		)
+		MAP_METHOD_AND_WRAP( 
+			"CopyDeep", 
+			CopyDeep,
+			"Copies all the metadata for one object - and it's children - to another.\n"
+			":param source: owner object to copy metadata from.\n"
+			":param target: owner object to copy metadata to.\n"
+		)
 
 	EXPOSURE_END()
 }
+
+MAP_FUNCTION_AND_WRAP( 
+	"CopyWithMetadata", 
+	PyCopyWithMetadata, 
+	"Copies an item, along with any associated metadata.\n"
+	":param src: the item to copy.\n"
+	":type src: IRoot\n"
+	":returns: a copy of the src item.\n"
+	":rtype: IRoot" 
+);

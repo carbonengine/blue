@@ -20,6 +20,9 @@ public:
 	BlueStdResult Index( IWeakObject* owner, const char* key, const char*& value ) const;
 	BlueStdResult GetKeys( IWeakObject* owner, std::vector<std::string>& keys ) const;
 	BlueStdResult GetItems( IWeakObject* owner, std::map<std::string, std::string>& items ) const;
+
+	BlueStdResult CopyShallow( IWeakObject* source, IWeakObject* target ) override;
+	BlueStdResult CopyDeep( IWeakObject* source, IWeakObject* target ) override;
 private:
 	struct DataTable
 	{
@@ -34,3 +37,11 @@ private:
 };
 
 TYPEDEF_BLUECLASS( BlueObjectMetadata );
+
+BLUEIMPORT void PostCopyMetadata( IRoot* source, IRoot** dest, ICopier* copier, void* context );
+
+#if BLUE_WITH_PYTHON
+
+PyObject* PyCopyWithMetadata( PyObject* src );
+
+#endif
