@@ -18,7 +18,7 @@ m_filename( filename )
 
 BackgroundReader::~BackgroundReader()
 {
-	CCP_ASSERT( !m_contents );
+
 }
 
 void BackgroundReader::Perform()
