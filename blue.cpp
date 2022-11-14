@@ -363,6 +363,18 @@ MAP_FUNCTION(
 	":returns: list of paths between the objects\n"
 	":rtype: list" );
 
+MAP_FUNCTION_AND_WRAP(
+	"FindAllReferences",
+	FindAllReferences,
+	"Finds all references to all objects in an object tree. The result of the function is a dictionary with all\n"
+	"objects in the tree as keys. Values of the dictionary are lists of references to the given object key.\n"
+	"These references follow the same format as the result of FindRoute function: they are tuples\n"
+	"(parent, key type, key) where parent is the \"parent\" object that has a reference to the key,\n"
+	"key type is 0 for object attributes and 1 for indices (lists or dictionaries), key is either an\n"
+	"attribute name or an index value.\n"
+	":param root: the root of object tree\n"
+	":rtype: Dict[IRoot, list]" );
+
 
 MAP_FUNCTION(
 	"FindInterface",
