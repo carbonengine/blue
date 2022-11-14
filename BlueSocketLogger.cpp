@@ -2,6 +2,8 @@
 #include "BlueSocketLogger.h"
 #ifndef _WIN32
 #include <sys/time.h>
+#else
+#include <WS2tcpip.h>
 #endif
 #ifdef __APPLE__
 #include <sys/sysctl.h>
@@ -199,9 +201,13 @@ private:
 		{
 			return false;
 		}
-		struct sockaddr_in clientService;
+		struct sockaddr_in clientService = {0};
 		clientService.sin_family = AF_INET;
-		clientService.sin_addr.s_addr = inet_addr( ip );
+		if ( inet_pton( clientService.sin_family, ip, &(clientService.sin_addr.s_addr) ) != 1 )
+		{
+			m_socket = InvalidSocket;
+			return false;
+		}
 		clientService.sin_port = htons( port );
 #ifdef _WIN32
 		unsigned long nonBlocking = 1;
