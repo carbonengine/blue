@@ -25,9 +25,9 @@
 #ifndef _BLUE_H_
 #define _BLUE_H_
 
-#include "CcpCore/include/CCPMemory.h"
-#include "CcpCore/include/CCPLog.h"
-#include "CcpCore/include/ICrashReporter.h"
+#include <CCPMemory.h>
+#include <CCPLog.h>
+#include <ICrashReporter.h>
 
 #ifndef __cplusplus
 	#error Blue requires C++ compilation (use a .cpp suffix moron)
@@ -80,4 +80,3 @@ inline void operator delete[]( void *p ) noexcept
 #endif
 
 #endif
-

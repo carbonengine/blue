@@ -4,7 +4,7 @@
 #define IBLUERESMAN_H
 
 #include "IBlueCallbackMan.h"
-#include "CcpCore/include/CcpAtomic.h"
+#include <CcpAtomic.h>
 #include <string>
 
 enum BlueResManQueue

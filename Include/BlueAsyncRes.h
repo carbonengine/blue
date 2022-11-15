@@ -5,7 +5,7 @@
 
 #include "IBlueResource.h"
 #include "IBluePersist.h"
-#include "CcpCore/include/CcpAtomic.h"
+#include <CcpAtomic.h>
 
 // Silence a warning we get from using std::wstring in the BlueAsyncRes class, which is
 // exported from the DLL. We can ignore this warning as uint32_t as all our dlls use the same

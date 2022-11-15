@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 
 #include "CallbackMan.h"
-#include "CcpCore/include/CcpTime.h"
+#include <CcpTime.h>
 #include "Include/IBlueThreadMonitor.h"
 
 static CcpLogChannel_t s_ch = CCP_LOG_DEFINE_CHANNEL( "CallbackMan" );

@@ -3,7 +3,7 @@
 #ifndef IBlueCallbackMan_h
 #define IBlueCallbackMan_h
 
-#include "CcpCore/include/CcpAtomic.h"
+#include <CcpAtomic.h>
 
 BLUE_INTERFACE( IBlueCallbackMan ) : IRoot
 {

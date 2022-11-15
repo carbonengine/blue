@@ -1,8 +1,8 @@
 #ifndef _CALLBACKMAN_H_
 #define _CALLBACKMAN_H_
 
-#include "CcpCore/include/CcpSemaphore.h"
-#include "CcpCore/include/CcpAtomic.h"
+#include <CcpSemaphore.h>
+#include <CcpAtomic.h>
 #include "Include/IBlueCallbackMan.h"
 
 BLUE_DECLARE( BlueCallbackMan );

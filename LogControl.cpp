@@ -1,6 +1,6 @@
 #include "StdAfx.h"
 #include "LogControl.h"
-#include <CcpCore/include/CCPLog.h>
+#include <CCPLog.h>
 
 #if BLUE_WITH_PYTHON
 

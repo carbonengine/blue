@@ -9,7 +9,7 @@
 #ifndef ScopedBlockTrap_h
 #define ScopedBlockTrap_h
 
-#include "CcpCore/include/CcpMacros.h"
+#include <CcpMacros.h>
 
 // Forward declaration
 struct _tasklet;
