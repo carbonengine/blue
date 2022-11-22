@@ -116,7 +116,7 @@ bool BlueObjectRecycler::RecycleOrLoad( const wchar_t* resPath, IRoot** obj )
 	auto result = Recycle( normalizedPath );
 	if( !result )
 	{
-		result = BeResMan->LoadObjectW( normalizedPath.c_str() );
+		result = BeResMan->LoadObject( normalizedPath.c_str() ).Detach();
 		if( !result )
 		{
 			*obj = nullptr;

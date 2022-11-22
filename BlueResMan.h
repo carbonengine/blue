@@ -77,8 +77,8 @@ public:
 	// manager no longer knows about them so future requests will go out to disk.
 	void ForgetAllResources();
 
-	IRoot* LoadObject( const char* name, Be::LOADOBJECT_INIT_FLAG init = Be::LDOBJ_INITIALIZE ) override;
-	IRoot* LoadObjectW( const wchar_t* name, Be::LOADOBJECT_INIT_FLAG init = Be::LDOBJ_INITIALIZE ) override;
+	IRootPtr LoadObject( const char* name, Be::LOADOBJECT_INIT_FLAG init = Be::LDOBJ_INITIALIZE ) override;
+	IRootPtr LoadObject( const wchar_t* name, Be::LOADOBJECT_INIT_FLAG init = Be::LDOBJ_INITIALIZE ) override;
 
 	bool SaveObject( IRoot* obj, const char* name ) override;
 	bool SaveObjectW( IRoot* obj, const wchar_t* name ) override;

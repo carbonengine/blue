@@ -539,10 +539,10 @@ static PyObject* PySetUrgentResourceLoads( PyObject* self, PyObject* args )
 }
 #endif
 
-IRoot* BlueResMan::LoadObject(const char *name, Be::LOADOBJECT_INIT_FLAG init /* = LDOBJ_INITIALIZE */)
+IRootPtr BlueResMan::LoadObject(const char *name, Be::LOADOBJECT_INIT_FLAG init /* = LDOBJ_INITIALIZE */)
 {
 	CA2W wn(name);
-	return LoadObjectW(wn, init);
+	return LoadObject(wn, init);
 }
 
 class RecursionLimiter
@@ -621,7 +621,7 @@ private:
 #endif
 
 
-IRoot* BlueResMan::LoadObjectW(const wchar_t* unnormalizedName, Be::LOADOBJECT_INIT_FLAG init /* = LDOBJ_INITIALIZE */)
+IRootPtr BlueResMan::LoadObject(const wchar_t* unnormalizedName, Be::LOADOBJECT_INIT_FLAG init /* = LDOBJ_INITIALIZE */)
 {
 	CCP_STATS_SCOPED_TIME(resManLoadObject);
 	CCP_STATS_INC(resManLoadObjectCalls);
@@ -748,7 +748,8 @@ IRoot* BlueResMan::LoadObjectW(const wchar_t* unnormalizedName, Be::LOADOBJECT_I
 	}
 
 	CCP_LOG_CH( s_ch, "Creating object from %S", filename.c_str() );
-	IRoot* obj = builder->CreateObjectWithYield( NULL, NULL );
+	IRootPtr obj;
+	obj.Attach( builder->CreateObjectWithYield( NULL, NULL ) );
 
 	if( !obj )
 	{
@@ -968,13 +969,13 @@ Be::Result<std::string> BlueResMan::WaitUrgent()
 
 Be::Result<std::string> BlueResMan::LoadObjectFromScript( const std::wstring& path, IRoot** obj )
 {
-	*obj = LoadObjectW( path.c_str(), Be::LDOBJ_INITIALIZE );
+	*obj = LoadObject( path.c_str(), Be::LDOBJ_INITIALIZE ).Detach();
 	return Be::Result<std::string>();
 }
 
 Be::Result<std::string> BlueResMan::LoadObjectWithoutInitializeFromScript( const std::wstring& path, IRoot** obj )
 {
-	*obj = LoadObjectW( path.c_str(), Be::LDOBJ_DONT_INITIALIZE );
+	*obj = LoadObject( path.c_str(), Be::LDOBJ_DONT_INITIALIZE ).Detach();
 	return Be::Result<std::string>();
 }
 

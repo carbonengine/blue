@@ -95,23 +95,19 @@ BLUE_INTERFACE( IBlueResMan ) : public IRoot
 	// Loads an object from either a blue file or a red file, based on the extension.
 	// 'init' controls whether IInitialize::Initialize is called on loaded objects.
 	// This function may yield the calling tasklet while loading the file.
-	virtual IRoot* LoadObject( const char* name, Be::LOADOBJECT_INIT_FLAG init = Be::LDOBJ_INITIALIZE ) = 0;
-	virtual IRoot* LoadObjectW( const wchar_t* name, Be::LOADOBJECT_INIT_FLAG init = Be::LDOBJ_INITIALIZE ) = 0;
+	[[nodiscard]] virtual IRootPtr LoadObject( const char* name, Be::LOADOBJECT_INIT_FLAG init = Be::LDOBJ_INITIALIZE ) = 0;
+	[[nodiscard]] virtual IRootPtr LoadObject( const wchar_t* name, Be::LOADOBJECT_INIT_FLAG init = Be::LDOBJ_INITIALIZE ) = 0;
 
 	template <typename T>
-	BluePtr<T> LoadObject( const char* name, Be::LOADOBJECT_INIT_FLAG init = Be::LDOBJ_INITIALIZE )
+	[[nodiscard]] BluePtr<T> LoadObject( const char* name, Be::LOADOBJECT_INIT_FLAG init = Be::LDOBJ_INITIALIZE )
 	{
-		IRootPtr obj;
-		obj.Attach( this->LoadObject( name, init ) );
-		return BluePtr<T>( BlueCastPtr( obj ) );
+		return BluePtr<T>( BlueCastPtr( this->LoadObject( name, init ) ) );
 	}
 
 	template <typename T>
-	BluePtr<T> LoadObject( const wchar_t* name, Be::LOADOBJECT_INIT_FLAG init = Be::LDOBJ_INITIALIZE )
+	[[nodiscard]] BluePtr<T> LoadObject( const wchar_t* name, Be::LOADOBJECT_INIT_FLAG init = Be::LDOBJ_INITIALIZE )
 	{
-		IRootPtr obj;
-		obj.Attach( this->LoadObjectW( name, init ) );
-		return BluePtr<T>( BlueCastPtr( obj ) );
+		return BluePtr<T>( BlueCastPtr( this->LoadObject( name, init ) ) );
 	}
     
     // Saves the given object to either a blue file or a red file, based on the extension.
