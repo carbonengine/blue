@@ -2210,7 +2210,12 @@ PyObject* LoadPythonExtension( PyObject* self, PyObject* args )
 		return nullptr;
 	}
 
+// accommodate for release builds, which use `-DCCP_BUILD_FLAVOR=`, e.g. macro without a value
+#if ~(~CCP_BUILD_FLAVOR + 0) == 0 && ~(~CCP_BUILD_FLAVOR + 1) == 1
+	std::string flavor;
+#else
 	std::string flavor{ CCP_STRINGIZE( CCP_BUILD_FLAVOR ) };
+#endif
 	std::string importName = name + flavor;
 
 	CCP_LOGNOTICE( "Trying to load python extension '%s' with flavor '%s'", name, flavor.c_str() );
