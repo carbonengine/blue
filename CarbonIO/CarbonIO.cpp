@@ -19,6 +19,7 @@ Description: implementation of IO Completion Ports for stackless
 #include <time.h>
 #include <process.h>
 #include <zlib.h>
+#include "snappy/snappy.h"
 
 #include "ssl_pipe.h"
 #include "slsocketmodule.h"
@@ -1115,14 +1116,12 @@ PyObject* CarbonIO::setCompressionType( PyObject *args )
 	char *type;
 	if ( !PyArg_ParseTuple(args, "z", &type) )
 	{
-		return nullptr;
+		return 0;
 	}
 
 	if ( !_strnicmp(type, "snappy", 6) )
 	{
 		m_compressionType = ceHeaderBitSnappyCompressed;
-		PyErr_SetString( PyExc_NotImplementedError, "Snappy compression is no longer supported" );
-		return nullptr;
 	}
 	else if ( !_strnicmp(type, "zlib", 4) )
 	{
@@ -3926,8 +3925,13 @@ bool CarbonIO::compress( const char *in, unsigned int inLen, char **out, unsigne
 	}
 	else if ( m_compressionType == ceHeaderBitSnappyCompressed )
 	{
-		// no longer supported
-		return false;
+		CPerformanceTime timeCompress( "snappy-compress" );
+		
+		*out = new(std::nothrow) char[ snappy::MaxCompressedLength(inLen) ];
+		size_t len = 0;
+		snappy::RawCompress( in, inLen, *out, &len );
+		*outLen = (unsigned int)len;
+		return true;
 	}
 
 	return false;
@@ -4017,8 +4021,38 @@ bool CarbonIO::decompress( SPacket* packet )
 	}
 	else if ( *(unsigned int *)packet->data & ceHeaderBitSnappyCompressed )
 	{
-		// no longer supported
-		return false;
+		size_t len = 0;
+		if ( !snappy::GetUncompressedLength( packet->data + packet->payloadOffset,
+											 (size_t)packet->packetLen - packet->payloadOffset,
+											 &len) )
+		{
+			D_DECOMPRESS(ciolog("fail<5>"));
+			packet->auxData = 0;
+			packet->auxDataLen = 0;
+			packet->packetLen = 0;
+			return false;
+		}
+
+		packet->auxData = new(std::nothrow) char[ len ];
+		packet->auxDataLen = (unsigned int)len;
+
+		if ( !snappy::RawUncompress(packet->data + packet->payloadOffset,
+									(size_t)packet->packetLen - packet->payloadOffset,
+									packet->auxData) )
+		{
+			D_DECOMPRESS(ciolog("fail<6> in[%d] out[%d]", packet->packetLen - packet->payloadOffset, len));
+			delete[] packet->auxData;
+			packet->auxData = 0;
+			packet->auxDataLen = 0;
+			packet->packetLen = 0;
+			return false;
+		}
+
+		D_DECOMPRESS(ciolog("snappy decompressed in[%d:0x%08X] out[%d:%.2f%%]",
+							 packet->packetLen - packet->payloadOffset, Ccp::Hash(packet->data + packet->payloadOffset, packet->packetLen - packet->payloadOffset), packet->auxDataLen, (100.f * (float)packet->auxDataLen / (float)(packet->packetLen - packet->payloadOffset))));
+		m_stats.bytesReceivedDecompressed += packet->auxDataLen;
+		m_stats.bytesReceived -= packet->auxDataLen;
+		return true;
 	}
 
 	return false; // data was not compressed

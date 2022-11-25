@@ -13,7 +13,7 @@ enum EHeaderBits
 
     ceHeaderExpectPayloadOffset = 1<<28, // if defined in a header, tells where the OOB data ends
     ceHeaderBitZlibCompressed = 1<<29, // was compressed with zlib
-    ceHeaderBitSnappyCompressed = 1<<30, // was compressed with snappy, no longer supported.
+    ceHeaderBitSnappyCompressed = 1<<30, // was compressed with snappy
     ceHeaderExtraHeaderBitsFollow = 1<<31, // in case it needs to be extended, reserve this bit [unimplemented]
 };
 
