@@ -2813,7 +2813,12 @@ sock_recv_into(PySocketSockObject *s, PyObject *args, PyObject *kwds)
     }
     if (recvlen == 0) {
         /* If nbytes was not specified, use the buffer's length */
-        recvlen = buflen;
+		if (buflen > (Py_ssize_t)INT_MAX) {
+			PyErr_SetString(PyExc_ValueError,
+							 "input buffer too large for receive buffer");
+			goto error;
+		}
+        recvlen = (int)buflen;
     }
 
     /* Check if the buffer is large enough */
@@ -3039,7 +3044,12 @@ sock_recvfrom_into(PySocketSockObject *s, PyObject *args, PyObject* kwds)
                                      kwlist, &buf,
                                      &recvlen, &flags))
         return NULL;
-    buflen = buf.len;
+	if ( buf.len > (Py_ssize_t)INT_MAX ) {
+		PyErr_SetString(PyExc_ValueError, "Source buffer too large to process");
+		goto error;
+	}
+
+    buflen = (int)buf.len;
 
     if (recvlen < 0) {
         PyErr_SetString(PyExc_ValueError,
@@ -3122,7 +3132,12 @@ sock_send(PySocketSockObject *s, PyObject *args)
         PyObject* obj;
         timeout = 0;
         if (PyArg_ParseTuple(args, "s*|i:send", &pbuf, &flags)) {
-            n = cio_send( s->sock_fd, pbuf.buf, pbuf.len, flags );
+			if (pbuf.len > (Py_ssize_t)INT_MAX) {
+				PyBuffer_Release(&pbuf);
+				PyErr_SetString(PyExc_ValueError, "Source buffer too large to process");
+				return 0;
+			}
+            n = cio_send( s->sock_fd, pbuf.buf, (int)pbuf.len, flags );
             PyBuffer_Release(&pbuf);
         } else if (PyArg_ParseTuple(args, "O|i:send", &obj, &flags)
                    && PySequence_Check(obj) )
@@ -3199,7 +3214,13 @@ sock_sendall(PySocketSockObject *s, PyObject *args)
     }
 #ifndef NO_CARBONIO
     else if ( g_useSocketIOCP == 1 ) {
-        n = !obj ? cio_send( s->sock_fd, pbuf.buf, pbuf.len, flags ) : cio_send_sequence( s->sock_fd, obj, flags );
+		if ( pbuf.len > (Py_ssize_t)INT_MAX )
+		{
+			PyBuffer_Release(&pbuf);
+			PyErr_SetString(PyExc_ValueError, "Source buffer too large to send");
+			return 0;
+		}
+		n = !obj ? cio_send( s->sock_fd, pbuf.buf, (int)pbuf.len, flags ) : cio_send_sequence( s->sock_fd, obj, flags );
         if (obj == NULL)
             PyBuffer_Release(&pbuf);
     }
@@ -3317,9 +3338,18 @@ sock_sendto(PySocketSockObject *s, PyObject *args)
             PyErr_Clear(); // if one of the parses failed but the other succeeded, undo the fail flag
 
             if ( !getsockaddrarg(s, addro, SAS2SA(&addrbuf), &addrlen) )
-                return NULL;
+			{
+				PyBuffer_Release(&pbuf);
+				return NULL;
+			}
 
-            n = cio_send_to( s->sock_fd, pbuf.buf, pbuf.len, flags, (struct sockaddr *)&addrbuf, &addrlen );
+			if ( pbuf.len > (Py_ssize_t)INT_MAX) {
+				PyBuffer_Release(&pbuf);
+				PyErr_SetString(PyExc_ValueError, "Source buffer too large to send");
+				return NULL;
+			}
+
+            n = cio_send_to( s->sock_fd, pbuf.buf, (int)pbuf.len, flags, (struct sockaddr *)&addrbuf, &addrlen );
             PyBuffer_Release(&pbuf);
         }
         else if ( (PyArg_ParseTuple(args, "OO:sendto", &obj, &addro)
@@ -3329,7 +3359,10 @@ sock_sendto(PySocketSockObject *s, PyObject *args)
             PyErr_Clear(); // if one of the parses failed but the other succeeded, undo the fail flag
 
             if ( !getsockaddrarg(s, addro, SAS2SA(&addrbuf), &addrlen) )
-                return NULL;
+			{
+				PyBuffer_Release( &pbuf );
+				return NULL;
+			}
 
             n = cio_send_sequence_to( s->sock_fd, obj, flags, (struct sockaddr *)&addrbuf, &addrlen );
             PyBuffer_Release(&pbuf);
@@ -5043,8 +5076,12 @@ socket_getaddrinfo(PyObject *self, PyObject *args)
     if ((all = PyList_New(0)) == NULL)
         goto err;
     for (res = res0; res; res = res->ai_next) {
+		if ( res->ai_addrlen > (size_t)INT_MAX ) {
+			PyErr_SetString( socket_error, "Source address buffer too large" );
+			goto err;
+		}
         PyObject *addr =
-            makesockaddr(-1, res->ai_addr, res->ai_addrlen, protocol);
+            makesockaddr(-1, res->ai_addr, (int)res->ai_addrlen, protocol);
         if (addr == NULL)
             goto err;
         single = Py_BuildValue("iiisO", res->ai_family,
@@ -5157,7 +5194,13 @@ socket_getnameinfo(PyObject *self, PyObject *args)
         }
 #endif
     }
-    error = getnameinfo(res->ai_addr, res->ai_addrlen,
+
+	if ( res->ai_addrlen > (size_t)INT_MAX ) {
+		PyErr_SetString( socket_error, "Source address buffer too large" );
+		goto fail;
+	}
+
+    error = getnameinfo(res->ai_addr, (socklen_t)res->ai_addrlen,
                     hbuf, sizeof(hbuf), pbuf, sizeof(pbuf), flags);
     if (error) {
         set_gaierror(error);

@@ -111,7 +111,13 @@ seq2set(PyObject *seq, fd_set *set, pylist fd2obj[FD_SETSIZE + 1])
     if (!fast_seq)
         return -1;
 
-    len = PySequence_Fast_GET_SIZE(fast_seq);
+	Py_ssize_t tmp = PySequence_Fast_GET_SIZE(fast_seq);
+	if ( tmp >= (Py_ssize_t)INT_MAX ) {
+		PyErr_SetString(PyExc_ValueError,
+						"Input sequence too large");
+		return -1;
+	}
+    len = (int)tmp;
 
     for (i = 0; i < len; i++)  {
         SOCKET v;
