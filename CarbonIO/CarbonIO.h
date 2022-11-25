@@ -463,7 +463,7 @@ private:
 	unsigned int m_compressionThreshold; // smallest packet to attempt compression on
 	unsigned int m_compressionMinRatio; // 0-100 compression ratio outgoing packets must be below to be sent compressed
 	unsigned int m_compressionLevel; // what zlib level is used for compresison
-	unsigned int m_compressionType; // how it will be compressed (supported: zlib and snappy)
+	unsigned int m_compressionType; // how it will be compressed (supported: zlib)
 	time_t m_SSLHandshakeNegotiationSeconds; // how many seconds can elapse before a connection is considered dead
 	bool m_enableTimers; // allow the performance counter to be hit. a lot.
 

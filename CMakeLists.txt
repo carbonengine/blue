@@ -215,15 +215,6 @@ elseif (WIN32)
         CarbonIO/ssl_pipe.h
         CarbonIO/stats.cpp
         CarbonIO/stats.h
-        CarbonIO/snappy/config.h
-        CarbonIO/snappy/snappy.cc
-        CarbonIO/snappy/snappy.h
-        CarbonIO/snappy/snappy-internal.h
-        CarbonIO/snappy/snappy-sinksource.cc
-        CarbonIO/snappy/snappy-sinksource.h
-        CarbonIO/snappy/snappy-stubs-internal.cc
-        CarbonIO/snappy/snappy-stubs-internal.h
-        CarbonIO/snappy/snappy-stubs-public.h
         slsocket.cpp
     )
 endif()

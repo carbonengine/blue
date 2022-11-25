@@ -363,7 +363,7 @@ static PyObject* setCompressionMinRatio( PySocketSockObject *s, PyObject *args )
 
 //------------------------------------------------------------------------------
 PyDoc_STRVAR( setCompressionType_doc,
-			  "setCompressionType(\"zlib|snappy\")\n"
+			  "setCompressionType(\"zlib\")\n"
 			  "\n"
 			  "Decide what type of compression will be used, this can be changed at any time\n" );
 
