@@ -1,4 +1,4 @@
-/* 
+/*
 	*************************************************************************
 
 	MotherLode.h
@@ -8,7 +8,7 @@
 	OS:        Win32
 	Project:   Yep
 
-	Description:   
+	Description:
 
 		A new general instance manager for blue objects.  Stores objects
 		that support the IWeakObject interface, so that one can access them
@@ -115,22 +115,22 @@ public:
 	PyObject* PyGetCachedKeys( PyObject* args );
 	PyObject* PyGetNonCachedKeys( PyObject* args );
 #endif
-	
+
 private:
-	
+
 	// The value stored in the map.  Can hold either a weakref, or a strongref.
 	struct Value:
 		public IWeakRef
 	{
 		Value(MotherLode *ml);
-		~Value();
-		
+		virtual ~Value();
+
 		//Assert various things
 		void Assert() const;
-			
+
 		// The IWeakRef interface
 		virtual void WeakRefNotify(IWeakObject *ptr);
-		
+
 		void Setup(IWeakObject *wo);
 
 		//Register and unregistering the weakref.  Unregister is not
@@ -146,7 +146,7 @@ private:
 		bool IsStrong() const {return mCacheable != 0;}
 		bool IsPending() const {CCP_ASSERT(IsStrong()); return mMemUsage == 0;}
 		bool IsLinked() const {return mLinked; }
-		
+
 		std::wstring mKey;
 		MotherLode *mMl;		//the owning motherlode
 		IWeakObject *mWeak;		//the object being managed
@@ -161,22 +161,22 @@ private:
 		ResourceCaching mAllowCaching;
 	};
 	friend Value;
-	
+
 	void AssertAll();
 	void WeakRefNotify( Value* value );
 	void Housekeeping();
-	
+
 	typedef TrackableStdHashMap<std::wstring, Value*> map_t;
 	typedef TrackableStdList<std::wstring> list_t;
-	
+
 	// key-value map. The value holds the actual object, either as a strong
 	// reference (for objects that are cached) or as a weak reference when
 	// objects are in use.
 	map_t mMap;
 
 	// Cached objects in LRU order. Note that the objects also live in the map.
-	list_t mLRU;	
-	
+	list_t mLRU;
+
 	// Cached objects with pending size info, i.e. asynchronously loaded resources
 	// that haven't finished loading.
 	list_t mPending;

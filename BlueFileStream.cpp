@@ -31,11 +31,13 @@ namespace
 	class BackgroundReader : public IBlueResManBackgroundCall
 	{
 	public:
-		BackgroundReader( BlueFileStream* stream, const wchar_t* filename ) : 
+		BackgroundReader( BlueFileStream* stream, const wchar_t* filename ) :
 		  m_stream( stream ),
 			  m_filename( filename )
 		  {
 		  }
+
+		  virtual ~BackgroundReader() = default;
 
 		  virtual void Perform()
 		  {
@@ -309,7 +311,7 @@ Be::Result<std::string> BlueFileStream::ReadEntireFileWithYield( const wchar_t* 
 	CCP_STATS_ZONE( __FUNCTION__ );
 
 #if CCP_STACKLESS
-	BackgroundReader* reader = CCP_NEW( "ReadEntireFileWithYield/reader" ) 
+	BackgroundReader* reader = CCP_NEW( "ReadEntireFileWithYield/reader" )
 		BackgroundReader( this, filename );
 	Be::Result<std::string> result;
 

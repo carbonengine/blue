@@ -17,7 +17,7 @@ class BackgroundReader : public IBlueResManBackgroundCall
 {
 public:
 	BackgroundReader( const std::wstring& filename );
-	~BackgroundReader();
+	virtual ~BackgroundReader();
 
 	// This is called on a background thread
 	virtual void Perform();
