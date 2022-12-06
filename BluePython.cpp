@@ -10,7 +10,7 @@
 #include "Include/IBlueObjectRecycler.h"
 #include "Include/IBluePaths.h"
 
-#include "BlueLogInMemory.h"
+#include "blueloginmemory.h"
 #include "LogToPython.h"
 #include "PrettyPrint.h"
 #include "BlueHeapq.h"
@@ -18,7 +18,7 @@
 #include "PyRowset.h"
 #include "crypto.h"
 #include "BlueClipboard.h"
-#include "ErrorMessage.h"
+#include "errormessage.h"
 
 #if _WIN32
 #include "win32.h"
@@ -2124,7 +2124,7 @@ void BluePyOS::ProcessLibDirectives( const directives_t& directives, std::vector
 	//now, process lib directives from the file
 	mPackaged = false;
 
-	for( const std::string directive : directives )
+	for( const std::string& directive : directives )
 	{
 		if( directive.find( "lib:" ) == 0 )
 		{
