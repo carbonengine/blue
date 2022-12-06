@@ -1,6 +1,6 @@
 #include "StdAfx.h"
 
-#include "include/IBlueOS.h"
+#include "Include/IBlueOS.h"
 #include "BlueResManBackgroundCall.h"
 #include "BlueResFile.h"
 #include "Include/IBlueResMan.h"
@@ -37,11 +37,11 @@ BlueResManBackgroundCall::~BlueResManBackgroundCall()
 
 void BlueResManBackgroundCall::AddToQueue()
 {
-	BeResMan->AddToQueue( 
-		BRMQ_BACKGROUND, 
-		BlueResManBackgroundCall::DoTheCall, 
-		this, 
-		m_flags, 
+	BeResMan->AddToQueue(
+		BRMQ_BACKGROUND,
+		BlueResManBackgroundCall::DoTheCall,
+		this,
+		m_flags,
 		&m_id );
 }
 
@@ -59,7 +59,7 @@ bool BlueResManBackgroundCall::Wait()
 	// Go to sleep and wake up! *(the sender releases the channel)
 	BeOS->NextScheduledEvent(0);
 	PyObject *ret = PyChannel_Receive( m_channel );
-	
+
 	// We don't want to run in the context of the resman update. MarkAsDone below
 	// sends on the channel, switching execution to this tasklet. We'd rather want
 	// the update to finish as soon as possible.
@@ -142,4 +142,3 @@ bool BlueResManBackgroundCall::Issue( IBlueResManBackgroundCall* theCall, uint32
 	return true;
 #endif
 }
-

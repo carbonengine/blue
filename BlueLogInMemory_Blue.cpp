@@ -6,7 +6,7 @@
 //
 
 #include "StdAfx.h"
-#include "BlueLogInMemory.h"
+#include "blueloginmemory.h"
 #include "Include/IBlueOS.h"
 
 BLUE_DEFINE_ABSTRACT( BlueLogInMemory );

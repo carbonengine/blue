@@ -6,7 +6,7 @@
 //
 
 #include "StdAfx.h"
-#include "BlueLogInMemory.h"
+#include "blueloginmemory.h"
 #include "Include/IBlueOS.h"
 
 static BlueLogInMemory* s_logInMemory = BlueLogInMemory::GetInstance();
@@ -22,7 +22,7 @@ BlueLogInMemory* BlueLogInMemory::GetInstance()
 	return &s_instance;
 }
 
-BlueLogInMemory::BlueLogInMemory( IRoot* lockobj /*= NULL */ ) : 
+BlueLogInMemory::BlueLogInMemory( IRoot* lockobj /*= NULL */ ) :
 	m_entries( "BlueLogInMemory/s_entries" ),
 	m_currentEntry( 0 ),
 	m_entryCount( 0 ),
@@ -115,17 +115,17 @@ PyObject* BlueLogInMemory::GetEntries( PyObject* args )
 	for( int i = 0; i < m_entryCount; ++i )
 	{
 		int srcIx = (m_currentEntry - 1 + m_capacity - i) % m_capacity;
-		
+
 		Entry& entry = m_entries[srcIx];
-		
+
 		PyObject* pyEntry = PyTuple_New( 5 );
-		
+
 		PyTuple_SET_ITEM( pyEntry, 0, PyString_FromString( entry.facility ) );
 		PyTuple_SET_ITEM( pyEntry, 1, PyString_FromString( entry.object ) );
 		PyTuple_SET_ITEM( pyEntry, 2, PyInt_FromLong( entry.severity ) );
 		PyTuple_SET_ITEM( pyEntry, 3, PyLong_FromLongLong( entry.timestamp ) );
 		PyTuple_SET_ITEM( pyEntry, 4, PyString_FromString( entry.message ) );
-		
+
 		PyList_SET_ITEM( result, i, pyEntry );
 	}
 
