@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 
-#include "include/IBlueOS.h"
-#include "ErrorMessage.h"
+#include "Include/IBlueOS.h"
+#include "errormessage.h"
 #include <algorithm>
 #include <cctype>
 
@@ -185,7 +185,7 @@ CFStringRef CopyWStringToCFString( const wchar_t* value )
 #endif
 
 /*
-	Uses OS functions to attempt to get an appropriate language code to use. 
+	Uses OS functions to attempt to get an appropriate language code to use.
 */
 std::string GetOSLanguageCode()
 {
@@ -243,7 +243,7 @@ std::string GetOSLanguageCode()
 #endif
 }
 
-/* 
+/*
 	Tries to get the language code as provided as a command line argument. Failing
 	that we try to get the code from the user's OS settings.
 */
@@ -280,7 +280,7 @@ const StringTable& GetLocalizedStringTable()
 }
 
 /*
-	Attempts to get a translated error message based on the supplied messageId. On failure, the 
+	Attempts to get a translated error message based on the supplied messageId. On failure, the
 	origin string is returned instead.
 */
 std::string GetByID( const std::string& original, unsigned messageId, const StringTable& table )
