@@ -7,6 +7,11 @@
 
 #include "StdAfx.h"
 
+#if __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 #if CCP_STACKLESS
 
 #include "Include/BlueNet.h"
@@ -2702,21 +2707,18 @@ bool BlueNet::SerializeObject( PyObject* object, BitPackerManaged& packer )
 		static_assert( sizeof(int64_t) >= sizeof(long) );
 		packer.Pack( (int64_t)PyInt_AS_LONG(object) );
 		BN_SERIALIZE(bnlog("packing Int[%d:0x%08X]", PyInt_AS_LONG(object), (unsigned long)PyInt_AS_LONG(object) ));
-		m_singleton.m_stats.numberTotal;
 	}
 	else if ( PyLong_CheckExact(object) )
 	{
 		packer.Pack( (uint32_t)PYOBJECT_LONG );
 		packer.Pack( (int64_t)PyLong_AsLongLong(object) );
 		BN_SERIALIZE(bnlog("packing Long[%lld:0x%016llX]", PyLong_AsLongLong(object), (unsigned long long)PyLong_AsLongLong(object) ));
-		m_singleton.m_stats.numberTotal;
 	}
 	else if ( PyFloat_CheckExact(object) )
 	{
 		packer.Pack( (uint32_t)PYOBJECT_DOUBLE );
 		packer.Pack( (double)PyFloat_AS_DOUBLE(object) );
 		BN_SERIALIZE(bnlog("packing Float[%f]", PyFloat_AS_DOUBLE(object)));
-		m_singleton.m_stats.numberTotal;
 	}
 	else if ( PyString_CheckExact(object) )
 	{
@@ -2765,7 +2767,7 @@ bool BlueNet::SerializeObject( PyObject* object, BitPackerManaged& packer )
 			}
 
 
-			m_singleton.m_stats.numberFellback;
+			m_singleton.m_stats.numberFellback++;
 		}
 	}
 
@@ -3110,4 +3112,6 @@ void BlueNet::LogError( const char* msg )
 }
 
 #endif
-
+#if __clang__
+#pragma clang diagnostic pop
+#endif
