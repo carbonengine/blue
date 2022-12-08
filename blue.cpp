@@ -363,6 +363,24 @@ MAP_FUNCTION(
 	":returns: list of paths between the objects\n"
 	":rtype: list" );
 
+
+MAP_FUNCTION(
+	"FindFirstRoute",
+	PyFindFirstRoute,
+	"Searches for the first route from one object to another. A route is a sequence of getattr or index operations.\n"
+	"This function is relatively heavy and should not be used in production code, but rather is indended for\n"
+	"in-house tools.\n"
+	"Function returns the first path it locates from one object to another, where each path is a list of tuples\n"
+	"(parent, type, index) where parent is a parent blue object, type is 0 for getattr call and 1 for index call,\n"
+	"index is either an attribute name or a list/dict key."
+	":param from: blue object that is the start of the path\n"
+	":type from: IRoot\n"
+	":param to: blue object that is the end of the path\n"
+	":type to: IRoot\n"
+	":returns: path between the objects\n"
+	":rtype: list" );
+
+
 MAP_FUNCTION_AND_WRAP(
 	"FindAllReferences",
 	FindAllReferences,
