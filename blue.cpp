@@ -347,9 +347,9 @@ MAP_FUNCTION(
 	":rtype: None" );
 
 
-MAP_FUNCTION( 
+MAP_FUNCTION_AND_WRAP( 
 	"FindRoute", 
-	PyFindRoute, 
+	FindRoute, 
 	"Searches for all routes from one object to another. A route is a sequence of getattr or index operations.\n"
 	"This function is relatively heavy and should not be used in production code, but rather is indended for\n"
 	"in-house tools.\n"
@@ -357,14 +357,12 @@ MAP_FUNCTION(
 	"(parent, type, index) where parent is a parent blue object, type is 0 for getattr call and 1 for index call,\n"
 	"index is either an attribute name or a list/dict key."
 	":param from: blue object that is the start of the path\n"
-	":type from: IRoot\n"
 	":param to: blue object that is the end of the path\n"
-	":type to: IRoot\n"
 	":returns: list of paths between the objects\n"
 	":rtype: list" );
 
 
-MAP_FUNCTION(
+MAP_FUNCTION_AND_WRAP(
 	"FindFirstRoute",
 	PyFindFirstRoute,
 	"Searches for the first route from one object to another. A route is a sequence of getattr or index operations.\n"
@@ -374,16 +372,14 @@ MAP_FUNCTION(
 	"(parent, type, index) where parent is a parent blue object, type is 0 for getattr call and 1 for index call,\n"
 	"index is either an attribute name or a list/dict key."
 	":param from: blue object that is the start of the path\n"
-	":type from: IRoot\n"
 	":param to: blue object that is the end of the path\n"
-	":type to: IRoot\n"
 	":returns: path between the objects\n"
 	":rtype: list" );
 
 
-MAP_FUNCTION(
+MAP_FUNCTION_AND_WRAP(
 	"FindAllReferences",
-	PyFindAllReferences,
+	FindAllReferences,
 	"Finds all references to all objects in an object tree. The result of the function is a dictionary with all\n"
 	"objects in the tree as keys. Values of the dictionary are lists of references to the given object key.\n"
 	"These references follow the same format as the result of FindRoute function: they are tuples\n"
@@ -391,18 +387,15 @@ MAP_FUNCTION(
 	"key type is 0 for object attributes and 1 for indices (lists or dictionaries), key is either an\n"
 	"attribute name or an index value.\n"
 	":param root: the root of object tree\n"
-	":type root: IRoot\n"
 	":rtype: Dict[IRoot, list]" );
 
 
-MAP_FUNCTION(
+MAP_FUNCTION_AND_WRAP(
 	"FindInterface",
-	PyFindInterface,
+	FindInterface,
 	"Searches though hierarhy of object for all objects implementing the given interface.\n"
 	":param root: root object\n"
-	":type root: IRoot\n"
 	":param iidName: interface name\n"
-	":type iidName: basestring\n"
 	":returns: list of objects that implements the given interface\n"
 	":rtype: list" );
 
