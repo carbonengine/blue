@@ -51,7 +51,7 @@
 #include <Psapi.h>
 #endif
 
-#include "BlueExposure/include/BlueExposure.h"
+#include <BlueExposure.h>
 #include "include/Blue.h"
 #include "Include/BlueStatistics.h"
 

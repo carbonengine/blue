@@ -4,7 +4,7 @@
 
 #include <string>
 #include "BlueSysInfo.h"
-#include "BlueExposure/include/BlueExposure.h"
+#include <BlueExposure.h>
 #include "pdm.h"
 #include <sys/sysctl.h>
 #include <sys/times.h>

@@ -5,7 +5,7 @@
 #if BLUE_WITH_PYTHON
 
 #include "Python.h"
-#include "BlueExposure/include/BlueExposureMacros.h"
+#include <BlueExposureMacros.h>
 
 BLUE_CLASS( LogControl )
 	: public IRoot

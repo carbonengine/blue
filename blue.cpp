@@ -11,7 +11,7 @@
 #include "BlueSocketLogger.h"
 #if BLUE_WITH_PYTHON
 #include "CcpUtils/PyCpp.h"
-#include "BlueExposure/Find.h"
+#include <Find.h>
 #include "version.h"
 #endif
 

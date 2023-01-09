@@ -10,7 +10,7 @@
 #if BLUE_WITH_PYTHON
 
 #include "Include/IBluePersist.h"
-#include "BlueExposure/include/BlueExposureMacrosDeprecated.h"
+#include <BlueExposureMacrosDeprecated.h>
 #include "Include/IBlueOS.h"
 
 class IBlueStream_Thunk : public IBlueStream

@@ -1,6 +1,6 @@
 #include "StdAfx.h"
 #include "BlueObjectMetadata.h"
-#include "BlueExposure/Find.h"
+#include <Find.h>
 #include "BlueSmartPtr.h"
 
 IBlueObjectMetadata* BeObjectMetadata = nullptr;
