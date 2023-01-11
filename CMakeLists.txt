@@ -5,7 +5,7 @@ list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake)
 
 
 add_library(Blue SHARED
-    ../Logger/Logger.cpp
+    Logger/Logger.cpp
     CarbonIO/dll_exports.h
     CarbonIO/protocol.h
     BlueSysInfo.mm
@@ -278,6 +278,7 @@ endif()
 target_link_libraries(Blue
     PUBLIC
         CcpCore
+        CcpUtils
         BlueExposure
     PRIVATE
         PDM::PDM
