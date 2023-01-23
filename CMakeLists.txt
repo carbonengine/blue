@@ -1,285 +1,314 @@
 cmake_minimum_required(VERSION 3.16)
 
 project(Blue VERSION 1.0.0)
-list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake)
+if(NOT DEFINED ENV{CCP_EVE_PERFORCE_BRANCH_PATH})
+    message(FATAL_ERROR "Missing required environment variable CCP_EVE_PERFORCE_BRANCH_PATH")
+elseif(NOT IS_ABSOLUTE $ENV{CCP_EVE_PERFORCE_BRANCH_PATH})
+    message(FATAL_ERROR "CCP_EVE_PERFORCE_BRANCH_PATH needs to be an absolute path")
+elseif(NOT EXISTS $ENV{CCP_EVE_PERFORCE_BRANCH_PATH})
+    message(FATAL_ERROR "CCP_EVE_PERFORCE_BRANCH_PATH is pointing at a non-existing location $ENV{CCP_EVE_PERFORCE_BRANCH_PATH}")
+elseif(NOT IS_DIRECTORY $ENV{CCP_EVE_PERFORCE_BRANCH_PATH})
+    message(FATAL_ERROR "CCP_EVE_PERFORCE_BRANCH_PATH needs to be a directory")
+else()
+    message(STATUS "Using CCP_EVE_PERFORCE_BRANCH_PATH located at $ENV{CCP_EVE_PERFORCE_BRANCH_PATH}")
+endif()
+
+file(TO_CMAKE_PATH "$ENV{CCP_EVE_PERFORCE_BRANCH_PATH}" BRANCH_ROOT_DIR)
+list(INSERT CMAKE_MODULE_PATH 0 ${BRANCH_ROOT_DIR}/cmake)
+include(CcpGlobalSettings)
+
+find_package(BlueExposure REQUIRED NO_CMAKE_PATH)
+find_package(CcpUtils REQUIRED NO_CMAKE_PATH)
+find_package(CURL REQUIRED NO_CMAKE_PATH)
+find_package(OpenSSL REQUIRED NO_CMAKE_PATH)
+find_package(PDM REQUIRED NO_CMAKE_PATH)
+find_package(YAML REQUIRED NO_CMAKE_PATH)
+find_package(ZLIB REQUIRED NO_CMAKE_PATH)
+
+
+set(PUBLIC_HEADER_FILES_INCLUDE
+    include/Blue.h
+    include/BlueAsyncRes.h
+    include/BluePySwrap.h
+    include/BlueStatistics.h
+    include/IBlueCallbackMan.h
+    include/IBlueEventListener.h
+    include/IBlueObjectProxy.h
+    include/IBlueObjectBuilder.h
+    include/IBlueOS.h
+    include/IBluePaths.h
+    include/IBluePersist.h
+    include/IBluePython.h
+    include/IBluePlacementObserver.h
+    include/IBlueResMan.h
+    include/IBlueResource.h
+    include/IBlueObjectMetadata.h
+    include/ICacheable.h
+    include/ICcpStatisticsAccumulator.h
+    include/ITaskletTimer.h
+    include/ScopedBlockTrap.h
+    include/BlueObjectMetadata.h
+    include/stacklessio.h
+)
 
 
 add_library(Blue SHARED
-    Logger/Logger.cpp
-    CarbonIO/dll_exports.h
-    CarbonIO/protocol.h
-    BlueSysInfo.mm
-    Accumulator/PercentileAccumulator.cpp
-    Accumulator/PercentileAccumulator_Blue.cpp
-    autoversion.h
-    BackgroundReader.cpp
-    BackgroundReader.h
-    Base64.cpp
-    BlackReader.cpp
-    BlackReader.h
-    BlackReader_Blue.cpp
-    BlackWriter.cpp
-    BlackWriter.h
-    BlackWriter_Blue.cpp
-    BlueAsyncRes.cpp
-    BlueAsyncRes_Blue.cpp
-    BlueClipboard.cpp
-    BlueClipboard.h
-    BlueClipboard.mm
-    BlueClipboard_Blue.cpp
-    BlueEventToPython.cpp
-    BlueEventToPython.h
-    BlueEventToPython_Blue.cpp
-    BlueFileStream.cpp
-    BlueFileStream.h
-    BlueFileStream_Blue.cpp
-    BlueFileUtil.cpp
-    BlueHeapq.cpp
-    BlueHeapq.h
-    BlueLogInMemory.cpp
-    BlueLogInMemory.h
-    BlueLogInMemory_Blue.cpp
-    BlueMemoryTracker.cpp
-    BlueMemoryTracker.h
-    BlueMemoryTracker_Blue.cpp
-    BlueMemStream.cpp
-    BlueMemStream.h
-    BlueMemStream_Blue.cpp
-    BlueNet.cpp
-    BlueNetworkStream.cpp
-    BlueNetworkStream.h
-    BlueNetworkStream_Blue.cpp
-    BlueOS.cpp
-    BlueOS.h
-    BlueOS.mm
-    BlueOS_Blue.cpp
-    BlueObjectBuilderPython.cpp
-    BlueObjectBuilderPython.h
-    BlueObjectBuilderPython_Blue.cpp
-    BlueObjectMetadata.cpp
-    BlueObjectMetadata.h
-    BlueObjectMetadata_Blue.cpp
-    BlueObjectProxy.cpp
-    BlueObjectProxy.h
-    BlueObjectProxy_Blue.cpp
-    BlueObjectRecycler.cpp
-    BlueObjectRecycler.h
-    BlueObjectRecycler_Blue.cpp
-    BluePaths.cpp
-    BluePaths.h
-    BluePaths_Blue.cpp
-    BluePython.cpp
-    BluePython.h
-    BluePython_Blue.cpp
-    BluePythonWeakRef.cpp
-    BluePythonWeakRef.h
-    BluePythonWeakRef_Blue.cpp
-    BlueRemoteStream.cpp
-    BlueRemoteStream.h
-    BlueRemoteStream_Blue.cpp
-    BlueResFile.h
-    BlueResFile2.cpp
-    BlueResFile2.h
-    BlueResFile2_Blue.cpp
-    BlueResFileSystemLocal.cpp
-    BlueResFileSystemLocal.h
-    BlueResFileSystemLocal_Blue.cpp
-    BlueResFileSystemRemote.cpp
-    BlueResFileSystemRemote.h
-    BlueResFileSystemRemote_Blue.cpp
-    BlueResMan.cpp
-    BlueResMan.h
-    BlueResMan_Blue.cpp
-    BlueResManBackgroundCall.cpp
-    BlueResManBackgroundCall.h
-    BlueSocketLogger.cpp
-    BlueSocketLogger.h
-    BlueStatistics.cpp
-    BlueStatistics_Blue.cpp
-    BlueStreamMethods.cpp
-    BlueSysInfo.cpp
-    BlueSysInfo.h
-    BlueSysInfo_Blue.cpp
-    BlueTestHelpers.cpp
-    BlueTestHelpers.h
-    BlueTestHelpers_Blue.cpp
-    BlueTextResource.cpp
-    BlueTextResource.h
-    BlueTextResource_Blue.cpp
-    BlueThreadMonitor.cpp
-    BlueThreadMonitor.h
-    BlueThreadMonitor_Blue.cpp
-    BlueTime.cpp
-    BlueTime.h
-    BlueTimeoutHandler.cpp
-    BlueTimeoutHandler.h
-    CallbackMan.cpp
-    CallbackMan.h
-    CallbackMan_Blue.cpp
-    DictReader.cpp
-    DictReader.h
-    DictReader_Blue.cpp
-    errormessage.cpp
-    errormessage.h
-    FileLogger.cpp
-    FileLogger.h
-    IBlueEventListener_Blue.cpp
-    IBlueObjectBuilder_Blue.cpp
-    IBluePlacementObserver_Blue.cpp
-    InterfaceDefinitions.cpp
-    IOLoop.cpp
-    IOLoop.h
-    IRootReader.cpp
-    IRootReader.h
-    IRootWriter.cpp
-    IRootWriter.h
-    IRootWriter_Blue.cpp
-    LogControl.cpp
-    LogControl.h
-    LogToPython.cpp
-    LogToPython.h
-    Marshal.cpp
-    Marshal.h
-    MotherLode.cpp
-    MotherLode.h
-    MotherLode_Blue.cpp
-    NetworkLogger.cpp
-    NetworkLogger.h
-    PrettyPrint.cpp
-    PrettyPrint.h
-    PyLogObject.cpp
-    PyMemory.cpp
-    PyRowSet.cpp
-    PyRowSet.h
-    PyScheduler.cpp
-    PyScheduler.h
-    PythonEvents.cpp
-    PythonEvents.h
-    PythonEvents_Blue.cpp
-    RemoteFileCache.cpp
-    RemoteFileCache.h
-    RemoteFileCache_Blue.cpp
-    ResourceLoading.cpp
-    ResourceLoading.h
-    ResourceWatch.cpp
-    ResourceWatch.h
-    ResourceWatch_Blue.cpp
-    ScopedBlockTrap.cpp
-    SimpleJson.cpp
-    SimpleJson.h
-    StdAfx.cpp
-    Synchro.cpp
-    Synchro.h
-    TaskletTimer.cpp
-    TaskletTimer.h
-    TaskletTimer_Blue.cpp
-    WatchdogThread.cpp
-    WatchdogThread.h
-    XUtil.cpp
-    YamlReader.cpp
-    YamlReader.h
-    YamlReader_Blue.cpp
-    YamlWriter.cpp
-    YamlWriter.h
-    YamlWriter_Blue.cpp
-    blue.cpp
-    crypto.cpp
-    crypto.h
-    crypto_Blue.cpp
-    manifest.cpp
-    manifest.h
-    md5.cpp
-    md5.h
-    slsocketmodule.c
-    slsocketmodule.h
-    slselectmodule.c
-    slsocket.h
-    stacklessio.cpp
-    stacklessio.h
-    stacklessio_api.h
-    version.h
-    win32.cpp
-    win32.h
+    src/Logger/Logger.cpp
+    src/CarbonIO/dll_exports.h
+    src/CarbonIO/protocol.h
+    src/BlueSysInfo.mm
+    src/Accumulator/PercentileAccumulator.cpp
+    src/Accumulator/PercentileAccumulator_Blue.cpp
+    src/autoversion.h
+    src/BackgroundReader.cpp
+    src/BackgroundReader.h
+    src/Base64.cpp
+    src/BlackReader.cpp
+    src/BlackReader.h
+    src/BlackReader_Blue.cpp
+    src/BlackWriter.cpp
+    src/BlackWriter.h
+    src/BlackWriter_Blue.cpp
+    src/BlueAsyncRes.cpp
+    src/BlueAsyncRes_Blue.cpp
+    src/BlueClipboard.cpp
+    src/BlueClipboard.h
+    src/BlueClipboard.mm
+    src/BlueClipboard_Blue.cpp
+    src/BlueEventToPython.cpp
+    src/BlueEventToPython.h
+    src/BlueEventToPython_Blue.cpp
+    src/BlueFileStream.cpp
+    src/BlueFileStream.h
+    src/BlueFileStream_Blue.cpp
+    src/BlueFileUtil.cpp
+    src/BlueHeapq.cpp
+    src/BlueHeapq.h
+    src/BlueLogInMemory.cpp
+    src/BlueLogInMemory.h
+    src/BlueLogInMemory_Blue.cpp
+    src/BlueMemoryTracker.cpp
+    src/BlueMemoryTracker.h
+    src/BlueMemoryTracker_Blue.cpp
+    src/BlueMemStream.cpp
+    src/BlueMemStream.h
+    src/BlueMemStream_Blue.cpp
+    src/BlueNet.cpp
+    src/BlueNetworkStream.cpp
+    src/BlueNetworkStream.h
+    src/BlueNetworkStream_Blue.cpp
+    src/BlueOS.cpp
+    src/BlueOS.h
+    src/BlueOS.mm
+    src/BlueOS_Blue.cpp
+    src/BlueObjectBuilderPython.cpp
+    src/BlueObjectBuilderPython.h
+    src/BlueObjectBuilderPython_Blue.cpp
+    src/BlueObjectMetadata.cpp
+    src/BlueObjectMetadata_Blue.cpp
+    src/BlueObjectProxy.cpp
+    src/BlueObjectProxy.h
+    src/BlueObjectProxy_Blue.cpp
+    src/BlueObjectRecycler.cpp
+    src/BlueObjectRecycler.h
+    src/BlueObjectRecycler_Blue.cpp
+    src/BluePaths.cpp
+    src/BluePaths.h
+    src/BluePaths_Blue.cpp
+    src/BluePython.cpp
+    src/BluePython.h
+    src/BluePython_Blue.cpp
+    src/BluePythonWeakRef.cpp
+    src/BluePythonWeakRef.h
+    src/BluePythonWeakRef_Blue.cpp
+    src/BlueRemoteStream.cpp
+    src/BlueRemoteStream.h
+    src/BlueRemoteStream_Blue.cpp
+    src/BlueResFile.h
+    src/BlueResFile2.cpp
+    src/BlueResFile2.h
+    src/BlueResFile2_Blue.cpp
+    src/BlueResFileSystemLocal.cpp
+    src/BlueResFileSystemLocal.h
+    src/BlueResFileSystemLocal_Blue.cpp
+    src/BlueResFileSystemRemote.cpp
+    src/BlueResFileSystemRemote.h
+    src/BlueResFileSystemRemote_Blue.cpp
+    src/BlueResMan.cpp
+    src/BlueResMan.h
+    src/BlueResMan_Blue.cpp
+    src/BlueResManBackgroundCall.cpp
+    src/BlueResManBackgroundCall.h
+    src/BlueSocketLogger.cpp
+    src/BlueSocketLogger.h
+    src/BlueStatistics.cpp
+    src/BlueStatistics_Blue.cpp
+    src/BlueStreamMethods.cpp
+    src/BlueSysInfo.cpp
+    src/BlueSysInfo.h
+    src/BlueSysInfo_Blue.cpp
+    src/BlueTestHelpers.cpp
+    src/BlueTestHelpers.h
+    src/BlueTestHelpers_Blue.cpp
+    src/BlueTextResource.cpp
+    src/BlueTextResource.h
+    src/BlueTextResource_Blue.cpp
+    src/BlueThreadMonitor.cpp
+    src/BlueThreadMonitor.h
+    src/BlueThreadMonitor_Blue.cpp
+    src/BlueTime.cpp
+    src/BlueTime.h
+    src/BlueTimeoutHandler.cpp
+    src/BlueTimeoutHandler.h
+    src/CallbackMan.cpp
+    src/CallbackMan.h
+    src/CallbackMan_Blue.cpp
+    src/DictReader.cpp
+    src/DictReader.h
+    src/DictReader_Blue.cpp
+    src/errormessage.cpp
+    src/errormessage.h
+    src/FileLogger.cpp
+    src/FileLogger.h
+    src/IBlueEventListener_Blue.cpp
+    src/IBlueObjectBuilder_Blue.cpp
+    src/IBluePlacementObserver_Blue.cpp
+    src/InterfaceDefinitions.cpp
+    src/IOLoop.cpp
+    src/IOLoop.h
+    src/IRootReader.cpp
+    src/IRootReader.h
+    src/IRootWriter.cpp
+    src/IRootWriter.h
+    src/IRootWriter_Blue.cpp
+    src/LogControl.cpp
+    src/LogControl.h
+    src/LogToPython.cpp
+    src/LogToPython.h
+    src/Marshal.cpp
+    src/Marshal.h
+    src/MotherLode.cpp
+    src/MotherLode.h
+    src/MotherLode_Blue.cpp
+    src/NetworkLogger.cpp
+    src/NetworkLogger.h
+    src/PrettyPrint.cpp
+    src/PrettyPrint.h
+    src/PyLogObject.cpp
+    src/PyMemory.cpp
+    src/PyRowSet.cpp
+    src/PyRowSet.h
+    src/PyScheduler.cpp
+    src/PyScheduler.h
+    src/PythonEvents.cpp
+    src/PythonEvents.h
+    src/PythonEvents_Blue.cpp
+    src/RemoteFileCache.cpp
+    src/RemoteFileCache.h
+    src/RemoteFileCache_Blue.cpp
+    src/ResourceLoading.cpp
+    src/ResourceLoading.h
+    src/ResourceWatch.cpp
+    src/ResourceWatch.h
+    src/ResourceWatch_Blue.cpp
+    src/ScopedBlockTrap.cpp
+    src/SimpleJson.cpp
+    src/SimpleJson.h
+    src/StdAfx.cpp
+    src/Synchro.cpp
+    src/Synchro.h
+    src/TaskletTimer.cpp
+    src/TaskletTimer.h
+    src/TaskletTimer_Blue.cpp
+    src/WatchdogThread.cpp
+    src/WatchdogThread.h
+    src/XUtil.cpp
+    src/YamlReader.cpp
+    src/YamlReader.h
+    src/YamlReader_Blue.cpp
+    src/YamlWriter.cpp
+    src/YamlWriter.h
+    src/YamlWriter_Blue.cpp
+    src/blue.cpp
+    src/crypto.cpp
+    src/crypto.h
+    src/crypto_Blue.cpp
+    src/manifest.cpp
+    src/manifest.h
+    src/md5.cpp
+    src/md5.h
+    src/slsocketmodule.c
+    src/slsocketmodule.h
+    src/slselectmodule.c
+    src/slsocket.h
+    src/stacklessio.cpp
+    src/stacklessio_api.h
+    src/version.h
+    src/win32.cpp
+    src/win32.h
 )
 
 if (APPLE)
-    target_sources(Blue PRIVATE slsocket_posix.cpp)
+    target_sources(Blue PRIVATE src/slsocket_posix.cpp)
 elseif (WIN32)
     target_sources(Blue PRIVATE
-        CarbonIO/api.cpp
-        CarbonIO/api.h
-        CarbonIO/CarbonIO.cpp
-        CarbonIO/CarbonIO.h
-        CarbonIO/dll_exports.cpp
-        CarbonIO/ssl_pipe.cpp
-        CarbonIO/ssl_pipe.h
-        CarbonIO/stats.cpp
-        CarbonIO/stats.h
-        slsocket.cpp
+        src/CarbonIO/api.cpp
+        src/CarbonIO/api.h
+        src/CarbonIO/CarbonIO.cpp
+        src/CarbonIO/CarbonIO.h
+        src/CarbonIO/dll_exports.cpp
+        src/CarbonIO/ssl_pipe.cpp
+        src/CarbonIO/ssl_pipe.h
+        src/CarbonIO/stats.cpp
+        src/CarbonIO/stats.h
+        src/slsocket.cpp
     )
 endif()
 
 # These files don't play nicely with PCH, partially because they are C and not C++, so let's exclude them from
 # using PCH until such a time that they are converted to C++
-set_source_files_properties(slsocketmodule.c slselectmodule.c PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
+set_source_files_properties(
+    src/slsocketmodule.c
+    src/slselectmodule.c
+    PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
 
 target_sources(Blue PRIVATE
-    Include/Base64.h
-    Include/BitPacker.h
-    Include/Blue.h
-    Include/BlueAsyncRes.h
-    Include/BlueChoosers.h
-    Include/BlueFileUtil.h
-    Include/BlueMain.h
-    Include/BlueNet.h
-    Include/BlueNetTypes.h
-    Include/BluePySwrap.h
-    Include/BlueStatistics.h
-    Include/DataStructs.h
-    Include/IBlueCallbackMan.h
-    Include/IBlueEventListener.h
-    Include/IBlueObjectBuilder.h
-    Include/IBlueObjectMetadata.h
-    Include/IBlueObjectProxy.h
-    Include/IBlueObjectRecycler.h
-    Include/IBlueOS.h
-    Include/IBluePaths.h
-    Include/IBluePersist.h
-    Include/IBluePlacementObserver.h
-    Include/IBluePython.h
-    Include/IBlueResFileSystem.h
-    Include/IBlueResMan.h
-    Include/IBlueResource.h
-    Include/IBlueThreadMonitor.h
-    Include/ICacheable.h
-    Include/ICcpStatisticsAccumulator.h
-    Include/IMotherLode.h
-    Include/IMotherLode.h
-    Include/ITaskletTimer.h
-    Include/IUnloadable.h
-    Include/ScopedBlockTrap.h
-    Include/StructPacker.h
+    include/Base64.h
+    include/BitPacker.h
+    include/BlueChoosers.h
+    include/BlueFileUtil.h
+    include/BlueMain.h
+    include/BlueNet.h
+    include/BlueNetTypes.h
+    include/DataStructs.h
+    include/IBlueObjectRecycler.h
+    include/IBlueResFileSystem.h
+    include/IBlueThreadMonitor.h
+    include/IMotherLode.h
+    include/IUnloadable.h
+    include/StructPacker.h
+    ${PUBLIC_HEADER_FILES_INCLUDE}
 )
 
-target_precompile_headers(Blue PUBLIC StdAfx.h)
+target_precompile_headers(Blue PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/StdAfx.h)
 target_compile_definitions(Blue
     PUBLIC
         CCP_STACKLESS
-#    PRIVATE
-#        BLUEBUILD
     )
 
 if(APPLE)
     enable_language(OBJCXX)
     target_compile_definitions(Blue PRIVATE PORTING_TO_LINUX)
     target_link_libraries(Blue PRIVATE "-framework Foundation -framework IOKit -framework AppKit")
+    set_target_properties(Blue PROPERTIES PREFIX "" SUFFIX ".so")
 endif()
 
 target_link_libraries(Blue
     PUBLIC
+        BlueExposure
         CcpCore
         CcpUtils
-        BlueExposure
+
     PRIVATE
         PDM::PDM
         CURL::libcurl
@@ -303,11 +332,32 @@ endif()
 
 target_include_directories(Blue
     PUBLIC
-        $<INSTALL_INTERFACE:Include/eve/blue>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Include>
+        $<INSTALL_INTERFACE:include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/.
-        ${CMAKE_CURRENT_SOURCE_DIR}/..
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 set_target_properties(Blue PROPERTIES CXX_VISIBILITY_PRESET hidden)
 set_target_properties(Blue PROPERTIES OUTPUT_NAME "blue")
+
+# Provide an install target iff this is the top level project only
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+    # Install rule to ensure that our runtime and linker files are in the expected, platform-specific folders
+    install(
+        TARGETS Blue
+        EXPORT BlueTargets
+        CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES}
+        ARCHIVE DESTINATION lib/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
+        LIBRARY DESTINATION lib/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
+        RUNTIME DESTINATION bin/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
+    )
+    # Install rule for available public headers
+    install(FILES ${PUBLIC_HEADER_FILES_INCLUDE} DESTINATION include)
+
+    # The config file is heavily inspired by files generated from CMake's `install(EXPORT ...)` command.
+    # However, because that command creates build environment specific files - f.e. it resolves above vendor variables
+    # and writes the resolved value into the *Target.cmake files - then we ended up writing one by hand.
+    # That said, at some point in the future we should go ahead and template the config file created here to be a
+    # parametrized function call that writes it out during the build, similar to `install(EXPORT ...)`.
+    install(FILES cmake/BlueConfig.cmake DESTINATION .)
+endif()
