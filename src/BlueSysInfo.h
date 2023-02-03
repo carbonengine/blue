@@ -2,6 +2,7 @@
 #ifndef blue_BlueSysInfo_h
 #define blue_BlueSysInfo_h
 
+#include "IBluePersist.h"
 
 BLUE_CLASS( BlueSysInfoCpu ): public IRoot
 {
@@ -143,5 +144,7 @@ private:
 };
 
 TYPEDEF_BLUECLASS( BlueSysInfo );
+
+BlueStdResult GetPDMByteData( IBlueStream** pdm_stream );
 
 #endif

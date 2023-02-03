@@ -183,3 +183,10 @@ const Be::ClassInfo* BlueSysInfoNetworkAdapter::ExposeToBlue()
 		MAP_ATTRIBUTE( "uuid", m_uuid, "Adapter UUID, which can be empty", Be::READ );
 	EXPOSURE_END()
 }
+
+MAP_FUNCTION_AND_WRAP(
+	"GetPDMByteData",
+	GetPDMByteData,
+	"Returns a stream for reading pdm byte data"
+	":raises IOError: on failure to serialise pdm data"
+);
