@@ -53,7 +53,7 @@ set(PUBLIC_HEADER_FILES_INCLUDE
 )
 
 
-add_library(Blue SHARED
+ccp_add_library(Blue SHARED
     src/Logger/Logger.cpp
     src/CarbonIO/dll_exports.h
     src/CarbonIO/protocol.h
@@ -301,7 +301,6 @@ if(APPLE)
     enable_language(OBJCXX)
     target_compile_definitions(Blue PRIVATE PORTING_TO_LINUX)
     target_link_libraries(Blue PRIVATE "-framework Foundation -framework IOKit -framework AppKit")
-    set_target_properties(Blue PROPERTIES PREFIX "" SUFFIX ".so")
 endif()
 
 target_link_libraries(Blue
