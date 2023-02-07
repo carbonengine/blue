@@ -1,11 +1,16 @@
 #include "StdAfx.h"
 #include "BlueSysInfo.h"
 #include "pdm.h"
+#include "pdm/protobuf.h"
+#include "BlueMemStream.h"
 #ifdef _WIN32
 #include "win32.h"
 #include <ShlObj.h>
 #include <intrin.h>
 #endif
+#include <sstream>
+
+static CcpLogChannel_t s_ch = CCP_LOG_DEFINE_CHANNEL( "BlueSysInfo" );
 
 BlueSysInfoTaskTimesPtr BlueSysInfo::GetProcessTimes() const
 {
@@ -377,4 +382,30 @@ const BlueSysInfoCpu& BlueSysInfo::GetCpuInfo() const
 const BlueSysInfoOs& BlueSysInfo::GetOsInfo() const
 {
     return m_os;
+}
+
+BlueStdResult GetPDMByteData( IBlueStream** pdm_stream )
+{
+	BlueStdResult result;
+
+	std::stringstream buffer;
+
+	auto can_serialize = pdm_proto::GetEVEPublicData( &buffer );
+	if( can_serialize )
+	{
+		std::string pdm_data = buffer.str();
+		MemStreamPtr contents;
+		contents.CreateInstance();
+		contents->Write( pdm_data.data(), pdm_data.size() );
+		contents->Seek( 0, ICcpStream::SO_BEGIN );
+		*pdm_stream = contents.Detach();
+		result = BlueStdResult( BLUE_STD_RESULT_OK );
+	}
+	else
+	{
+		result = BlueStdResult( BLUE_STD_RESULT_IO_ERROR, "Failed to serialize pdm data" );
+		CCP_LOGERR_CH( s_ch, result.GetMessage() );
+	}
+
+	return result;
 }
