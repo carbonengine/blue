@@ -16,6 +16,7 @@ endif()
 file(TO_CMAKE_PATH "$ENV{CCP_EVE_PERFORCE_BRANCH_PATH}" BRANCH_ROOT_DIR)
 list(INSERT CMAKE_MODULE_PATH 0 ${BRANCH_ROOT_DIR}/cmake)
 include(CcpGlobalSettings)
+include(CcpPackageConfigHelpers)
 
 find_package(BlueExposure REQUIRED NO_CMAKE_PATH)
 find_package(CcpUtils REQUIRED NO_CMAKE_PATH)
@@ -52,7 +53,7 @@ set(PUBLIC_HEADER_FILES_INCLUDE
 )
 
 
-add_library(Blue SHARED
+ccp_add_library(Blue SHARED
     src/Logger/Logger.cpp
     src/CarbonIO/dll_exports.h
     src/CarbonIO/protocol.h
@@ -300,7 +301,6 @@ if(APPLE)
     enable_language(OBJCXX)
     target_compile_definitions(Blue PRIVATE PORTING_TO_LINUX)
     target_link_libraries(Blue PRIVATE "-framework Foundation -framework IOKit -framework AppKit")
-    set_target_properties(Blue PROPERTIES PREFIX "" SUFFIX ".so")
 endif()
 
 target_link_libraries(Blue
@@ -332,8 +332,7 @@ endif()
 
 target_include_directories(Blue
     PUBLIC
-        $<INSTALL_INTERFACE:include>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
@@ -354,10 +353,10 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     # Install rule for available public headers
     install(FILES ${PUBLIC_HEADER_FILES_INCLUDE} DESTINATION include)
 
-    # The config file is heavily inspired by files generated from CMake's `install(EXPORT ...)` command.
-    # However, because that command creates build environment specific files - f.e. it resolves above vendor variables
-    # and writes the resolved value into the *Target.cmake files - then we ended up writing one by hand.
-    # That said, at some point in the future we should go ahead and template the config file created here to be a
-    # parametrized function call that writes it out during the build, similar to `install(EXPORT ...)`.
-    install(FILES cmake/BlueConfig.cmake DESTINATION .)
+    configure_ccp_vendor_config_file(
+        TARGET Blue
+        DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/BlueConfig.cmake"
+        DEPENDENCIES "BlueExposure;CcpUtils;CURL;OpenSSL;PDM;YAML;ZLIB"
+    )
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/BlueConfig.cmake DESTINATION .)
 endif()
