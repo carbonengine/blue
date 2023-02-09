@@ -47,6 +47,7 @@ set(PUBLIC_HEADER_FILES_INCLUDE
     include/ICacheable.h
     include/ICcpStatisticsAccumulator.h
     include/ITaskletTimer.h
+    include/ITriFunction.h
     include/ScopedBlockTrap.h
     include/BlueObjectMetadata.h
     include/stacklessio.h
