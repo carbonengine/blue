@@ -12,9 +12,9 @@
 #pragma warning (disable : 4996) // remove Windows nagging about using _strincmp() etc
 
 #include <CarbonIO/dll_exports.h>
-#include <CcpUtils/LinkHash.h>
-#include <CcpUtils/RWSpinLock.h>
-#include <CcpUtils/ScopedLocks.h>
+#include <LinkHash.h>
+#include <RWSpinLock.h>
+#include <ScopedLocks.h>
 
 #if __APPLE__
 #include <dispatch/dispatch.h>

@@ -17,8 +17,8 @@ Description: structure describing the statistics gathered from CarbonIO
 ***************************************************************************/
 
 #include <windows.h>
-#include <CcpUtils/LinkHash.h>
-#include <CcpUtils/ScopedLocks.h>
+#include <LinkHash.h>
+#include <ScopedLocks.h>
 
 //------------------------------------------------------------------------------
 struct CioSocketStats

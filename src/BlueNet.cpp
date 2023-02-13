@@ -23,7 +23,7 @@
 #include "stdio.h"
 #include "ctype.h"
 
-#include <CcpUtils/SimpleLog.h>
+#include <SimpleLog.h>
 
 BlueNet BlueNet::m_singleton; // so the static singleton can exist
 long BlueNet::m_constAddressTypeNode;

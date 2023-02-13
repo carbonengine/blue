@@ -40,9 +40,9 @@ Description: implementation of IO Completion Ports for stackless
 #include "stats.h"
 #include "ssl_pipe.h"
 
-#include <CcpUtils/LinkHash.h>
-#include <CcpUtils/RWSpinLock.h>
-#include <CcpUtils/ScopedLocks.h>
+#include <LinkHash.h>
+#include <RWSpinLock.h>
+#include <ScopedLocks.h>
 
 typedef struct _PySocketSockObject PySocketSockObject;
 typedef union sock_addr sock_addr_t;
