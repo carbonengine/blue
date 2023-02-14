@@ -23,7 +23,7 @@ Description: implementation of IO Completion Ports for stackless
 #include "ssl_pipe.h"
 #include "slsocketmodule.h"
 
-#include <CcpUtils/SimpleLog.h>
+#include <SimpleLog.h>
 
 CarbonIO CarbonIO::m_singleton; // singleton
 

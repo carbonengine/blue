@@ -10,7 +10,7 @@
 #include "ResourceLoading.h"
 #include "BlueSocketLogger.h"
 #if BLUE_WITH_PYTHON
-#include "CcpUtils/PyCpp.h"
+#include "BluePyCpp.h"
 #include <Find.h>
 #include "version.h"
 #endif

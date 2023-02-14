@@ -13,7 +13,7 @@
 #include "IBlueOS.h"
 
 #if CCP_STACKLESS
-#include "CcpUtils/PyCpp.h"
+#include "BluePyCpp.h"
 #define STACKLESS_ALLOWTHREADS() Ccp::PyAllowThreads allowThreads( true )
 #else
 #define STACKLESS_ALLOWTHREADS()

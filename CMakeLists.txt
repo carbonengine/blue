@@ -19,7 +19,6 @@ include(CcpGlobalSettings)
 include(CcpPackageConfigHelpers)
 
 find_package(BlueExposure REQUIRED NO_CMAKE_PATH)
-find_package(CcpUtils REQUIRED NO_CMAKE_PATH)
 find_package(CURL REQUIRED NO_CMAKE_PATH)
 find_package(OpenSSL REQUIRED NO_CMAKE_PATH)
 find_package(PDM REQUIRED NO_CMAKE_PATH)
@@ -50,6 +49,10 @@ set(PUBLIC_HEADER_FILES_INCLUDE
     include/ITriFunction.h
     include/ScopedBlockTrap.h
     include/BlueObjectMetadata.h
+    include/BluePyCpp.h
+    include/BluePlatform.h
+    include/BluePlatformPosix.h
+    include/BluePlatformWin32.h
     include/stacklessio.h
 )
 
@@ -183,6 +186,7 @@ ccp_add_library(Blue SHARED
     src/IRootWriter.cpp
     src/IRootWriter.h
     src/IRootWriter_Blue.cpp
+    src/LinkHash.h
     src/LogControl.cpp
     src/LogControl.h
     src/LogToPython.cpp
@@ -239,6 +243,8 @@ ccp_add_library(Blue SHARED
     src/manifest.h
     src/md5.cpp
     src/md5.h
+    src/RWSpinLock.h
+    src/ScopedLocks.h
     src/slsocketmodule.c
     src/slsocketmodule.h
     src/slselectmodule.c
@@ -308,8 +314,6 @@ target_link_libraries(Blue
     PUBLIC
         BlueExposure
         CcpCore
-        CcpUtils
-
     PRIVATE
         PDM::PDM
         CURL::libcurl
@@ -357,7 +361,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     configure_ccp_vendor_config_file(
         TARGET Blue
         DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/BlueConfig.cmake"
-        DEPENDENCIES "BlueExposure;CcpUtils;CURL;OpenSSL;PDM;YAML;ZLIB"
+        DEPENDENCIES "BlueExposure;CURL;OpenSSL;PDM;YAML;ZLIB"
     )
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/BlueConfig.cmake DESTINATION .)
 endif()

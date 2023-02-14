@@ -36,7 +36,7 @@
 #include <stacklessio_api.h>
 #include <CarbonIO/dll_exports.h>
 
-#include <CcpUtils/PyCpp.h>
+#include <BluePyCpp.h>
 
 /* #define LOGG */
 #ifdef LOGG

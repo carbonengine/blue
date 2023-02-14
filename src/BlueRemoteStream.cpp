@@ -12,7 +12,7 @@
 #include "IBluePaths.h"
 
 #if CCP_STACKLESS
-#include "CcpUtils/PyCpp.h"
+#include "BluePyCpp.h"
 #endif
 #include "md5.h"
 #ifdef _WIN32

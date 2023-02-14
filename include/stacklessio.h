@@ -78,8 +78,8 @@
 #pragma pack(pop)
 #endif
 
-#include <CcpUtils/PyCpp.h>
-#include <CcpUtils/platform.h>
+#include <BluePyCpp.h>
+#include <BluePlatform.h>
 
 #include <Python.h>
 #include <stackless_api.h>
