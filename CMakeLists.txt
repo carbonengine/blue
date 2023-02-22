@@ -50,6 +50,7 @@ set(PUBLIC_HEADER_FILES_INCLUDE
     include/ITriConstants.h
     include/ITriCurveLength.h
     include/ITriFunction.h
+    include/ITriObserverLocal.h
     include/ScopedBlockTrap.h
     include/BlueObjectMetadata.h
     include/BluePyCpp.h
