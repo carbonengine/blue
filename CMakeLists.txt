@@ -45,7 +45,10 @@ set(PUBLIC_HEADER_FILES_INCLUDE
     include/IBlueObjectMetadata.h
     include/ICacheable.h
     include/ICcpStatisticsAccumulator.h
+    include/ITr2DebugRenderer2.h
     include/ITaskletTimer.h
+    include/ITriConstants.h
+    include/ITriCurveLength.h
     include/ITriFunction.h
     include/ScopedBlockTrap.h
     include/BlueObjectMetadata.h
@@ -53,6 +56,7 @@ set(PUBLIC_HEADER_FILES_INCLUDE
     include/BluePlatform.h
     include/BluePlatformPosix.h
     include/BluePlatformWin32.h
+    include/Rect.h
     include/stacklessio.h
 )
 
