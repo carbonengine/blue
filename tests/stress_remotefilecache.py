@@ -1,9 +1,6 @@
-import sys
 import os
 import time
 import random
-
-sys.path.append("../../../../packages")
 
 import blue
 import walk
@@ -25,7 +22,7 @@ def FormatMemory( val ):
     return str( round(val,2) )+label
 
 def LoadAllFilesInFolder(rootFolder):
-    print "Loading files from", rootFolder
+    print("Loading files from", rootFolder)
     for root, dirs, files in walk.walk(rootFolder):
         for name in files:
             filename = root + "/" + name
@@ -45,7 +42,7 @@ def Setup():
 if __name__ == "__main__":
     Setup()
     LoadAllFilesInFolder("res:/dx9/model/ship")
-    print "Remote file cache statistics:"
-    print blue.remoteFileCache.filesDownloaded, "files downloaded,", FormatMemory(blue.remoteFileCache.bytesDownloaded)
-    print blue.remoteFileCache.filesCached, "files cached,", FormatMemory(blue.remoteFileCache.bytesCached)
-    print blue.remoteFileCache.filesUsedFromCache, "files used from cache"
+    print("Remote file cache statistics:")
+    print(blue.remoteFileCache.filesDownloaded, "files downloaded,", FormatMemory(blue.remoteFileCache.bytesDownloaded))
+    print(blue.remoteFileCache.filesCached, "files cached,", FormatMemory(blue.remoteFileCache.bytesCached))
+    print(blue.remoteFileCache.filesUsedFromCache, "files used from cache")

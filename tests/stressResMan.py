@@ -1,7 +1,3 @@
-import sys
-sys.path.append("~/depot/blueExposure/BlueExposureTest/bin/python_27/Linux32_gcc")
-sys.path.append("../../autobuild/blue/python_27/Win32")
-
 import blue
 import random
 import logging
@@ -15,7 +11,7 @@ SHORT_PREPARE = 0.7
 
 def GatherResourceNames( count ):
     resourceNames = []
-    for i in xrange(count):
+    for i in range(count):
         load = random.random()
         prepare = random.random()
 
@@ -61,7 +57,7 @@ while len( allResources ) > 0:
 def LoadAndWait( resourceNames ):
     resources = []
     for resPath in resourceNames:
-        print resPath
+        print(resPath)
         res = blue.resMan.GetResource( str(resPath) )
         resources.append( res )
 
@@ -96,4 +92,3 @@ for each in workPackets:
     #log.LogInfo( "Creating tasklet for {0} packets".format( len( each ) ) )
     #tasklets.append( uthread.new( LoadList, each ) )
     LoadList(each)
-    
