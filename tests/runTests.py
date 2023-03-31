@@ -1,8 +1,3 @@
-import os
-import sys
-import unittest
-
-sys.path.append(os.path.join('..', '..', 'packages', 'bluetests', 'test'))
 from test_blackpersistence import *
 from test_blue import *
 from test_blueexposure import *
@@ -31,8 +26,8 @@ from test_yamlpersistence import *
 
 
 if __name__ == "__main__":
-    import uthread2
+    import stackless
     import blue
-    tasklet = uthread2.start_tasklet(unittest.main)
-    while tasklet.is_alive():
+    tasklet = stackless.tasklet(unittest.main)
+    while tasklet.alive:
         blue.os.Pump()
