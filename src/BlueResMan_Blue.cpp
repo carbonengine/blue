@@ -65,13 +65,9 @@ static PyObject* PySaveObjectToYamlString( PyObject* self, PyObject* args )
 	writer.WriteObjectToStream( obj, &ms );
 
 	ssize_t size = ms.GetSize();
-	PyObject* returnValue = PyString_FromStringAndSize( nullptr, size );
-
-	void* data;
-	ms.LockData( &data, size );
-
-	char* dst = PyString_AsString( returnValue );
-	memcpy( dst, data, size );
+    void* data;
+    ms.LockData( &data, size );
+	PyObject* returnValue = PyUnicode_FromStringAndSize( reinterpret_cast<const char*>(data), size );
 
 	ms.UnlockData();
 

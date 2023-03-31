@@ -819,7 +819,7 @@ PyObject* BlueResMan::PyLoadObjectFromYamlString( PyObject* self, PyObject* args
 		return NULL;
 	}
 
-	if (!PyString_Check(pyCharStream))
+	if (!PyUnicode_Check(pyCharStream))
 	{
 		PyErr_SetString(PyExc_TypeError, "LoadObjectFromYamlString expected a non-unicode string.");
 		return NULL;
@@ -829,7 +829,7 @@ PyObject* BlueResMan::PyLoadObjectFromYamlString( PyObject* self, PyObject* args
 	newStream.CreateInstance(GetMemStreamClsid());
 	if (newStream)
 	{
-		char* charString = PyString_AsString(pyCharStream);
+		const char* charString = PyUnicode_AsUTF8(pyCharStream);
 		ssize_t len = strlen(charString);
 
 		MemStream *memStream = static_cast<MemStream*>( static_cast<IBlueStream*>( newStream ) );

@@ -101,10 +101,10 @@ BLUE_INTERFACE(IBluePyOS) : public IRoot
 		PyObject* exception = NULL
 		) = 0;
 
-	// Do a stack trace to the logger
-	virtual void DoStackTrace(
-		PyObject *frame = 0
-		) = 0;
+//	// Do a stack trace to the logger
+//	virtual void DoStackTrace(
+//		PyObject *frame = 0
+//		) = 0;
 
 	virtual PyObject* CreateTasklet(
 		PyObject* meth,
@@ -185,10 +185,10 @@ BLUE_INTERFACE(IBluePyOS) : public IRoot
 		...
 		) = 0;
 
-	// Get a string containing the stack trace
-	virtual PyObject *GetStackTrace(
-		PyObject *frame =0
-		) = 0;
+//	// Get a string containing the stack trace
+//	virtual PyObject *GetStackTrace(
+//		PyObject *frame =0
+//		) = 0;
 
 	//Turn a python exception into a BlueStr
 	virtual void FormatException(char **result) = 0;
@@ -235,6 +235,11 @@ BLUE_INTERFACE(IBluePyOS) : public IRoot
 	//Turns a Blue error into a python error.  There must be a pending blue error.
 	//always returns 0.
 	virtual PyObject * PyErr_BlueError() = 0;
+
+	// return a borrowed ref to mBlueModule, which might be a nullptr
+	// this is a somewhat dirty hack in order to not have to rewrite a bunch of our start up sequence
+	// (even though we probably should do that at one point)
+	virtual PyObject* BlueModule() = 0;
 
 	virtual void RebaseSimClock(Be::Time oldTime, Be::Time newTime) = 0;
 };

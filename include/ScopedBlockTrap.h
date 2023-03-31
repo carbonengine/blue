@@ -11,10 +11,6 @@
 
 #include <CcpMacros.h>
 
-// Forward declaration
-struct _tasklet;
-typedef _tasklet PyTaskletObject;
-
 // Description:
 //   ScopedBlockTrap provides a way to set and restore blocktrap state around
 //   a scope, such as a C++ to python callback

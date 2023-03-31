@@ -2,6 +2,6 @@
 #ifndef BlueHeapq_H
 #define BlueHeapq_H
 
-void InitHeapq();
+bool InitHeapq(PyObject* blueModule);
 
 #endif

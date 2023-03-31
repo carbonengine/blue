@@ -375,8 +375,8 @@ PyObject* PyGetFileLoggingState( PyObject* self, PyObject* args )
 	if ( CCP::s_fileLoggingEnabled )
 	{
 		PyObject* t = PyTuple_New(3);
-		PyTuple_SetItem(t, 0, PyString_FromString( ""  ));
-		PyTuple_SetItem(t, 1, PyInt_FromLong( 1  ));
+		PyTuple_SetItem(t, 0, PyUnicode_FromString( "" ));
+		PyTuple_SetItem(t, 1, PyLong_FromLong( 1  ));
 
 		int isFull = 0;
 		if (CCP::s_fileLogMessageBuffer->IsFull())

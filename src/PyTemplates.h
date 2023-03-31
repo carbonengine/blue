@@ -263,8 +263,7 @@ struct PyXObject : public PyObject, public PyXThunker<T>
 	{
 		static PyTypeObject type =
 		{
-			PyObject_HEAD_INIT(&PyType_Type)
-			0,
+			PyVarObject_HEAD_INIT(&PyType_Type, 0)
 			T::_ClassName(),
 			0,
 			0,
@@ -302,7 +301,7 @@ struct PyXObject : public PyObject, public PyXThunker<T>
 			0,                  /* tp_init */
 			0,                  /* tp_alloc */
 			0,					/* tp_new */
-			_PyObject_Del,                  /* tp_free */
+			nullptr,                  /* tp_free */
 		};
 
 		static bool postInitialized = false;

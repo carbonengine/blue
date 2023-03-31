@@ -108,8 +108,8 @@ PyObject* BlueStatistics::PyGetDescriptions( PyObject* self, PyObject* args )
 
 		CcpStaticStatisticsEntry* entry = *it;
 
-		PyTuple_SetItem( pyEntry, 0, PyString_FromString( entry->GetDescription().c_str() ) );
-		PyTuple_SetItem( pyEntry, 1, PyString_FromString( typeNames[entry->GetType()] ) );
+		PyTuple_SetItem( pyEntry, 0, PyUnicode_FromString( entry->GetDescription().c_str() ) );
+		PyTuple_SetItem( pyEntry, 1, PyUnicode_FromString( typeNames[entry->GetType()] ) );
 
 		PyDict_SetItemString( statsDict, entry->GetName().c_str(), pyEntry );
 	}
@@ -121,8 +121,8 @@ PyObject* BlueStatistics::PyGetDescriptions( PyObject* self, PyObject* args )
 
 		auto entry = *it;
 
-		PyTuple_SetItem( pyEntry, 0, PyString_FromString( entry->GetDescription().c_str() ) );
-		PyTuple_SetItem( pyEntry, 1, PyString_FromString( typeNames[entry->GetType()] ) );
+		PyTuple_SetItem( pyEntry, 0, PyUnicode_FromString( entry->GetDescription().c_str() ) );
+		PyTuple_SetItem( pyEntry, 1, PyUnicode_FromString( typeNames[entry->GetType()] ) );
 
 		PyDict_SetItemString( statsDict, entry->GetName().c_str(), pyEntry );
 	}
@@ -142,7 +142,7 @@ PyObject* BlueStatistics::PyGetStats( PyObject* self, PyObject* args )
 
 		CcpStaticStatisticsEntry* entry = *it;
 
-		PyTuple_SetItem( pyEntry, 0, PyString_FromString( entry->GetName().c_str() ) );
+		PyTuple_SetItem( pyEntry, 0, PyUnicode_FromString( entry->GetName().c_str() ) );
 		PyTuple_SetItem( pyEntry, 1, PyFloat_FromDouble( entry->GetValue() ) );
 		PyTuple_SetItem( pyEntry, 2, PyFloat_FromDouble( entry->GetPeak() ) );
 
@@ -158,7 +158,7 @@ PyObject* BlueStatistics::PyGetStats( PyObject* self, PyObject* args )
 
 		auto entry = *it;
 
-		PyTuple_SetItem( pyEntry, 0, PyString_FromString( entry->GetName().c_str() ) );
+		PyTuple_SetItem( pyEntry, 0, PyUnicode_FromString( entry->GetName().c_str() ) );
 		PyTuple_SetItem( pyEntry, 1, PyFloat_FromDouble( entry->GetValue() ) );
 		PyTuple_SetItem( pyEntry, 2, PyFloat_FromDouble( entry->GetPeak() ) );
 
@@ -825,4 +825,3 @@ const Be::ClassInfo* BlueStatistics::ExposeToBlue()
 
 	EXPOSURE_END()
 }
-

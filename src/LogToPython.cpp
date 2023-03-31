@@ -101,7 +101,7 @@ PyObject* PyGetLogEchoFunction( PyObject* self, PyObject* args )
 {
 	PyObject* returnValue = PyTuple_New( 2 );
 
-	PyTuple_SET_ITEM( returnValue, 0, PyInt_FromLong( s_logCallbackThreshold ) );
+	PyTuple_SET_ITEM( returnValue, 0, PyLong_FromLong( s_logCallbackThreshold ) );
 	if( !s_logCallback )
 	{
 		s_logCallback = Py_None;

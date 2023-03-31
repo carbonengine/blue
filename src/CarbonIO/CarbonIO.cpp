@@ -64,7 +64,7 @@ extern "C" PyObject* socket_set_error( int error );
 //------------------------------------------------------------------------------
 void CarbonIO::setPyError( const char* msg, int err /*=0*/ )
 {
-	socket_set_extra_error_info( PyString_FromString(msg) );
+	socket_set_extra_error_info( PyUnicode_FromString(msg) );
 	socket_set_error( err ? err : WSAGetLastError() );
 	if ( err )
 	{
@@ -767,7 +767,7 @@ void CarbonIO::enableSSL( SOCKET fd )
 //------------------------------------------------------------------------------
 void CarbonIO::setSSLClientCertificate( PyObject *obj )
 {
-	char* cert = PyString_AsString( obj );
+	char* cert = PyBytes_AsString( obj );
 	if ( cert )
 	{
 	}
@@ -776,7 +776,7 @@ void CarbonIO::setSSLClientCertificate( PyObject *obj )
 //------------------------------------------------------------------------------
 void CarbonIO::setSSLServerCertificate( PyObject *obj )
 {
-	char* cert = PyString_AsString( obj );
+	char* cert = PyBytes_AsString( obj );
 	if ( cert )
 	{
 	}
@@ -785,7 +785,7 @@ void CarbonIO::setSSLServerCertificate( PyObject *obj )
 //------------------------------------------------------------------------------
 void CarbonIO::setSSLPrivateClientKey( PyObject *obj )
 {
-	char* key = PyString_AsString( obj );
+	char* key = PyBytes_AsString( obj );
 	if ( key )
 	{
 	}
@@ -794,7 +794,7 @@ void CarbonIO::setSSLPrivateClientKey( PyObject *obj )
 //------------------------------------------------------------------------------
 void CarbonIO::setSSLPrivateServerKey( PyObject *obj )
 {
-	char* key = PyString_AsString( obj );
+	char* key = PyBytes_AsString( obj );
 	if ( key )
 	{
 	}
@@ -820,17 +820,17 @@ PyObject* CarbonIO::getWakeupMethod()
 	{
 		case WAKEUP_DYNAMIC_CONTEXT:
 		{
-			return PyString_FromString( "Dynamic Context" );
+			return PyUnicode_FromString( "Dynamic Context" );
 		}
 		
 		case WAKEUP_PENDING_CALL:
 		{
-			return PyString_FromString( "Pending Call" );
+			return PyUnicode_FromString( "Pending Call" );
 		}
 
 		default:
 		{
-			return PyString_FromString( "UNDEFINED! RUN!" );
+			return PyUnicode_FromString( "UNDEFINED! RUN!" );
 		}
 	}
 }
@@ -863,7 +863,7 @@ PyObject* CarbonIO::getBytesWaiting( SOCKET fd )
 		m_completionListLock.unlock();
 	}
 
-	return PyInt_FromLong( bytes );
+	return PyLong_FromLong( bytes );
 }
 
 //------------------------------------------------------------------------------
@@ -2230,7 +2230,7 @@ int CarbonIO::recvEx( SOCKET fd,
 						ulock.release();
 						spinUntilNoReadJobsScheduled( completion );
 //						setPyError( "socket has been closed", WSAECONNRESET );
-						*obj = PyString_FromString( "" ); // stream connections expect a blank (zero) read to signify EOF
+						*obj = PyBytes_FromString( "" ); // stream connections expect a blank (zero) read to signify EOF
 					}
 				}
 				result = 0;
@@ -2405,7 +2405,7 @@ int CarbonIO::recvEx( SOCKET fd,
 					{
 						spinUntilNoReadJobsScheduled( completion );
 //						setPyError( "socket has been closed", WSAECONNRESET );
-						*obj = PyString_FromString( "" ); // stream connections expect a blank (zero) read to signify EOF
+						*obj = PyBytes_FromString( "" ); // stream connections expect a blank (zero) read to signify EOF
 					}
 				}
 
@@ -2518,7 +2518,7 @@ int CarbonIO::recvEx( SOCKET fd,
 		}
 		if ( obj )
 		{
-			*obj = PyString_FromStringAndSize( P->data, truncLen );
+			*obj = PyBytes_FromStringAndSize( P->data, truncLen );
 		}
 		else if ( buf )
 		{
@@ -2534,14 +2534,14 @@ int CarbonIO::recvEx( SOCKET fd,
 
 		if ( obj )
 		{
-			*obj = PyString_FromStringAndSize( realdata, realLen );
+			*obj = PyBytes_FromStringAndSize( realdata, realLen );
 
 			if ( includeOOB )
 			{
 				D_RECVEX(ciolog("OOB called for on recieve for[%d], packing a tuple", (int)completion->workHandle));
 				PyObject *tuple = PyTuple_New( 3 );
 				PyTuple_SET_ITEM( tuple, 0, *obj );
-				PyTuple_SET_ITEM( tuple, 1, PyString_FromStringAndSize(P->oobData, P->oobLen) );
+				PyTuple_SET_ITEM( tuple, 1, PyBytes_FromStringAndSize(P->oobData, P->oobLen) );
 				PyTuple_SET_ITEM( tuple, 2, PyLong_FromLongLong(P->serialNumber)  );
 				*obj = tuple;
 			}
@@ -2561,7 +2561,7 @@ int CarbonIO::recvEx( SOCKET fd,
 
 		if ( obj )
 		{
-			*obj = PyString_FromStringAndSize( P->data, P->packetLen );
+			*obj = PyBytes_FromStringAndSize( P->data, P->packetLen );
 		}
 		else if ( buf )
 		{

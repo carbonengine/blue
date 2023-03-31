@@ -54,7 +54,7 @@ Synchro::Synchro()
 	mShutdown = false;
 	
 	for (int i = 0; i < sizeof TIMERS / sizeof *TIMERS; i++)
-		TIMERS[i].mContext = PyString_InternFromString(TIMERS[i].mName);
+		TIMERS[i].mContext = PyUnicode_InternFromString(TIMERS[i].mName);
 }
 
 
@@ -101,7 +101,7 @@ void Synchro::Shutdown()
 	if (yielders) {
 		for(int i = PyChannel_GetBalance(yielders);  i<0; i++) {
 			if (!value)
-				value = PyString_FromString("Synchro is shutting down");
+				value = PyUnicode_FromString("Synchro is shutting down");
 			int fail = PyChannel_SendException(yielders, PyExc_TaskletExit, value);
 			if (fail)
 				PyOS->PyError();
@@ -112,7 +112,7 @@ void Synchro::Shutdown()
 	for(SleeperIt it = wallSleepers.begin(); it!= wallSleepers.end(); ++it) {
 		if (PyChannel_GetBalance(it->channel)) {
 			if (!value)
-				value = PyString_FromString("Synchro is shutting down");
+				value = PyUnicode_FromString("Synchro is shutting down");
 			int fail = PyChannel_SendException(it->channel, PyExc_TaskletExit, value);
 			if (fail)
 				PyOS->PyError();
@@ -122,7 +122,7 @@ void Synchro::Shutdown()
 	for(SleeperIt it = mSimSleepers.begin(); it!= mSimSleepers.end(); ++it) {
 		if (PyChannel_GetBalance(it->channel)) {
 			if (!value)
-				value = PyString_FromString("Synchro is shutting down");
+				value = PyUnicode_FromString("Synchro is shutting down");
 			int fail = PyChannel_SendException(it->channel, PyExc_TaskletExit, value);
 			if (fail)
 				PyOS->PyError();
@@ -192,7 +192,7 @@ bool Synchro::Tick()
 							if (head) {
 								BluePy str(PyObject_Str(head));
 								if (str)
-									CCP_LOGWARN_CH( s_ch, "tasklet %s woken up %ds late (%I64d %I64d)", PyString_AsString(str), 
+									CCP_LOGWARN_CH( s_ch, "tasklet %s woken up %ds late (%I64d %I64d)", PyUnicode_AsUTF8(str),
 										(now-s.due)/(10*1000*1000), BeOS->GetActualTime(), BeOS->GetInfo()->mRealTime);
 								Py_DECREF(head);
 							}
@@ -257,7 +257,7 @@ bool Synchro::Tick()
 
 	// Resume yielders  Gather those due for wakeup now, don't do it on the
 	// fly to avoid reentrancy.
-	int nYielders = -mYielders->balance; //wake up only those that are here already.
+	int nYielders = -PyChannel_GetBalance(mYielders); //wake up only those that are here already.
 	if (nYielders>0) {
 		AutoTasklet _at(PyOS->GetTaskletTimer(), TIMERS[TIMER_YIELDERS].mContext);
 		while (nYielders--)
@@ -273,7 +273,7 @@ bool Synchro::Tick()
 //--------------------------------------------------------------------
 PyObject* Synchro::Str()
 {
-	return PyString_FromFormat(
+	return PyUnicode_FromFormat(
 		"Synchro with %" CCP_SIZET_FORMAT " wallclock-sleepers, %" CCP_SIZET_FORMAT " sim-sleepers and %" CCP_SIZET_FORMAT " tickers",
 		mWallclockSleepers.size(), mSimSleepers.size(), size_t( PyList_GET_SIZE(mTickers) )
 		);
@@ -693,13 +693,13 @@ PyObject* Synchro::Get_sleepers()
 void Synchro::AddStat()
 {
 	CCP_STATS_SET( statSleepers, mWallclockSleepers.size() + mSimSleepers.size() );
-	CCP_STATS_SET( statYielders, -mYielders->balance );
+	CCP_STATS_SET( statYielders, -PyChannel_GetBalance( mYielders ) );
 	CCP_STATS_SET( statRunnable, PyStackless_GetRunCount() - 1 );
 
 	Stat stat;
 	stat.mTime = BeOS->GetActualTime();
 	stat.mRunnable = PyStackless_GetRunCount()-1; //don't count the running tasklet.
-	stat.mYielders = -mYielders->balance;
+	stat.mYielders = -PyChannel_GetBalance( mYielders );
 	stat.mSleepers = mWallclockSleepers.size() + mSimSleepers.size();
 
 	//shuffle the vectors around
@@ -739,14 +739,14 @@ void Synchro::RemoveSleeper( Heap<Sleeper> &sleepers, Sleeper &sl )
 					BluePy str(PyObject_Str(head));
 					if( str )
 					{
-						CCP_LOGWARN_CH(s_ch, "On channel queue: %s", PyString_AsString(str));
+						CCP_LOGWARN_CH(s_ch, "On channel queue: %s", PyUnicode_AsUTF8(str));
 					}
 					Py_DECREF(head);
 				}
 				BluePy str(PyObject_Str((PyObject*)it->tasklet));
 				if( str )
 				{
-					CCP_LOGWARN_CH(s_ch, "Tasklet: %s", PyString_AsString(str));
+					CCP_LOGWARN_CH(s_ch, "Tasklet: %s", PyUnicode_AsUTF8(str));
 				}
 			}
 			break;

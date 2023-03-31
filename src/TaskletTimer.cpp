@@ -3,7 +3,7 @@
 
 	TaskletTimer.cpp
 
-	Author:    Kristján Valur Jónsson
+	Author:    Kristjï¿½n Valur Jï¿½nsson
 	Created:   Sept 2004
 	OS:        Win32
 	Project:   Yep
@@ -47,9 +47,9 @@ PyObject *Frame::ToPython(double iFreq) const
 	r.Set("rTime", BluePy(PyFloat_FromDouble(mRealTime * iFreq)));
 	r.Set("uTime", BluePy(PyFloat_FromDouble(mTimes.mUser * 1e-7))); //100ns to s
 	r.Set("kTime", BluePy(PyFloat_FromDouble(mTimes.mKernel * 1e-7)));
-	r.Set("nCalls", BluePy(PyInt_FromLong(mNCalls)));
-	r.Set("nSwitches", BluePy(PyInt_FromLong(mNSwitches)));
-	r.Set("Id", BluePy(PyInt_FromLong(mId)));
+	r.Set("nCalls", BluePy(PyLong_FromLong(mNCalls)));
+	r.Set("nSwitches", BluePy(PyLong_FromLong(mNSwitches)));
+	r.Set("Id", BluePy(PyLong_FromLong(mId)));
 	r.Set("Key", mKey);
 	return r.Detach();
 }
@@ -62,9 +62,9 @@ CcpStatisticsEntryMap_t s_statsMap( "TaskletTimer/s_statsMap" );
 
 static void AddToStat( PyObject * newContext, Times elapsed, double frequency )
 {
-	if( PyString_Check( newContext ) )
+	if( PyUnicode_Check( newContext ) )
 	{
-		const char* name = PyString_AsString( newContext );
+		const char* name = PyUnicode_AsUTF8( newContext );
 
 		CcpStatisticsEntryMap_i it = s_statsMap.find( name );
 		if( it == s_statsMap.end() )
@@ -121,7 +121,7 @@ PyObject *TaskletTimer::GetCurrent()
 		r = f->Key();
 		Py_INCREF(r);
 	} else
-		r = PyString_FromString("<NO CONTEXT>"); //some python code expects strings always
+		r = PyUnicode_FromString("<NO CONTEXT>"); //some python code expects strings always
 	return r;
 }
 
@@ -143,7 +143,7 @@ PyObject *TaskletTimer::EnterTasklet(PyObject *newContext)
 
 PyObject *TaskletTimer::EnterTaskletStr(const char *context, TASKLETFLAGS flags)
 {
-	PyObject *obj = PyString_FromString(context);
+	PyObject *obj = PyUnicode_FromString(context);
 	if (!obj)
 		return NULL;
 	PyObject *result = EnterTaskletEx(obj, flags);
@@ -177,7 +177,7 @@ PyObject *TaskletTimer::EnterTaskletEx(PyObject *newContext, TASKLETFLAGS flags)
 		Py_DECREF(strifiedName);
 #if CCP_TELEMETRY_ENABLED
 		if (canonicalName) {
-			tmTaskletEnter(TMCM_GENERAL, PyString_AsString(canonicalName));
+			tmTaskletEnter(TMCM_GENERAL, PyUnicode_AsUTF8(canonicalName));
 		}
 #else
 		CCP_UNUSED( canonicalName );
@@ -227,8 +227,7 @@ PyObject *TaskletTimer::EnterTaskletEx(PyObject *newContext, TASKLETFLAGS flags)
 	
 	f = stack->Push(mFrameTrees, newContext, now);
 	f->mNCalls++;
-	PyCCP_MemSetContext(f->Id());
-	
+
 	res = of?of->Key():Py_None;
 	Py_INCREF(res);
 
@@ -295,8 +294,6 @@ bool TaskletTimer::ReturnFromTasklet(PyObject *backContext)
 	stack->Pop();
 	int id = stack->CurrentFrame() ? stack->CurrentFrame()->Id() : -1;
 	
-	PyCCP_MemSetContext(id);
-
     Times now2(mTime);
 	mOverhead += now2-now; //accumulate overhead
 	return true;
@@ -351,8 +348,6 @@ PyObject * TaskletTimer::SwitchStack(intptr_t contextID)
 		oldStack->CurrentFrame()->mTimes += elapsed;	
 	mCurrentStack = newStack;
 
-	PyCCP_MemSetContext(CurrentFrame() ? CurrentFrame()->Id() : -1);
-	
 	ClearWarn();  //so we always warn when we switch
 	if (mSliceWarning)
 		WarnSlice(now, oldStack, mSimpleCtxt, true);
@@ -436,7 +431,7 @@ void TaskletTimer::WarnSlice(Be::Time now, Stack *stack, PyObject *newctxt, bool
 		{
 			PyErr_Clear();
 		}
-		json.set( "next", PyString_AsString( nstr ) );
+		json.set( "next", PyUnicode_AsUTF8( nstr ) );
 	}
 
 	//and now, the stack:
@@ -584,7 +579,7 @@ PyObject *TaskletTimer::PyEnterTasklet(PyObject* args)
 	if (!PyArg_UnpackTuple(args, "EnterTasklet", 1, 2, &ctx, &flag))
 		return 0;
 	if (flag) {
-		flags = PyInt_AsLong(flag);
+		flags = PyLong_AsLong(flag);
 		if (flags == -1 && PyErr_Occurred())
 			return NULL;
 	}
@@ -703,7 +698,7 @@ bool TaskletTimer::UpdateMaxAndCount( PyObject* key, int rms )
 	long count = 1;
 	if( mw )
 	{
-		long ms = PyInt_AsLong( PyTuple_GetItem( mw, 0 ) );
+		long ms = PyLong_AsLong( PyTuple_GetItem( mw, 0 ) );
 		if( ms == -1 && PyErr_Occurred() )
 		{
 			PyErr_Clear();
@@ -714,12 +709,12 @@ bool TaskletTimer::UpdateMaxAndCount( PyObject* key, int rms )
 		{
 			return false;
 		}
-		count = PyInt_AsLong( PyTuple_GetItem( mw, 1 ) );
+		count = PyLong_AsLong( PyTuple_GetItem( mw, 1 ) );
 		count++;
 	}
 	PyObject* tuple = PyTuple_New( 2 );
-	PyTuple_SET_ITEM( tuple, 0, PyInt_FromLong( rms ) );
-	PyTuple_SET_ITEM( tuple, 1, PyInt_FromLong( count ) );
+	PyTuple_SET_ITEM( tuple, 0, PyLong_FromLong( rms ) );
+	PyTuple_SET_ITEM( tuple, 1, PyLong_FromLong( count ) );
 	PyDict_SetItem( mMaxWarn, key, tuple );
 
 	return true;

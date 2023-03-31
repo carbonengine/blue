@@ -710,7 +710,8 @@ int IOEventQueue::Dispatch_impl(const char *from)
 			n++;
 
 		//Queue length stat
-		IncrementStat("event::queuelen", (float)PyStackless_GetRunCountTs(slp_initial_tstate));
+// FIXME - do we still need this?
+//		IncrementStat("event::queuelen", (float)PyStackless_GetRunCountTs(slp_initial_tstate));
 	}
 	return n;
 }
@@ -747,7 +748,7 @@ void IOEventQueue::PyWriteUnraisable(const char *msg)
 	PyObject *exc, *val, *tb;
 	PyObject *msg_obj;
 	PyErr_Fetch(&exc, &val, &tb);
-	msg_obj = PyString_FromString(msg ? msg : "");
+	msg_obj = PyUnicode_FromString(msg ? msg : "");
 	PyErr_Restore(exc, val, tb);
 	if (!msg_obj) {
 		msg_obj = Py_None;
@@ -1201,17 +1202,25 @@ extern PyTypeObject PyAsyncFile_Type;
 #endif
 extern "C" void initstacklessio(void)
 {
-	PyObject *module;
-
 #ifdef USE_ASYNC_FILE
 	if (PyType_Ready(&PyAsyncFile_Type) < 0)
 		return;
 #endif
 
 	/* Create the module and add the functions */
-	module = Py_InitModule3("stacklessio", stacklessio_extentions, 0);
-	if (module == NULL)
+	static struct PyModuleDef moduleDef {
+		PyModuleDef_HEAD_INIT,
+		"stacklessio",
+		"",
+		-1,
+		stacklessio_extentions
+	};
+	auto module = PyModule_Create(&moduleDef);
+	if (module == nullptr)
+	{
+		CCP_LOGERR("Failed creating stacklessio module");
 		return;
+	}
 
 #ifdef USE_ASYNC_FILE
 	if (PyModule_AddObject(module, "asyncfile", (PyObject*)&PyAsyncFile_Type))

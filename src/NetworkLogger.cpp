@@ -675,8 +675,8 @@ PyObject* PyGetNetworkLoggingState( PyObject* self, PyObject* args )
 	if ( CCP::s_networkLoggingEnabled )
 	{
 		t = PyTuple_New(3);
-		PyTuple_SetItem(t, 0, PyString_FromString( CCP::s_networkLoggingServerName  ));
-		PyTuple_SetItem(t, 1, PyInt_FromLong( CCP::s_networkLoggingPort ));
+		PyTuple_SetItem(t, 0, PyUnicode_FromString( CCP::s_networkLoggingServerName  ));
+		PyTuple_SetItem(t, 1, PyLong_FromLong( CCP::s_networkLoggingPort ));
 
 		int isFull = 0;
 		if (CCP::s_messageBuffer->IsFull())

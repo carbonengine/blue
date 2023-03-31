@@ -220,13 +220,13 @@ struct DBRowDescriptor :
 		tp->tp_clear = (inquiry)GCClear;
 		tp->tp_repr = (reprfunc)(PyCFunction)PyCFuncArgs<&DBRowDescriptor::Repr>;
 		tp->tp_as_sequence = &sequenceMethods;
-		tp->tp_compare = Compare;
+		tp->tp_richcompare = Compare;
 		tp->tp_hash = Hash;
 		return true;
 	}
 
-	static int Compare(PyObject *a, PyObject *b);
-	static long Hash(PyObject *obj);
+	static PyObject* Compare(PyObject *a, PyObject *b, int op);
+	static Py_hash_t Hash(PyObject *obj);
 
 	static PyObject *_New(PyTypeObject*type, PyObject *args, PyObject *kw);
 	PyObject *Repr(PyObject *args);
@@ -413,21 +413,33 @@ PyObject *DBRowDescriptor::_New(PyTypeObject *subtype, PyObject *args, PyObject 
 	return obj;
 }
 
-int DBRowDescriptor::Compare(PyObject *a, PyObject *b)
+PyObject* DBRowDescriptor::Compare(PyObject *a, PyObject *b, int op)
 {
 	auto lhs = static_cast<RowDescriptor *>(static_cast<DBRowDescriptor *>(a));
 	auto rhs = static_cast<RowDescriptor *>(static_cast<DBRowDescriptor *>(b));
 
-	if (*lhs == *rhs)
-		return 0;
-
-	return (lhs < rhs) ? -1 : 1;
+	switch(op) {
+	case Py_EQ:
+		if ( *lhs == *rhs )
+			Py_RETURN_TRUE;
+		Py_RETURN_FALSE;
+	case Py_LT:
+		if ( lhs < rhs )
+			Py_RETURN_TRUE;
+		Py_RETURN_FALSE;
+	case Py_GT:
+		if ( lhs > rhs )
+			Py_RETURN_TRUE;
+		Py_RETURN_FALSE;
+	default:
+		Py_RETURN_NOTIMPLEMENTED;
+	}
 }
 
-long DBRowDescriptor::Hash(PyObject *obj)
+Py_hash_t DBRowDescriptor::Hash(PyObject *obj)
 {
 	std::hash<PyObject *> hash;
-	return static_cast<long>(hash(obj));
+	return static_cast<Py_hash_t>(hash(obj));
 }
 
 PyObject *DBRowDescriptor::Repr(PyObject *args)
@@ -441,17 +453,13 @@ PyObject *DBRowDescriptor::Repr(PyObject *args)
 			Py_DECREF(l);
 			return 0;
 		}
-		PyTuple_SET_ITEM(tpl, 0, PyString_FromString(mColumnList[i].mName.c_str()));
-		PyTuple_SET_ITEM(tpl, 1, PyInt_FromLong(mColumnList[i].mType));
-		PyTuple_SET_ITEM(tpl, 2, PyInt_FromLong(mColumnList[i].mSize));
+		PyTuple_SET_ITEM(tpl, 0, PyUnicode_FromString(mColumnList[i].mName.c_str()));
+		PyTuple_SET_ITEM(tpl, 1, PyLong_FromLong(mColumnList[i].mType));
+		PyTuple_SET_ITEM(tpl, 2, PyLong_FromLong(mColumnList[i].mSize));
 		PyList_SET_ITEM(l, i, tpl);
 	}
-	PyObject *lrepr = PyObject_Repr(l);
+	PyObject *result = PyUnicode_FromFormat("<DBRowDescriptor object %R %d>", l, mTotalLen);
 	Py_DECREF(l);
-	if (!lrepr)
-		return 0;
-	PyObject *result = PyString_FromFormat("<DBRowDescriptor object %s %d>", PyString_AsString(lrepr), mTotalLen);
-	Py_DECREF(lrepr);
 	return result;
 }
 
@@ -504,12 +512,12 @@ PyObject *DBRowDescriptor::__reduce_ex__(PyObject *proto)
 		if (!st) {
 			Py_DECREF(r); return 0;
 		}
-		PyObject *o = PyString_FromString(name);
+		PyObject *o = PyUnicode_FromString(name);
 		if (!o) {
 			Py_DECREF(st); Py_DECREF(r); return 0;
 		}
 		PyTuple_SET_ITEM(st, 0, o);
-		o = PyInt_FromLong(type);
+		o = PyLong_FromLong(type);
 		if (!o) {
 			Py_DECREF(st); Py_DECREF(r); return 0;
 		}
@@ -574,15 +582,15 @@ PyObject *DBRowDescriptor::Keys()
 
 PyObject *DBRowDescriptor::Index(PyObject *key)
 {
-	if (!PyString_Check(key))
+	if (!PyUnicode_Check(key))
 		return PyErr_SetString(PyExc_TypeError, "string key required"), nullptr;
-	const char *c = PyString_AS_STRING(key);
+	const char *c = PyUnicode_AsUTF8(key);
 	columnMap_t::iterator i = mColumnMap.find(c);
 	if (i==mColumnMap.end())
 		return PyErr_Format(PyExc_KeyError, "key %s not found", c), nullptr;
 	const ColumnDescriptor *cd = (*i).second.first;
 
-	return PyInt_FromLong((int)(cd - &mColumnList[0]));
+	return PyLong_FromLong((int)(cd - &mColumnList[0]));
 }
 
 
@@ -630,7 +638,7 @@ bool DBRowDescriptor::Set_virtual(PyObject *l)
 		BluePy name(PyObject_Str(PyTuple_GET_ITEM(t, 0)));
 		if (!name)
 			goto ERR2;
-		ColumnDescriptor cd(PyString_AS_STRING(name.o));
+		ColumnDescriptor cd(PyUnicode_AsUTF8(name.o));
 		cd.mType = DBTYPE_EMPTY;
 		mColumnList.push_back(cd);
 		if (!newList.Append(t))
@@ -693,9 +701,9 @@ PyObject *DBRowDescriptor::SequenceGet(DBRowDescriptor *row, Py_ssize_t i)
 	const ColumnDescriptor &cd = row->mColumnList[i];
 	BluePyTuple r(3);
 	if (!r) return 0;
-	r.SET(0, PyString_InternFromString(cd.mName.c_str()));
-	r.SET(1, PyInt_FromLong(cd.mType));
-	r.SET(2, PyInt_FromLong(cd.mSize));
+	r.SET(0, PyUnicode_InternFromString(cd.mName.c_str()));
+	r.SET(1, PyLong_FromLong(cd.mType));
+	r.SET(2, PyLong_FromLong(cd.mSize));
 	return r.Detach();
 }
 
@@ -712,7 +720,6 @@ bool operator == (const DBRow &a, const DBRow &b)
 	for (size_t i = 0; i < a.GetColumnCount(); ++i)
 	{
 		const auto &cd = a.mRD->mColumnList[i];
-		int result;
 		auto del = [](PyObject *p) {
 			Py_XDECREF(p);
 		};
@@ -720,7 +727,7 @@ bool operator == (const DBRow &a, const DBRow &b)
 		auto lhs = std::unique_ptr<PyObject, decltype(del)>(a.Get(cd, i), del);
 		auto rhs = std::unique_ptr<PyObject, decltype(del)>(b.Get(cd, i), del);
 
-		if (PyObject_Cmp(lhs.get(), rhs.get(), &result) == -1 || result != 0)
+		if ( PyObject_RichCompareBool( lhs.get(), rhs.get(), Py_EQ ) != 1 ) // FIXME this swallows errors, which are indicated by a -1 return code
 			return false;
 	}
 
@@ -756,7 +763,7 @@ bool DBRow::InitType(PyTypeObject *tp)
 		tp->tp_repr = (reprfunc)(PyCFunction)PyCFuncArgs<&DBRow::Repr>;
 		tp->tp_getattro = (PyCFunction)PyCFuncArgs<&DBRow::GetAttr>;
 		tp->tp_setattro = SetAttr;
-		tp->tp_compare = Compare;
+		tp->tp_richcompare = Compare;
 		tp->tp_hash = Hash;
 		return true;
 }
@@ -951,21 +958,35 @@ bool DBRow::InitDB(PyObject *dataO, PyObject *reuse)
 	return true;
 }
 
-int DBRow::Compare(PyObject *a, PyObject *b)
+PyObject* DBRow::Compare(PyObject *a, PyObject *b, int op)
 {
 	auto lhs = static_cast<DBRow *>(a);
 	auto rhs = static_cast<DBRow *>(b);
 
-	if (*lhs == *rhs)
-		return 0;
-
-	return (lhs < rhs) ? -1 : 1;
+	switch(op) {
+	case Py_EQ:
+		if ( *lhs == *rhs )
+			Py_RETURN_TRUE;
+		Py_RETURN_FALSE;
+	case Py_LT:
+		if ( lhs < rhs ) {
+			Py_RETURN_TRUE;
+		}
+		Py_RETURN_FALSE;
+	case Py_GT:
+		if ( lhs > rhs ) {
+			Py_RETURN_TRUE;
+		}
+		Py_RETURN_FALSE;
+	default:
+		Py_RETURN_NOTIMPLEMENTED;
+	}
 }
 
-long DBRow::Hash(PyObject *obj)
+Py_hash_t DBRow::Hash(PyObject *obj)
 {
 	std::hash<PyObject *> hash;
-	return static_cast<long>(hash(obj));
+	return static_cast<Py_hash_t>(hash(obj));
 }
 
 //store Reuse a python object being set into a row.  Look it up in a dict and replace, or insert it.
@@ -1000,12 +1021,8 @@ PyObject *DBRow::Repr(PyObject *args)
 		}
 		PyList_SET_ITEM(l, i, v); //steal ref to v
 	}
-	PyObject *lrepr = PyObject_Repr(l);
+	PyObject *result = PyUnicode_FromFormat("<DBRow object %R>", l);
 	Py_DECREF(l);
-	if (!lrepr)
-		return 0;
-	PyObject *result = PyString_FromFormat("<DBRow object %s>", PyString_AsString(lrepr));
-	Py_DECREF(lrepr);
 	return result;
 }
 
@@ -1021,21 +1038,21 @@ PyObject *DBRow::Get(const ColumnDescriptor &c, Py_ssize_t i) const
 	void *data = Data(c.mOffset);
 	switch (c.mType) {
 	case DBTYPE_I1:
-		return PyInt_FromLong(*(int8_t*)data);
+		return PyLong_FromLong(*(int8_t*)data);
 	case DBTYPE_UI1:
-		return PyInt_FromLong(*(uint8_t*)data);
+		return PyLong_FromLong(*(uint8_t*)data);
 	case DBTYPE_BOOL: {
 		PyObject *result = GetBit(c.mOffset)?Py_True:Py_False;
 		Py_INCREF(result);
 		return result; }
 	case DBTYPE_I2:
-		return PyInt_FromLong(*(int16_t*)data);
+		return PyLong_FromLong(*(int16_t*)data);
 	case DBTYPE_UI2:
-		return PyInt_FromLong(*(uint16_t*)data);
+		return PyLong_FromLong(*(uint16_t*)data);
 	case DBTYPE_I4:
-		return PyInt_FromLong(*(int32_t*)data);
+		return PyLong_FromLong(*(int32_t*)data);
 	case DBTYPE_UI4:
-		return PyInt_FromLong(*(uint32_t*)data);
+		return PyLong_FromLong(*(uint32_t*)data);
 	case DBTYPE_R4:
 		return PyFloat_FromDouble(*(float*)data);
 	case DBTYPE_I8:
@@ -1067,7 +1084,7 @@ PyObject *DBRow::Get(const ColumnDescriptor &c, Py_ssize_t i) const
 template<class T>
 static bool SetInt(T* dest, PyObject *o)
 {
-	long l = PyInt_AsLong(o);
+	long l = PyLong_AsLong(o);
 	if (l == -1 && PyErr_Occurred())
 		return false;
 	*dest = (T)l;
@@ -1321,8 +1338,8 @@ int DBRow::SequenceSetSlice(DBRow *row, Py_ssize_t ilow, Py_ssize_t ihigh, PyObj
 // Mapping interface
 const ColumnDescriptor *DBRow::GetCD(int &idx, PyObject *key, PyObject *exception)
 {
-	if (PyString_Check(key)) {
-		const char *c = PyString_AsString(key);
+	if (PyUnicode_Check(key)) {
+		const char *c = PyUnicode_AsUTF8(key);
 		RowDescriptor::columnMap_t::iterator i = mRD->mColumnMap.find(c);
 		if (i==mRD->mColumnMap.end()) {
 			if (exception)
@@ -1332,8 +1349,8 @@ const ColumnDescriptor *DBRow::GetCD(int &idx, PyObject *key, PyObject *exceptio
 		idx = (*i).second.second;
 		return (*i).second.first;
 	}
-	if (PyInt_Check(key)) {
-		int c = int(PyInt_AS_LONG(key));
+	if (PyLong_Check(key)) {
+		int c = int(PyLong_AS_LONG(key));
 		int oc = c;
 		if (c < 0)
 			c =(int) mRD->mColumnList.size()+c;
@@ -1427,7 +1444,7 @@ PyObject *DBRow::__getstate__()
 		//str = BluePy(PyString_FromStringAndSize((char*)Data(0), mRD->mDataLen));
 		std::vector<char> packed;
 		PackData(packed);
-		str = BluePy(PyString_FromStringAndSize(&packed[0], packed.size()));
+		str = BluePy(PyBytes_FromStringAndSize(&packed[0], packed.size()));
 		if (!str) return 0;
 	}
 	BluePy objs;
@@ -1454,9 +1471,9 @@ PyObject *DBRow::__setstate__(PyObject *state)
 			return PyErr_SetString(PyExc_TypeError, "expected a tuple of size 2"), nullptr;
 		str = PyTuple_GET_ITEM(state, 0);
 		objs = PyTuple_GET_ITEM(state, 1);
-		if (!PyString_Check(str) || !PyList_Check(objs))
-			return PyErr_SetString(PyExc_TypeError, "expected a tuple string and list"), nullptr;
-	} else if (PyString_Check(state))
+		if (!PyBytes_Check(str) || !PyList_Check(objs))
+			return PyErr_SetString(PyExc_TypeError, "expected a tuple bytes and list"), nullptr;
+	} else if (PyBytes_Check(state))
 		str = state;
 	else if (PyList_Check(state))
 		objs = state;
@@ -1466,7 +1483,7 @@ PyObject *DBRow::__setstate__(PyObject *state)
 	if (str) {
 		const char *data;
 		Py_ssize_t datalen;
-		if (PyString_AsStringAndSize(str, (char**)&data, &datalen) || !UnpackData(data, datalen))
+		if (PyBytes_AsStringAndSize(str, (char**)&data, &datalen) || !UnpackData(data, datalen))
 			return nullptr;
 		/*
 		int l = PyString_GET_SIZE(str);
@@ -1532,7 +1549,7 @@ PyObject *DBRow::Get___data__()
 	PyObject *r = PyTuple_New(mRD->mNObjects+offset);
 	if (!r) return 0;
 	if (offset)
-		PyTuple_SET_ITEM(r, 0, PyString_FromStringAndSize((char*)Data(0), mRD->mDataLen));
+		PyTuple_SET_ITEM(r, 0, PyBytes_FromStringAndSize((char*)Data(0), mRD->mDataLen));
 	for (int i = 0; i<mRD->mNObjects; i++) {
 		PyObject *o = Object(i);
 		Py_XINCREF(o);
@@ -1549,9 +1566,9 @@ bool DBRow::Set___data__(PyObject *v)
 		return PyErr_Format(PyExc_ValueError, "argument must be tuple of %d elements", mRD->mNObjects+offset), false;
 	if (offset) {
 		PyObject *s = PyTuple_GET_ITEM(v, 0);
-		if (!PyString_Check(s) || PyString_GET_SIZE(s) != mRD->mDataLen)
+		if (!PyBytes_Check(s) || PyBytes_GET_SIZE(s) != mRD->mDataLen)
 			return PyErr_Format(PyExc_ValueError, "incorrect blob size, must be %d bytes", mRD->mDataLen), false;
-		memcpy(Data(0), PyString_AS_STRING(s), mRD->mDataLen);
+		memcpy(Data(0), PyBytes_AS_STRING(s), mRD->mDataLen);
 	}
 	for (int i = 0; i<mRD->mNObjects; i++) {
 		PyObject *o PyTuple_GET_ITEM(v, i+offset);
@@ -1571,7 +1588,7 @@ PyObject *DBRow::Get___cdata__()
 	if (offset) {
 		std::vector<char> data;
 		PackData(data);
-		PyTuple_SET_ITEM(r, 0, PyString_FromStringAndSize(data.size()?&data[0]:0, data.size()));
+		PyTuple_SET_ITEM(r, 0, PyBytes_FromStringAndSize(data.size()?&data[0]:0, data.size()));
 	}
 	for (int i = 0; i<mRD->mNObjects; i++) {
 		PyObject *o = Object(i);
@@ -1590,9 +1607,9 @@ bool DBRow::Set___cdata__(PyObject *v)
 		return PyErr_Format(PyExc_ValueError, "argument must be tuple of %d elements", mRD->mNObjects+offset), false;
 	if (offset) {
 		PyObject *s = PyTuple_GET_ITEM(v, 0);
-		if (!PyString_Check(s))
+		if (!PyBytes_Check(s))
 			return PyErr_SetString(PyExc_TypeError, "blob must be string"), false;
-		if (!UnpackData(PyString_AS_STRING(s), PyString_GET_SIZE(s)))
+		if (!UnpackData(PyBytes_AS_STRING(s), PyBytes_GET_SIZE(s)))
 			return false;
 	}
 	for (int i = 0; i<mRD->mNObjects; i++) {
@@ -1802,7 +1819,7 @@ bool DBRowsetInit(PyObject *module)
 		return false;
 
 	//create a blue.db module, load it with classes and constants.  Way to go.
-	PyObject *db = Py_InitModule("blue.db", 0);
+	PyObject *db = PyModule_New("blue.db");
 	if (PyModule_AddObject(db, "RowDescriptor", (PyObject*)DBRowDescriptor::GetType()))
 		return false;
 	if (PyModule_AddObject(db, "Row", (PyObject*)DBRow::GetType()))

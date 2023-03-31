@@ -308,8 +308,18 @@ void BlueNet::Init()
 	s_log.init( buf );
 	printf("BlueNet logging as [%s]\n", buf );
 #endif
-
-	Py_InitModule( "blue.net", m_methods );
+	static struct PyModuleDef moduleDef = {
+		PyModuleDef_HEAD_INIT,
+		"blue.net",
+		"",
+		-1,
+		m_methods,
+	};
+	auto module = PyModule_Create(&moduleDef);
+	if ( ! module ) {
+		CCP_LOGERR("Failed to create blue.net module");
+		return;
+	}
 
 	srand( (unsigned int)time(0) );
 
@@ -330,7 +340,7 @@ void BlueNet::Init()
 		PyObject *C;
 		if ( (C = PyObject_GetAttrString(constModule, "ADDRESS_TYPE_NODE")) )
 		{
-			m_constAddressTypeNode = PyInt_AS_LONG( C );
+			m_constAddressTypeNode = PyLong_AS_LONG( C );
 			BN_CONST_IMPORT(bnlog("imported m_constAddressTypeNode[%d]", m_constAddressTypeNode));
 			Py_XDECREF( C );
 		} else {
@@ -340,7 +350,7 @@ void BlueNet::Init()
 
 		if ( (C = PyObject_GetAttrString(constModule, "ADDRESS_TYPE_CLIENT")) )
 		{
-			m_constAddressTypeClient = PyInt_AS_LONG( C );
+			m_constAddressTypeClient = PyLong_AS_LONG( C );
 			BN_CONST_IMPORT(bnlog("imported m_constAddressTypeClient[%d]", m_constAddressTypeClient));
 			Py_XDECREF( C );
 		} else {
@@ -355,6 +365,7 @@ void BlueNet::Init()
 		BN_CONST_IMPORT(bnlog("const imported failed"));
         // Also unconditionally log an error because BlueNet is inoperable without these values.
         CCP_LOGERR_CH( s_blueNetChannel, "BlueNet Init failed to import address types from const, BlueNet will fail to route in this state" );
+		PyErr_Clear(); // some attribute may not have existed, clear the error that was raised when we asked for them
 	}
 
 	CioSetErrorLogCallback( LogError ); // always allow errors
@@ -1391,7 +1402,7 @@ PyObject* BlueNet::PySetNewStringMaxLen( PyObject* module, PyObject* args )
 //------------------------------------------------------------------------------
 PyObject* BlueNet::PyGetNewStringMaxLen( PyObject* module, PyObject* args )
 {
-	return PyInt_FromLong( m_singleton.m_NewStringMaxLen );
+	return PyLong_FromLong( m_singleton.m_NewStringMaxLen );
 }
 
 //------------------------------------------------------------------------------
@@ -1621,8 +1632,8 @@ PyObject* BlueNet::PySendBlueNetPacket( PyObject *self, PyObject *args )
 		return NULL;
 	}
 
-	char *data = PyString_AsString( pickle );
-	int size = (int)PyString_GET_SIZE( pickle );
+	char *data = PyBytes_AsString( pickle );
+	int size = (int)PyBytes_GET_SIZE( pickle );
 	if ( !data || !size )
 	{
 		return NULL; // pyerror will already be set
@@ -1844,7 +1855,7 @@ PyObject* BlueNet::PyGetLatencyToFirstHop( PyObject *self, PyObject *unused )
 		Py_RETURN_NONE; // chew static
 	}
 
-	return PyInt_FromLong( m_singleton.GetLatencyToFirstHop() );
+	return PyLong_FromLong( m_singleton.GetLatencyToFirstHop() );
 }
 
 //------------------------------------------------------------------------------
@@ -1854,22 +1865,22 @@ PyObject* BlueNet::PyGetRoutingMode( PyObject *self, PyObject *unused )
 	{
 		case MODE_CLIENT:
 		{
-			return PyString_FromString( "client" );
+			return PyUnicode_FromString( "client" );
 		}
 
 		case MODE_PROXY:
 		{
-			return PyString_FromString( "proxy" );
+			return PyUnicode_FromString( "proxy" );
 		}
 
 		case MODE_SERVER:
 		{
-			return PyString_FromString( "server" );
+			return PyUnicode_FromString( "server" );
 		}
 
 		default:
 		{
-			return PyString_FromString( "none" );
+			return PyUnicode_FromString( "none" );
 		}
 	}
 }
@@ -2701,13 +2712,6 @@ bool BlueNet::SerializeObject( PyObject* object, BitPackerManaged& packer )
 			BN_SERIALIZE_DICT(bnlog("packing dict succeeded"));
 		}
 	}
-	else if ( PyInt_CheckExact(object) )
-	{
-		packer.Pack( (uint32_t)PYOBJECT_INT );
-		static_assert( sizeof(int64_t) >= sizeof(long) );
-		packer.Pack( (int64_t)PyInt_AS_LONG(object) );
-		BN_SERIALIZE(bnlog("packing Int[%d:0x%08X]", PyInt_AS_LONG(object), (unsigned long)PyInt_AS_LONG(object) ));
-	}
 	else if ( PyLong_CheckExact(object) )
 	{
 		packer.Pack( (uint32_t)PYOBJECT_LONG );
@@ -2720,12 +2724,11 @@ bool BlueNet::SerializeObject( PyObject* object, BitPackerManaged& packer )
 		packer.Pack( (double)PyFloat_AS_DOUBLE(object) );
 		BN_SERIALIZE(bnlog("packing Float[%f]", PyFloat_AS_DOUBLE(object)));
 	}
-	else if ( PyString_CheckExact(object) )
+	else if ( PyUnicode_CheckExact(object) )
 	{
 		packer.Pack( (unsigned int)PYOBJECT_STRING );
-		char* string;
 		Py_ssize_t len;
-		PyString_AsStringAndSize( object, &string, &len );
+		const char* string = PyUnicode_AsUTF8AndSize( object, &len );
 		BN_SERIALIZE(bnlog("packing a String[%s]", string)); // warning- the above code does NOT assume zero termination but this log does
 		m_singleton.PackString( string, (unsigned int)len, packer );
 	}
@@ -2844,7 +2847,7 @@ PyObject* BlueNet::UnserializeObject( BitPacker& packer )
 			{
 				break;
 			}
-			ret = PyString_FromStringAndSize( buf, len );
+			ret = PyUnicode_FromStringAndSize( buf, len );
 			break;
 		}
 
@@ -2854,7 +2857,7 @@ PyObject* BlueNet::UnserializeObject( BitPacker& packer )
 
 			int32_t val;
 			packer.Unpack( val );
-			return PyInt_FromLong( val );
+			return PyLong_FromLong( val );
 		}
 
 		case PYOBJECT_LONG:
@@ -2987,7 +2990,7 @@ PyObject* BlueNet::UnserializeObject( BitPacker& packer )
 			char* buf;
 			packer.Unpack( len );
 			packer.DeQueueAlignedBlock( &buf, len );
-			ret = PyString_FromStringAndSize( buf, len );
+			ret = PyBytes_FromStringAndSize( buf, len );
 
 			break;
 		}
@@ -3090,7 +3093,7 @@ void BlueNet::PackMarshalStream( PyObject* object, BitPackerManaged& packer )
 	{
 		Py_ssize_t len;
 		char* buffer;
-		PyString_AsStringAndSize( stream, &buffer, &len );
+		PyBytes_AsStringAndSize( stream, &buffer, &len );
 
 		packer.Pack( (unsigned int)len );
 		packer.QueueAlignedBlock( buffer, (int)len );

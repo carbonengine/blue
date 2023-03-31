@@ -217,7 +217,6 @@ public:
 
 	PyObject* PyAddExitProc( PyObject* args );
 	PyObject* PyGetArg( PyObject* args );
-	PyObject* PyGetEnv( PyObject* args );
 	PyObject* PyDumpState( PyObject* args );
 	PyObject* Py_EnableTrace( PyObject* args );
 	PyObject* Py_GetWrapperList( PyObject* args );
@@ -270,6 +269,8 @@ public:
 	void SetEventHandler(
 		IPythonEvents * handler ) override;
 
+	PyObject* BlueModule() override { return mBlueModule; }
+
 
 	//--------------------------------------------------------------------
 	// Convenience functions
@@ -306,11 +307,11 @@ public:
 		float& lastTime,
 		float& maxTime ) override;
 
-	void DoStackTrace(
-		PyObject* frame = 0 ) override;
-
-	PyObject* GetStackTrace(
-		PyObject* frame = 0 ) override;
+//	void DoStackTrace(
+//		PyObject* frame = 0 ) override;
+//
+//	PyObject* GetStackTrace(
+//		PyObject* frame = 0 ) override;
 
 	ITaskletTimer* GetTaskletTimer() override; //Get the tasklet timer object
 

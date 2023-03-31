@@ -321,7 +321,7 @@ int runPyMain( std::vector<std::wstring> &argv )
 	}
 
 	// Success,... now lets hope the arguments make sense
-	int result = Py_Main( nPythonArgs, pythonArguments );
+	int result = Py_BytesMain( nPythonArgs, pythonArguments );
 
 	// Cleanup
 	for( unsigned int i = 0; i < nPythonArgs; i++ )
@@ -1042,6 +1042,7 @@ bool BlueOS::Startup( int pyOptimizeFlag, ManifestVerification manifestVerificat
 	mLockFramerate = 0.0;  //TODO: not used, but would be
 
 #if BLUE_WITH_PYTHON
+	CCP_LOG( "Creating PyOS" );
 	BeClasses->CreateInstance(GetBluePyOSClsid(), GetIBluePyOSIID(), (void**)&PyOS);
 	if( !PyOS )
 	{
@@ -1056,7 +1057,7 @@ bool BlueOS::Startup( int pyOptimizeFlag, ManifestVerification manifestVerificat
 
 	for (int i = 0; i < sizeof TASKLETS / sizeof TASKLETS[0]; i++)
 	{
-		TASKLETS[i].mContext = PyString_InternFromString(TASKLETS[i].mName);
+		TASKLETS[i].mContext = PyUnicode_InternFromString(TASKLETS[i].mName);
 	}
 #endif
 
@@ -1710,7 +1711,7 @@ PyObject* BlueOS::PyTimeDiffInMs(PyObject* args)
 		return PyLong_FromLongLong( diff );
 	}
 
-	return PyInt_FromLong((long)diff);
+	return PyLong_FromLong((long)diff);
 }
 
 
@@ -1746,7 +1747,7 @@ PyObject* BlueOS::PyTimeDiffInUs(PyObject* args)
 		return PyLong_FromLongLong( diff );
 	}
 
-	return PyInt_FromLong((long)diff);
+	return PyLong_FromLong((long)diff);
 }
 
 
@@ -1826,14 +1827,14 @@ PyObject* BlueOS::PyGetTimeParts(PyObject* args)
 		return nullptr;
 	}
 
-	PyList_SET_ITEM(list, 0, PyInt_FromLong(st.year));
-	PyList_SET_ITEM(list, 1, PyInt_FromLong(st.month));
-	PyList_SET_ITEM(list, 2, PyInt_FromLong(st.dayOfWeek));
-	PyList_SET_ITEM(list, 3, PyInt_FromLong(st.day));
-	PyList_SET_ITEM(list, 4, PyInt_FromLong(st.hour));
-	PyList_SET_ITEM(list, 5, PyInt_FromLong(st.minute));
-	PyList_SET_ITEM(list, 6, PyInt_FromLong(st.second));
-	PyList_SET_ITEM(list, 7, PyInt_FromLong(st.milliseconds));
+	PyList_SET_ITEM(list, 0, PyLong_FromLong(st.year));
+	PyList_SET_ITEM(list, 1, PyLong_FromLong(st.month));
+	PyList_SET_ITEM(list, 2, PyLong_FromLong(st.dayOfWeek));
+	PyList_SET_ITEM(list, 3, PyLong_FromLong(st.day));
+	PyList_SET_ITEM(list, 4, PyLong_FromLong(st.hour));
+	PyList_SET_ITEM(list, 5, PyLong_FromLong(st.minute));
+	PyList_SET_ITEM(list, 6, PyLong_FromLong(st.second));
+	PyList_SET_ITEM(list, 7, PyLong_FromLong(st.milliseconds));
 
 	return list;
 }
@@ -2253,7 +2254,7 @@ PyObject* BlueOS::PySetAppTitle(PyObject* args)
 PyObject* BlueOS::PyShellExecute(PyObject* args)
 {
 	PyObject *fn, *params=0;
-	if( !PyArg_ParseTuple(args, "O!|O!", &PyBaseString_Type, &fn, &PyBaseString_Type, &params) )
+	if( !PyArg_ParseTuple(args, "O!|O!", &PyUnicode_Type, &fn, &PyUnicode_Type, &params) )
 	{
 		return NULL;
 	}

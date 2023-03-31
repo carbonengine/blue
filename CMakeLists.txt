@@ -324,6 +324,7 @@ target_link_libraries(Blue
 )
 
 if(WIN32)
+    set_target_properties(Blue PROPERTIES SUFFIX ".pyd")
     target_link_libraries(Blue
         PRIVATE
             crypt32
@@ -344,7 +345,7 @@ target_include_directories(Blue
 set_target_properties(Blue PROPERTIES CXX_VISIBILITY_PRESET hidden)
 set_target_properties(Blue PROPERTIES OUTPUT_NAME "blue")
 
-# Provide an install target iff this is the top level project only
+# Provide tests and an install target iff this is the top level project only
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     # Install rule to ensure that our runtime and linker files are in the expected, platform-specific folders
     install(

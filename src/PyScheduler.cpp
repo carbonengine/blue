@@ -26,6 +26,12 @@
 
 #if CCP_STACKLESS
 
+// DANGER WILL ROBINSON!
+// This is required for GetPythonTickCount - there may be better options available now than to rely on the internal API
+#define Py_BUILD_CORE
+#include <internal/pycore_pystate.h>
+#undef Py_BUILD_CORE
+
 #include "PyScheduler.h"
 
 #ifdef _WIN32
@@ -60,6 +66,12 @@ PyScheduler::PyScheduler(double maxTime)
 	}
 }
 
+// There's probably a smarter way to measure elapsed Python ticks than relying on an internal API include
+int GetPythonTickCount() {
+	PyThreadState *tstate = PyThreadState_Get();
+	return tstate->st.tick_counter * tstate->interp->check_interval;
+}
+
 bool PyScheduler::RunTicks(long ticks)
 {
 	LOGIT("Running %d ticks", ticks);
@@ -67,13 +79,13 @@ bool PyScheduler::RunTicks(long ticks)
 	uint64_t time1, time2;
 	long tick1, tick2;
 
-	tick1 = PySys_GetTickCount();
+	tick1 = GetPythonTickCount();
 	mInQueue1 = PyStackless_GetRunCount()-1;
     time1 = CcpGetTimestamp();
 	PyObject *r = PyStackless_RunWatchdogEx( ticks,
 		PY_WATCHDOG_SOFT | PY_WATCHDOG_IGNORE_NESTING | PY_WATCHDOG_TOTALTIMEOUT );
     time2 = CcpGetTimestamp();
-	tick2 = PySys_GetTickCount();
+	tick2 = GetPythonTickCount();
 	mInQueue2 = PyStackless_GetRunCount()-1;
 	
 	if(!r)

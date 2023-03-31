@@ -17,7 +17,8 @@ CCP_STATS_DECLARE( trackedAllocationsCount,		"Blue/Memory/trackedAllocationsCoun
 CCP_STATS_DECLARE( trackedAllocationsSize,		"Blue/Memory/trackedAllocationsSize", false, CST_MEMORY, "Combined size of tracked allocations live in the system" );
 
 #if CCP_STACKLESS
-CCP_STATS_DECLARE( pyMemory,					"Blue/Memory/Python", false, CST_MEMORY, "The amount of memory allocated for Python" );
+//CCP_STATS_DECLARE( pyMemory,					"Blue/Memory/Python", false, CST_MEMORY, "The amount of memory allocated for Python" );
+CCP_STATS_DECLARED_ELSEWHERE( pyMemory );
 #endif
 
 CCP_STATS_DECLARE( workingSetSize,				"Blue/Memory/WorkingSet", false, CST_MEMORY, "The working set size as reported by the OS" );
@@ -70,8 +71,7 @@ void MemoryTracker::Update()
 	CCP_STATS_SET( pageFileUsage, info.pageFileUsage );
 
 #if CCP_STACKLESS
-	auto pythonMemory = PySys_GetPyMalloced();
-	CCP_STATS_SET( pyMemory, pythonMemory );
+	auto pythonMemory = static_cast<int64_t>( CCP_STATS_GET( pyMemory ) );
 
 	bool logMemory = false;
 
@@ -129,7 +129,7 @@ void MemoryTracker::SummaryReport( const char* filename )
 	fprintf( file, "Memory statistics\n" );
 	fprintf( file, "-----------------------------------------------------------------------------\n" );
 #if CCP_STACKLESS
-	PrintFieldToFile( file, "Python reported memory", PySys_GetPyMalloced() );
+	PrintFieldToFile( file, "Python reported memory", static_cast<int64_t>( CCP_STATS_GET( pyMemory ) ) );
 #endif
 	PrintFieldToFile( file, "CCP Malloc usage", CCPMallocUsage() );
 

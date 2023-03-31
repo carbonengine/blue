@@ -2,7 +2,7 @@
 #ifndef _WIN32_H_
 #define _WIN32_H_
 
-void initwin32(void);
+void initwin32(PyObject* blueModule);
 #if BLUE_WITH_PYTHON
 PyObject *PyWin32Error(const char *msg = 0, DWORD code = 0);
 #endif

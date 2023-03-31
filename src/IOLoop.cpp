@@ -61,8 +61,8 @@ SleepWithIo::SleepWithIo() :
 {
 	if ( !m_ctxtSleep )
 	{
-		m_ctxtSleep = PyString_FromString("SleepWithIo::Wait");
-		m_ctxtRun = PyString_FromString("SleepWithIo::Run");
+		m_ctxtSleep = PyUnicode_FromString("SleepWithIo::Wait");
+		m_ctxtRun = PyUnicode_FromString("SleepWithIo::Run");
 	}
 }
 

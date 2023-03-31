@@ -795,8 +795,7 @@ static PyMethodDef iocpfile_methods[] =
 //------------------------------------------------------------------------------
 PyTypeObject PyAsyncFile_Type =
 {
-	PyObject_HEAD_INIT(NULL)
-	0,
+	PyVarObject_HEAD_INIT(NULL, 0)
 	"asyncfile",
 	sizeof(PyAsyncFileObject),
 	0,
@@ -859,4 +858,3 @@ extern "C" void init_asyncfileiocp( PyObject *module )
 
 	s_unInitedString = PyString_FromString( "<uninitialized asyncfile>" );
 }
-

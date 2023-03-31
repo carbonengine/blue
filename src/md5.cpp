@@ -512,18 +512,25 @@ inline void MD5::II(uint4& a, uint4 b, uint4 c, uint4 d, uint4 x,
 }
 
 
-std::string md5_checksum( std::string input )
+PyObject* md5_checksum( PyObject*, PyObject* args )
 {
+	unsigned char* data;
+	Py_ssize_t size;
+	if ( !PyArg_ParseTuple( args, "y#", &data, &size ) )
+	{
+		return nullptr;
+	}
+
 	MD5 checkSum;
-	checkSum.update( (unsigned char*)input.c_str(), (unsigned int)input.size() );
+	checkSum.update( data, size );
 	checkSum.finalize();
 
-	char buffer[33];
-	return checkSum.hex_digest( buffer );
+	char buffer[33] = {0};
+	return PyUnicode_FromString( checkSum.hex_digest( buffer ) );
 }
 
-MAP_FUNCTION_AND_WRAP( 
+MAP_FUNCTION(
 	"md5_checksum", 
 	md5_checksum, 
 	"Returns MD5 checksum for the given data\n"
-	":param data: any data as a string" );
+	":param data: any data as a bytes-like object" );

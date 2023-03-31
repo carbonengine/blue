@@ -57,7 +57,7 @@ IRoot* DictReader::CreateObjectInternal()
 		ThrowError( "Dictionary must have a 'type' item" );
 	}
 
-	const char* type = PyString_AsString( typeO );
+	const char* type = PyUnicode_AsUTF8( typeO );
 	if( !type )
 	{
 		ThrowError( "'type' must be a string" );
@@ -111,7 +111,7 @@ void DictReader::ReadIRoot( IRoot& instance )
 		ThrowError( "Dictionary must have a 'type' item" );
 	}
 
-	const char* type = PyString_AsString( typeO );
+	const char* type = PyUnicode_AsUTF8( typeO );
 	if( !type )
 	{
 		ThrowError( "'type' must be a string" );
@@ -173,7 +173,7 @@ void DictReader::ReadMembers( IRoot* instance )
 	PyObject* sourceDict = m_currentSource;
 	while( PyDict_Next( sourceDict, &pos, &key, &value ) )
 	{
-		const char* name = PyString_AsString( key );
+		const char* name = PyUnicode_AsUTF8( key );
 		if( !name )
 		{
 			ThrowError( "Keys in member dict must be strings" );
@@ -219,11 +219,11 @@ void DictReader::ReadMetadata( IRoot* owner, PyObject* metadata )
 
 	while( PyDict_Next( metadata, &pos, &key, &value ) )
 	{
-		if( !PyString_Check( key ) || !PyString_Check( value ) )
+		if( !PyUnicode_Check( key ) || !PyUnicode_Check( value ) )
 		{
 			ThrowError( "Expected strings in metadata" );
 		}
-		BeObjectMetadata->Set( weak, PyString_AsString( key ), PyString_AsString( value ) );
+		BeObjectMetadata->Set( weak, PyUnicode_AsUTF8( key ), PyUnicode_AsUTF8( value ) );
 	}
 }
 
@@ -340,21 +340,12 @@ void DictReader::ReadFloat16( uint16_t& dst )
 const char* DictReader::ReadString()
 {
 	PyErr_Clear();
-	char* val = PyString_AsString( m_currentSource );
+	const char* val = PyUnicode_AsUTF8( m_currentSource );
 	if( val )
 	{
 		return CCP_STRDUP( "DictReader/ReadChar", val );
 	}
-
-	PyErr_Clear();
-
-	const wchar_t* val2 = (const wchar_t*)PyUnicode_AsUnicode( m_currentSource );
-	if( !val )
-	{
-		ThrowError( "Expected a string" );
-	}
-
-	return CCP_STRDUP( "DictReader/ReadChar", CW2A( val2 ) );
+        return nullptr;
 }
 
 const wchar_t* DictReader::ReadWString()
@@ -365,16 +356,7 @@ const wchar_t* DictReader::ReadWString()
 	{
 		return CCP_WSTRDUP( "DictReader/ReadWChar", val );
 	}
-
-	PyErr_Clear();
-
-	char* val2 = PyString_AsString( m_currentSource );
-	if( !val2 )
-	{
-		ThrowError( "Expected a string" );
-	}
-
-	return CCP_WSTRDUP( "DictReader/ReadWChar", CA2W( val2 ) );
+        return nullptr;
 }
 
 void DictReader::ReadFloatArray( float* values, size_t numValues )
@@ -512,7 +494,7 @@ void DictReader::ReadDict( IBlueDict* dict )
 	for( auto i = 0; i < numEntries; i += 2 )
 	{
 		PyObject* keyObj = PyList_GetItem( sourceList, i );
-		char* key = PyString_AsString( keyObj );
+		const char* key = PyUnicode_AsUTF8( keyObj );
 		if( !key )
 		{
 			ThrowError( "Key must be a string" );

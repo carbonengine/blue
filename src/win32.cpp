@@ -465,7 +465,7 @@ PyObject *PyGetFileVersionInfo(PyObject *self, PyObject *args)
 
 				char *result = 0;
 				if (VerQueryValue(buffer, key, (void**)&result, &len) && result && len) 
-					d.Set(key, BluePy(PyString_FromString((char*)result)));
+					d.Set(key, BluePy(PyUnicode_FromString((char*)result)));
 			}
 		}
 	}
@@ -523,11 +523,11 @@ static PyObject *ValueToPython(const char *buffer, int valueLen, DWORD valueType
 	PyObject *resultO = 0;
 	switch(valueType) {
 	case REG_BINARY:
-		resultO = PyString_FromStringAndSize(buffer, valueLen);
+		resultO = PyBytes_FromStringAndSize(buffer, valueLen);
 		break;
 	case REG_DWORD:
 //	case REG_DWORD_LITTLE_ENDIAN:
-		resultO = PyInt_FromLong(*(DWORD*)buffer);
+		resultO = PyLong_FromLong(*(DWORD*)buffer);
 		break;
 	case REG_DWORD_BIG_ENDIAN: {
 		union {
@@ -538,7 +538,7 @@ static PyObject *ValueToPython(const char *buffer, int valueLen, DWORD valueType
 		p[1] = buffer[2];
 		p[2] = buffer[1];
 		p[3] = buffer[0];
-		resultO = PyInt_FromLong(r);
+		resultO = PyLong_FromLong(r);
 		break; }
 	case REG_SZ:
 	case REG_EXPAND_SZ:
@@ -584,7 +584,7 @@ static PyObject *ValueToPython(const char *buffer, int valueLen, DWORD valueType
 		}
 		break;}
 	default:
-		resultO = PyString_FromStringAndSize(buffer, valueLen);
+		resultO = PyUnicode_FromStringAndSize(buffer, valueLen);
 	}
 	return resultO;
 }
@@ -711,14 +711,17 @@ PyObject *PyGetProcessWorkingSetSize(PyObject *self, PyObject *args)
 		return 0;
 
 	if (!loader->GetProcessWorkingSetSize())
-		return PyErr_SetString(PyExc_NotImplementedError, "not availible on this platform"), 0;
-	
+	{
+		PyErr_SetString(PyExc_NotImplementedError, "not availible on this platform");
+		return nullptr;
+	}
+
 	SIZE_T min = 0, max = 0;
 	BOOL ok = loader->GetProcessWorkingSetSize()(GetCurrentProcess(), &min, &max);
 	if (!ok)
-		return PyWin32Error(), 0;
+		return PyWin32Error();
 
-	return Py_BuildValue("NN", PyInt_FromSize_t(min), PyInt_FromSize_t(max));
+	return Py_BuildValue("NN", PyLong_FromSize_t(min), PyLong_FromSize_t(max));
 }
 
 
@@ -731,7 +734,10 @@ PyObject *PySetProcessWorkingSetSize(PyObject *self, PyObject *args)
 		return 0;
 
 	if (!loader->SetProcessWorkingSetSize())
-		return PyErr_SetString(PyExc_NotImplementedError, "not availible on this platform"), 0;
+	{
+		PyErr_SetString( PyExc_NotImplementedError, "not availible on this platform" );
+		return nullptr;
+	}
 	
 	if (!loader->SetProcessWorkingSetSize()(GetCurrentProcess(), wMin, wMax))
 		return PyWin32Error();
@@ -747,12 +753,15 @@ PyObject *PyGetProcessIoCounters(PyObject *self, PyObject *args)
 		return 0;
 
 	if (!loader->GetProcessIoCounters())
-		return PyErr_SetString(PyExc_NotImplementedError, "not availible on this platform"), 0;
+	{
+		PyErr_SetString( PyExc_NotImplementedError, "not availible on this platform" );
+		return nullptr;
+	}
 
 	IO_COUNTERS counters;
 	BOOL ok = loader->GetProcessIoCounters()(GetCurrentProcess(), &counters);
 	if (!ok)
-		return PyWin32Error(), 0;
+		return PyWin32Error();
 
 	return Py_BuildValue("{sN sN sN sN sN sN}",
 		"ReadOperationCount", PyLong_FromUnsignedLongLong(counters.ReadOperationCount),
@@ -965,11 +974,11 @@ PyObject* PyGetProcessTcpEStats(PyObject* self, PyObject* args)
 #pragma warning( disable : 4996 )
 		struct in_addr ipAddr;
 		ipAddr.S_un.S_addr = ( u_long ) tcpTable->table[i].dwLocalAddr;
-		PyDict_SetItemString( valueDictionary, "localAddr", tmp = PyString_FromString( inet_ntoa( ipAddr ) ) );  Py_DECREF( tmp );
+		PyDict_SetItemString( valueDictionary, "localAddr", tmp = PyUnicode_FromString( inet_ntoa( ipAddr ) ) );  Py_DECREF( tmp );
 		PyDict_SetItemString( valueDictionary, "localPort", tmp = PyLong_FromLong( ntohs( ( u_short ) tcpTable->table[i].dwLocalPort ) ) );  Py_DECREF( tmp );
 
 		ipAddr.S_un.S_addr = ( u_long ) tcpTable->table[i].dwRemoteAddr;
-		PyDict_SetItemString( valueDictionary, "remoteAddr", tmp = PyString_FromString( inet_ntoa( ipAddr ) ) );  Py_DECREF( tmp );
+		PyDict_SetItemString( valueDictionary, "remoteAddr", tmp = PyUnicode_FromString( inet_ntoa( ipAddr ) ) );  Py_DECREF( tmp );
 		PyDict_SetItemString( valueDictionary, "remotePort", tmp = PyLong_FromLong( ntohs( ( u_short ) tcpTable->table[i].dwRemotePort ) ) );  Py_DECREF( tmp );
 #pragma warning( pop )
 
@@ -1009,13 +1018,13 @@ PyObject* PyGetProcessTcpEStats(PyObject* self, PyObject* args)
 
 			PyDict_SetItemString( congDataDict, "SndLimTransRwin", tmp = PyLong_FromUnsignedLong( congData.SndLimTransRwin ) );  Py_DECREF( tmp );
 			PyDict_SetItemString( congDataDict, "SndLimTimeRwin",  tmp = PyLong_FromUnsignedLong( congData.SndLimTimeRwin ) );   Py_DECREF( tmp );
-			PyDict_SetItemString( congDataDict, "SndLimBytesRwin", tmp = _PyLong_FromSize_t( congData.SndLimBytesRwin ) );       Py_DECREF( tmp );
+			PyDict_SetItemString( congDataDict, "SndLimBytesRwin", tmp = PyLong_FromSize_t( congData.SndLimBytesRwin ) );       Py_DECREF( tmp );
 			PyDict_SetItemString( congDataDict, "SndLimTransCwnd", tmp = PyLong_FromUnsignedLong( congData.SndLimTransCwnd ) );  Py_DECREF( tmp );
 			PyDict_SetItemString( congDataDict, "SndLimTimeCwnd",  tmp = PyLong_FromUnsignedLong( congData.SndLimTimeCwnd ) );   Py_DECREF( tmp );
-			PyDict_SetItemString( congDataDict, "SndLimBytesCwnd", tmp = _PyLong_FromSize_t( congData.SndLimBytesCwnd ) );       Py_DECREF( tmp );
+			PyDict_SetItemString( congDataDict, "SndLimBytesCwnd", tmp = PyLong_FromSize_t( congData.SndLimBytesCwnd ) );       Py_DECREF( tmp );
 			PyDict_SetItemString( congDataDict, "SndLimTransSnd",  tmp = PyLong_FromUnsignedLong( congData.SndLimTransSnd ) );   Py_DECREF( tmp );
 			PyDict_SetItemString( congDataDict, "SndLimTimeSnd",   tmp = PyLong_FromUnsignedLong( congData.SndLimTimeSnd ) );    Py_DECREF( tmp );
-			PyDict_SetItemString( congDataDict, "SndLimBytesSnd",  tmp = _PyLong_FromSize_t( congData.SndLimBytesSnd ) );        Py_DECREF( tmp );
+			PyDict_SetItemString( congDataDict, "SndLimBytesSnd",  tmp = PyLong_FromSize_t( congData.SndLimBytesSnd ) );        Py_DECREF( tmp );
 			PyDict_SetItemString( congDataDict, "SlowStart",       tmp = PyLong_FromUnsignedLong( congData.SlowStart ) );        Py_DECREF( tmp );
 			PyDict_SetItemString( congDataDict, "CongAvoid",       tmp = PyLong_FromUnsignedLong( congData.CongAvoid ) );        Py_DECREF( tmp );
 			PyDict_SetItemString( congDataDict, "OtherReductions", tmp = PyLong_FromUnsignedLong( congData.OtherReductions ) );  Py_DECREF( tmp );
@@ -1098,8 +1107,8 @@ PyObject* PyGetProcessTcpEStats(PyObject* self, PyObject* args)
 			PyDict_SetItemString( recDataDict, "EcnNoncesRcvd",  tmp = PyLong_FromUnsignedLong( recStats.EcnNoncesRcvd ) );  Py_DECREF( tmp );
 			PyDict_SetItemString( recDataDict, "CurReasmQueue",  tmp = PyLong_FromUnsignedLong( recStats.CurReasmQueue ) );  Py_DECREF( tmp );
 			PyDict_SetItemString( recDataDict, "MaxReasmQueue",  tmp = PyLong_FromUnsignedLong( recStats.MaxReasmQueue ) );  Py_DECREF( tmp );
-			PyDict_SetItemString( recDataDict, "CurAppRQueue",   tmp = _PyLong_FromSize_t( recStats.CurAppRQueue ) );        Py_DECREF( tmp );
-			PyDict_SetItemString( recDataDict, "MaxAppRQueue",   tmp = _PyLong_FromSize_t( recStats.MaxAppRQueue ) );        Py_DECREF( tmp );
+			PyDict_SetItemString( recDataDict, "CurAppRQueue",   tmp = PyLong_FromSize_t( recStats.CurAppRQueue ) );        Py_DECREF( tmp );
+			PyDict_SetItemString( recDataDict, "MaxAppRQueue",   tmp = PyLong_FromSize_t( recStats.MaxAppRQueue ) );        Py_DECREF( tmp );
 			PyDict_SetItemString( recDataDict, "WinScaleSent",   tmp = PyLong_FromUnsignedLong( recStats.WinScaleSent ) );   Py_DECREF( tmp );
 			
 			Py_DECREF( recDataDict );
@@ -1197,7 +1206,7 @@ PyObject *PyGetAdaptersInfo(PyObject *self, PyObject *args)
 		obtained = pi->LeaseObtained;
 		expires = pi->LeaseExpires;
 #endif
-		BluePy Address(PyString_FromStringAndSize((char*)pi->Address, pi->AddressLength)); if (!Address) return 0;
+		BluePy Address(PyUnicode_FromStringAndSize((char*)pi->Address, pi->AddressLength)); if (!Address) return 0;
 		BluePy IpAddressList(ParseIP_ADDR_STRING(&pi->IpAddressList)); if (!IpAddressList) return 0;
 		BluePy GatewayList(ParseIP_ADDR_STRING(&pi->GatewayList)); if (!GatewayList) return 0;
 		BluePy DhcpServer(ParseIP_ADDR_STRING(pi->DhcpEnabled ? &pi->DhcpServer : 0)); if (!DhcpServer) return 0;
@@ -1441,10 +1450,21 @@ PyObject *PyWin32Error(const char *msg, DWORD ierror)
 
 //initialize the module, man
 void
-::initwin32(void)
+::initwin32(PyObject* blueModule)
 {
 	loader = CCP_NEW("initwin32/loader") SoftLoader;
-	PyObject *win32 = Py_InitModule("blue.win32", methods);
+	static struct PyModuleDef moduleDef {
+		PyModuleDef_HEAD_INIT,
+		"blue.win32",
+		"",
+		-1,
+		methods
+	};
+	PyObject *win32 = PyModule_Create( &moduleDef );
+	if ( !win32 ) {
+		CCP_LOGERR( "Failed creation blue.win32 module" );
+		return;
+	}
 	DefineErrors(win32);
 	DefineConsts(win32);
 }

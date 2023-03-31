@@ -1780,13 +1780,20 @@ PyDoc_STRVAR(module_doc,
 *** IMPORTANT NOTICE ***\n\
 On Windows and OpenVMS, only sockets are supported; on Unix, all file descriptors.");
 
-void
-initslselect(void)
+PyMODINIT_FUNC
+PyInit_slselect(void)
 {
-    PyObject *m;
-    m = Py_InitModule3("slselect", select_methods, module_doc);
-    if (m == NULL)
-        return;
+	static struct PyModuleDef moduleDef = {
+		PyModuleDef_HEAD_INIT,
+		"slselect",
+		module_doc,
+		-1,
+		select_methods
+	};
+    PyObject *m = PyModule_Create(&moduleDef);
+    if ( !m ) {
+		return NULL;
+	}
 
     SelectError = PyErr_NewException("select.error", NULL, NULL);
     Py_INCREF(SelectError);
@@ -1934,4 +1941,6 @@ initslselect(void)
 #endif
 
 #endif /* HAVE_KQUEUE */
+
+	return m;
 }

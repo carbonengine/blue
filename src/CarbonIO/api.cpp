@@ -259,7 +259,7 @@ static PyObject *clearStats( PyObject *self )
 static PyObject *setTimersActive( PySocketSockObject *s, PyObject *obj )
 {
 	CALL_TRACE(CALLTRACE _trace(__FUNCTION__));
-	CarbonIO::singleton()->setTimersEnabled( PyInt_AsLong(obj) != 0 );
+	CarbonIO::singleton()->setTimersEnabled( PyLong_AsLong(obj) != 0 );
 	Py_RETURN_NONE;
 }
 
@@ -444,10 +444,23 @@ extern "C" void initcarbonio(void)
 	{
 		return;
 	}
+
+	static struct PyModuleDef moduleDef {
+		PyModuleDef_HEAD_INIT,
+		"carbonio",
+		"",
+		-1,
+		cio_extentions,
+		nullptr,
+		nullptr,
+		nullptr,
+		nullptr,
+	};
 	
-	PyObject *module = Py_InitModule3( "carbonio", cio_extentions, 0 );
-	if ( module == NULL )
+	PyObject *module = PyModule_Create( &moduleDef );
+	if ( module == nullptr )
 	{
+		CCP_LOGERR("Failed creating carbonio module");
 		return;
 	}
 }

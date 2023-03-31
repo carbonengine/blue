@@ -39,14 +39,14 @@ const char *Immortalize( PyObject *s )
     {
         return "";
     }
-    if ( !PyString_Check( s ) )
+    if ( !PyUnicode_Check( s ) )
     {
         PyErr_SetString( PyExc_TypeError, "string expected" );
         return NULL;
     }
     Py_INCREF( s ); //must own the reference we intern
-    PyString_InternImmortal( &s );
-    const char *result = PyString_AS_STRING( s );
+    PyUnicode_InternImmortal( &s );
+    const char *result = PyUnicode_AsUTF8( s );
     Py_DECREF( s );
     return result;
 }
@@ -105,9 +105,9 @@ TaskletInfo GetTaskletInfo( PyTaskletObject* tasklet )
 
 	if( auto methodName = PyObject_GetAttrString( (PyObject*)tasklet, "method_name" ) )
 	{
-		if( PyString_CheckExact( methodName ) )
+		if( PyUnicode_CheckExact( methodName ) )
 		{
-			info.name = PyString_AsString( methodName );
+			info.name = PyUnicode_AsUTF8( methodName );
 		}
 		Py_XDECREF( methodName );
 	}
@@ -118,9 +118,9 @@ TaskletInfo GetTaskletInfo( PyTaskletObject* tasklet )
 
 	if( auto fileName = PyObject_GetAttrString( (PyObject*)tasklet, "file_name" ) )
 	{
-		if( PyString_CheckExact( fileName ) )
+		if( PyUnicode_CheckExact( fileName ) )
 		{
-			info.filename = PyString_AsString( fileName );
+			info.filename = PyUnicode_AsUTF8( fileName );
 		}
 		Py_XDECREF( fileName );
 	}
@@ -131,9 +131,9 @@ TaskletInfo GetTaskletInfo( PyTaskletObject* tasklet )
 
 	if( auto lineNumber = PyObject_GetAttrString( (PyObject*)tasklet, "line_number" ) )
 	{
-		if( PyInt_Check( lineNumber ) )
+		if( PyLong_Check( lineNumber ) )
 		{
-			info.line = int( PyInt_AsLong( lineNumber ) );
+			info.line = int( PyLong_AsLong( lineNumber ) );
 		}
 		Py_XDECREF( lineNumber );
 	}
@@ -149,7 +149,7 @@ int PythonProfiler( PyObject* obj, PyFrameObject* frame, int what, PyObject* arg
 	switch( what )
 	{
 	case PyTrace_CALL:
-		tmEnterEx( 0, nullptr, 0, 0, PyString_AsString( frame->f_code->co_filename ), PyFrame_GetLineNumber( frame ), TMZF_NONE, "%s", PyString_AsString( frame->f_code->co_name ) );
+		tmEnterEx( 0, nullptr, 0, 0, PyUnicode_AsUTF8( frame->f_code->co_filename ), PyFrame_GetLineNumber( frame ), TMZF_NONE, "%s", PyUnicode_AsUTF8( frame->f_code->co_name ) );
 		tmZoneColor( 0, 94.f / 255.f, 32.f / 255.f );
 		break;
 	case PyTrace_EXCEPTION:
@@ -749,5 +749,3 @@ tmTaskletZone::~tmTaskletZone()
 }
 
 #endif
-
-

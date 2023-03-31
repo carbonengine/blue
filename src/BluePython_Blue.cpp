@@ -114,15 +114,6 @@ const Be::ClassInfo* BluePyOS::ExposeToBlue()
 		)
 		MAP_METHOD_AS_METHOD
 		(
-			"GetEnv",
-			PyGetEnv, 
-			"Returns dictionary of environment variables.\n" 
-			":param name: optional environment variable name; if passed the function returns its value, otherwise returns all variables\n"
-			":type name: basestring\n"
-			":rtype: unicode | dict[basestring, basestring]"
-		)
-		MAP_METHOD_AS_METHOD
-		(
 			"DumpState",
 			PyDumpState, 
 			"Dumps state, or something.\n" 

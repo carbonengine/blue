@@ -116,13 +116,13 @@ PyObject* PyGenerateRandomBytes( PyObject* self, PyObject* args )
 		return nullptr;
 	}
 
-	PyObject* r = PyString_FromStringAndSize( nullptr, nBytes );
+	PyObject* r = PyBytes_FromStringAndSize( nullptr, nBytes );
 	if( !r )
 	{
 		return PyErr_SetString( PyExc_RuntimeError, "GenerateRandomBytes: Object creation error" ), nullptr;
 	}
 
-	if( RAND_bytes( reinterpret_cast<unsigned char*>( PyString_AS_STRING( r ) ), nBytes ) != 1 )
+	if( RAND_bytes( reinterpret_cast<unsigned char*>( PyBytes_AS_STRING( r ) ), nBytes ) != 1 )
 	{
 		Py_DECREF( r );
 		r = nullptr;
@@ -158,7 +158,20 @@ PyMethodDef CryptoMethods[] =
 
 bool InitCryptoModule()
 {
-	return Py_InitModule( "blue.crypto", CryptoMethods );
+	static struct PyModuleDef moduleDef {
+		PyModuleDef_HEAD_INIT,
+		"blue.crypto",
+		"",
+		-1,
+		CryptoMethods
+	};
+	auto module = PyModule_Create(&moduleDef);
+	if ( ! module ) {
+		CCP_LOGERR("Failed creating blue.crypto module");
+		return false;
+	}
+
+	return true;
 }
 
 #else

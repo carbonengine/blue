@@ -120,11 +120,11 @@ PyObject* BlueLogInMemory::GetEntries( PyObject* args )
 
 		PyObject* pyEntry = PyTuple_New( 5 );
 
-		PyTuple_SET_ITEM( pyEntry, 0, PyString_FromString( entry.facility ) );
-		PyTuple_SET_ITEM( pyEntry, 1, PyString_FromString( entry.object ) );
-		PyTuple_SET_ITEM( pyEntry, 2, PyInt_FromLong( entry.severity ) );
+		PyTuple_SET_ITEM( pyEntry, 0, PyUnicode_FromString( entry.facility ) );
+		PyTuple_SET_ITEM( pyEntry, 1, PyUnicode_FromString( entry.object ) );
+		PyTuple_SET_ITEM( pyEntry, 2, PyLong_FromLong( entry.severity ) );
 		PyTuple_SET_ITEM( pyEntry, 3, PyLong_FromLongLong( entry.timestamp ) );
-		PyTuple_SET_ITEM( pyEntry, 4, PyString_FromString( entry.message ) );
+		PyTuple_SET_ITEM( pyEntry, 4, PyUnicode_FromString( entry.message ) );
 
 		PyList_SET_ITEM( result, i, pyEntry );
 	}

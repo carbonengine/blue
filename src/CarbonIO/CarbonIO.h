@@ -170,7 +170,7 @@ public:
 	void setSSLServerCertificate( PyObject *obj );
 	void setSSLPrivateClientKey( PyObject *obj );
 	void setSSLPrivateServerKey( PyObject *obj );
-	void setSSLHandshakeMaxSeconds( PyObject *obj ) { m_SSLHandshakeNegotiationSeconds = PyInt_AsLong(obj); }
+	void setSSLHandshakeMaxSeconds( PyObject *obj ) { m_SSLHandshakeNegotiationSeconds = PyLong_AsLong(obj); }
 
 #ifdef DEBUG_LOG
 	void setErrorLogCallback( void (*callback)(const char* msg) ) { }
@@ -896,7 +896,7 @@ bool CarbonIO::wakeupEx( SJob* job )
 		Py_DECREF( tasklet );
 		if (fail)
 		{
-			PyObject *msg = PyString_FromString("wakeupEx");
+			PyObject *msg = PyUnicode_FromString("wakeupEx");
 			if ( !msg ) // just in case
 			{
 				msg = Py_None;
@@ -910,10 +910,11 @@ bool CarbonIO::wakeupEx( SJob* job )
 			result = true; // a successful wakeup was done.
 		}
 		m_singleton.m_events.inc( "event::dispatch", m_singleton.getPerformanceCounter() - job->t0 );
-		if ( areTimersEnabled() )
-		{
-			m_singleton.m_events.incval( "event::queuelen", (float)PyStackless_GetRunCountTs(slp_initial_tstate) );
-		}
+// FIXME do we still need this?
+//		if ( areTimersEnabled() )
+//		{
+//			m_singleton.m_events.incval( "event::queuelen", (float)PyStackless_GetRunCountTs(slp_initial_tstate) );
+//		}
 	}
 	else
 	{

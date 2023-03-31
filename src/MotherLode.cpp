@@ -3,7 +3,7 @@
 
 	MotherLode.cpp
 
-	Author:    Kristján Valur Jónsson
+	Author:    Kristjï¿½n Valur Jï¿½nsson
 	Created:   Dec 2008
 	OS:        Win32
 	Project:   Yep
@@ -479,7 +479,7 @@ PyObject *MotherLode::PynWeak(PyObject *args)
 {
 	if (!PyArg_ParseTuple(args, ":nWeak"))
 		return 0;
-	return PyInt_FromSize_t(mMap.size() - mLRU.size() - mPending.size());
+	return PyLong_FromSize_t(mMap.size() - mLRU.size() - mPending.size());
 }
 
 

@@ -190,12 +190,14 @@ public:
 		for(auto i2= set.begin(); i2 != set.end(); ++i2) {
 			if (filter) {
 				for (Frame* f = *i2; f; ++f ) {
-					int cmp;
-					if (PyObject_Cmp(filter, f->Key(), &cmp))
-						return false;
-					if (cmp == 0)
-						//found
-						res.push_back(*i2);					
+                                    if (1 == PyObject_RichCompareBool(filter, f->Key(), Py_EQ))
+                                        res.push_back(*i2);
+//					int cmp;
+//					if (PyObject_Cmp(filter, f->Key(), &cmp))
+//						return false;
+//					if (cmp == 0)
+//						found
+//						res.push_back(*i2);
 				}
 			} else
 				res.push_back(*i2);

@@ -20,7 +20,7 @@ PyObject* BlueClipboard::PyGetString() const
     switch( result )
     {
     case CLIPBOARD_OK:
-        return PyString_FromStringAndSize( str.c_str(), str.length() );
+        return PyUnicode_FromStringAndSize( str.c_str(), str.length() );
         break;
     case CLIPBOARD_INCOMPATIBLE_FORMAT:
         Py_RETURN_NONE;
@@ -50,35 +50,24 @@ PyObject* BlueClipboard::PyGetUnicode() const
 
 PyObject* BlueClipboard::PySetData( PyObject* data )
 {
-	if( !PyString_Check( data ) && !PyUnicode_Check( data ) )
+	if( !PyUnicode_Check( data ) )
 	{
-		PyErr_SetString( PyExc_TypeError, "string or unicode object required" );
+		PyErr_SetString( PyExc_TypeError, "String object required" );
 		return nullptr;
 	}
 
 	OperationResult result;
-	if( PyString_Check( data ) )
-	{
-		char* str;
-		Py_ssize_t len;
-		PyString_AsStringAndSize( data, &str, &len );
+        Py_ssize_t len = PyUnicode_GET_LENGTH( data );
+        std::wstring unicode;
+        unicode.resize( size_t( len ) );
+        PyUnicode_AsWideChar( data, &unicode[0], len );
 
-		result = SetData( std::string( str, str + len ) );
-	}
-	else
-	{
-		Py_ssize_t len = PyUnicode_GET_SIZE( data );
-		std::wstring unicode;
-		unicode.resize( size_t( len ) );
-		PyUnicode_AsWideChar( (PyUnicodeObject*)data, &unicode[0], len );
-
-		result = SetData( unicode );
-	}
+        result = SetData( unicode );
 	if( result == CLIPBOARD_OK )
 	{
 		Py_RETURN_NONE;
 	}
-    PyErr_SetString( PyExc_OSError, "failed to write data to clipboard" );
+        PyErr_SetString( PyExc_OSError, "failed to write data to clipboard" );
 	return nullptr;
 }
 

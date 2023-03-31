@@ -24,7 +24,7 @@ public:
 
 	BlueStdResult Open( const char* url );
 	void Close();
-	BlueStdResult ReadData( Be::Optional<size_t> size, std::string& contents );
+	BlueStdResult ReadData( Be::Optional<size_t> size, PyObject*& contents );
 	BlueStdResult Tell( ptrdiff_t& position );
 
 	/////////////////////////////////////////

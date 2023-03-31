@@ -228,9 +228,9 @@ public:
 
 	// published members
 	PYTHON_MEMBERS_BEGIN()
-		PYTHON_MEMBER("stringTable", T_OBJECT, mStrTable.o, RO)
-		PYTHON_MEMBER("stringTableRev", T_OBJECT, mStrTableRev.o, RO)
-		PYTHON_MEMBER("packetHadCrc", T_INT, mPacketHadCrc, RO)
+		PYTHON_MEMBER("stringTable", T_OBJECT, mStrTable.o, READONLY)
+		PYTHON_MEMBER("stringTableRev", T_OBJECT, mStrTableRev.o, READONLY)
+		PYTHON_MEMBER("packetHadCrc", T_INT, mPacketHadCrc, READONLY)
 		PYTHON_MEMBER("statStrings", T_OBJECT, mStatStrings.o, 0)
 		PYTHON_MEMBER("statGlobals", T_OBJECT, mStatGlobals.o, 0) //classes instantiated from globals		
 		PYTHON_MEMBER("globalsWhitelist", T_OBJECT, mGlobalsWhitelist.o, 0) //whitelist for globals
@@ -423,8 +423,9 @@ private:
 	static PyObject *tp_repr_method(PyObject *self);
 	
 	//buffer protocol.
-	static Py_ssize_t getreadbuffer(PyObject *self, Py_ssize_t segment, void **ptrptr);
-	static Py_ssize_t getsegcount(PyObject *self, Py_ssize_t *lenp);
+	static int getbuffer(PyObject* exporter, Py_buffer* view, int flags);
+//	static Py_ssize_t getreadbuffer(PyObject *self, Py_ssize_t segment, void **ptrptr);
+//	static Py_ssize_t getsegcount(PyObject *self, Py_ssize_t *lenp);
 	
 	//sequence protocol
 	static Py_ssize_t SequenceLength(PyObject *self);

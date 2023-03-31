@@ -12,10 +12,6 @@
 #include <yaml.h>
 #include <cstdint>
 
-#if CCP_STACKLESS
-	struct _tasklet;
-	typedef _tasklet PyTaskletObject;
-#endif
 
 struct PoolAllocatedYamlEvent : public yaml_event_t
 {

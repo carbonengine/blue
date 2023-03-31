@@ -537,8 +537,7 @@ static PyMethodDef asfile_methods[] = {
 
 
 PyTypeObject PyAsyncFile_Type = {
-	PyObject_HEAD_INIT(NULL)
-	0,
+	PyVarObject_HEAD_INIT(NULL, 0)
 	"asyncfile",
 	sizeof(PyAsyncFileObject),
 	0,
