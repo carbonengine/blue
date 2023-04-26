@@ -1777,7 +1777,18 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 	case  'i':
 		if (PyLong_CheckExact(o))
 		{
-			long i = PyLong_AS_LONG(o);
+			long i = PyLong_AsLong(o);
+
+			// Deal with overflow errors; Python long objects are arbitrarily ... long
+			if ( PyErr_Occurred() ) {
+				if ( ! PyErr_ExceptionMatches( PyExc_OverflowError ) )
+				{
+					return false;
+				}
+				PyErr_Clear();
+				auto success = WriteLong(stream, o);
+				return success;
+			}
 
 			switch(i)
 			{
@@ -1808,12 +1819,7 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 				}
 				else
                 {
-				    PyObject* tmp = PyLong_FromLong(i);
-				    if(!tmp) {
-				        return false;
-				    }
-				    auto success = WriteLong(stream, tmp);
-				    Py_XDECREF(tmp);
+				    auto success = WriteLong(stream, o);
 				    return success;
                 }
 				return true;

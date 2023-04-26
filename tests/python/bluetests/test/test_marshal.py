@@ -106,6 +106,7 @@ class testMarshal(blueunittest.TestCase):
     def test_long(self):
         self.verify_round_trip(42)
         self.verify_round_trip(9223372036854775807)
+        self.verify_round_trip(9223372036854775808)
 
     def test_float(self):
         self.verify_round_trip(0.0)
