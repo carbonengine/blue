@@ -1875,7 +1875,7 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 				if( index )
 				{
 					RETFAIL( WriteType( stream, TY_STR_TABLE ) );
-					RETFAIL( stream->Write( (char)PyLong_AS_LONG( index ) ) );
+					return stream->Write( (char)PyLong_AS_LONG( index ) );
 				}
 				else
 				{
