@@ -1861,7 +1861,6 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 		break;
 
 	case  's':
-	case  'u':
 		if (PyUnicode_CheckExact(o))
 		{
 			Py_ssize_t size = PyUnicode_GET_DATA_SIZE(o);
