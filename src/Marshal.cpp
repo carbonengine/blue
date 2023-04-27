@@ -1891,7 +1891,14 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 			return WriteType(stream, TY_TRUE);
 		else if (o == Py_False)
 			return WriteType(stream, TY_FALSE);
-		
+
+		if (o->ob_type == DBRow::GetType())
+			//name is blue.DBRow
+			return WriteType(stream, TY_DBROW) && static_cast<DBRow*>(o)->Write(*this, *stream);
+
+		if (o->ob_type == WriteStream::GetType())
+			return WriteType(stream, TY_WSTREAM) && static_cast<WriteStream*>(o)->Write(*this, *stream);
+
 		if ( PyObject_CheckBuffer( o ) )
 		{
 			CHECKREF();
@@ -1903,13 +1910,6 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 			PyBuffer_Release(&srcbuff);
 			return success;
 		}
-
-		if (o->ob_type == DBRow::GetType())
-			//name is blue.DBRow
-			return WriteType(stream, TY_DBROW) && static_cast<DBRow*>(o)->Write(*this, *stream);
-
-		if (o->ob_type == WriteStream::GetType())
-			return WriteType(stream, TY_WSTREAM) && static_cast<WriteStream*>(o)->Write(*this, *stream);
 
 		break;
 
