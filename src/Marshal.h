@@ -129,8 +129,8 @@ enum PYTYPES
     
     TY_TUPLE2 = 44,	//a two-tuple, surprisingly common
     TY_MARK = 45,	//a marker for dynamic lists and other dynamic forms
-    
-    TY_UTF8 = 46,	//unicode as utf-8
+
+    TY_UTF8_OBSOLETE = 46,	//unicode as utf-8 -- obsolete and unused as of Python 3 upgrade
     
     TY_LONG = 47,	//a proper long
     
@@ -321,7 +321,6 @@ private:
 	PyObject * ReadObjectInt64( ReadStream * stream, bool isShared );
 	PyObject * ReadObjectNone( ReadStream* stream, bool isShared );
 	PyObject * ReadObjectTuple0( ReadStream * stream, bool isShared );
-	PyObject * ReadObjectUtf8( ReadStream * stream, bool isShared );
 	PyObject * ReadObjectUnicode1( ReadStream * stream, bool isShared );
 	PyObject * ReadObjectUnicode0( ReadStream * stream, bool isShared );
 	PyObject * ReadObjectUnicode( ReadStream * stream, bool isShared );

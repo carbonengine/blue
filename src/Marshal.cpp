@@ -63,7 +63,6 @@ bool MarshalInit(PyObject *module)
 	Marshal::s_typeHandlers[ TY_UNICODE	] = &Marshal::ReadObjectUnicode;
 	Marshal::s_typeHandlers[ TY_UNICODE_0 ] = &Marshal::ReadObjectUnicode0;
 	Marshal::s_typeHandlers[ TY_UNICODE_1 ] = &Marshal::ReadObjectUnicode1;
-	Marshal::s_typeHandlers[ TY_UTF8 ] = &Marshal::ReadObjectUtf8;
 	Marshal::s_typeHandlers[ TY_BUFFER ] = &Marshal::ReadObjectBuffer;
 	Marshal::s_typeHandlers[ TY_TUPLE0 ] = &Marshal::ReadObjectTuple0;
 	Marshal::s_typeHandlers[ TY_TUPLE1 ] = &Marshal::ReadObjectTuple1;
@@ -1076,20 +1075,11 @@ PyObject * Marshal::ReadObjectBuffer( ReadStream * stream, bool isShared )
 	return r.Detach();
 }
 
-PyObject * Marshal::ReadObjectUtf8( ReadStream * stream, bool isShared )
-{
-	int len;
-	const char *buff;
-	if( !stream->ReadInteger( len ) || !stream->GetBuffer( buff, len ) ) return 0;
-	return PyUnicode_DecodeUTF8( (char*)buff, len, 0 );
-}
-
 PyObject * Marshal::ReadObjectUnicode1( ReadStream * stream, bool isShared )
 {
-    int byteorder = -1;
-	char16_t code;
+	char code;
 	if( !stream->Read( code ) ) return 0;
-    return PyUnicode_DecodeUTF16((const char*) &code, sizeof(char16_t), NULL, &byteorder);
+    return PyUnicode_FromStringAndSize((const char*) &code, 1);
 }
 
 PyObject * Marshal::ReadObjectUnicode0( ReadStream * stream, bool isShared )
@@ -1099,11 +1089,10 @@ PyObject * Marshal::ReadObjectUnicode0( ReadStream * stream, bool isShared )
 
 PyObject * Marshal::ReadObjectUnicode( ReadStream * stream, bool isShared )
 {
-	int len;
-	int byteorder = -1;
-	const char16_t *buff;
-	if( !stream->ReadInteger( len ) || !stream->GetBuffer( buff, len ) ) return 0;
-	return PyUnicode_DecodeUTF16( (const char*)buff, sizeof(char16_t) * len, NULL, &byteorder );
+	int kind, len;
+	const char *buff;
+	if( !stream->ReadInteger( kind ) || !stream->ReadInteger( len ) || !stream->GetBuffer( buff, len ) ) return 0;
+	return PyUnicode_FromKindAndData( kind, buff, len );
 }
 
 PyObject * Marshal::ReadObjectStrTable( ReadStream * stream, bool isShared )
@@ -1872,66 +1861,27 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 		break;
 
 	case  's':
-		if (PyUnicode_CheckExact(o))
-		{
-			Py_ssize_t size = PyUnicode_GET_LENGTH(o);
-			const char* string = PyUnicode_AS_DATA(o);
-
-			if (size == 0)
-			{
-				RETFAIL(WriteType(stream, TY_STR_EMPTY));
-			}
-			else if (size == 1)
-			{
-				RETFAIL(WriteType(stream, TY_STR_CHAR));
-				RETFAIL(stream->Write<char>(string[0]));
-			} else {
-				PyObject* index = PyDict_GetItem(mStrTable, o);
-				if (index)
-				{
-					RETFAIL(WriteType(stream, TY_STR_TABLE));
-					RETFAIL(stream->Write((char)PyLong_AS_LONG(index)));
-				} else {
-					//Write the string as buffer.  This gives us object sharing and all
-					//The old TY_STR_SHORT and TY_STR are kept for backwards compatibility
-					CHECKREF();
-					RETFAIL(WriteType(stream, TY_BUFFER));
-					RETFAIL(stream->WriteBuff(string, size));					
-				}
-			}
-
-			// Update statistics of non-empty strings.
-			if (*string && mStatStrings && PyDict_Check(mStatStrings.o))
-			{
-				PyObject* count = PyDict_GetItem(mStatStrings, o);
-				int icount = count != NULL ? int( PyLong_AS_LONG(count) ) : 0;
-				PyObject* newcount = PyLong_FromLong(icount + 1);
-				PyDict_SetItem(mStatStrings, o, newcount);
-				Py_DECREF(newcount);
-			}
-			return true;
-		}
-		break;
-	
 	case  'u':
 		if (PyUnicode_CheckExact(o))
 		{
-			BluePy utf8(PyUnicode_AsUTF8String(o));
-
-			// Check to see if we received a null pointer and return early.
-			if(!utf8) {
-				return false;
-			}
-
-			Py_ssize_t size = PyUnicode_GET_LENGTH(utf8.o);
-			const char *data = PyUnicode_AS_DATA(utf8.o);
+			Py_ssize_t size = PyUnicode_GET_DATA_SIZE(o);
+			const char *data = PyUnicode_AS_DATA(o);
 			if (size == 0) {
 				return WriteType(stream, TY_UNICODE_0);
 			} else if (size == 1) {
 				return WriteType(stream, TY_UNICODE_1) && stream->Write(*data);
 			} else {
-				return WriteType(stream, TY_UTF8) && stream->WriteInteger((int)size) &&
-				   stream->WriteBuffWoSize(data, size);
+				PyObject* index = PyDict_GetItem( mStrTable, o );
+				if( index )
+				{
+					RETFAIL( WriteType( stream, TY_STR_TABLE ) );
+					RETFAIL( stream->Write( (char)PyLong_AS_LONG( index ) ) );
+				}
+				else
+				{
+					return WriteType( stream, TY_UNICODE ) && stream->WriteInteger( int( PyUnicode_KIND( o ) ) ) && stream->WriteInteger( (int)size ) &&
+						stream->WriteBuffWoSize( data, size );
+				}
 			}
 		}
 		break;
