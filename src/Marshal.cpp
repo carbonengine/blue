@@ -766,7 +766,7 @@ int WriteStream::getbuffer( PyObject* exporter, Py_buffer* view, int flags )
 
 	view->obj = exporter;
 	view->buf = self->mBuff;
-	view->len = self->mSize;
+	view->len = self->mPos;
 	Py_INCREF(view->obj);
 
 	return 0;
