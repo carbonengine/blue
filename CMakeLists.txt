@@ -375,7 +375,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
             COMMAND ${PYTHON_EXECUTABLE} -m unittest -v ${PYTHON_TEST}
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests/python
         )
-        set_tests_properties(${PYTHON_TEST} PROPERTIES ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_BINARY_DIR}")
+        set_tests_properties(${PYTHON_TEST} PROPERTIES ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:Blue>")
     endforeach()
 
     # Install rule to ensure that our runtime and linker files are in the expected, platform-specific folders
