@@ -1,18 +1,16 @@
-"""Placeholder package that grabs the tests for blue from
-the blue source trees,
-so the tests and project can be run as a normal python package.
+"""Import blue for test code
 
-If you are testing an existing C++ project,
-just add test_*.py files to the test directory for the C++ project.
-
-If you are adding a new C++ project,
-you should add a new file to this package's python test directory.
-
-See `tests/runtests.py` to run the tests from the commandline.
+This package import is only necessary for blue's python test suite because those cannot run through
+exefile in interpreter mode (which loads blue for you).
 """
-try:
-    import blue
-except ImportError:
-    import blue_debug
-    import sys
-    sys.modules["blue"] = blue_debug
+import importlib
+import sys
+for flavour in ('', '_internal', '_trinitydev', '_debug'):
+    try:
+        mod = importlib.import_module(f"blue{flavour}")
+        sys.modules["blue"] = mod
+        break
+    except ImportError:
+        pass
+else:
+    raise ImportError("Could not import any flavour of blue")
