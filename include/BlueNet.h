@@ -71,7 +71,7 @@ class Marshal;
 class BlueNet
 {
 public:
-	static void Init();
+	static bool Init( PyObject* blueModule );
 
 	//---------------------------------------
 	struct PacketInfo

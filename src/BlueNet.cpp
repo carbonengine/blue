@@ -300,7 +300,7 @@ BlueNet::~BlueNet()
 }
 
 //------------------------------------------------------------------------------
-void BlueNet::Init()
+bool BlueNet::Init( PyObject* blueModule )
 {
 #ifdef BN_DEBUG_LOG
 	char buf[256];
@@ -318,7 +318,7 @@ void BlueNet::Init()
 	auto module = PyModule_Create(&moduleDef);
 	if ( ! module ) {
 		CCP_LOGERR("Failed to create blue.net module");
-		return;
+		return false;
 	}
 
 	srand( (unsigned int)time(0) );
@@ -378,7 +378,14 @@ void BlueNet::Init()
 
 	m_singleton.RegisterCallbackFromPython( BlueNetCallback, m_singleton.m_blueNetHandlerPacketKey );
 
+	if ( PyModule_AddObject(blueModule, "net", module) ) {
+		CCP_LOGERR("Failed adding net submodule to blue");
+		return false;
+	}
+
 	CcpCreateThread( &BatchThread, nullptr, CCP_THREAD_PRIORITY_NORMAL );
+
+	return true;
 }
 
 //------------------------------------------------------------------------------

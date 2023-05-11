@@ -220,10 +220,11 @@ bool BluePyOS::InitBasicModuleSupport()
 
 #if _WIN32
 	//init the submodules blue.win32 and blue.heapq.  The latter is required for the Marshal::New()
-	initwin32(mBlueModule);
+	if ( !initwin32(mBlueModule) )
+		return false;
 #endif
 
-	if( !InitCryptoModule() )
+	if( !InitCryptoModule(mBlueModule) )
 		return false;
 
 	if (!MarshalInit(mBlueModule))
@@ -246,7 +247,10 @@ bool BluePyOS::InitBasicModuleSupport()
 	PyInit__slsocket();
 	PyInit_slselect();
 
-	BeNet->Init(); // c-routing support
+	// c-routing support
+	if ( !BeNet->Init( mBlueModule ) ) {
+		return false;
+	}
 
 	// Insert synchro
 	mSynchro = CCP_NEW( "BluePyOS/mSyncro" ) Synchro;

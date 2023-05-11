@@ -1449,8 +1449,7 @@ PyObject *PyWin32Error(const char *msg, DWORD ierror)
 }
 
 //initialize the module, man
-void
-::initwin32(PyObject* blueModule)
+bool initwin32(PyObject* blueModule)
 {
 	loader = CCP_NEW("initwin32/loader") SoftLoader;
 	static struct PyModuleDef moduleDef {
@@ -1463,10 +1462,16 @@ void
 	PyObject *win32 = PyModule_Create( &moduleDef );
 	if ( !win32 ) {
 		CCP_LOGERR( "Failed creation blue.win32 module" );
-		return;
+		return false;
 	}
-	DefineErrors(win32);
-	DefineConsts(win32);
+	DefineErrors( win32 );
+	DefineConsts( win32 );
+	if ( PyModule_AddObject( blueModule, "win32", win32 ) ) {
+		CCP_LOGERR( "Failed adding win32 submodule to blue" );
+		return false;
+	}
+
+	return true;
 }
 
 

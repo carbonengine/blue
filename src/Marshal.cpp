@@ -87,6 +87,7 @@ bool MarshalInit(PyObject *module)
 	Py_INCREF( WriteStream::GetType() );
 	if (PyModule_AddObject(module, "MarshalStream", (PyObject*)WriteStream::GetType()))
 		return false;
+
 	return true;
 }
 

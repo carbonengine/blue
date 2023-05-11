@@ -156,7 +156,7 @@ PyMethodDef CryptoMethods[] =
 	{nullptr}
 };
 
-bool InitCryptoModule()
+bool InitCryptoModule( PyObject* blueModule )
 {
 	static struct PyModuleDef moduleDef {
 		PyModuleDef_HEAD_INIT,
@@ -171,12 +171,17 @@ bool InitCryptoModule()
 		return false;
 	}
 
+	if ( PyModule_AddObject(blueModule, "crypto", module) ) {
+		CCP_LOGERR("Failed adding crypto submodule to blue");
+		return false;
+	}
+
 	return true;
 }
 
 #else
 
-bool InitCryptoModule()
+bool InitCryptoModule( PyObject* )
 {
 	return true;
 }

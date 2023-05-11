@@ -21,7 +21,7 @@
 }
 
 
-bool InitCryptoModule();
+bool InitCryptoModule( PyObject* blueModule );
 bool InitCrypto();
 
 Be::Result<std::string> SHA256( const void* buffer, size_t length, std::string& returnValue );
