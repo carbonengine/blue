@@ -198,6 +198,8 @@ void bnlog( const char* format, ... )
 PyMethodDef BlueNet::m_methods[] =
 {
 	{ "SetMyNodeID", PySetMyNodeID, METH_VARARGS, "SetMyNodeID(id)\n\nIdentify this node" },
+	{ "SetAddressTypeNode", PySetAddressTypeNode, METH_VARARGS, "SetAddressTypeNode(val)\n\nUsed to forward the ADDRESS_TYPE_NODE constant from Python land." },
+	{ "SetAddressTypeClient", PySetAddressTypeClient, METH_VARARGS, "SetAddressTypeClient(val)\n\nUsed to forward the ADDRESS_TYPE_CLIENT constant from Python land." },
 	{ "SetTransportNodeID", PySetTransportNodeID, METH_VARARGS, "SetTransportNodeID(transport,id)\n\nset the nodeID of this transport" },
 	{ "SetMode", PySetMode, METH_VARARGS, "SetMode(<proxy/server/client>)\n\nHow low-level routing should act, must be set once and only once" },
 	{ "SetMinPingFrequency", PySetMinPingFrequency, METH_VARARGS, "SetMinPingFrequency(seconds)\n\nSets the minimum time that must elapse before latency is determined" },
@@ -333,41 +335,6 @@ bool BlueNet::Init( PyObject* blueModule )
 		entry->newString = 0;
 	}
 
-	// machonet refers to a "const" class, pre-thunk those values
-	PyObject *constModule = PyImport_ImportModule("carbon.common.lib.const");
-	if ( constModule )
-	{
-		PyObject *C;
-		if ( (C = PyObject_GetAttrString(constModule, "ADDRESS_TYPE_NODE")) )
-		{
-			m_constAddressTypeNode = PyLong_AS_LONG( C );
-			BN_CONST_IMPORT(bnlog("imported m_constAddressTypeNode[%d]", m_constAddressTypeNode));
-			Py_XDECREF( C );
-		} else {
-            BN_CONST_IMPORT(bnlog("ADDRESS_TYPE_NODE imported failed"));
-            CCP_LOGERR_CH( s_blueNetChannel, "BlueNet Init failed to import ADDRESS_TYPE_NODE from const, BlueNet will fail to route in this state" );
-        }
-
-		if ( (C = PyObject_GetAttrString(constModule, "ADDRESS_TYPE_CLIENT")) )
-		{
-			m_constAddressTypeClient = PyLong_AS_LONG( C );
-			BN_CONST_IMPORT(bnlog("imported m_constAddressTypeClient[%d]", m_constAddressTypeClient));
-			Py_XDECREF( C );
-		} else {
-            BN_CONST_IMPORT(bnlog("ADDRESS_TYPE_CLIENT imported failed"));
-            CCP_LOGERR_CH( s_blueNetChannel, "BlueNet Init failed to import ADDRESS_TYPE_CLIENT from const, BlueNet will fail to route in this state" );
-        }
-
-		PyErr_Clear(); // some attribute may not have existed, clear the error that was raised when we asked for them
-	}
-	else
-	{
-		BN_CONST_IMPORT(bnlog("const imported failed"));
-        // Also unconditionally log an error because BlueNet is inoperable without these values.
-        CCP_LOGERR_CH( s_blueNetChannel, "BlueNet Init failed to import address types from const, BlueNet will fail to route in this state" );
-		PyErr_Clear(); // some attribute may not have existed, clear the error that was raised when we asked for them
-	}
-
 	CioSetErrorLogCallback( LogError ); // always allow errors
 
 	m_singleton.m_aggregateSendIntervalMilliseconds = 0;
@@ -386,6 +353,28 @@ bool BlueNet::Init( PyObject* blueModule )
 	CcpCreateThread( &BatchThread, nullptr, CCP_THREAD_PRIORITY_NORMAL );
 
 	return true;
+}
+
+PyObject* BlueNet::PySetAddressTypeNode( PyObject* self, PyObject* args ) {
+	if (!PyArg_ParseTuple( args, "l", &m_constAddressTypeNode )) {
+		m_constAddressTypeNode = 0;
+		BN_CONST_IMPORT(bnlog("ADDRESS_TYPE_NODE imported failed"));
+		CCP_LOGERR_CH( s_blueNetChannel, "BlueNet Init failed to import ADDRESS_TYPE_NODE from const, BlueNet will fail to route in this state" );
+		return nullptr;
+	}
+	BN_CONST_IMPORT(bnlog("imported m_constAddressTypeNode[%d]", m_constAddressTypeNode));
+	Py_RETURN_NONE;
+}
+
+PyObject* BlueNet::PySetAddressTypeClient( PyObject* self, PyObject* args ) {
+	if (!PyArg_ParseTuple( args, "l", &m_constAddressTypeClient )) {
+		m_constAddressTypeClient = 0;
+		BN_CONST_IMPORT(bnlog("ADDRESS_TYPE_CLIENT imported failed"));
+		CCP_LOGERR_CH( s_blueNetChannel, "BlueNet Init failed to import ADDRESS_TYPE_CLIENT from const, BlueNet will fail to route in this state" );
+		return nullptr;
+	}
+	BN_CONST_IMPORT(bnlog("imported m_constAddressTypeClient[%d]", m_constAddressTypeClient));
+	Py_RETURN_NONE;
 }
 
 //------------------------------------------------------------------------------

@@ -212,6 +212,10 @@ public:
 	static bool SerializeObject( PyObject* object, BitPackerManaged& packet );
 	static PyObject* UnserializeObject( BitPacker& packer );
 
+	// initialized from Python land
+	static long m_constAddressTypeNode;
+	static long m_constAddressTypeClient;
+
 private:
 
 	BlueNet();
@@ -252,6 +256,9 @@ private:
 	static PyObject* PyDumpNewStringTable( PyObject* module, PyObject* args );
 	static PyObject* PyDumpTransportTable( PyObject* module, PyObject* args );
 
+	static PyObject* PySetAddressTypeNode( PyObject* self, PyObject* args );
+	static PyObject* PySetAddressTypeClient( PyObject* self, PyObject* args );
+
 	//---------------------
 	enum CallbackStyle
 	{
@@ -261,10 +268,6 @@ private:
 	};
 	void RegisterCallback( DataCallback callback, const int blueNetKey, int style =CALLBACK_SYNC );
 	void RegisterCallback( ExtendedDataCallback callback, const int blueNetKey, int style =CALLBACK_SYNC );
-
-	// imported from the "const" module at startup
-	static long m_constAddressTypeNode;
-	static long m_constAddressTypeClient;
 
 	// check for sub-macho delivery
 	static bool OnPostDecompress( long long descriptor, const char* data, const int len, const char* OobData, const int OobLen );
