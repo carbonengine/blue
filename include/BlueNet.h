@@ -48,11 +48,19 @@
 #define BN_BATCH(a) //a
 #define BN_PACKSTRING(a) //a
 
-// how small the data can be thatwill fit into a static job allocation,
+// how small the data can be that will fit into a static job allocation,
 // larger than this will require a new/delete
 const int BLUE_NET_SMALL_BUFFER_SIZE = 4096;
 const int DEFAULT_PING_FREQUENCY = 30;
 const unsigned int MIN_SCHEDULED_IO_INTERVAL = 15;
+
+// Keep this in sync with the identically named constants in carbon/common/lib/const.py
+enum AddressType {
+	ADDRESS_TYPE_NODE = 1,
+	ADDRESS_TYPE_CLIENT = 2,
+	ADDRESS_TYPE_BROADCAST = 4,
+	ADDRESS_TYPE_ANY = 8
+};
 
 // the amount of data that can accumulate on a transport before
 // transmission is forced
@@ -212,10 +220,6 @@ public:
 	static bool SerializeObject( PyObject* object, BitPackerManaged& packet );
 	static PyObject* UnserializeObject( BitPacker& packer );
 
-	// initialized from Python land
-	static long m_constAddressTypeNode;
-	static long m_constAddressTypeClient;
-
 private:
 
 	BlueNet();
@@ -255,9 +259,6 @@ private:
 	static PyObject* PyDumpStringTable( PyObject* module, PyObject* args );
 	static PyObject* PyDumpNewStringTable( PyObject* module, PyObject* args );
 	static PyObject* PyDumpTransportTable( PyObject* module, PyObject* args );
-
-	static PyObject* PySetAddressTypeNode( PyObject* self, PyObject* args );
-	static PyObject* PySetAddressTypeClient( PyObject* self, PyObject* args );
 
 	//---------------------
 	enum CallbackStyle

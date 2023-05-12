@@ -26,8 +26,6 @@
 #include <SimpleLog.h>
 
 BlueNet BlueNet::m_singleton; // so the static singleton can exist
-long BlueNet::m_constAddressTypeNode;
-long BlueNet::m_constAddressTypeClient;
 int BlueNet::m_constNoneKey = 0;
 int BlueNet::m_constPongKey;
 int BlueNet::m_constMinPingFrequency = DEFAULT_PING_FREQUENCY; // in seconds.. at least this much time must elapse
@@ -198,8 +196,6 @@ void bnlog( const char* format, ... )
 PyMethodDef BlueNet::m_methods[] =
 {
 	{ "SetMyNodeID", PySetMyNodeID, METH_VARARGS, "SetMyNodeID(id)\n\nIdentify this node" },
-	{ "SetAddressTypeNode", PySetAddressTypeNode, METH_VARARGS, "SetAddressTypeNode(val)\n\nUsed to forward the ADDRESS_TYPE_NODE constant from Python land." },
-	{ "SetAddressTypeClient", PySetAddressTypeClient, METH_VARARGS, "SetAddressTypeClient(val)\n\nUsed to forward the ADDRESS_TYPE_CLIENT constant from Python land." },
 	{ "SetTransportNodeID", PySetTransportNodeID, METH_VARARGS, "SetTransportNodeID(transport,id)\n\nset the nodeID of this transport" },
 	{ "SetMode", PySetMode, METH_VARARGS, "SetMode(<proxy/server/client>)\n\nHow low-level routing should act, must be set once and only once" },
 	{ "SetMinPingFrequency", PySetMinPingFrequency, METH_VARARGS, "SetMinPingFrequency(seconds)\n\nSets the minimum time that must elapse before latency is determined" },
@@ -353,28 +349,6 @@ bool BlueNet::Init( PyObject* blueModule )
 	CcpCreateThread( &BatchThread, nullptr, CCP_THREAD_PRIORITY_NORMAL );
 
 	return true;
-}
-
-PyObject* BlueNet::PySetAddressTypeNode( PyObject* self, PyObject* args ) {
-	if (!PyArg_ParseTuple( args, "l", &m_constAddressTypeNode )) {
-		m_constAddressTypeNode = 0;
-		BN_CONST_IMPORT(bnlog("ADDRESS_TYPE_NODE imported failed"));
-		CCP_LOGERR_CH( s_blueNetChannel, "BlueNet Init failed to import ADDRESS_TYPE_NODE from const, BlueNet will fail to route in this state" );
-		return nullptr;
-	}
-	BN_CONST_IMPORT(bnlog("imported m_constAddressTypeNode[%d]", m_constAddressTypeNode));
-	Py_RETURN_NONE;
-}
-
-PyObject* BlueNet::PySetAddressTypeClient( PyObject* self, PyObject* args ) {
-	if (!PyArg_ParseTuple( args, "l", &m_constAddressTypeClient )) {
-		m_constAddressTypeClient = 0;
-		BN_CONST_IMPORT(bnlog("ADDRESS_TYPE_CLIENT imported failed"));
-		CCP_LOGERR_CH( s_blueNetChannel, "BlueNet Init failed to import ADDRESS_TYPE_CLIENT from const, BlueNet will fail to route in this state" );
-		return nullptr;
-	}
-	BN_CONST_IMPORT(bnlog("imported m_constAddressTypeClient[%d]", m_constAddressTypeClient));
-	Py_RETURN_NONE;
 }
 
 //------------------------------------------------------------------------------
@@ -659,7 +633,7 @@ bool BlueNet::SendPacketToClientList( const unsigned long long* clientList,
 	BlueNetHeader header;
 	memset( &header, 0, sizeof(BlueNetHeader) );
 	header.blueNetKey = blueNetKey;
-	header.destinationType = m_constAddressTypeClient;
+	header.destinationType = ADDRESS_TYPE_CLIENT;
 
 	Ccp::RWSpinlockReadScoped rlock( m_transportLock );
 
@@ -921,7 +895,7 @@ bool BlueNet::SendPacketToNode( const unsigned long long nodeID,
 
 	header.timestamp = CheckForPing( target );
     header.latencyAccumulator = target->latency;
-	header.destinationType = m_constAddressTypeNode;
+	header.destinationType = ADDRESS_TYPE_NODE;
 	header.blueNetKey = blueNetKey;
 
 	char headerData[ BLUE_HEADER_SCRATCH_SIZE ];
@@ -1635,11 +1609,11 @@ PyObject* BlueNet::PySendBlueNetPacket( PyObject *self, PyObject *args )
 		return NULL; // pyerror will already be set
 	}
 
-	if ( destinationType == m_constAddressTypeNode )
+	if ( destinationType == ADDRESS_TYPE_NODE )
 	{
 		m_singleton.SendPacketToNode( destinationID, BlueNetKeyFromName(key), data, size );
 	}
-	else if ( destinationType == m_constAddressTypeClient )
+	else if ( destinationType == ADDRESS_TYPE_CLIENT )
 	{
 		if ( destinationID )
 		{
@@ -2103,7 +2077,7 @@ bool BlueNet::SendClientPacket( int blueNetKey,
 	BlueNetHeader header;
 	memset( &header, 0, sizeof(BlueNetHeader) );
 
-	header.destinationType = m_constAddressTypeClient;
+	header.destinationType = ADDRESS_TYPE_CLIENT;
 	header.destinationID = clientID;
 	header.blueNetKey = blueNetKey;
 	header.timestamp = CheckForPing( transport );
@@ -2157,13 +2131,13 @@ void BlueNet::Route( BlueNetHeader* header,
 	BitPacker repacker( rebuiltHeader, BLUE_HEADER_SCRATCH_SIZE );
 
 	TransportRepr *target = 0;
-	if ( header->destinationType == m_constAddressTypeNode )
+	if ( header->destinationType == ADDRESS_TYPE_NODE )
 	{
 		BN_ROUTE(bnlog("destination 'NODE' pulling target[%lld]", header->destinationID));
 		target = m_singleton.m_transportsByNodeID.getItem( header->destinationID );
 		header->priority = true; // override priority so it is forwarded imediately to the server
 	}
-	else if ( header->destinationType == m_constAddressTypeClient )
+	else if ( header->destinationType == ADDRESS_TYPE_CLIENT )
 	{
 		if ( !header->forkedAddresses )
 		{
