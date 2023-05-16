@@ -552,6 +552,8 @@ bool BluePyOS::Startup()
 		PyConfig_InitIsolatedConfig( &config );
 	} else {
 		PyConfig_InitPythonConfig( &config );
+		// need to disable user site directory because it may contain C extensions compiled with a different compiler. Alternately: we could provide our own site directory, but what's the point?
+		config.user_site_directory = 0;
 	}
 	CCP_LOG( "Init reported exit code %d and message %s", status.exitcode, status.err_msg );
 
