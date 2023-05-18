@@ -10,8 +10,8 @@
 #include "RemoteFileCache.h"
 #include "BlueFileStream.h"
 #include "BlueRemoteStream.h"
-#include "Include/IBluePaths.h"
-#include "Include/BlueFileUtil.h"
+#include "IBluePaths.h"
+#include "BlueFileUtil.h"
 
 #ifdef __ANDROID__
 #include <errno.h>
