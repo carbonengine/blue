@@ -282,31 +282,9 @@ bool BluePyOS::InitBasicModuleSupport()
 	Py_DECREF(sysmodule);
 #endif
 
-//    PyObject *m = PyImport_ImportModule("blue.heapq");
-//	assert(!PyErr_Occurred());
-//    if (m)
-//        PyModule_AddObject(mBlueModule, "heapq", m);
-//	assert(!PyErr_Occurred());
-//#if _WIN32
-//	//init the submodules into the blue module
-//	m = PyImport_ImportModule("blue.win32");
-//	assert(!PyErr_Occurred());
-//	if (m)
-//		PyModule_AddObject(mBlueModule, "win32", m);
-//	assert(!PyErr_Occurred());
-//#endif
-//	m = PyImport_ImportModule("blue.crypto");
-//	assert(!PyErr_Occurred());
-//	if (m)
-//		PyModule_AddObject(mBlueModule, "crypto", m);
-//	assert(!PyErr_Occurred());
-//#if CCP_STACKLESS
-//    m = PyImport_ImportModule("blue.net");
-//	assert(!PyErr_Occurred());
-//    if (m)
-//        PyModule_AddObject(mBlueModule, "net", m);
-//	assert(!PyErr_Occurred());
-//#endif
+    PyObject* sys_modules = PyImport_GetModuleDict();
+    PyDict_SetItemString( sys_modules, "blue", mBlueModule );
+    Py_DECREF( mBlueModule );
 
 	return true;
 }
