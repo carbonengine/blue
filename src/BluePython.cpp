@@ -284,7 +284,6 @@ bool BluePyOS::InitBasicModuleSupport()
 
     PyObject* sys_modules = PyImport_GetModuleDict();
     PyDict_SetItemString( sys_modules, "blue", mBlueModule );
-    Py_DECREF( mBlueModule );
 
 	return true;
 }
