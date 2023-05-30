@@ -1,3 +1,5 @@
+#include <sstream>
+#include <string>
 #include "StdAfx.h"
 
 #if BLUE_WITH_PYTHON
@@ -547,15 +549,21 @@ bool BluePyOS::Startup()
 		return false;
 	}
 
-//    Py_SetPath( path.c_str() );
+    std::wstringstream pathHelper(path);
+    for (std::wstring tmp; std::getline(pathHelper, tmp, L';');)
+    {
+        status = PyWideStringList_Append( &(config.module_search_paths), tmp.c_str() );
+        CCP_LOG( "Appending %S to sys.path candidate list (error %d: %s)", tmp.c_str(), status.exitcode, status.err_msg );
+    }
+    config.module_search_paths_set = 1;
 
 	CCP_LOG( "Initializing Python" );
 	status = Py_InitializeFromConfig(&config);
 
 	if (!Py_IsInitialized())
 	{
-		PyFlushError( "Failed initializing Python" );
-		CCP_LOGERR( "Py_Initialize() failed" );
+        PyFlushError( "Failed initializing Python" );
+        CCP_LOGERR( "Py_Initialize() failed with error %d: %s", status.exitcode, status.err_msg );
 		return false;
 	}
 
