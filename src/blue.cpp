@@ -99,10 +99,11 @@ PyObject* PyAtomicFileRead(PyObject *self, PyObject* args)
 	DWORD fileSize;
 	BY_HANDLE_FILE_INFORMATION info;
 	{
+        Py_UNICODE *fileName = PyUnicode_AS_UNICODE(ufn.o);
 		Ccp::PyAllowThreads _allow;
 		for(int i = 0; i<10; i++) {
-			h = CreateFileW(PyUnicode_AS_UNICODE(ufn.o),
-							GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, 0);
+            h = CreateFileW(fileName,
+                            GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, 0);
 			if (h==INVALID_HANDLE_VALUE) {
 				DWORD code = GetLastError();
 				if (code == ERROR_SHARING_VIOLATION) {
@@ -132,8 +133,9 @@ PyObject* PyAtomicFileRead(PyObject *self, PyObject* args)
 		}
 		DWORD read;
 		{
+            char *buffer = PyBytes_AsString(r);
 			Ccp::PyAllowThreads _allow;
-			BOOL success = ReadFile(h, PyBytes_AsString(r), fileSize, &read, 0);
+            BOOL success = ReadFile(h, buffer, fileSize, &read, 0);
 			if (!success)
 				goto HERR;
 				
@@ -216,10 +218,11 @@ PyObject* PyAtomicFileWrite(PyObject *self, PyObject* args)
 //	Py_ssize_t segcount;
 	HANDLE h;
 	{
-		Ccp::PyAllowThreads _allow;		
+        Py_UNICODE *fileName = PyUnicode_AS_UNICODE(ufn.o);
+		Ccp::PyAllowThreads _allow;
 		for(int i = 0; i<10; i++) {
-			h = CreateFileW(PyUnicode_AS_UNICODE(ufn.o),
-							GENERIC_WRITE, 0, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, 0);
+            h = CreateFileW(fileName,
+                            GENERIC_WRITE, 0, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, 0);
 			if (h==INVALID_HANDLE_VALUE) {
 				DWORD code = GetLastError();
 				if (code == ERROR_SHARING_VIOLATION) {
@@ -233,14 +236,7 @@ PyObject* PyAtomicFileWrite(PyObject *self, PyObject* args)
 			goto HERR;
 	}
 
-//	segcount = buffer->bf_getsegcount(dataO, 0);
-//	for(Py_ssize_t i = 0; i<segcount; i++){
-//		void *data;
-//		Py_ssize_t datalen = buffer->bf_getreadbuffer(dataO, i, &data);
-//		if (datalen<0) {
-//			CloseHandle(h);
-//			return 0;
-//		}
+
 		//support only DWORD sizes yet
 		DWORD written;
 		BOOL success;
@@ -249,22 +245,12 @@ PyObject* PyAtomicFileWrite(PyObject *self, PyObject* args)
 			success = WriteFile(h, buffer.buf, (DWORD)buffer.len, &written, 0);
 			if (!success)
 				goto HERR;
-//			if (i+1 == segcount) {
-//				CloseHandle(h);
-//				h = INVALID_HANDLE_VALUE;
-//			}
 		}
 		if (written != buffer.len) {
 			if (h != INVALID_HANDLE_VALUE) CloseHandle(h);
 			PyErr_SetString(PyExc_IOError, "Wrote short file");
 			return nullptr;
 		}
-//		if (i+1 < segcount) {
-//			DWORD moved = SetFilePointer(h, (DWORD)datalen, 0, FILE_CURRENT);
-//			if (moved == INVALID_SET_FILE_POINTER)
-//				goto HERR;
-//		}
-//	}
 	if (h != INVALID_HANDLE_VALUE)
 		CloseHandle(h);
 	Py_INCREF(Py_None);
