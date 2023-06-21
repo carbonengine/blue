@@ -203,9 +203,9 @@ HERR:
 //Again, atomicity is guaranteed by the os locking ops
 PyObject* PyAtomicFileWrite(PyObject *self, PyObject* args)
 {
-	BluePy ufn;
+	PyObject* ufn;
 	Py_buffer buffer;
-	if (!PyArg_ParseTuple(args, "Uy*", &(ufn.o), &buffer))
+	if (!PyArg_ParseTuple(args, "Uy*", &ufn, &buffer))
 		return NULL;
 
 	if ( ! PyBuffer_IsContiguous( &buffer, 'A' ) ) {
@@ -218,7 +218,7 @@ PyObject* PyAtomicFileWrite(PyObject *self, PyObject* args)
 //	Py_ssize_t segcount;
 	HANDLE h;
 	{
-        Py_UNICODE *fileName = PyUnicode_AS_UNICODE(ufn.o);
+        Py_UNICODE *fileName = PyUnicode_AS_UNICODE(ufn);
 		Ccp::PyAllowThreads _allow;
 		for(int i = 0; i<10; i++) {
             h = CreateFileW(fileName,
