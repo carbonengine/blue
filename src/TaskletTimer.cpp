@@ -95,8 +95,6 @@ TaskletTimer::TaskletTimer() :
 	mLastTime(0), mOverhead(0), mLastSwitch(0), mLastWarn(0),
 	mMaxWarn(1),
 	mStackMap( "TaskletTimer/mStackMap" ),
-	mSimpleCtxt(Py_None, true),
-	mCanonicalizationDict(PyDict_New()),
 	m_BlueOSPumpCountAtStart( 0 )
 {
 	mCurrentStack = 0;
@@ -110,6 +108,19 @@ TaskletTimer::TaskletTimer() :
 TaskletTimer::~TaskletTimer()
 {
 	;
+}
+
+
+bool TaskletTimer::InitPythonObjects()
+{
+    if (!mSimpleCtxt) {
+        mSimpleCtxt = BluePy(Py_None, true);
+    }
+    if (!mCanonicalizationDict) {
+        mCanonicalizationDict = BluePy(PyDict_New());
+    }
+
+    return mCanonicalizationDict && mSimpleCtxt;
 }
 
 

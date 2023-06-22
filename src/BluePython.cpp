@@ -621,7 +621,12 @@ bool BluePyOS::Startup()
 	}
 
 #if CCP_STACKLESS
-	// Reset the tasklet counter (can only do this after pyinit and module support, we register modules and types)
+    if ( !mTTimer.InitPythonObjects() ) {
+        CCP_LOGERR( "Failed initalizing TaskletTimers" );
+        PyFlushError( nullptr );
+        return false;
+    }
+    // Reset the tasklet counter (can only do this after pyinit and module support, we register modules and types)
 	mTTimer.Reset();
 	PyStackless_SetScheduleFastcallback(::OnTaskletSwitch);
 #endif

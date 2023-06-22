@@ -324,6 +324,9 @@ public:
 	
 	// INotify interface
 	bool OnModified(Be::Var* value) override;
+
+    // Python objects cannot be initialized before the interpreter runs
+    bool InitPythonObjects();
 		
 private:
 
