@@ -438,11 +438,12 @@ static PyMethodDef cio_extentions[] =
 };
 
 //------------------------------------------------------------------------------
-extern "C" void initcarbonio(void)
+PyMODINIT_FUNC
+PyInit_carbonio(void)
 {
 	if ( !CarbonIO::singleton()->init() )
 	{
-		return;
+		return nullptr;
 	}
 
 	static struct PyModuleDef moduleDef {
@@ -461,6 +462,6 @@ extern "C" void initcarbonio(void)
 	if ( module == nullptr )
 	{
 		CCP_LOGERR("Failed creating carbonio module");
-		return;
 	}
+	return module;
 }

@@ -1200,7 +1200,7 @@ static PyMethodDef stacklessio_extentions[] = {
 #ifdef USE_ASYNC_FILE
 extern PyTypeObject PyAsyncFile_Type;
 #endif
-extern "C" void initstacklessio(void)
+PyObject* PyInit_stacklessio(void)
 {
 #ifdef USE_ASYNC_FILE
 	if (PyType_Ready(&PyAsyncFile_Type) < 0)
@@ -1219,7 +1219,7 @@ extern "C" void initstacklessio(void)
 	if (module == nullptr)
 	{
 		CCP_LOGERR("Failed creating stacklessio module");
-		return;
+		return nullptr;
 	}
 
 #ifdef USE_ASYNC_FILE
@@ -1227,6 +1227,8 @@ extern "C" void initstacklessio(void)
 		return;
 	Py_INCREF(&PyAsyncFile_Type);
 #endif
+
+	return module;
 }
 
 SCallbackEntry* g_packetCallbackChainPostDecompress = NULL;

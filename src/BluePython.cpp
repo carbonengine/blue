@@ -243,11 +243,11 @@ bool BluePyOS::InitBasicModuleSupport()
 
 #if CCP_STACKLESS
 #ifndef NO_CARBONIO
-	initcarbonio();
+	auto carbonIoModule = PyInit_carbonio();
 #endif
-	initstacklessio();
-	PyInit__slsocket();
-	PyInit_slselect();
+	auto stacklessIoModule = PyInit_stacklessio();
+	auto slsocketModule = PyInit__slsocket();
+	auto slselectModule = PyInit_slselect();
 
 	// c-routing support
 	if ( !BeNet->Init( mBlueModule ) ) {
@@ -284,8 +284,27 @@ bool BluePyOS::InitBasicModuleSupport()
 	Py_DECREF(sysmodule);
 #endif
 
-    PyObject* sys_modules = PyImport_GetModuleDict();
-    PyDict_SetItemString( sys_modules, "blue", mBlueModule );
+	PyObject* sys_modules = PyImport_GetModuleDict();
+	if( PyDict_SetItemString( sys_modules, "blue", mBlueModule ) != 0 )
+	{
+		return false;
+	}
+	if( PyDict_SetItemString( sys_modules, "_slsocket", slsocketModule ) != 0 )
+	{
+		return false;
+	}
+	if( PyDict_SetItemString( sys_modules, "_slselect", slselectModule ) != 0 )
+	{
+		return false;
+	}
+	if( PyDict_SetItemString( sys_modules, "carbonio", carbonIoModule ) != 0 )
+	{
+		return false;
+	}
+	if( PyDict_SetItemString( sys_modules, "stacklessio", stacklessIoModule ) != 0 )
+	{
+		return false;
+	}
 
 	return true;
 }

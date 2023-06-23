@@ -6,7 +6,7 @@
 extern "C" {
 #endif
 
-extern void initstacklessio( void );
+extern PyObject* PyInit_stacklessio( void );
 extern PyObject* PyInit__slsocket( void );
 extern PyObject* PyInit_slselect( void );
 

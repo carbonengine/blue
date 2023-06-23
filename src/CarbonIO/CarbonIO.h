@@ -48,7 +48,7 @@ typedef struct _PySocketSockObject PySocketSockObject;
 typedef union sock_addr sock_addr_t;
 extern "C" void ciolog( const char* format, ... );
 
-extern "C" void initcarbonio( void );
+PyMODINIT_FUNC PyInit_carbonio( void );
 
 //------------------------------------------------------------------------------
 //#define DISABLE_CIO_OPTIMIZATIONS
