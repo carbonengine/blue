@@ -488,7 +488,7 @@ void TaskletTimer::SimpleWarnSlice(Be::Time now, const char *what, PyObject *new
 	forder = logf(forder)/logf(2.0f); // compute the base 2 logarithm.
 	int order = (int)ceilf(forder);
 
-	BluePyStr oc = BluePy(PyObject_Str(oldctxt));
+	BluePyStr oc = oldctxt != Py_None ? BluePy(PyObject_Str(oldctxt)) : BluePyStr( "<None>" );
 	if (!oc) {
 		PyErr_Clear();
 		oc = BluePyStr("<bad>");
