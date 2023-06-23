@@ -12,26 +12,30 @@
 // PythonEvents class
 //
 //////////////////////////////////////////////////////////////////////
-class PythonEvents :
-	public IRoot
+class PythonEvents : public IRoot
 {
 public:
 	EXPOSE_TO_BLUE();
 
-	PythonEvents() : mPort(PYSTDOUT), mSoftspace(0) { Py_INCREF(Py_None); mEncoding = Py_None; }
+	PythonEvents() :
+		mPort( PYSTDOUT ), mSoftspace( 0 ), mEncoding( nullptr )
+	{
+	}
 
 	PYPORT mPort;
 	int mSoftspace; //used by python's print handler
 	PyObject* mEncoding;
 
-	PyObject* Pywrite ( PyObject* args );
-	PyObject* Pyflush ( PyObject* args );
-	PyObject* Pyencoding() { return mEncoding; };
-	PyObject* Pyisatty ( PyObject* args );
-
+	PyObject* Pywrite( PyObject* args );
+	PyObject* Pyflush( PyObject* args );
+	PyObject* Pyencoding()
+	{
+		return mEncoding;
+	};
+	PyObject* Pyisatty( PyObject* args );
 };
 
-TYPEDEF_BLUECLASS(PythonEvents);
+TYPEDEF_BLUECLASS( PythonEvents );
 
 #endif
 

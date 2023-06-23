@@ -272,9 +272,23 @@ bool BluePyOS::InitBasicModuleSupport()
 			if (mPyPorts[i].mEncoding == Py_None) {
 				Py_DECREF(Py_None);
 			}
-			PyObject* orig_stdout = PySys_GetObject((char*)"stdout");
-			// no need to incref because it's a borrowed reference
-			mPyPorts[i].mEncoding = PyObject_GetAttrString(orig_stdout, "encoding");
+			PyObject* encoding = nullptr;
+			PyObject* orig_stdout = PySys_GetObject( (char*)"stdout" ); // no need to incref because it's a borrowed reference
+			if( orig_stdout != Py_None )
+			{
+				encoding = PyObject_GetAttrString( orig_stdout, "encoding" );
+			}
+			else
+			{
+				encoding = PyUnicode_FromString( PyUnicode_GetDefaultEncoding() );
+			}
+			Py_INCREF( encoding );
+			mPyPorts[i].mEncoding = encoding;
+		}
+		else
+		{
+			Py_INCREF( Py_None );
+			mPyPorts[i].mEncoding = Py_None;
 		}
 		BluePythonObject* obj = WrapBlueObject(mPyPorts[i].GetRawRoot());
 		PyObject_SetAttrString(sysmodule, (char*)PORTNAMES[i], obj);
