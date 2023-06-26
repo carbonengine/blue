@@ -484,13 +484,21 @@ static PyObject* ClockThisWithoutStars(PyObject*, PyObject* args)
 	return ClockThisImpl(ctx, fn, realArgs, kw);
 }
 
+CCP_STATS_DECLARED_ELSEWHERE( pyMemory );
+static PyObject* PyGetPyMalloced(PyObject*, PyObject*)
+{
+	return PyLong_FromLongLong( int64_t( CCP_STATS_GET( pyMemory ) ) );
+}
+
 
 //--------------------------------------------------------------------
 // ClockThis utility functions
 static PyMethodDef clockthis[] = {
 	{"ClockThis", (PyCFunction)ClockThis, METH_VARARGS | METH_KEYWORDS, "ClockThis utility"},
 	{"ClockThisWithoutTheStars", ClockThisWithoutStars, METH_VARARGS, "ClockThisWithoutTheStars utility"},
-	{0}
+	// `getpymalloced` is not related to clockthis at all, but you know, it's also a customization to `sys`
+	{"getpymalloced", PyGetPyMalloced, METH_VARARGS, "Returns the size of memory allocated by Python, in bytes."},
+	{nullptr}
 };
 
 #endif
@@ -621,7 +629,9 @@ bool BluePyOS::Startup()
 	for (PyMethodDef* md = clockthis; md->ml_meth != NULL; md++)
 	{
 		PyObject* fn = PyCFunction_New(md, NULL);
-		PySys_SetObject((char*)md->ml_name, fn);
+		if ( PySys_SetObject((char*)md->ml_name, fn) == -1 ) {
+			CCP_LOGERR( "Failed adding %s to sys module", md->ml_name );
+		}
 		Py_DECREF(fn);
 	}
 #endif

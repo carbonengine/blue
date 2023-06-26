@@ -13,7 +13,7 @@
 // necessary to ensure that the Python allocator is set up before any static
 // initializers that may call on the Python C API are executed.
 
-CCP_STATS_DECLARE( pyMemory, "Blue/Memory/Python", false, CST_MEMORY, "The amount of memory allocated for Python" );
+CCP_STATS_DECLARE( pyMemory,					"Blue/Memory/Python", false, CST_MEMORY, "The amount of memory allocated for Python" );
 
 class PyMemoryInitializer;
 

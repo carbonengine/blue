@@ -17,7 +17,6 @@ CCP_STATS_DECLARE( trackedAllocationsCount,		"Blue/Memory/trackedAllocationsCoun
 CCP_STATS_DECLARE( trackedAllocationsSize,		"Blue/Memory/trackedAllocationsSize", false, CST_MEMORY, "Combined size of tracked allocations live in the system" );
 
 #if CCP_STACKLESS
-//CCP_STATS_DECLARE( pyMemory,					"Blue/Memory/Python", false, CST_MEMORY, "The amount of memory allocated for Python" );
 CCP_STATS_DECLARED_ELSEWHERE( pyMemory );
 #endif
 
