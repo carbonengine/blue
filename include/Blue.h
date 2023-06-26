@@ -37,6 +37,7 @@ extern "C"
 {
 	BLUEIMPORT void BlueModuleStartup();
 	BLUEIMPORT void BlueInitializeSocketLogger();
+	BLUEIMPORT void BlueShutdownSocketLogger();
 	BLUEIMPORT void BlueSetCrashReporter( ICrashReporter* crashReporter );
 	BLUEIMPORT void BlueLogFuncChannel( CcpLogChannel_t& logObject, CCP::LogType type, unsigned long userData, const char* format, va_list args );
 }

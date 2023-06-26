@@ -432,6 +432,13 @@ void BlueInitializeSocketLogger()
 	}
 }
 
+void BlueShutdownSocketLogger()
+{
+	CCP_LOG( "Shutting down socket logger" );
+	FlushSocketLogger();
+	StopSocketLogger();
+}
+
 void BlueSetCrashReporter( ICrashReporter* crashReporter )
 {
 	BeCrashes = crashReporter;
