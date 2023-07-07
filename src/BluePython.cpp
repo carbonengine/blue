@@ -213,8 +213,12 @@ bool BluePyOS::InitBasicModuleSupport()
 	if (PyDict_SetItemString(dict, "LogChannel", (PyObject*)LogChannelType()))
 		return false;
 
-	if ( !InitHeapq(mBlueModule) )
+    PyObject* heapqModule = InitHeapq();
+	if ( !InitHeapq() )
 		throw PyError();
+    if ( PyModule_AddObject( mBlueModule, "heapq", heapqModule ) ) {
+        return false;
+    }
 
     // Add the DBRowsetStuff
     if( !DBRowsetInit( mBlueModule ) )
@@ -299,10 +303,13 @@ bool BluePyOS::InitBasicModuleSupport()
 #endif
 
 	PyObject* sys_modules = PyImport_GetModuleDict();
-	if( PyDict_SetItemString( sys_modules, "blue", mBlueModule ) != 0 )
-	{
-		return false;
-	}
+    if( PyDict_SetItemString( sys_modules, "blue", mBlueModule ) != 0 )
+    {
+        return false;
+    }
+    if ( PyDict_SetItemString( sys_modules, "blue.heapq", heapqModule ) != 0 ) {
+        return false;
+    }
 	if( PyDict_SetItemString( sys_modules, "_slsocket", slsocketModule ) != 0 )
 	{
 		return false;

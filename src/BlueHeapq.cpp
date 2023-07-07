@@ -322,7 +322,7 @@ PyObject *PyHeapCheck(PyObject *self, PyObject *args)
 
 }
 
-bool InitHeapq(PyObject* blueModule)
+PyMODINIT_FUNC InitHeapq(void)
 {
     static struct PyModuleDef moduleDef = {
         PyModuleDef_HEAD_INIT,
@@ -334,15 +334,10 @@ bool InitHeapq(PyObject* blueModule)
     auto module = PyModule_Create(&moduleDef);
     if ( ! module ) {
         CCP_LOGERR("Failed to create blue.heapq module");
-		return false;
+		return nullptr;
     }
 
-	if ( PyModule_AddObject(blueModule, "heapq", module) ) {
-		CCP_LOGERR("Failed adding heapq submodule to blue");
-		return false;
-	}
-
-	return true;
+	return module;
 }
 
 #endif
