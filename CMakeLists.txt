@@ -348,7 +348,11 @@ set_target_properties(Blue PROPERTIES OUTPUT_NAME "blue")
 # Provide tests and an install target iff this is the top level project only
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     # tests
+    option(BUILD_TESTING "Build tests. Enabled by default." ON)
     include(CTest)
+    if(BUILD_TESTING)
+        add_subdirectory(tests)
+    endif()
     # discover python tests ... this may be a little bit brittle since we're working around the missing `_blueexposuretest`
     # binary. As in, test discovery happens during the configure stage at which the binary does not exist yet.
     set(PYTHON_EXECUTABLE "${BRANCH_ROOT_DIR}/vendor/python/3.8.1+ccp-stackless/bin/Windows/x64/v141/python.exe")

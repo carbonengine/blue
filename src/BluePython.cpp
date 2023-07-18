@@ -21,6 +21,7 @@
 #include "crypto.h"
 #include "BlueClipboard.h"
 #include "errormessage.h"
+#include "PyMemory.h"
 
 #if _WIN32
 #include "win32.h"
@@ -543,6 +544,11 @@ bool BluePyOS::Startup()
 	// issue treating the corresponding configuration flag correctly, so we cannot
 	// just add `-s` or set `PYTHONNOUSERSITE=1` in the pythonInterpreter scipts.
 	Py_NoUserSiteDirectory++;
+
+	// TODO this doesn't seem to work well when mixing Python C extensions
+	// that are built in debug vs. non-debug...
+	CCP_LOG( "Installing Python memory allocators" );
+	InstallPythonMemoryHooks();
 
 	PyPreConfig preConfig;
 	PyConfig config;
