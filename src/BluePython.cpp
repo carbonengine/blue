@@ -545,10 +545,15 @@ bool BluePyOS::Startup()
 	// just add `-s` or set `PYTHONNOUSERSITE=1` in the pythonInterpreter scipts.
 	Py_NoUserSiteDirectory++;
 
-	// TODO this doesn't seem to work well when mixing Python C extensions
-	// that are built in debug vs. non-debug...
-	CCP_LOG( "Installing Python memory allocators" );
-	InstallPythonMemoryHooks();
+    // Guard memory hook installation for the event that blue is imported in a vanilla python interpreter
+    // TODO Fix blue startup sequence so that module import doesn't try to bootstrap the interpreter!
+    if ( ! Py_IsInitialized() )
+    {
+        // TODO this doesn't seem to work well when mixing Python C extensions
+        // that are built in debug vs. non-debug...
+        CCP_LOG( "Installing Python memory allocators" );
+        InstallPythonMemoryHooks();
+    }
 
 	PyPreConfig preConfig;
 	PyConfig config;
