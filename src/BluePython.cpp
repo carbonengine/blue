@@ -588,14 +588,17 @@ bool BluePyOS::Startup()
 		//		Py_IgnoreEnvironmentFlag++; //ignore PYTHONPATH and like
 		//		Py_DontWriteBytecodeFlag++; // Do not read or write .pyc ro .pyo files
 		PyConfig_InitIsolatedConfig( &config );
-	} else {
+        config.write_bytecode = 0;
+        config.optimization_level = 2;
+        config.site_import = 0;
+    } else {
 		PyConfig_InitPythonConfig( &config );
 		// need to disable user site directory because it may contain C extensions compiled with a different compiler. Alternately: we could provide our own site directory, but what's the point?
 		config.user_site_directory = 0;
 	}
 	CCP_LOG( "Init reported exit code %d and message %s", status.exitcode, status.err_msg );
 
-	CCP_LOG( "Adding warn option ");
+    CCP_LOG( "Adding warn option ");
 	status = PyWideStringList_Append( &(config.warnoptions), L"d" );
 	CCP_LOG( "Warn option reported exit code %d and message %s", status.exitcode, status.err_msg );
 	CCP_LOG( "Setting argv");
@@ -615,6 +618,11 @@ bool BluePyOS::Startup()
         CCP_LOG( "Appending %S to sys.path candidate list (error %d: %s)", tmp.c_str(), status.exitcode, status.err_msg );
     }
     config.module_search_paths_set = 1;
+
+    // We want to avoid cluttering the Perforce workspace with `__pycache__` folders. Therefore, write any compiled
+    // bytecode to our usual cache location instead.
+    config.pycache_prefix = BePaths->ResolvePathForWritingW(L"cache:/__pycache__").data();
+    CCP_LOG( "Configured __pycache__ location to be %ls", config.pycache_prefix );
 
 	CCP_LOG( "Initializing Python" );
 	status = Py_InitializeFromConfig(&config);
