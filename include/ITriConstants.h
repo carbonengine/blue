@@ -3,7 +3,7 @@
 
 	ITriConstants.h
 
-	Author:    Hilmar Veigar Pétursson
+	Author:    Hilmar Veigar Ptursson
 	Created:   August 2001
 	OS:        Win32
 	Project:   Trinity

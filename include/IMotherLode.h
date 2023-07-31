@@ -3,7 +3,7 @@
 
 	IMotherLode.h
 
-	Author:    Kristján Valur Jónsson
+	Author:    Kristjn Valur Jnsson
 	Created:   Dec 2008
 	OS:        Win32
 	Project:   Blue
