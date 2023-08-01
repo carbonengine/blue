@@ -3,7 +3,7 @@
 
 	BlueTime.cpp
 
-	Author:    Kristján Valur Jónsson
+	Author:    Kristjn Valur Jnsson
 	Created:   sept. 2004
 	OS:        Win32
 	Project:   Blue
