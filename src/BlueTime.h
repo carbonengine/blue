@@ -3,7 +3,7 @@
 
 	BlueTime.h
 
-	Author:    Kristjn Valur Jnsson
+	Author:    Kristján Valur Jónsson
 	Created:   sept. 2004
 	OS:        Win32
 	Project:   Blue

@@ -3,7 +3,7 @@
 
 	MotherLode.cpp
 
-	Author:    Kristjn Valur Jnsson
+	Author:    Kristján Valur Jónsson
 	Created:   Dec 2008
 	OS:        Win32
 	Project:   Yep

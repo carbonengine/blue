@@ -3,7 +3,7 @@
 
 	BlueSmartVar.h
 
-	Author:    Kristjn Valur Jnsson
+	Author:    Kristján Valur Jónsson
 	Created:   Sep. 2003
 	OS:        Win32
 	Project:   Blue
