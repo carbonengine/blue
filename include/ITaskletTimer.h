@@ -3,7 +3,7 @@
 
 	ITaskletTimer.h
 
-	Author:    Kristjn Valur Jnsson
+	Author:    Kristján Valur Jónsson
 	Created:   Sept. 2004
 	OS:        Win32
 	Project:   Blue

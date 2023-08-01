@@ -3,7 +3,7 @@
 
 	ITriFunction.h
 
-	Author:    Hilmar Veigar Ptursson
+	Author:    Hilmar Veigar Pétursson
 	Created:   August 2001
 	OS:        Windows, macOS
 	Project:   Blue (Originally Trinity)
