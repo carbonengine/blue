@@ -89,7 +89,7 @@ static void TranslateExc(const std::exception &e) throw()
 {
 	if (dynamic_cast<const SystemError *>(&e)) {
         const SystemError &se = dynamic_cast<const SystemError &>(e);
-        PyObjectPtr info(PyString_FromString(se.what()));
+        PyObjectPtr info(PyUnicode_FromString(se.what()));
 		if (info)
 			socket_set_extra_error_info(info);
         else
@@ -108,7 +108,7 @@ static void TranslateExc() throw()
 // Use this when you don't want to return a socket error but an error
 // code.
 static void SetSystemError(const SystemError &se) {
-	PyObjectPtr info(PyString_FromString(se.what()));
+	PyObjectPtr info(PyUnicode_FromString(se.what()));
 	if (info)
 		socket_set_extra_error_info(info);
 	else
@@ -1796,7 +1796,7 @@ public:
             Py_INCREF(result);
         else
             //Here we can later create a buffer object and avoid copying the data
-            result = PyString_FromStringAndSize(mData, mBytesRead-sizeof(mHeader));
+            result = PyBytes_FromStringAndSize(mData, mBytesRead-sizeof(mHeader));
         if (mData)
             free(mData);
         mData = 0;
@@ -1804,7 +1804,7 @@ public:
     }
 
     PyObject *GetSequence() {
-        return PyInt_FromLong(mSequence);
+        return PyLong_FromLong(mSequence);
     }
 
 protected:
@@ -2223,25 +2223,25 @@ slsock_apply_settings(PyObject *self, PyObject *dict)
     }
 	v = PyDict_GetItemString(dict, "version");
 	if (v) {
-		long d = PyInt_AsLong(v);
+		long d = PyLong_AsLong(v);
 		if (d == -1 && PyErr_Occurred()) return NULL;
 		slsockVersion = d;
 	}
 	v = PyDict_GetItemString(dict, "allocChunkSize");
 	if (v) {
-		Py_ssize_t d = PyInt_AsSsize_t(v);
+		Py_ssize_t d = PyLong_AsSsize_t(v);
 		if (d == -1 && PyErr_Occurred()) return NULL;
 		slsockAllocChunkSize = d;
 	}
 	v = PyDict_GetItemString(dict, "defaultRCVBUF");
 	if (v) {
-		long d = PyInt_AsLong(v);
+		long d = PyLong_AsLong(v);
 		if (d == -1 && PyErr_Occurred()) return NULL;
 		defaultRCVBUF = d;
 	}
 	v = PyDict_GetItemString(dict, "defaultSNDBUF");
 	if (v) {
-		long d = PyInt_AsLong(v);
+		long d = PyLong_AsLong(v);
 		if (d == -1 && PyErr_Occurred()) return NULL;
 		defaultSNDBUF = d;
 	}

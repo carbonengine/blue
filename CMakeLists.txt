@@ -306,7 +306,7 @@ target_compile_definitions(Blue
 
 if(APPLE)
     enable_language(OBJCXX)
-    target_compile_definitions(Blue PRIVATE PORTING_TO_LINUX)
+    target_compile_definitions(Blue PRIVATE PORTING_TO_LINUX NO_CARBONIO)
     target_link_libraries(Blue PRIVATE "-framework Foundation -framework IOKit -framework AppKit")
 endif()
 
@@ -355,7 +355,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     endif()
     # discover python tests ... this may be a little bit brittle since we're working around the missing `_blueexposuretest`
     # binary. As in, test discovery happens during the configure stage at which the binary does not exist yet.
-    set(PYTHON_EXECUTABLE "${BRANCH_ROOT_DIR}/vendor/python/3.8.1+ccp-stackless/bin/Windows/x64/v141/python.exe")
+    set(ENV{PYTHONPATH} ${BRANCH_ROOT_DIR}/carbon/common/stdlib:${BRANCH_ROOT_DIR}/vendor/python/3.8.1+ccp-stackless/${CCP_VENDOR_BIN_PATH})
     execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sys; sys.modules['blue']=sys;import unittest; print_suite = lambda x: (print(x._exception), sys.exit(1)) if hasattr(x, '_exception') else print(x.id()) if not hasattr(x, '__iter__') else [print_suite(x) for x in x];print_suite(unittest.defaultTestLoader.discover('.'))"
         OUTPUT_VARIABLE PYTHON_TESTS_STR
         OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -374,7 +374,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
             COMMAND ${PYTHON_EXECUTABLE} -m unittest -v ${PYTHON_TEST}
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests/python
         )
-        set_tests_properties(${PYTHON_TEST} PROPERTIES ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:Blue>")
+        set_tests_properties(${PYTHON_TEST} PROPERTIES ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:Blue>:${BRANCH_ROOT_DIR}/carbon/common/stdlib:${BRANCH_ROOT_DIR}/vendor/python/3.8.1+ccp-stackless/${CCP_VENDOR_BIN_PATH};BUILDFLAVOR=$<LOWER_CASE:$<CONFIG>>")
     endforeach()
 
     # Install rule to ensure that our runtime and linker files are in the expected, platform-specific folders

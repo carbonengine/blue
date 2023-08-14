@@ -319,10 +319,12 @@ bool BluePyOS::InitBasicModuleSupport()
 	{
 		return false;
 	}
+#ifndef NO_CARBONIO
 	if( PyDict_SetItemString( sys_modules, "carbonio", carbonIoModule ) != 0 )
 	{
 		return false;
 	}
+#endif
 	if( PyDict_SetItemString( sys_modules, "stacklessio", stacklessIoModule ) != 0 )
 	{
 		return false;

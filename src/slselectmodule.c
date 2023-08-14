@@ -378,8 +378,8 @@ update_ufd_array(pollObject *self)
 
     i = pos = 0;
     while (PyDict_Next(self->dict, &pos, &key, &value)) {
-        self->ufds[i].fd = PyInt_AsLong(key);
-        self->ufds[i].events = (short)PyInt_AsLong(value);
+        self->ufds[i].fd = PyLong_AsLong(key);
+        self->ufds[i].events = (short)PyLong_AsLong(value);
         i++;
     }
     self->ufd_uptodate = 1;
@@ -409,10 +409,10 @@ poll_register(pollObject *self, PyObject *args)
 
     /* Add entry to the internal dictionary: the key is the
        file descriptor, and the value is the event mask. */
-    key = PyInt_FromLong(fd);
+    key = PyLong_FromLong(fd);
     if (key == NULL)
         return NULL;
-    value = PyInt_FromLong(events);
+    value = PyLong_FromLong(events);
     if (value == NULL) {
         Py_DECREF(key);
         return NULL;
@@ -451,7 +451,7 @@ poll_modify(pollObject *self, PyObject *args)
     if (fd == -1) return NULL;
 
     /* Modify registered fd */
-    key = PyInt_FromLong(fd);
+    key = PyLong_FromLong(fd);
     if (key == NULL)
         return NULL;
     if (PyDict_GetItem(self->dict, key) == NULL) {
@@ -459,7 +459,7 @@ poll_modify(pollObject *self, PyObject *args)
         PyErr_SetFromErrno(PyExc_IOError);
         return NULL;
     }
-    value = PyInt_FromLong(events);
+    value = PyLong_FromLong(events);
     if (value == NULL) {
         Py_DECREF(key);
         return NULL;
@@ -492,7 +492,7 @@ poll_unregister(pollObject *self, PyObject *o)
         return NULL;
 
     /* Check whether the fd is already in the array */
-    key = PyInt_FromLong(fd);
+    key = PyLong_FromLong(fd);
     if (key == NULL)
         return NULL;
 
@@ -535,10 +535,10 @@ poll_poll(pollObject *self, PyObject *args)
         return NULL;
     }
     else {
-        tout = PyNumber_Int(tout);
+        tout = PyNumber_Long(tout);
         if (!tout)
             return NULL;
-        timeout = PyInt_AsLong(tout);
+        timeout = PyLong_AsLong(tout);
         Py_DECREF(tout);
         if (timeout == -1 && PyErr_Occurred())
             return NULL;
@@ -576,7 +576,7 @@ poll_poll(pollObject *self, PyObject *args)
             value = PyTuple_New(2);
             if (value == NULL)
                 goto error;
-            num = PyInt_FromLong(self->ufds[i].fd);
+            num = PyLong_FromLong(self->ufds[i].fd);
             if (num == NULL) {
                 Py_DECREF(value);
                 goto error;
@@ -587,7 +587,7 @@ poll_poll(pollObject *self, PyObject *args)
                is a 16-bit short, and IBM assigned POLLNVAL
                to be 0x8000, so the conversion to int results
                in a negative number. See SF bug #923315. */
-            num = PyInt_FromLong(self->ufds[i].revents & 0xffff);
+            num = PyLong_FromLong(self->ufds[i].revents & 0xffff);
             if (num == NULL) {
                 Py_DECREF(value);
                 goto error;
@@ -647,12 +647,6 @@ poll_dealloc(pollObject *self)
     PyObject_Del(self);
 }
 
-static PyObject *
-poll_getattr(pollObject *self, char *name)
-{
-    return Py_FindMethod(poll_methods, (PyObject *)self, name);
-}
-
 static PyTypeObject poll_Type = {
     /* The ob_type field must be initialized in the module init function
      * to be portable to Windows without using C++. */
@@ -661,16 +655,30 @@ static PyTypeObject poll_Type = {
     sizeof(pollObject),         /*tp_basicsize*/
     0,                          /*tp_itemsize*/
     /* methods */
-    (destructor)poll_dealloc, /*tp_dealloc*/
-    0,                          /*tp_print*/
-    (getattrfunc)poll_getattr, /*tp_getattr*/
-    0,                      /*tp_setattr*/
-    0,                          /*tp_compare*/
+    (destructor)poll_dealloc,   /*tp_dealloc*/
+    0,                          /*tp_vectorcall_offset*/
+    0,                          /*tp_getattr*/
+    0,                          /*tp_setattr*/
+    0,                          /*tp_as_async*/
     0,                          /*tp_repr*/
     0,                          /*tp_as_number*/
     0,                          /*tp_as_sequence*/
     0,                          /*tp_as_mapping*/
     0,                          /*tp_hash*/
+	0,                          /*tp_call*/
+	0,                          /*tp_str*/
+	0,                          /*tp_getattr*/
+	0,                          /*tp_setattr*/
+	0,                          /*tp_as_buffer*/
+	Py_TPFLAGS_DEFAULT,         /*tp_flags*/
+	0,                          /*tp_doc*/
+	0,                          /*tp_traverse*/
+	0,                          /*tp_clear*/
+	0,                          /*tp_richcompare*/
+	0,                          /*tp_weaklistoffset*/
+	0,                          /*tp_iter*/
+	0,                          /*tp_iternext*/
+	poll_methods,               /*tp_methods*/
 };
 
 PyDoc_STRVAR(poll_doc,
@@ -1262,7 +1270,7 @@ kqueue_event_repr(kqueue_event_Object *s)
         "data=0x%zd udata=%p>",
         (size_t)(s->e.ident), s->e.filter, s->e.flags,
         s->e.fflags, (Py_ssize_t)(s->e.data), s->e.udata);
-    return PyString_FromString(buf);
+    return PyUnicode_FromString(buf);
 }
 
 static int
@@ -1485,7 +1493,7 @@ kqueue_queue_fileno(kqueue_queue_Object *self)
 {
     if (self->kqfd < 0)
         return kqueue_queue_err_closed();
-    return PyInt_FromLong(self->kqfd);
+    return PyLong_FromLong(self->kqfd);
 }
 
 PyDoc_STRVAR(kqueue_queue_fileno_doc,
@@ -1873,14 +1881,14 @@ PyInit_slselect(void)
     kqueue_event_Type.tp_new = PyType_GenericNew;
     Py_TYPE(&kqueue_event_Type) = &PyType_Type;
     if(PyType_Ready(&kqueue_event_Type) < 0)
-        return;
+        return NULL;
 
     Py_INCREF(&kqueue_event_Type);
     PyModule_AddObject(m, "kevent", (PyObject *)&kqueue_event_Type);
 
     Py_TYPE(&kqueue_queue_Type) = &PyType_Type;
     if(PyType_Ready(&kqueue_queue_Type) < 0)
-        return;
+        return NULL;
     Py_INCREF(&kqueue_queue_Type);
     PyModule_AddObject(m, "kqueue", (PyObject *)&kqueue_queue_Type);
 

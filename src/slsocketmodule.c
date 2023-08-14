@@ -1180,7 +1180,7 @@ makesockaddr(SOCKET_T sockfd, struct sockaddr *addr, int addrlen, int proto)
 #endif /* linux */
         {
             /* regular NULL-terminated string */
-            return PyString_FromString(a->sun_path);
+            return PyUnicode_DecodeFSDefault(a->sun_path);
         }
     }
 #endif /* AF_UNIX */
@@ -2054,7 +2054,7 @@ static PyObject* getSocketDescriptor( PySocketSockObject *sock )
 #if defined(MS_WINDOWS) && SIZEOF_SOCKET_T == 8
 	return PyLong_FromUnsignedLongLong( sock->sock_fd );
 #else
-    return PyInt_FromLong( sock->sock_fd );
+    return PyLong_FromLong( sock->sock_fd );
 #endif
 }
 
@@ -2424,7 +2424,7 @@ static PyObject *
 sock_fileno(PySocketSockObject *s)
 {
 #if SIZEOF_SOCKET_T <= SIZEOF_LONG
-    return PyInt_FromLong((long) s->sock_fd);
+    return PyLong_FromLong((long) s->sock_fd);
 #else
     return PyLong_FromLongLong((PY_LONG_LONG)s->sock_fd);
 #endif
@@ -2561,74 +2561,6 @@ PyDoc_STRVAR(listen_doc,
 Enable a server to accept connections.  The backlog argument must be at\n\
 least 1; it specifies the number of unaccepted connection that the system\n\
 will allow before refusing new connections.");
-
-
-#ifndef NO_DUP
-/* s.makefile(mode) method.
-   Create a new open file object referring to a dupped version of
-   the socket's file descriptor.  (The dup() call is necessary so
-   that the open file and socket objects may be closed independent
-   of each other.)
-   The mode argument specifies 'r' or 'w' passed to fdopen(). */
-
-static PyObject *
-sock_makefile(PySocketSockObject *s, PyObject *args)
-{
-    extern int fclose(FILE *);
-    char *mode = "r";
-    int bufsize = -1;
-#ifdef MS_WIN32
-    Py_intptr_t fd;
-#else
-    int fd;
-#endif
-    FILE *fp;
-    PyObject *f;
-#ifdef __VMS
-    char *mode_r = "r";
-    char *mode_w = "w";
-#endif
-
-    if (!PyArg_ParseTuple(args, "|si:makefile", &mode, &bufsize))
-        return NULL;
-#ifdef __VMS
-    if (strcmp(mode,"rb") == 0) {
-        mode = mode_r;
-    }
-    else {
-        if (strcmp(mode,"wb") == 0) {
-            mode = mode_w;
-        }
-    }
-#endif
-#ifdef MS_WIN32
-    if (((fd = _open_osfhandle(s->sock_fd, _O_BINARY)) < 0) ||
-        ((fd = dup(fd)) < 0) || ((fp = fdopen(fd, mode)) == NULL))
-#else
-    if ((fd = dup(s->sock_fd)) < 0 || (fp = fdopen(fd, mode)) == NULL)
-#endif
-    {
-        if (fd >= 0)
-#ifdef SLSOCKET
-            SOCKETCLOSE(fd, NULL);
-#else
-            SOCKETCLOSE(fd);
-#endif
-        return s->errorhandler();
-    }
-    f = PyFile_FromFile(fp, "<socket>", mode, fclose);
-    if (f != NULL)
-        PyFile_SetBufSize(f, bufsize);
-    return f;
-}
-
-PyDoc_STRVAR(makefile_doc,
-"makefile([mode[, buffersize]]) -> file object\n\
-\n\
-Return a regular file object corresponding to the socket.\n\
-The mode and buffersize arguments are as for the built-in open() function.");
-
-#endif /* NO_DUP */
 
 #if !defined(SLSOCKET)
 /*
@@ -3799,10 +3731,6 @@ static PyMethodDef sock_methods[] = {
 #endif
     {"listen",            (PyCFunction)sock_listen, METH_O,
                       listen_doc},
-#ifndef NO_DUP
-    {"makefile",          (PyCFunction)sock_makefile, METH_VARARGS,
-                      makefile_doc},
-#endif
     {"recv",              (PyCFunction)sock_recv, METH_VARARGS,
                       recv_doc},
     {"recv_into",         (PyCFunction)sock_recv_into, METH_VARARGS | METH_KEYWORDS,
@@ -4772,7 +4700,7 @@ socket_inet_aton(PyObject *self, PyObject *args)
     if (inet_aton != NULL) {
 #endif
     if (inet_aton(ip_addr, &buf))
-        return PyString_FromStringAndSize((char *)(&buf),
+        return PyBytes_FromStringAndSize((char *)(&buf),
                                           sizeof(buf));
 
     PyErr_SetString(socket_error,
@@ -6438,7 +6366,7 @@ struct hostent *socket_hostent_dup(const struct hostent *e)
     if (!r)
         return 0;
     memset(r, 0, sizeof(struct hostent));
-    r->h_name = _strdup(e->h_name);
+    r->h_name = strdup(e->h_name);
     if (!r->h_name)
         goto FAIL;
 
@@ -6449,7 +6377,7 @@ struct hostent *socket_hostent_dup(const struct hostent *e)
         goto FAIL;
     r->h_aliases[i] = NULL;
     for(i=0; e->h_aliases[i]; i++) {
-        r->h_aliases[i] = _strdup(e->h_aliases[i]);
+        r->h_aliases[i] = strdup(e->h_aliases[i]);
         if (!r->h_aliases[i])
             goto FAIL;
     }

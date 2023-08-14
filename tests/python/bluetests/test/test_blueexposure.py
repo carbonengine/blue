@@ -1,3 +1,4 @@
+import sys
 import unittest
 import blue
 
@@ -65,7 +66,7 @@ class TestBlueExposure(unittest.TestCase):
             self.assertEqual(x.myInt, each, "Failed to assign %d" % each)
 
         def AssignLong_ErrorExpected():
-            x.myInt = 2147483648
+            x.myInt = sys.maxsize + 1
         
         self.assertRaises(OverflowError, AssignLong_ErrorExpected)
 

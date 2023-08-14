@@ -176,7 +176,7 @@ HERR:
         return PyErr_SetFromErrnoWithFilename( PyExc_OSError, filenameStr );
     }
 
-	BluePy r( PyString_FromStringAndSize( nullptr, Py_ssize_t( fileSize ) ) );
+	BluePy r( PyBytes_FromStringAndSize( nullptr, Py_ssize_t( fileSize ) ) );
 	if( !r )
 	{
 		close( f );
@@ -185,7 +185,7 @@ HERR:
 	ssize_t bytes;
 	{
 		Ccp::PyAllowThreads _allow;
-		bytes = read( f, PyString_AsString(r), fileSize );
+		bytes = read( f, PyBytes_AsString(r), fileSize );
 		close( f );
 	}
 	if( long( bytes ) < fileSize )
@@ -264,7 +264,8 @@ HERR:
 
 #elif defined(__APPLE__)
 
-	CW2A filenameStr( reinterpret_cast<const wchar_t*>( PyUnicode_AS_UNICODE( ufn.o ) ) );
+	Py_UNICODE *fileName = PyUnicode_AS_UNICODE(ufn);
+	CW2A filenameStr( reinterpret_cast<const wchar_t*>( fileName ) );
 	int f;
 	{
 		Ccp::PyAllowThreads _allow;
@@ -275,25 +276,15 @@ HERR:
         return PyErr_SetFromErrnoWithFilename( PyExc_OSError, filenameStr );
     }
 	ON_BLOCK_EXIT( [&] { close( f ); } );
-	Py_ssize_t segcount = buffer->bf_getsegcount( dataO, 0 );
-	for( Py_ssize_t i = 0; i < segcount; i++ )
+	ssize_t written;
 	{
-		void *data;
-		Py_ssize_t datalen = buffer->bf_getreadbuffer( dataO, i, &data );
-		if( datalen < 0 ) 
-		{
-			return PyErr_SetString( PyExc_ValueError, "Unexpected end of buffer" ), nullptr;
-		}
-		ssize_t written;
-		{
-			Ccp::PyAllowThreads _allow;
-			written = write( f, data, datalen );
-		}
-		if( written != datalen ) 
-		{
-			return PyErr_SetString( PyExc_IOError, "Wrote short file" ), nullptr;
-		}
-	}	
+		 Ccp::PyAllowThreads _allow;
+		 written = write( f, buffer.buf, buffer.len );
+	}
+	if( written != buffer.len )
+	{
+		 return PyErr_SetString( PyExc_IOError, "Wrote short file" ), nullptr;
+	}
 	Py_RETURN_NONE;
 
 #else
@@ -619,7 +610,7 @@ void PatchPythonExit()
 
 }
 
-PyMODINIT_FUNC
+PyMODINIT_FUNC BLUE_EXPORTED_INIT
 	CCP_CONCATENATE( PyInit_blue, CCP_BUILD_FLAVOR ) (void)
 {
     BlueModuleStartup();

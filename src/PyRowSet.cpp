@@ -741,10 +741,9 @@ bool DBRow::InitType(PyTypeObject *tp)
 			0,
 			0,
 			(ssizeargfunc)SequenceGet,
-			(ssizessizeargfunc)SequenceGetSlice,
+			nullptr,
 			(ssizeobjargproc)SequenceSet,
-			(ssizessizeobjargproc)SequenceSetSlice,
-
+			nullptr,
 		};
 
 		static PyMappingMethods mappingMethods = {

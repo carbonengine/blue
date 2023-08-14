@@ -519,7 +519,7 @@ bool WriteStream::InitType(PyTypeObject *type)
 		0,
 		0,
 		SequenceGet,
-		SequenceGetSlice,
+		0,
 		0,
 		0
 	};

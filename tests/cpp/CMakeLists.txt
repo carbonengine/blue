@@ -19,17 +19,21 @@ target_link_libraries(BlueCppUnitTests
     Python
 )
 
-if(WIN32)
-    get_target_property(Python_DLL_PATH Python IMPORTED_LOCATION)
-    cmake_path(GET Python_DLL_PATH PARENT_PATH Python_DLL_PATH)
-
-    file(GLOB PYTHON_RUNTIME_FILES "${Python_DLL_PATH}/*.pyd")
-    list(APPEND PYTHON_RUNTIME_FILES "${Python_DLL_PATH}/Python38.zip")
-    add_custom_command(TARGET BlueCppUnitTests POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:BlueCppUnitTests> $<TARGET_FILE_DIR:BlueCppUnitTests>
-        COMMAND ${CMAKE_COMMAND} -E copy ${PYTHON_RUNTIME_FILES} $<TARGET_FILE_DIR:BlueCppUnitTests>
+# Unfortunately the Python runtime is required for test discovery to work. It's not possible to override the working
+# directory for discovery itself - the `WORKING_DIRECTORY` attribute there is for discovered tests. Therefore, we need
+# to place it in the output folder.
+get_target_property(LIBPYTHON Python IMPORTED_LOCATION)
+add_custom_command(TARGET BlueCppUnitTests POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy ${LIBPYTHON} $<TARGET_FILE_DIR:BlueCppUnitTests>
         COMMAND_EXPAND_LISTS
-    )
-endif()
+        VERBATIM
+)
 
-gtest_discover_tests(BlueCppUnitTests)
+# Test discovery needs to be delayed until we are about to run tests as otherwise the above post-build step won't have
+# run. Additionally, we set the working directory for the tests to be the folder in which all built-in Python C
+# extensions are located. That way we can avoid copying them around.
+cmake_path(GET LIBPYTHON ROOT_PATH PYTHON_BIN_FOLDER)
+gtest_discover_tests(BlueCppUnitTests
+        DISCOVERY_MODE PRE_TEST
+        WORKING_DIRECTORY ${PYTHON_BIN_FOLDER}
+)
