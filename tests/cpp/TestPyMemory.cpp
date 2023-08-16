@@ -23,7 +23,11 @@ protected:
 		if (!envBranchPath) {
 			GTEST_FAIL() << "Could not find `CCP_EVE_PERFORCE_BRANCH_PATH` environment variable, thus Python cannot be initialized correctly.\n";
 		}
-		swprintf(pythonPath, sizeof(pythonPath) / sizeof(*pythonPath), L"%s/carbon/common/stdlib", envBranchPath);
+#if _MSC_VER
+        swprintf(pythonPath, sizeof(pythonPath) / sizeof(*pythonPath), L"%S/carbon/common/stdlib", envBranchPath);
+#else
+        swprintf(pythonPath, sizeof(pythonPath) / sizeof(*pythonPath), L"%s/carbon/common/stdlib", envBranchPath);
+#endif
 
 		PyConfig_InitIsolatedConfig(&config);
 		PyWideStringList_Append(&config.module_search_paths, L".");

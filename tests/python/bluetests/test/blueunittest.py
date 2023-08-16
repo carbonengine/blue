@@ -8,6 +8,10 @@ class TestCase(unittest.TestCase):
         Assert that two Blue objects are equal. 
         """
 
+        a = blue.List()
+        a.append(blue.List())
+        self.assertEqual(a[0], a[-1])
+
         self.assertEqual(type(obj1), type(obj2))
 
         if isinstance(obj1, blue.BlueWrapper):
