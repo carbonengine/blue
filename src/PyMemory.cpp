@@ -88,30 +88,54 @@ namespace Ccp {
     }
 
     void *PyMallocWithGIL(void *ctx, size_t size) {
-        auto gil = PyGILState_Ensure();
+        PyGILState_STATE gil = PyGILState_UNLOCKED;
+        bool ensure_release = ( PyGILState_Check() == 0 && !_Py_IsFinalizing() );
+        if (ensure_release) {
+            gil = PyGILState_Ensure();
+        }
         auto ret = Ccp::PyRawMalloc(ctx, size);
-        PyGILState_Release(gil);
+        if (ensure_release) {
+            PyGILState_Release(gil);
+        }
         return ret;
     }
 
     void *PyCallocWithGIL(void *ctx, size_t nelem, size_t size) {
-        auto gil = PyGILState_Ensure();
+        PyGILState_STATE gil = PyGILState_UNLOCKED;
+        bool ensure_release = ( PyGILState_Check() == 0 && !_Py_IsFinalizing() );
+        if (ensure_release) {
+            gil = PyGILState_Ensure();
+        }
         auto ret = Ccp::PyRawCalloc(ctx, nelem, size);
-        PyGILState_Release(gil);
+        if (ensure_release) {
+            PyGILState_Release(gil);
+        }
         return ret;
     }
 
     void *PyReallocWithGIL(void *ctx, void *ptr, size_t size) {
-        auto gil = PyGILState_Ensure();
+        PyGILState_STATE gil = PyGILState_UNLOCKED;
+        bool ensure_release = ( PyGILState_Check() == 0 && !_Py_IsFinalizing() );
+        if (ensure_release) {
+            gil = PyGILState_Ensure();
+        }
         auto ret = Ccp::PyRawRealloc(ctx, ptr, size);
-        PyGILState_Release(gil);
+        if (ensure_release) {
+            PyGILState_Release(gil);
+        }
         return ret;
     }
 
     void PyFreeWithGIL(void *ctx, void *ptr) {
-        auto gil = PyGILState_Ensure();
+        PyGILState_STATE gil = PyGILState_UNLOCKED;
+        bool ensure_release = ( PyGILState_Check() == 0 && !_Py_IsFinalizing() );
+        if (ensure_release) {
+            gil = PyGILState_Ensure();
+        }
         Ccp::PyRawFree(ctx, ptr);
-        PyGILState_Release(gil);
+        if (ensure_release) {
+            PyGILState_Release(gil);
+        }
     }
 }
 
