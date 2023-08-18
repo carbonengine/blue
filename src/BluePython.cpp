@@ -614,7 +614,13 @@ bool BluePyOS::Startup()
 	}
 
     std::wstringstream pathHelper(path);
+#if _WIN32
     for (std::wstring tmp; std::getline(pathHelper, tmp, L';');)
+#elif __APPLE__
+	for (std::wstring tmp; std::getline(pathHelper, tmp, L':');)
+#else
+#error Unknown env var separator on this platform
+#endif
     {
         status = PyWideStringList_Append( &(config.module_search_paths), tmp.c_str() );
         CCP_LOG( "Appending %S to sys.path candidate list (error %d: %s)", tmp.c_str(), status.exitcode, status.err_msg );
