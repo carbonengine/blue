@@ -1664,7 +1664,7 @@ PyObject *Marshal::GetGlobalObject(PyObject *nameO)
 		modulename = BluePyStr(dot-name, name);
 		name = dot+1;
 	} else {
-		modulename = BluePyStr("__builtin__");
+		modulename = BluePyStr("builtins");
 	}
 
 	BluePy module( PyImport_ImportModule( PyUnicode_AsUTF8( modulename ) ) );
@@ -2524,16 +2524,16 @@ void Marshal::InitGlobalsBlacklist()
 	//full objects are more powerful, they prevent aliasing.  Disabling a module means that the
 	//objects in there can still be accessed if they are aliased to another module.
 	static const pair list[] = {
-		{"__builtin__", "eval"}, //The evil of all evils
-		{"__builtin__", "execfile"}, //also evil
-		{"__builtin__", "getattr"}, //can be used with __import__ to acess anything
-		{"__builtin__", "setattr"},
-		{"__builtin__", "__import__"}, 
-		{"__builtin__", "globals"}, 
-		{"__builtin__", "locals"}, 
-		{"__builtin__", "vars"}, 
-		{"__builtin__", "reload"}, 
-		{"__builtin__", 0}, //Also, disallow the __builtin__ module
+		{"builtins", "eval"}, //The evil of all evils
+		{"builtins", "execfile"}, //also evil
+		{"builtins", "getattr"}, //can be used with __import__ to acess anything
+		{"builtins", "setattr"},
+		{"builtins", "__import__"},
+		{"builtins", "globals"},
+		{"builtins", "locals"},
+		{"builtins", "vars"},
+		{"builtins", "reload"},
+		{"builtins", 0}, //Also, disallow the __builtin__ module
 		{"__main__", 0}, //all sorts of junk here
 		{"os", 0}, //all of module os, which contains evil process management and stuff.
 		{"pickle", 0}, //don't want the hacker to instantiate another pickler
@@ -2561,7 +2561,7 @@ void Marshal::InitGlobalsBlacklist()
 
 		// Recent additions from Veritech, 04.04.2006
 		{"types", 0},
-		{"__builtin__", "type"},
+		{"builtins", "type"},
 		{"types", "FunctionType"},
 		{"types", "CodeType"},
 		{"types", "InstanceType"},
