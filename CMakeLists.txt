@@ -393,7 +393,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
         RUNTIME DESTINATION bin/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
     )
     # Install rule for available public headers
-    install(FILES ${PUBLIC_HEADER_FILES_INCLUDE} DESTINATION include)
+    install(DIRECTORY include DESTINATION . FILES_MATCHING PATTERN "*.h")
 
     configure_ccp_vendor_config_file(
         TARGET Blue
