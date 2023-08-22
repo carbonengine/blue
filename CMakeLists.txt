@@ -45,6 +45,7 @@ set(PUBLIC_HEADER_FILES_INCLUDE
     include/IBlueObjectMetadata.h
     include/ICacheable.h
     include/ICcpStatisticsAccumulator.h
+    include/ICurveSetDriver.h
     include/ITr2DebugRenderer2.h
     include/ITaskletTimer.h
     include/ITriConstants.h
