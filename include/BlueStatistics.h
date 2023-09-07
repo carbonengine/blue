@@ -148,8 +148,8 @@ private:
 	uint32_t m_telemetryContext;
 };
 
-void tmTaskletEnter( uint32_t ctx, const char* name );
-void tmTaskletLeave( uint32_t ctx );
+void BLUEIMPORT tmTaskletEnter( uint32_t ctx, const char* name );
+void BLUEIMPORT tmTaskletLeave( uint32_t ctx );
 void tmTaskletAppendText( uint32_t ctx, const char* appendText );
 
 #define CCP_STATS_SCOPED_TIME( identifier ) \
