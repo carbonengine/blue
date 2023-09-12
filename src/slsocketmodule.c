@@ -4912,7 +4912,7 @@ socket_getaddrinfo(PyObject *self, PyObject *args)
         idna = PyObject_CallMethod(hobj, "encode", "s", "idna");
         if (!idna)
             return NULL;
-        hptr = PyUnicode_AsUTF8(idna);
+        hptr = PyBytes_AsString(idna);
     } else {
         PyErr_SetString(PyExc_TypeError,
                         "getaddrinfo() argument 1 must be string or None");
