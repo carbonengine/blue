@@ -3701,7 +3701,7 @@ SIO_KEEPALIVE_VALS:  'option' is a tuple of (onoff, timeout, interval).");
 /* List of methods for socket objects */
 
 static PyMethodDef sock_methods[] = {
-    {"accept",            (PyCFunction)sock_accept, METH_NOARGS,
+    {"_accept",            (PyCFunction)sock_accept, METH_NOARGS,
                       accept_doc},
     {"bind",              (PyCFunction)sock_bind, METH_O,
                       bind_doc},
@@ -3853,16 +3853,17 @@ static int
 sock_initobj(PyObject *self, PyObject *args, PyObject *kwds)
 {
     PySocketSockObject *s = (PySocketSockObject *)self;
+    PyObject* fdobj = NULL; // unused, only here for compatibility with stdlib socket
     SOCKET_T fd;
 #ifdef SLSOCKET
     void *xtradata = NULL;
 #endif
     int family = AF_INET, type = SOCK_STREAM, proto = 0;
-    static char *keywords[] = {"family", "type", "proto", 0};
+    static char *keywords[] = {"family", "type", "proto", "fileno", 0};
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds,
-                                     "|iii:socket", keywords,
-                                     &family, &type, &proto))
+                                     "|iiiO:socket", keywords,
+                                     &family, &type, &proto, &fdobj))
         return -1;
 
 
