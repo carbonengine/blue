@@ -5036,7 +5036,9 @@ socket_getnameinfo(PyObject *self, PyObject *args)
     }
 #ifndef NO_CARBONIO
     else {
-        cio_getaddrinfo( hostp, pbuf, &hints, &res );
+        error = cio_getaddrinfo( hostp, pbuf, &hints, &res );
+        if (error == -1)
+            goto fail;
     }
 #endif
 #else
