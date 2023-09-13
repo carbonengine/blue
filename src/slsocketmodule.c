@@ -2233,6 +2233,21 @@ PyDoc_STRVAR(close_doc,
 \n\
 Close the socket.  It cannot be used after this call.");
 
+static PyObject *
+sock_detach(PySocketSockObject *s, PyObject *Py_UNUSED(ignored))
+{
+    SOCKET_T fd = s->sock_fd;
+    s->sock_fd = INVALID_SOCKET;
+    return PyLong_FromSocket_t(fd);
+}
+
+PyDoc_STRVAR(detach_doc,
+             "detach()\n\
+\n\
+Close the socket object without closing the underlying file descriptor.\n\
+The object cannot be used after this call, but the file descriptor\n\
+can be reused for other purposes.  The file descriptor is returned.");
+
 #ifndef SLSOCKET
 static int
 internal_connect(PySocketSockObject *s, struct sockaddr *addr, int addrlen,
@@ -3711,6 +3726,8 @@ static PyMethodDef sock_methods[] = {
                       connect_doc},
     {"connect_ex",        (PyCFunction)sock_connect_ex, METH_O,
                       connect_ex_doc},
+    {"detach",            (PyCFunction)sock_detach, METH_NOARGS,
+     detach_doc},
 #ifndef NO_DUP
     {"dup",               (PyCFunction)sock_dup, METH_NOARGS,
                       dup_doc},
