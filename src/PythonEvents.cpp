@@ -34,9 +34,10 @@ extern IPythonEventsPtr sPyEventHandler;
 PyObject* PythonEvents::Pywrite(PyObject* args)
 {
 	const char *text;
+    [[maybe_unused]] Py_ssize_t len;
 
-	if (!PyArg_ParseTuple(args, "s", &text))
-		return NULL;
+	if (!PyArg_ParseTuple(args, "s#", &text, &len))
+		return nullptr;
 
 	bool nolog = strncmp( text, NO_LOGGING_PREFIX, NO_LOGGING_PREFIX_LEN ) == 0;
 

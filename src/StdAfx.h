@@ -22,6 +22,7 @@
 
 // include all python stuff
 #if BLUE_WITH_PYTHON
+#define PY_SSIZE_T_CLEAN
 #include <Python.h>
 
 #if CCP_STACKLESS
