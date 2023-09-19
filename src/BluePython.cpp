@@ -315,7 +315,7 @@ bool BluePyOS::InitBasicModuleSupport()
 	{
 		return false;
 	}
-	if( PyDict_SetItemString( sys_modules, "_slselect", slselectModule ) != 0 )
+	if( PyDict_SetItemString( sys_modules, "slselect", slselectModule ) != 0 )
 	{
 		return false;
 	}
