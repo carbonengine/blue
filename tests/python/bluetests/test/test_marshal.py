@@ -182,3 +182,8 @@ class testMarshal(blueunittest.TestCase):
         obj = [OldSchoolObject(), SimpleObject(), "this is a test"]
         ws = blue.marshal.Save(obj)
         self.verify_round_trip(ws)
+
+    def test_converting_to_bytes_does_not_crash(self):
+        obj = [OldSchoolObject(), SimpleObject(), "this is a test"]
+        ws = blue.marshal.Save(obj)
+        self.assertIsInstance(bytes(ws), bytes)

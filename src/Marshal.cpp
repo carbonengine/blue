@@ -507,10 +507,7 @@ bool WriteStream::InitType(PyTypeObject *type)
 	//set up the buffer interface
 	static PyBufferProcs bufferProcs = {
 		getbuffer,
-		0
-//		0,
-//		getsegcount,
-//		(charbufferproc)getreadbuffer //need this for binascii.b2a_hex()
+		nullptr
 	};
 	type->tp_as_buffer = &bufferProcs;
 
@@ -761,40 +758,11 @@ int WriteStream::getbuffer( PyObject* exporter, Py_buffer* view, int flags )
 	if (!self->mFinalized)
 	{
 		PyErr_SetString( PyExc_BufferError, "buffer not ready" );
-		view->obj = nullptr;
 		return -1;
 	}
 
-	view->obj = exporter;
-	view->buf = self->mBuff;
-	view->len = self->mPos;
-	Py_INCREF(view->obj);
-
-	return 0;
+    return PyBuffer_FillInfo( view, exporter, self->mBuff, self->mPos, 1, flags );
 }
-
-//Py_ssize_t WriteStream::getreadbuffer(PyObject *selfO, Py_ssize_t segment, void **ptrptr)
-//{
-//	WriteStream *self = static_cast<WriteStream*>(selfO);
-//	if (!self->mFinalized)
-//		return PyErr_SetString(PyExc_RuntimeError, "buffer not ready"), -1;
-//	if (segment!=0)
-//		return PyErr_SetString(PyExc_ValueError, "invalid segment"), -1;
-//	*ptrptr = self->mBuff;
-//	return self->mPos;
-//}
-//
-//
-//Py_ssize_t WriteStream::getsegcount(PyObject *selfO, Py_ssize_t *lenp)
-//{
-//	WriteStream *self = static_cast<WriteStream*>(selfO);
-//	if (!self->mFinalized)
-//		return 0;
-//	if (lenp)
-//		*lenp = self->mPos;
-//	return 1;
-//}
-
 
 //SequenceProtocol
 Py_ssize_t WriteStream::SequenceLength(PyObject *selfO)
