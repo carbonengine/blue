@@ -116,6 +116,7 @@ PyObject* IBlueStream_Thunk::PyWrite(PyObject* args)
 	}
 
 	if ( PyBuffer_IsContiguous( &buffer, 'A' ) == 0 ) {
+        PyBuffer_Release(&buffer);
 		PyErr_SetString(PyExc_NotImplementedError, "Support for non-contiguous buffers is currently not implemented");
 		return nullptr;
 	}
@@ -129,6 +130,7 @@ PyObject* IBlueStream_Thunk::PyWrite(PyObject* args)
 		if ( ! PyErr_Occurred() ) {
 			PyErr_SetString( PyExc_SystemError, "Internal error - writing buffer failed without further information" );
 		}
+        PyBuffer_Release(&buffer);
 		return nullptr;
 	}
 
@@ -162,6 +164,7 @@ PyObject* IBlueStream_Thunk::PyWrite(PyObject* args)
 //			break;
 //	}
 
+    PyBuffer_Release(&buffer);
 	Py_INCREF(Py_None);
 	return Py_None;
 }
