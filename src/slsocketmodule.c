@@ -2877,7 +2877,11 @@ sock_accept(PySocketSockObject *s, PyObject *Py_UNUSED(ignored))
 #endif
     {
         if (_Py_set_inheritable(newfd, 0, NULL) < 0) {
+#ifdef SLSOCKET
+            SOCKETCLOSE(newfd, xtradata);
+#else
             SOCKETCLOSE(newfd);
+#endif
             goto finally;
         }
     }
@@ -4164,12 +4168,13 @@ sock_recvmsg_guts(PySocketSockObject *s, struct iovec *iov, int iovlen,
     }
     if (controllen > 0 && (controlbuf = PyMem_Malloc(controllen)) == NULL)
         return PyErr_NoMemory();
-
+#ifndef SLSOCKET
     /* Make the system call. */
     if (!IS_SELECTABLE(s)) {
         select_error();
         goto finally;
     }
+#endif
 
     msg.msg_name = SAS2SA(&addrbuf);
     msg.msg_namelen = addrbuflen;
@@ -5035,11 +5040,13 @@ sock_sendmsg(PySocketSockObject *s, PyObject *args)
         }
     }
 
+#ifndef SLSOCKET
     /* Make the system call. */
     if (!IS_SELECTABLE(s)) {
         select_error();
         goto finally;
     }
+#endif
 
     ctx.msg = &msg;
     ctx.flags = flags;
@@ -5403,7 +5410,7 @@ sock_setmaxpacketsize(PySocketSockObject *s, PyObject *args)
         if (!PyArg_ParseTuple(args, "|i:setmaxpacketsize", &newvalue))
             return 0;
         oldvalue = slsock_setmaxpacketsize(s, newvalue != -1? newvalue : 1);
-        if (!newvalue == -1)
+        if (newvalue != -1)
             slsock_setmaxpacketsize(s, oldvalue);  /*if we are querying only */
         return PyLong_FromLong(oldvalue);
     }
@@ -6890,14 +6897,14 @@ socket_socketpair(PyObject *self, PyObject *args)
     if (_Py_set_inheritable(sv[1], 0, atomic_flag_works) < 0)
         goto finally;
 
-    s0 = new_sockobject(sv[0], family, type, proto, NULL
+    s0 = new_sockobject(sv[0], family, type, proto
 #ifdef SLSOCKET
                         ,NULL
 #endif
                         );
     if (s0 == NULL)
         goto finally;
-    s1 = new_sockobject(sv[1], family, type, proto, NULL
+    s1 = new_sockobject(sv[1], family, type, proto
 #ifdef SLSOCKET
                         ,NULL
 #endif
