@@ -2135,7 +2135,7 @@ int CarbonIO::recvEx( SOCKET fd,
 	SCompletionUnit *completion = m_completionList.getItem( (long long)fd );
 	if ( !completion )
 	{
-		D_RECVEX(ciolog( "recvEx <1> %d <1> %p %d", fd, completion, completion->reap ? 1:0));
+		D_RECVEX(ciolog( "recvEx <1> %d <1>", fd));
 		
 		m_completionListLock.unlock();
 		setPyError( "socket not found in manged list", WSAECONNRESET );
@@ -2571,7 +2571,7 @@ int CarbonIO::recvEx( SOCKET fd,
 
 	freePacket( P ); // done with it
 
-	D_RECVEX(ciolog( "recvEx got object[%p] size[%d]\n", obj?*obj:0, obj?PyString_Size(*obj):0 ));
+	D_RECVEX(ciolog( "recvEx got object[%p] size[%d]\n", obj?*obj:0, obj?PyBytes_Size(*obj):0 ));
 
 	DEC_COMPLETION_REF( completion );
 	
@@ -3084,6 +3084,10 @@ void CarbonIO::installPacketizer( SCompletionUnit* completion )
 bool CarbonIO::prepareSequence( PyObject *obj, SPacket *packet )
 {
 	PyObject *fast = PySequence_Fast(obj, "sequence required");
+//	if (!fast) {
+//		D_SEQUENCE(ciolog("PySequence_Fast(obj) failed"));
+//		return false;
+//	}
 	for (int i = 0; i<PySequence_Fast_GET_SIZE(fast); i++)
 	{
 		D_SEQUENCE(ciolog("preparing fast items [%d]", i));

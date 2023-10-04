@@ -26,7 +26,7 @@ extern "C" {
 
     //socket creation and destruction.  The destructor uses refcounting.
     SOCKET_T slsock_socket(void **xtradata, int family, int type, int proto);
-    SOCKET_T slsock_socket_from_fd(void **xtradata, int fd);
+    SOCKET_T slsock_socket_from_fd(void **xtradata, SOCKET_T fd);
     int slsock_closesocket(SOCKET_T, void *xtradata);
     void slsock_releasesocket(PySocketSockObject *s);
 

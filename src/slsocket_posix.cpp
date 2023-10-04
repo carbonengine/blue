@@ -1052,7 +1052,7 @@ int slsock_socket(void **xtradata, int family, int type, int proto)
 	}
 }
 
-int slsock_socket_from_fd(void **xtradata, int fd)
+int slsock_socket_from_fd(void **xtradata, SOCKET_T fd)
 {
 	*xtradata = 0;
 	try {

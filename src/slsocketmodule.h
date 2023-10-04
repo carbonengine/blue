@@ -8,7 +8,7 @@
 #   include <sys/socket.h>
 # endif
 # include <netinet/in.h>
-# if !(defined(__BEOS__) || defined(__CYGWIN__) || (defined(PYOS_OS2) && defined(PYCC_VACPP)))
+# if !defined(__CYGWIN__)
 #  include <netinet/tcp.h>
 # endif
 
@@ -21,6 +21,13 @@
 #endif
 
 # include <winsock2.h>
+/* Windows 'supports' CMSG_LEN, but does not follow the POSIX standard
+ * interface at all, so there is no point including the code that
+ * attempts to use it.
+ */
+# ifdef PySocket_BUILDING_SOCKET
+#  undef CMSG_LEN
+# endif
 # include <ws2tcpip.h>
 /* VC6 is shipped with old platform headers, and does not have MSTcpIP.h
  * Separate SDKs have all the functions we want, but older ones don't have
@@ -28,7 +35,7 @@
  * I use SIO_GET_MULTICAST_FILTER to detect a decent SDK.
  */
 # ifdef SIO_GET_MULTICAST_FILTER
-#  include <MSTcpIP.h> /* for SIO_RCVALL */
+#  include <mstcpip.h> /* for SIO_RCVALL */
 #  define HAVE_ADDRINFO
 #  define HAVE_SOCKADDR_STORAGE
 #  define HAVE_GETADDRINFO
@@ -55,6 +62,15 @@ typedef int socklen_t;
 #  undef AF_NETLINK
 #endif
 
+#ifdef HAVE_LINUX_QRTR_H
+# ifdef HAVE_ASM_TYPES_H
+#  include <asm/types.h>
+# endif
+# include <linux/qrtr.h>
+#else
+#  undef AF_QIPCRTR
+#endif
+
 #ifdef HAVE_BLUETOOTH_BLUETOOTH_H
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/rfcomm.h>
@@ -67,15 +83,78 @@ typedef int socklen_t;
 #include <bluetooth.h>
 #endif
 
+#ifdef HAVE_NET_IF_H
+# include <net/if.h>
+#endif
+
 #ifdef HAVE_NETPACKET_PACKET_H
 # include <sys/ioctl.h>
-# include <net/if.h>
 # include <netpacket/packet.h>
 #endif
 
 #ifdef HAVE_LINUX_TIPC_H
 # include <linux/tipc.h>
 #endif
+
+#ifdef HAVE_LINUX_CAN_H
+# include <linux/can.h>
+#else
+# undef AF_CAN
+# undef PF_CAN
+#endif
+
+#ifdef HAVE_LINUX_CAN_RAW_H
+#include <linux/can/raw.h>
+#endif
+
+#ifdef HAVE_LINUX_CAN_BCM_H
+#include <linux/can/bcm.h>
+#endif
+
+#ifdef HAVE_SYS_SYS_DOMAIN_H
+#include <sys/sys_domain.h>
+#endif
+#ifdef HAVE_SYS_KERN_CONTROL_H
+#include <sys/kern_control.h>
+#endif
+
+#ifdef HAVE_LINUX_VM_SOCKETS_H
+# include <linux/vm_sockets.h>
+#else
+# undef AF_VSOCK
+#endif
+
+#ifdef HAVE_SOCKADDR_ALG
+
+# include <linux/if_alg.h>
+# ifndef AF_ALG
+#  define AF_ALG 38
+# endif
+# ifndef SOL_ALG
+#  define SOL_ALG 279
+# endif
+
+/* Linux 3.19 */
+# ifndef ALG_SET_AEAD_ASSOCLEN
+#  define ALG_SET_AEAD_ASSOCLEN           4
+# endif
+# ifndef ALG_SET_AEAD_AUTHSIZE
+#  define ALG_SET_AEAD_AUTHSIZE           5
+# endif
+/* Linux 4.8 */
+# ifndef ALG_SET_PUBKEY
+#  define ALG_SET_PUBKEY                  6
+# endif
+
+# ifndef ALG_OP_SIGN
+#  define ALG_OP_SIGN                     2
+# endif
+# ifndef ALG_OP_VERIFY
+#  define ALG_OP_VERIFY                   3
+# endif
+
+#endif /* HAVE_SOCKADDR_ALG */
+
 
 #ifndef Py__SOCKET_H
 #define Py__SOCKET_H
@@ -118,6 +197,7 @@ typedef int SOCKET_T;
 /* Socket address */
 typedef union sock_addr {
     struct sockaddr_in in;
+    struct sockaddr sa;
 #ifdef AF_UNIX
     struct sockaddr_un un;
 #endif
@@ -136,6 +216,21 @@ typedef union sock_addr {
 #endif
 #ifdef HAVE_NETPACKET_PACKET_H
     struct sockaddr_ll ll;
+#endif
+#ifdef HAVE_LINUX_CAN_H
+    struct sockaddr_can can;
+#endif
+#ifdef HAVE_SYS_KERN_CONTROL_H
+    struct sockaddr_ctl ctl;
+#endif
+#ifdef HAVE_SOCKADDR_ALG
+    struct sockaddr_alg alg;
+#endif
+#ifdef AF_QIPCRTR
+    struct sockaddr_qrtr sq;
+#endif
+#ifdef AF_VSOCK
+    struct sockaddr_vm vm;
 #endif
 } sock_addr_t;
 
@@ -157,7 +252,7 @@ typedef struct _PySocketSockObject {
     PyObject *(*errorhandler)(void); /* Error handler; checks
                                         errno, returns NULL and
                                         sets a Python exception */
-    double sock_timeout;                 /* Operation timeout in seconds;
+    _PyTime_t sock_timeout;     /* Operation timeout in seconds;
                                         0.0 means non-blocking */
 } PySocketSockObject;
 
@@ -215,67 +310,15 @@ typedef struct _PySocketSockObject {
 typedef struct {
     PyTypeObject *Sock_Type;
     PyObject *error;
+    PyObject *timeout_error;
 } PySocketModule_APIObject;
 
-/* XXX The net effect of the following appears to be to define a function
-   XXX named PySocketModule_APIObject in _ssl.c.  It's unclear why it isn't
-   XXX defined there directly.
+#define PySocketModule_ImportModuleAndAPI() PyCapsule_Import(PySocket_CAPSULE_NAME, 1)
 
-   >>> It's defined here because other modules might also want to use
-   >>> the C API.
-
-*/
-#ifndef PySocket_BUILDING_SOCKET
-
-/* --- C API ----------------------------------------------------*/
-
-/* Interfacestructure to C API for other modules.
-   Call PySocketModule_ImportModuleAndAPI() to initialize this
-   structure. After that usage is simple:
-
-   if (!PyArg_ParseTuple(args, "O!|zz:ssl",
-                         &PySocketModule.Sock_Type, (PyObject*)&Sock,
-                         &key_file, &cert_file))
-     return NULL;
-   ...
-*/
-
-static
-PySocketModule_APIObject PySocketModule;
-
-/* You *must* call this before using any of the functions in
-   PySocketModule and check its outcome; otherwise all accesses will
-   result in a segfault. Returns 0 on success. */
-
-#ifndef DPRINTF
-# define DPRINTF if (0) printf
-#endif
-
-static
-int PySocketModule_ImportModuleAndAPI(void)
-{
-    void *api;
-
-  DPRINTF(" Loading capsule %s\n", PySocket_CAPSULE_NAME);
-  api = PyCapsule_Import(PySocket_CAPSULE_NAME, 1);
-    if (api == NULL)
-        goto onError;
-    memcpy(&PySocketModule, api, sizeof(PySocketModule));
-    DPRINTF(" API object loaded and initialized.\n");
-    return 0;
-
- onError:
-    DPRINTF(" not found.\n");
-    return -1;
-}
-
-#endif /* !PySocket_BUILDING_SOCKET */
-
+#ifdef SLSOCKET
 PyObject *socket_set_error(int error); /* external access to the function */
 void socket_set_extra_error_info(PyObject *o); /* extra error info */
 
-#ifdef SLSOCKET
-/* threadsafe helper functions to create local copies of hostent structures */
 struct hostent *socket_hostent_dup(const struct hostent *h);
 void socket_hostent_free(struct hostent *h);
 #endif
