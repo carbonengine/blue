@@ -37,11 +37,16 @@ public:
 	bool IsDirectory( const wchar_t* resPath );
 	Be::Result<std::string> ListDir( const wchar_t* resPath, std::list<std::string>& contents );
 
+	void RegisterOnServerFailedCallback( BlueScriptCallback callback );
+
 private:
 	std::string m_server;
 	std::string m_backupServer;
 	std::string m_prefix;
 	std::wstring m_cacheFolder;
+	bool m_registerDownloadErrors;
+	int m_numSequentialPrimaryServerDownloadErrors;
+	int m_primaryServerFailThreshold;
 
 	struct FileInfo
 	{
@@ -66,6 +71,8 @@ private:
 	bool m_fullHeaderLogging;
 	bool m_verifyContentsOnSave;
 	bool m_verifyContentsOnLoad;
+
+	BlueScriptCallback m_on_server_failed_callback;
 
 private:
 	bool AddFileIndexFromStream( IBlueStream* stream );
