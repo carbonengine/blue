@@ -2686,7 +2686,7 @@ void CarbonIO::wakeUpTaskletChain( SJob* job, bool force /*=false*/ )
 
 		if ( m_singleton.m_wakeupMethod == WAKEUP_PENDING_CALL )
 		{
-			if ( Py_AddPendingCall( &wakeUpTaskletsEx, (void *)(long long)force ) == -1 )
+			if ( !_Py_IsFinalizing() && Py_AddPendingCall( &wakeUpTaskletsEx, (void *)(long long)force ) == -1 )
 			{
 				// fallback to dynamic context (extra CPU but safe)
 				InterlockedIncrement( &m_singleton.m_stats.pendingCallQueueFailure );
