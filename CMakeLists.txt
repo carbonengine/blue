@@ -382,6 +382,19 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
             message(FATAL_ERROR "Unsupported platform")
         endif ()
     endforeach()
+    # running the socket test_suite through `-m unittest` does not work because the `unittest` module already imports
+    # `socket`, and therefore our customizations won't be applied correctly.
+    add_test(NAME socket_test_suite
+        COMMAND ${PYTHON_EXECUTABLE} test_socket.py
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests
+    )
+    if(WIN32)
+        set_tests_properties(socket_test_suite PROPERTIES ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:Blue>\;${BRANCH_ROOT_DIR}/carbon/common/stdlib\;${BRANCH_ROOT_DIR}/vendor/python/3.8.1+ccp-stackless/${CCP_VENDOR_BIN_PATH};BUILDFLAVOR=$<LOWER_CASE:$<CONFIG>>")
+    elseif (APPLE)
+        set_tests_properties(socket_test_suite PROPERTIES ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:Blue>:${BRANCH_ROOT_DIR}/carbon/common/stdlib:${BRANCH_ROOT_DIR}/vendor/python/3.8.1+ccp-stackless/${CCP_VENDOR_BIN_PATH};BUILDFLAVOR=$<LOWER_CASE:$<CONFIG>>")
+    else()
+        message(FATAL_ERROR "Unsupported platform")
+    endif ()
 
     # Install rule to ensure that our runtime and linker files are in the expected, platform-specific folders
     install(
