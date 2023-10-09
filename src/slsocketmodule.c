@@ -3325,9 +3325,7 @@ static PyObject *
 sock_close(PySocketSockObject *s, PyObject *Py_UNUSED(ignored))
 {
     SOCKET_T fd;
-#ifndef SLSOCKET
     int res;
-#endif
 
     fd = s->sock_fd;
     if (fd != INVALID_SOCKET) {
@@ -3336,12 +3334,12 @@ sock_close(PySocketSockObject *s, PyObject *Py_UNUSED(ignored))
         if ( g_useSocketIOCP == 0 )
         {
             Py_BEGIN_ALLOW_THREADS
-            (void) SOCKETCLOSE(fd, s->sock_xtradata);
+            res = SOCKETCLOSE(fd, s->sock_xtradata);
             Py_END_ALLOW_THREADS
         }
         else
         {
-            (void) SOCKETCLOSE(fd, s->sock_xtradata);
+            res = SOCKETCLOSE(fd, s->sock_xtradata);
         }
 #else
         /* We do not want to retry upon EINTR: see
@@ -3351,12 +3349,12 @@ sock_close(PySocketSockObject *s, PyObject *Py_UNUSED(ignored))
         Py_BEGIN_ALLOW_THREADS
         res = SOCKETCLOSE(fd);
         Py_END_ALLOW_THREADS
-        /* bpo-30319: The peer can already have closed the connection.
-           Python ignores ECONNRESET on close(). */
-        if (res < 0 && errno != ECONNRESET) {
-            return s->errorhandler();
-        }
 #endif
+		/* bpo-30319: The peer can already have closed the connection.
+           Python ignores ECONNRESET on close(). */
+		if (res < 0 && errno != ECONNRESET) {
+			return s->errorhandler();
+		}
     }
     Py_RETURN_NONE;
 }
