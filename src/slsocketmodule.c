@@ -4733,12 +4733,10 @@ sock_sendto(PySocketSockObject *s, PyObject *args)
 
             if ( !getsockaddrarg(s, addro, SAS2SA(&addrbuf), &addrlen, "sendto") )
 			{
-				PyBuffer_Release( &pbuf );
 				return NULL;
 			}
 
             n = cio_send_sequence_to( s->sock_fd, obj, flags, (struct sockaddr *)&addrbuf, &addrlen );
-            PyBuffer_Release(&pbuf);
         } else
             n = -1;
 
