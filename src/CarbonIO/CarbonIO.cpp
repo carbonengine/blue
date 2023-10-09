@@ -577,7 +577,7 @@ int CarbonIO::close( HANDLE fd )
 		m_completionListLock.unlock();
 		emitStatusMessage( "close/reap call for [%p] but we do not manage it, performing blind ::closesocket()", fd );
 		D_REAPSOCKET(ciolog("[%d] ineligible for reap, performing ::closesocket()", (int)fd ));
-		::closesocket( (SOCKET)fd );
+		return ::closesocket( (SOCKET)fd );
 	}
 
 	onTaskletScheduled( false ); // even though a tasklet wasn't scheduled, some waits are expecting wakeup here
