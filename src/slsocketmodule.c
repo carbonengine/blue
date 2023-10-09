@@ -6113,7 +6113,7 @@ sock_initobj(PyObject *self, PyObject *args, PyObject *kwds)
 static PyTypeObject sock_type = {
     PyVarObject_HEAD_INIT(0, 0)         /* Must fill in type value later */
 #ifdef SLSOCKET
-    PySocket_MODULE_NAME "socket",
+    PySocket_MODULE_NAME ".socket",
 #else
     "_socket.socket",                           /* tp_name */
 #endif
