@@ -4481,6 +4481,10 @@ sock_send(PySocketSockObject *s, PyObject *args)
     }
 #ifndef NO_CARBONIO
     else {
+		if( s->sock_fd == INVALID_SOCKET ) {
+			PyErr_SetExcFromWindowsErr(PyExc_OSError, WSAENOTSOCK);
+			return 0;
+		}
         PyObject* obj;
         if (PyArg_ParseTuple(args, "s*|i:send", &pbuf, &flags)) {
 			ctx.buf = pbuf.buf;
