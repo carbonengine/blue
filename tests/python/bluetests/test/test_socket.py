@@ -1,37 +1,3 @@
-import os
-flavor = os.environ.get("BUILDFLAVOR", "release")
-
-if flavor == 'release':
-    import blue as mod
-elif flavor == 'debug':
-    import blue_debug as mod
-elif flavor == 'trinitydev':
-    import blue_trinitydev as mod
-elif flavor == 'internal':
-    import blue_internal as mod
-else:
-    raise RuntimeError("Unknown build flavor: {}".format(flavor))
-
-import sys
-sys.modules["blue"] = mod
-
-import carbonio
-import _slsocket
-_slsocket.use_carbonio(True)
-carbonio._socket = _slsocket
-sys.modules["_socket"] = _slsocket
-
-def run_in_tasklet(func):
-    def wrapped(*args, **kwargs):
-        import stackless
-
-        stackless.tasklet(func)(*args, **kwargs)
-        assert(stackless.runcount == 2)
-        stackless.run()
-        if (stackless.runcount != 1):
-            raise RuntimeError("Leaking tasklets")
-    return wrapped
-
 import unittest
 from test import support
 
@@ -369,6 +335,12 @@ class ThreadableTest:
             raise exc
 
     def clientRun(self, test_func):
+        import stackless
+        t = stackless.tasklet(self._clientRun)(test_func)
+        while t.alive:
+            stackless.run()
+
+    def _clientRun(self, test_func):
         self.server_ready.wait()
         try:
             self.clientSetUp()
@@ -856,7 +828,6 @@ class GeneralModuleTests(unittest.TestCase):
         with self.assertRaises(OSError, msg=msg % 'socket.gaierror'):
             raise socket.gaierror
 
-    @run_in_tasklet
     def testSendtoErrors(self):
         # Testing that sendto doesn't mask failures. See #10169.
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -931,7 +902,6 @@ class GeneralModuleTests(unittest.TestCase):
         socket.IPPROTO_L2TP
         socket.IPPROTO_SCTP
 
-    @run_in_tasklet
     def testHostnameRes(self):
         # Testing hostname resolution mechanisms
         hostname = socket.gethostname()
@@ -1035,7 +1005,6 @@ class GeneralModuleTests(unittest.TestCase):
             if sys.getrefcount(__name__) != orig:
                 self.fail("socket.getnameinfo loses a reference")
 
-    @run_in_tasklet
     def testInterpreterCrash(self):
         # Making sure getnameinfo doesn't crash the interpreter
         try:
@@ -1319,7 +1288,6 @@ class GeneralModuleTests(unittest.TestCase):
 
     # XXX The following don't test module-level functionality...
 
-    @run_in_tasklet
     def testSockName(self):
         # Testing getsockname()
         port = support.find_unused_port()
@@ -1354,7 +1322,6 @@ class GeneralModuleTests(unittest.TestCase):
         reuse = sock.getsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR)
         self.assertFalse(reuse == 0, "failed to set reuse mode")
 
-    @run_in_tasklet
     def testSendAfterClose(self):
         # testing send() after close() with timeout
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
@@ -1434,7 +1401,6 @@ class GeneralModuleTests(unittest.TestCase):
             raise
         self.assertRaises(TypeError, s.ioctl, socket.SIO_LOOPBACK_FAST_PATH, None)
 
-    @run_in_tasklet
     def testGetaddrinfo(self):
         try:
             socket.getaddrinfo('localhost', 80)
@@ -1605,7 +1571,6 @@ class GeneralModuleTests(unittest.TestCase):
             self.assertRaises(ValueError, fp.writable)
             self.assertRaises(ValueError, fp.seekable)
 
-    @run_in_tasklet
     def test_socket_close(self):
         sock = socket.socket()
         try:
