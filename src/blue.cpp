@@ -637,7 +637,7 @@ void PatchPythonExit()
 }
 
 PyMODINIT_FUNC
-	initblue(void)
+	CCP_CONCATENATE( initblue, CCP_BUILD_FLAVOR ) (void)
 {
 	if (gNoRecursiveInitBlue)
 		return;

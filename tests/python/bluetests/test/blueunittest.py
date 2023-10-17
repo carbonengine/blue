@@ -11,7 +11,7 @@ class TestCase(unittest.TestCase):
         self.assertEqual(type(obj1), type(obj2))
 
         if isinstance(obj1, blue.BlueWrapper):
-            for attributeName in obj1.__dict__:
+            for attributeName in obj1.__members__:
                 attr1 = getattr(obj1, attributeName)
                 attr2 = getattr(obj2, attributeName)
 

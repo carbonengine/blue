@@ -177,7 +177,8 @@ PyTypeObject *LogChannelType();
 bool BluePyOS::InitBasicModuleSupport()
 {
 	// put myself into python as a module
-	mBlueModule = Py_InitModule( "blue", 0);
+	const char* moduleName = CCP_STRINGIZE( CCP_CONCATENATE( blue, CCP_BUILD_FLAVOR ) );
+	mBlueModule = Py_InitModule(moduleName , 0 );
 	PyObject* dict = PyModule_GetDict(mBlueModule); //borrowed ref
 
 	BlueRegisterToModule( mBlueModule, BlueRegistration::GetClassRegs(),

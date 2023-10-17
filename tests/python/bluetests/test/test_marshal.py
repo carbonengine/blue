@@ -51,9 +51,9 @@ class testMarshal(blueunittest.TestCase):
             if i in IGNORE_TYPES:
                 continue
             if cls.loaded[i] == 0:
-                print("Missing coverage for type %d when loading" % i, file=sys.stderr)
+                sys.stderr.write("Missing coverage for type %d when loading" % i)
             if cls.saved[i] == 0:
-                print("Missing coverage for type %d when saving" % i, file=sys.stderr)
+                sys.stderr.write("Missing coverage for type %d when saving" % i)
 
     def _update_coverage(self):
         typeStats = blue.marshal.GetTypeStats()
