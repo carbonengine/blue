@@ -29,7 +29,7 @@ static CBlueThreadMonitor s_threadMonitorInstance;
 IBlueCallbackMan* BeCallbackMan = nullptr;
 IBlueResMan* BeResMan = nullptr;
 IBlueObjectRecycler* BeRecycler = nullptr;
-IBlueThreadMonitor* BeThreadMonitor = nullptr;
+IBlueThreadMonitor* BeThreadMonitor = &s_threadMonitorInstance;
 
 BLUE_REGISTER_GLOBAL_AS_MODULE_OBJECT( "resMan", BeResMan );
 BLUE_REGISTER_GLOBAL_AS_MODULE_OBJECT( "recycler", BeRecycler );
@@ -69,8 +69,6 @@ unsigned int GetDefaultThreadCount()
 
 BLUEIMPORT bool BlueInitializeResourceLoading()
 {
-	BeThreadMonitor = &s_threadMonitorInstance;
-
 	unsigned int threadCount = GetStartupArgAsInt( L"resManThreadCount" );
 
 	if( threadCount == 0 )
