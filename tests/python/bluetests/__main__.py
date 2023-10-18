@@ -16,10 +16,9 @@ def main():
     sys.modules["_socket"] = _slsocket
     import stackless
     # Cannot import unittest before we patch the socket, because unittest imports socket.
-    from unittest import main
+    import unittest
     __unittest = True
-    t = stackless.tasklet(main)(module=None)
-    while t.alive:
-        stackless.run()
+    unittest.main(module=None)
+
 
 main()
