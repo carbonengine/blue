@@ -304,10 +304,6 @@ bool BluePyOS::InitBasicModuleSupport()
 #endif
 
 	PyObject* sys_modules = PyImport_GetModuleDict();
-    if( PyDict_SetItemString( sys_modules, "blue", mBlueModule ) != 0 )
-    {
-        return false;
-    }
     if ( PyDict_SetItemString( sys_modules, "blue.heapq", heapqModule ) != 0 ) {
         return false;
     }
@@ -514,6 +510,9 @@ static PyMethodDef clockthis[] = {
 #endif
 
 
+extern "C" PyObject* CCP_CONCATENATE( PyInit_blue, CCP_BUILD_FLAVOR )( void );
+
+
 bool BluePyOS::Startup()
 {
 	if (mInit)
@@ -632,8 +631,14 @@ bool BluePyOS::Startup()
     config.pycache_prefix = BePaths->ResolvePathForWritingW(L"cache:/__pycache__").data();
     CCP_LOG( "Configured __pycache__ location to be %ls", config.pycache_prefix );
 
+	// Initialize built-in Python modules
+	if ( PyImport_AppendInittab( g_moduleName, CCP_CONCATENATE( PyInit_blue, CCP_BUILD_FLAVOR ) ) == -1 ) {
+		CCP_LOGERR("Failed adding %s to inittab", g_moduleName);
+		return false;
+	}
+
 	CCP_LOG( "Initializing Python" );
-	status = Py_InitializeFromConfig(&config);
+	status = Py_InitializeFromConfig( &config );
 
 	if (!Py_IsInitialized())
 	{
