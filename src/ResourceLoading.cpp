@@ -20,14 +20,14 @@
 #include "curl/curl.h"
 
 static CRemoteFileCache s_remoteFileCache;
-RemoteFileCache* BeRemoteFileCache = nullptr;
+RemoteFileCache* BeRemoteFileCache = &s_remoteFileCache;
 BLUE_REGISTER_GLOBAL_AS_MODULE_OBJECT( "remoteFileCache", BeRemoteFileCache );
 
 static CBlueResMan s_resourceManagerInstance;
 static CBlueThreadMonitor s_threadMonitorInstance;
 
 IBlueCallbackMan* BeCallbackMan = nullptr;
-IBlueResMan* BeResMan = nullptr;
+IBlueResMan* BeResMan = &s_resourceManagerInstance;
 IBlueObjectRecycler* BeRecycler = nullptr;
 IBlueThreadMonitor* BeThreadMonitor = &s_threadMonitorInstance;
 
@@ -107,9 +107,6 @@ BLUEIMPORT bool BlueInitializeResourceLoading()
 
 	// Initialize the resource manager
 	s_resourceManagerInstance.Initialize();
-	BeResMan = &s_resourceManagerInstance;
-
-	BeRemoteFileCache = &s_remoteFileCache;
 
 	return true;
 }
