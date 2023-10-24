@@ -40,7 +40,6 @@
 #include <Python.h>
 
 // forward decls
-struct IPythonEvents;
 struct BluePythonObject;
 struct IList;
 struct ITaskletTimer;
@@ -85,10 +84,6 @@ BLUE_INTERFACE(IBluePyOS) : public IRoot
 	// the pumping
 	virtual int PumpPython(
 		bool quit
-		) = 0;
-
-	virtual void SetEventHandler(
-		IPythonEvents* handler
 		) = 0;
 
 	//--------------------------------------------------------------------
@@ -240,31 +235,6 @@ BLUE_INTERFACE(IBluePyOS) : public IRoot
 };
 
 extern BLUEIMPORT IBluePyOS* PyOS;
-
-//////////////////////////////////////////////////////////////////////
-//
-// IPythonEvents interface
-//
-//////////////////////////////////////////////////////////////////////
-
-enum PYPORT
-{
-	PYSTDOUT		= 0,
-	PYSTDERR		= 1,
-	PYLOGINFO		= 2,
-	PYLOGWARN		= 3,
-	PYLOGERR		= 4,
-	PYLOGFATAL		= 5,
-	_PYPORTLAST		= PYLOGFATAL
-};
-
-BLUE_INTERFACE(IPythonEvents) : public IRoot
-{
-	virtual void OnWrite(
-		PYPORT port,
-		const char* text
-		) = 0;
-};
 
 #endif
 

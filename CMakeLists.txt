@@ -212,9 +212,6 @@ ccp_add_library(Blue SHARED
     src/PyRowSet.h
     src/PyScheduler.cpp
     src/PyScheduler.h
-    src/PythonEvents.cpp
-    src/PythonEvents.h
-    src/PythonEvents_Blue.cpp
     src/RemoteFileCache.cpp
     src/RemoteFileCache.h
     src/RemoteFileCache_Blue.cpp
