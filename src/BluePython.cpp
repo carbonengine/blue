@@ -173,12 +173,21 @@ BluePyOS::BluePyOS(IRoot* lockobj) :
 
 PyTypeObject *LogChannelType();
 
+void AddToSysModules(const char* moduleName, PyObject* module)
+{
+	// Add module to sys.modules with name moduleName
+	// thus making it possible to "import [moduleName]"
+	// Not necessary when module is initialized with the
+	// correct name when calling Py_InitModule.
+	PyObject* moduleDict = PyImport_GetModuleDict();
+	PyDict_SetItemString(moduleDict, moduleName, module);
+}
+
 //--------------------------------------------------------------------
 bool BluePyOS::InitBasicModuleSupport()
 {
-	// put myself into python as a module
-	const char* moduleName = CCP_STRINGIZE( CCP_CONCATENATE( blue, CCP_BUILD_FLAVOR ) );
-	mBlueModule = Py_InitModule(moduleName , 0 );
+	// Put myself into python as a module called blue.
+	mBlueModule = Py_InitModule( g_moduleName, 0 );
 	PyObject* dict = PyModule_GetDict(mBlueModule); //borrowed ref
 
 	BlueRegisterToModule( mBlueModule, BlueRegistration::GetClassRegs(),
@@ -292,6 +301,15 @@ bool BluePyOS::InitBasicModuleSupport()
         PyModule_AddObject(mBlueModule, "net", m);
 #endif
 
+	const char* moduleName = CCP_STRINGIZE(CCP_CONCATENATE(blue, CCP_BUILD_FLAVOR));
+	if( moduleName != g_moduleName )
+	{
+		// Inject the blue module into sys.modules as blue[CCP_BUILD_FLAVOR].
+		// This is necessary so that exefile processes get the correct version
+		// of the module when they run "import blue".
+		AddToSysModules(moduleName, mBlueModule);
+	}
+
 	return true;
 }
 
@@ -341,7 +359,14 @@ bool BluePyOS::FiniBasicModuleSupport()
 	Py_DECREF(sysmodule);
 
 	//and delete the "blue" module (by replacing it with None)
-	PyDict_SetItemString(modules, "blue", Py_None);
+	PyDict_SetItemString(modules, g_moduleName, Py_None);
+
+	// Delete the blue[CCP_BUILD_FLAVOR] module (by replacing it with None)
+	const char* moduleName = CCP_STRINGIZE(CCP_CONCATENATE(blue, CCP_BUILD_FLAVOR));
+	if (moduleName != g_moduleName)
+	{
+		PyDict_SetItemString(modules, moduleName, Py_None);
+	}
 
 	mBlueModule = 0;
 	return true;
