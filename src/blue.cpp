@@ -90,11 +90,11 @@ PyObject* PyAtomicFileRead(PyObject *self, PyObject* args)
 	PyObject *filename;
 	if (!PyArg_ParseTuple(args, "U", &filename))
 		return NULL;
-	
-	
+
+
 	BluePy ufn(PyUnicode_FromObject(filename));
 	if (!ufn) return 0;
-#ifdef _WIN32	
+#ifdef _WIN32
 	HANDLE h = INVALID_HANDLE_VALUE;
 	DWORD fileSize;
 	BY_HANDLE_FILE_INFORMATION info;
@@ -119,7 +119,7 @@ PyObject* PyAtomicFileRead(PyObject *self, PyObject* args)
 		fileSize = GetFileSize(h, 0);
 		if (fileSize == INVALID_FILE_SIZE)
 			goto HERR;
-		
+
 		BOOL success = GetFileInformationByHandle(h, &info);
 		if (!success)
 			goto HERR;
@@ -138,7 +138,7 @@ PyObject* PyAtomicFileRead(PyObject *self, PyObject* args)
             BOOL success = ReadFile(h, buffer, fileSize, &read, 0);
 			if (!success)
 				goto HERR;
-				
+
 			CloseHandle(h);
 			h = INVALID_HANDLE_VALUE;
 		}
@@ -147,7 +147,7 @@ PyObject* PyAtomicFileRead(PyObject *self, PyObject* args)
 			PyErr_SetString( PyExc_RuntimeError, "Read short file" );
 			return nullptr;
 		}
-		
+
 		return r.Detach();
 	}
 
@@ -241,7 +241,7 @@ PyObject* PyAtomicFileWrite(PyObject *self, PyObject* args)
 		DWORD written;
 		BOOL success;
 		{
-			Ccp::PyAllowThreads _allow;		
+			Ccp::PyAllowThreads _allow;
 			success = WriteFile(h, buffer.buf, (DWORD)buffer.len, &written, 0);
 			if (!success)
 				goto HERR;
@@ -294,7 +294,7 @@ HERR:
 
 }
 
-MAP_FUNCTION( 
+MAP_FUNCTION(
 	"AtomicFileRead",
 	PyAtomicFileRead,
 	"Reads an entire file atomically. Returns the contents of the file as a string.\n"
@@ -303,7 +303,7 @@ MAP_FUNCTION(
 	":type filename: basestring\n"
 	":rtype: str" );
 
-MAP_FUNCTION( 
+MAP_FUNCTION(
 	"AtomicFileWrite",
 	PyAtomicFileWrite,
 	"Writes an entire file atomically. Raises OSError, IOError.\n"
@@ -314,9 +314,9 @@ MAP_FUNCTION(
 	":rtype: None" );
 
 
-MAP_FUNCTION_AND_WRAP( 
-	"FindRoute", 
-	FindRoute, 
+MAP_FUNCTION_AND_WRAP(
+	"FindRoute",
+	FindRoute,
 	"Searches for all routes from one object to another. A route is a sequence of getattr or index operations.\n"
 	"This function is relatively heavy and should not be used in production code, but rather is indended for\n"
 	"in-house tools.\n"
@@ -398,9 +398,9 @@ PyObject* PyEnableDebuggerLogging( PyObject* self, PyObject* args )
 	Py_RETURN_NONE;
 }
 
-MAP_FUNCTION( 
-	"EnableDebuggerLogging", 
-	PyEnableDebuggerLogging, 
+MAP_FUNCTION(
+	"EnableDebuggerLogging",
+	PyEnableDebuggerLogging,
 	"Enables echoing of log to debugger output window\n"
 	":param threshold: minimum severity level required for the message to be output\n"
 	":type threshold: Optional[int]\n"
@@ -411,7 +411,7 @@ MAP_FUNCTION(
 void BlueInitializeSocketLogger()
 {
     CCP_LOG( "Connecting to socket logger" );
-    
+
 	if( StartSocketLogger() )
 	{
 		CCP::RegisterLogEcho( &LogToSocketLogger, CCP::LOGTYPE_INFO, true, CCP::LOG_ECHO_REQUIRES_PRIVILEGE_CHECK );
@@ -444,15 +444,15 @@ void BlueModuleStartup()
 {
     // Inform the logging system of the main thread
     CCP::SetLogMainThreadId();
-    
+
     unsigned int memoryLoad = 0;
-    
+
     // This is duplicating work from ExeFile but I don't see a good
     // way around that. If I have ExeFile call functions in BeOS or
     // something I can't get data from arguments until after all
     // the initialization process is done.
     std::vector<std::wstring> argv = GetSplitCommandLine();
-    
+
     for( size_t i = 1; i < argv.size(); ++i )
     {
         const std::wstring &arg = argv[i];
@@ -480,7 +480,7 @@ void BlueModuleStartup()
     }
 
     CCP_LOG( "Blue module starting" );
-    
+
 #ifdef _WIN32
 		OSVERSIONINFOEX ver = {0};
 		ver.dwOSVersionInfoSize = sizeof(ver);
@@ -490,11 +490,11 @@ void BlueModuleStartup()
 			ver.dwMinorVersion,
 			ver.dwBuildNumber,
 			ver.szCSDVersion,
-			ver.dwPlatformId, 
-			ver.wServicePackMajor, ver.wServicePackMinor, 
+			ver.dwPlatformId,
+			ver.wServicePackMajor, ver.wServicePackMinor,
 			ver.wSuiteMask, ver.wProductType);
 #endif
-    
+
     if( memoryLoad )
     {
         unsigned int memSize = memoryLoad * 1024*1024;
@@ -613,7 +613,9 @@ void PatchPythonExit()
 PyMODINIT_FUNC BLUE_EXPORTED_INIT
 	CCP_CONCATENATE( PyInit_blue, CCP_BUILD_FLAVOR ) (void)
 {
-    BlueModuleStartup();
+	if ( BlueRegistration::GetClassRegs().empty() ) {
+		BlueModuleStartup();
+	}
 
 	BlueInitializeSocketLogger();
 

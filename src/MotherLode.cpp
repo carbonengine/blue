@@ -32,7 +32,8 @@
 #include "BluePythonWeakRef.h"
 #endif
 
-IMotherLode* BeMotherLode = nullptr;
+static CMotherLode s_beMotherLode;
+IMotherLode* BeMotherLode = &s_beMotherLode;
 BLUE_REGISTER_GLOBAL_AS_MODULE_OBJECT( "motherLode", BeMotherLode );
 
 CcpLogChannel_t s_ml = CCP_LOG_DEFINE_CHANNEL( "MotherLode" );

@@ -3,7 +3,8 @@
 #include <Find.h>
 #include "BlueSmartPtr.h"
 
-IBlueObjectMetadata* BeObjectMetadata = nullptr;
+static CBlueObjectMetadata s_beObjectMetadata;
+IBlueObjectMetadata* BeObjectMetadata = &s_beObjectMetadata;
 
 BlueObjectMetadata::DataTable::DataTable()
 	:mapping( "BlueObjectMetadata::DataTable::mapping" )
