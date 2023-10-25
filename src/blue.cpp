@@ -613,9 +613,7 @@ void PatchPythonExit()
 PyMODINIT_FUNC BLUE_EXPORTED_INIT
 	CCP_CONCATENATE( PyInit_blue, CCP_BUILD_FLAVOR ) (void)
 {
-	if ( BlueRegistration::GetClassRegs().empty() ) {
-		BlueModuleStartup();
-	}
+	BlueModuleStartup();
 
 	BlueInitializeSocketLogger();
 
