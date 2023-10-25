@@ -46,8 +46,6 @@
 
 IBluePyOS* PyOS = nullptr;
 
-IPythonEventsPtr sPyEventHandler;
-
 static CcpLogChannel_t s_chPy = CCP_LOG_DEFINE_CHANNEL( "Python Logs" );
 static CcpLogChannel_t s_chMemory = CCP_LOG_DEFINE_CHANNEL( "Memory" );
 
@@ -263,44 +261,6 @@ bool BluePyOS::InitBasicModuleSupport()
 	mSynchro = CCP_NEW( "BluePyOS/mSyncro" ) Synchro;
 	mPySynchro = mSynchro;
 	PyDict_SetItemString(dict, "synchro", mSynchro);
-
-
-	// Redirect python stdout and stderr and
-	// add log support
-	PyObject* sysmodule = PyImport_ImportModule("sys");
-
-	for (int i = 0; i <= _PYPORTLAST; i++)
-	{
-		mPyPorts[i].mPort = (PYPORT)i;
-		// Need to track encoding for stdout and stderr so that interpreter mode works.
-		if (i == PYSTDOUT) {
-			if (mPyPorts[i].mEncoding == Py_None) {
-				Py_DECREF(Py_None);
-			}
-			PyObject* encoding = nullptr;
-			PyObject* orig_stdout = PySys_GetObject( (char*)"stdout" ); // no need to incref because it's a borrowed reference
-			if( orig_stdout != Py_None )
-			{
-				encoding = PyObject_GetAttrString( orig_stdout, "encoding" );
-			}
-			else
-			{
-				encoding = PyUnicode_FromString( PyUnicode_GetDefaultEncoding() );
-			}
-			Py_INCREF( encoding );
-			mPyPorts[i].mEncoding = encoding;
-		}
-		else
-		{
-			Py_INCREF( Py_None );
-			mPyPorts[i].mEncoding = Py_None;
-		}
-		BluePythonObject* obj = WrapBlueObject(mPyPorts[i].GetRawRoot());
-		PyObject_SetAttrString(sysmodule, (char*)PORTNAMES[i], obj);
-		Py_DECREF(obj);
-	}
-
-	Py_DECREF(sysmodule);
 #endif
 
 	PyObject* sys_modules = PyImport_GetModuleDict();
@@ -335,17 +295,6 @@ bool BluePyOS::FiniBasicModuleSupport()
 {
 
 	PyObject* sysmodule = PyImport_ImportModule("sys");
-#if 0 //we want to keep this redirected to catch stuff that occurs during shutdown
-	// Remove standard error redirecting
-	int i;
-	for (i = 0; i <= _PYPORTLAST; i++)
-	{
-		mPyPorts[i].mPort = (PYPORT)i;
-		PyObject_DelAttrString(sysmodule, (char*)PORTNAMES[i]);
-	}
-	PySys_SetObject("stdout", PySys_GetObject("__stdout__"));
-	PySys_SetObject("stderr", PySys_GetObject("__stderr__"));
-#endif
 
 #if CCP_STACKLESS
 
@@ -375,7 +324,7 @@ bool BluePyOS::FiniBasicModuleSupport()
 	Py_DECREF(sysmodule);
 
 	//and delete the "blue" module (by replacing it with None)
-	PyDict_SetItemString(modules, "blue", Py_None);
+	PyDict_SetItemString(modules, g_moduleName, Py_None);
 
 	mBlueModule = 0;
 	return true;
@@ -530,8 +479,6 @@ bool BluePyOS::Startup()
 	mInterpreterMode = BeOS->HasStartupArg( L"py" );
 
 	mExceptionHandler = NULL;
-
-	sPyEventHandler = static_cast<IPythonEvents*>( this );  //We are the event handler initially.
 
 #if CCP_STACKLESS
 	if( BeOS->HasStartupArg( L"telemetryMarkup" ) )
@@ -757,9 +704,6 @@ void BluePyOS::Shutdown(int level)
 	Py_XDECREF(mExceptionHandler);
 	mExceptionHandler = NULL;
 
-	//We are the event handler during shutdown
-	sPyEventHandler = static_cast<IPythonEvents*>( this );
-
 	// Finish basic module support
 	FiniBasicModuleSupport();
 
@@ -794,10 +738,6 @@ void BluePyOS::Shutdown(int level)
 
 	// Now, all python references to the blue wrappers should be gone.
 	// todo: BlueWrapper::Shutdown();
-
-	// python has stopped running.  Release stuff with no python consequences.
-	//This is currently set to us, a static object. unlocking just sets to 0.
-	sPyEventHandler.Unlock();
 
 	mInit = false;
 }
@@ -960,17 +900,6 @@ int BluePyOS::	PumpPython(bool quit)
 #endif
 
 	return 1;
-}
-
-
-//--------------------------------------------------------------------
-// BluePyOS::SetEventHandler
-//--------------------------------------------------------------------
-void BluePyOS::SetEventHandler(
-	IPythonEvents* handler
-	)
-{
-	sPyEventHandler = handler ? handler : this;
 }
 
 
@@ -1622,25 +1551,6 @@ bool BluePyOS::PostEvent(
 //}
 
 
-//--------------------------------------------------------------------
-// IPythonEvents::OnWrite
-//--------------------------------------------------------------------
-void BluePyOS::OnWrite(
-	PYPORT port,
-	const char* text
-	)
-{
-	if( port == PYSTDERR )
-	{
-		fprintf(stderr, "%s", text);
-	}
-	else
-	{
-		fprintf(stdout, "%s", text);
-	}
-}
-
-
 
 
 //////////////////////////////////////////////////////////////////////
@@ -1712,8 +1622,6 @@ PyObject* BluePyOS::PyDumpState(PyObject* args)
 
 	char tmp[CCP_MAX_PATH];
 
-	IPythonEventsPtr tmpp = sPyEventHandler;
-	sPyEventHandler = static_cast<IPythonEvents*>( this );
 	PyObject* file = PySys_GetObject((char*)"stderr");
 
 	if (!file)
@@ -1747,8 +1655,6 @@ PyObject* BluePyOS::PyDumpState(PyObject* args)
 
 		PyFile_WriteString("\n\n", file);
 	}
-
-	sPyEventHandler = tmpp;
 #endif
 
 	Py_INCREF(Py_None);
