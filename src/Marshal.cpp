@@ -1060,8 +1060,8 @@ PyObject * Marshal::ReadObjectUnicode( ReadStream * stream, bool isShared )
 {
 	int kind, len;
 	const char *buff;
-	if( !stream->ReadInteger( kind ) || !stream->ReadInteger( len ) || !stream->GetBuffer( buff, len ) ) return 0;
-	return PyUnicode_FromKindAndData( kind, buff, len );
+	if( !stream->ReadInteger( len ) || !stream->GetBuffer( buff, len ) ) return 0;
+	return PyUnicode_FromStringAndSize( buff, len );
 }
 
 PyObject * Marshal::ReadObjectStrTable( ReadStream * stream, bool isShared )
@@ -1832,8 +1832,10 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 	case  's':
 		if (PyUnicode_CheckExact(o))
 		{
-			Py_ssize_t size = PyUnicode_GET_DATA_SIZE(o);
-			const char *data = PyUnicode_AS_DATA(o);
+//			Py_ssize_t size = PyUnicode_GET_LENGTH(o);
+//			const char *data = PyUnicode_AS_DATA(o);
+			Py_ssize_t size = 0;
+			const char *data = PyUnicode_AsUTF8AndSize(o, &size);
 			if (size == 0) {
 				return WriteType(stream, TY_UNICODE_0);
 			} else if (size == 1) {
@@ -1847,7 +1849,7 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 				}
 				else
 				{
-					return WriteType( stream, TY_UNICODE ) && stream->WriteInteger( int( PyUnicode_KIND( o ) ) ) && stream->WriteInteger( (int)size ) &&
+					return WriteType( stream, TY_UNICODE ) && stream->WriteInteger( (int)size ) &&
 						stream->WriteBuffWoSize( data, size );
 				}
 			}
