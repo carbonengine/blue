@@ -18,16 +18,13 @@ BlueSysInfoTaskTimesPtr BlueSysInfo::GetProcessTimes() const
 	times.CreateInstance();
 
 	int64_t kernelTime, userTime;
-	if( CcpGetProcessTimes( kernelTime, userTime ) )
+	if( !CcpGetProcessTimes( kernelTime, userTime ) )
 	{
-		times->m_systemTime = double( kernelTime ) / 10000000.0;
-		times->m_userTime = double( userTime ) / 10000000.0;
+		PyErr_SetString( PyExc_OSError, "Failed to get process times" );
+		return nullptr;
 	}
-	else
-	{
-		times->m_systemTime = 0;
-		times->m_userTime = 0;
-	}
+	times->m_systemTime = double( kernelTime ) / 10000000.0;
+	times->m_userTime = double( userTime ) / 10000000.0;
 	return times;
 }
 
@@ -37,16 +34,13 @@ BlueSysInfoTaskTimesPtr BlueSysInfo::GetThreadTimes() const
 	times.CreateInstance();
 
 	int64_t kernelTime, userTime;
-	if( CcpGetThreadTimes( kernelTime, userTime ) )
+	if( !CcpGetThreadTimes( kernelTime, userTime ) )
 	{
-		times->m_systemTime = double( kernelTime ) / 10000000.0;
-		times->m_userTime = double( userTime ) / 10000000.0;
+		PyErr_SetString( PyExc_OSError, "Failed to get thread times" );
+		return nullptr;
 	}
-	else
-	{
-		times->m_systemTime = 0;
-		times->m_userTime = 0;
-	}
+	times->m_systemTime = double( kernelTime ) / 10000000.0;
+	times->m_userTime = double( userTime ) / 10000000.0;
 	return times;
 }
 

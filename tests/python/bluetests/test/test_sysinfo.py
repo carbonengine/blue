@@ -47,16 +47,15 @@ class TestSysInfo(unittest.TestCase):
     def testSharedFontsDirectoryExists(self):
         self._testDirectoryExists(blue.sysinfo.GetSharedFontsDirectory())
 
-    @unittest.skip("Flaky")
-    def testProcessTimesNotZero(self):
+    def testProcessTimesReturnsSaneValues(self):
         """
-        Skipped because of occasional failures.
-        https://ccpgames.atlassian.net/browse/PLAT-3476
-        (Flaky unittests regarding process and thread times)
+        System and user times can be 0 if
+        GetProcessTimes is called early enough
+        in the process.
         """
         times = blue.sysinfo.GetProcessTimes()
-        self.assertGreater(times.systemTime, 0)
-        self.assertGreater(times.userTime, 0)
+        self.assertGreaterEqual(times.systemTime, 0)
+        self.assertGreaterEqual(times.userTime, 0)
 
     def testProcessTimesIncrease(self):
         before = blue.sysinfo.GetProcessTimes()
@@ -66,16 +65,15 @@ class TestSysInfo(unittest.TestCase):
             count += i
         self.assertGreater(blue.sysinfo.GetProcessTimes().userTime, before.userTime)
 
-    @unittest.skip("Flaky")
-    def testThreadTimesNotZero(self):
+    def testThreadTimesReturnsSaneValues(self):
         """
-        Skipped because of occasional failures.
-        https://ccpgames.atlassian.net/browse/PLAT-3476
-        (Flaky unittests regarding process and thread times)
+        System and user times can be 0 if
+        GetThreadTimes is called early enough
+        in the thread.
         """
         times = blue.sysinfo.GetThreadTimes()
-        self.assertGreater(times.systemTime, 0)
-        self.assertGreater(times.userTime, 0)
+        self.assertGreaterEqual(times.systemTime, 0)
+        self.assertGreaterEqual(times.userTime, 0)
 
     def testThreadTimesNotGreaterThanProcessTimes(self):
         thread = blue.sysinfo.GetThreadTimes()
