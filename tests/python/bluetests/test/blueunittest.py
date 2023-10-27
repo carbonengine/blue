@@ -22,5 +22,5 @@ class TestCase(unittest.TestCase):
                 else:
                     if attributeName != "__iroot__":
                         self.assertEqual(attr1, attr2)
-        elif isinstance(obj1, str):
+        else:
             self.assertEqual(obj1, obj2)

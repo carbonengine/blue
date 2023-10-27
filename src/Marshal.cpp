@@ -523,7 +523,8 @@ bool WriteStream::InitType(PyTypeObject *type)
 	type->tp_as_sequence = &sequenceMethods;
 	type->tp_str = &tp_str_method;
 	type->tp_repr = &tp_repr_method;
-		
+	type->tp_richcompare = &tp_richcompare_method;
+
 	return true;
 }
 
@@ -616,6 +617,31 @@ PyObject *WriteStream::tp_repr_method(PyObject *_self)
 	PyObject *res = PyUnicode_FromFormat("<MarshalStream %R>", str);
 	Py_DECREF(str);
 	return res;
+}
+
+PyObject *WriteStream::tp_richcompare_method(PyObject *self, PyObject* other, int op)
+{
+	if (op != Py_EQ)
+	{
+		Py_RETURN_RICHCOMPARE(self, other, op);
+	}
+	if (self == other)
+	{
+		Py_RETURN_TRUE;
+	}
+
+	WriteStream *_self = static_cast<WriteStream*>(self);
+	WriteStream *_other = static_cast<WriteStream*>(other);
+	if (_self->mPos != _other->mPos)
+	{
+		Py_RETURN_FALSE;
+	}
+	auto smaller = std::min(_self->mPos, _other->mPos);
+	if (memcmp(_self->mBuff, _other->mBuff, smaller) != 0)
+	{
+		Py_RETURN_FALSE;
+	}
+	Py_RETURN_TRUE;
 }
 
 
@@ -1058,9 +1084,9 @@ PyObject * Marshal::ReadObjectUnicode0( ReadStream * stream, bool isShared )
 
 PyObject * Marshal::ReadObjectUnicode( ReadStream * stream, bool isShared )
 {
-	int kind, len;
+	int len;
 	const char *buff;
-	if( !stream->ReadInteger( len ) || !stream->GetBuffer( buff, len ) ) return 0;
+	if( !stream->ReadInteger( len ) || !stream->GetBuffer( buff, len ) ) return nullptr;
 	return PyUnicode_FromStringAndSize( buff, len );
 }
 
