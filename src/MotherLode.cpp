@@ -309,11 +309,13 @@ void MotherLode::Startup()
 
 void MotherLode::Shutdown()
 {
-	CCP_ASSERT(mActive);
-	mActive = false;
-	Clear();
-	if (BeOS)
-		BeOS->UnregisterForTicks(this, cookie);
+	if (mActive)
+	{
+		mActive = false;
+		Clear();
+		if (BeOS)
+			BeOS->UnregisterForTicks(this, cookie);
+	}
 }
 
 
