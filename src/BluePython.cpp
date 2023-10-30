@@ -575,8 +575,13 @@ bool BluePyOS::Startup()
 
     // We want to avoid cluttering the Perforce workspace with `__pycache__` folders. Therefore, write any compiled
     // bytecode to our usual cache location instead.
-    config.pycache_prefix = BePaths->ResolvePathForWritingW(L"cache:/__pycache__").data();
-    CCP_LOG( "Configured __pycache__ location to be %ls", config.pycache_prefix );
+	auto cachePath = BePaths->ResolvePathForWritingW(L"cache:/__pycache__");
+	if ( ! cachePath.empty() ) {
+		config.pycache_prefix = cachePath.data();
+		CCP_LOG( "Configured __pycache__ location to be %ls", config.pycache_prefix );
+	} else {
+		CCP_LOG( "Not configuring __pycache__ because `cache:` prefix not registered" );
+	}
 
 	// Initialize built-in Python modules
 	if ( PyImport_AppendInittab( g_moduleName, CCP_CONCATENATE( PyInit_blue, CCP_BUILD_FLAVOR ) ) == -1 ) {
