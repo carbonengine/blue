@@ -523,7 +523,8 @@ bool WriteStream::InitType(PyTypeObject *type)
 	type->tp_as_sequence = &sequenceMethods;
 	type->tp_str = &tp_str_method;
 	type->tp_repr = &tp_repr_method;
-		
+	type->tp_richcompare = &tp_richcompare_method;
+
 	return true;
 }
 
@@ -616,6 +617,31 @@ PyObject *WriteStream::tp_repr_method(PyObject *_self)
 	PyObject *res = PyUnicode_FromFormat("<MarshalStream %R>", str);
 	Py_DECREF(str);
 	return res;
+}
+
+PyObject *WriteStream::tp_richcompare_method(PyObject *self, PyObject* other, int op)
+{
+	if (op != Py_EQ)
+	{
+		Py_RETURN_RICHCOMPARE(self, other, op);
+	}
+	if (self == other)
+	{
+		Py_RETURN_TRUE;
+	}
+
+	WriteStream *_self = static_cast<WriteStream*>(self);
+	WriteStream *_other = static_cast<WriteStream*>(other);
+	if (_self->mPos != _other->mPos)
+	{
+		Py_RETURN_FALSE;
+	}
+	auto smaller = std::min(_self->mPos, _other->mPos);
+	if (memcmp(_self->mBuff, _other->mBuff, smaller) != 0)
+	{
+		Py_RETURN_FALSE;
+	}
+	Py_RETURN_TRUE;
 }
 
 
@@ -1058,10 +1084,10 @@ PyObject * Marshal::ReadObjectUnicode0( ReadStream * stream, bool isShared )
 
 PyObject * Marshal::ReadObjectUnicode( ReadStream * stream, bool isShared )
 {
-	int kind, len;
+	int len;
 	const char *buff;
-	if( !stream->ReadInteger( kind ) || !stream->ReadInteger( len ) || !stream->GetBuffer( buff, len ) ) return 0;
-	return PyUnicode_FromKindAndData( kind, buff, len );
+	if( !stream->ReadInteger( len ) || !stream->GetBuffer( buff, len ) ) return nullptr;
+	return PyUnicode_FromStringAndSize( buff, len );
 }
 
 PyObject * Marshal::ReadObjectStrTable( ReadStream * stream, bool isShared )
@@ -1832,8 +1858,10 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 	case  's':
 		if (PyUnicode_CheckExact(o))
 		{
-			Py_ssize_t size = PyUnicode_GET_DATA_SIZE(o);
-			const char *data = PyUnicode_AS_DATA(o);
+//			Py_ssize_t size = PyUnicode_GET_LENGTH(o);
+//			const char *data = PyUnicode_AS_DATA(o);
+			Py_ssize_t size = 0;
+			const char *data = PyUnicode_AsUTF8AndSize(o, &size);
 			if (size == 0) {
 				return WriteType(stream, TY_UNICODE_0);
 			} else if (size == 1) {
@@ -1847,7 +1875,7 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 				}
 				else
 				{
-					return WriteType( stream, TY_UNICODE ) && stream->WriteInteger( int( PyUnicode_KIND( o ) ) ) && stream->WriteInteger( (int)size ) &&
+					return WriteType( stream, TY_UNICODE ) && stream->WriteInteger( (int)size ) &&
 						stream->WriteBuffWoSize( data, size );
 				}
 			}

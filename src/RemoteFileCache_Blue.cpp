@@ -49,6 +49,25 @@ const Be::ClassInfo* RemoteFileCache::ExposeToBlue()
 
 		MAP_ATTRIBUTE
 		(
+			"registerDownloadErrors",
+			m_registerDownloadErrors,
+			"Set true to register errors when download from primary server fails.\n"
+			"Default: true",
+			Be::READWRITE
+		)
+
+		MAP_ATTRIBUTE
+		(
+			"primaryServerFailThreshold",
+			m_primaryServerFailThreshold,
+			"Number of failures encountered from primary server before defaulting to backup server.\n"
+			"set -1 to never fallback to backup server."
+			"Default: -1",
+			Be::READWRITE 
+		)
+
+		MAP_ATTRIBUTE
+		(
 			"bytesDownloaded",
 			m_bytesDownloaded,
 			"Number of bytes successfully downloaded from server.",
@@ -115,6 +134,13 @@ const Be::ClassInfo* RemoteFileCache::ExposeToBlue()
 			"If set, the contents of downloaded files is verified against the md5 checksum\n"
 			"when using the file from the local cache.",
 			Be::READWRITE
+		)
+
+		MAP_METHOD_AND_WRAP
+		(
+			"RegisterOnServerFailedCallback",
+			RegisterOnServerFailedCallback,
+			"Register a callback method to be called whenever download from server fails." 
 		)
 		
 		MAP_METHOD_AND_WRAP

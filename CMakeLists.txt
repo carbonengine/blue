@@ -45,14 +45,20 @@ set(PUBLIC_HEADER_FILES_INCLUDE
     include/IBlueObjectMetadata.h
     include/ICacheable.h
     include/ICcpStatisticsAccumulator.h
+    include/ICurveSetDriver.h
+    include/ITr2DebugRenderer2.h
     include/ITaskletTimer.h
+    include/ITriConstants.h
+    include/ITriCurveLength.h
     include/ITriFunction.h
+    include/ITriObserverLocal.h
     include/ScopedBlockTrap.h
     include/BlueObjectMetadata.h
     include/BluePyCpp.h
     include/BluePlatform.h
     include/BluePlatformPosix.h
     include/BluePlatformWin32.h
+    include/Rect.h
     include/stacklessio.h
 )
 
@@ -206,9 +212,6 @@ ccp_add_library(Blue SHARED
     src/PyRowSet.h
     src/PyScheduler.cpp
     src/PyScheduler.h
-    src/PythonEvents.cpp
-    src/PythonEvents.h
-    src/PythonEvents_Blue.cpp
     src/RemoteFileCache.cpp
     src/RemoteFileCache.h
     src/RemoteFileCache_Blue.cpp
@@ -356,7 +359,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     # discover python tests ... this may be a little bit brittle since we're working around the missing `_blueexposuretest`
     # binary. As in, test discovery happens during the configure stage at which the binary does not exist yet.
     set(ENV{PYTHONPATH} ${BRANCH_ROOT_DIR}/carbon/common/stdlib:${BRANCH_ROOT_DIR}/vendor/python/3.8.1+ccp-stackless/${CCP_VENDOR_BIN_PATH})
-    execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sys; sys.modules['blue']=sys;import unittest; print_suite = lambda x: (print(x._exception), sys.exit(1)) if hasattr(x, '_exception') else print(x.id()) if not hasattr(x, '__iter__') else [print_suite(x) for x in x];print_suite(unittest.defaultTestLoader.discover('.'))"
+    execute_process(COMMAND ${PYTHON_EXECUTABLE} discover.py
         OUTPUT_VARIABLE PYTHON_TESTS_STR
         OUTPUT_STRIP_TRAILING_WHITESPACE
         ERROR_STRIP_TRAILING_WHITESPACE

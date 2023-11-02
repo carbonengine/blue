@@ -29,7 +29,6 @@
 #include "IBlueOS.h"
 #include "TaskletTimer.h"
 #include "PyScheduler.h"
-#include "PythonEvents.h"
 
 #ifdef STACKLESS
 #include <stackless_api.h>
@@ -85,8 +84,7 @@ TYPEDEF_BLUECLASS( BlueCpuUsage );
 BLUE_DECLARE( BluePyOS );
 
 BLUE_CLASS( BluePyOS ) :
-	public IBluePyOS,
-	public IPythonEvents
+	public IBluePyOS
 {
 public:
 	// ctor
@@ -163,9 +161,6 @@ public:
 	long mSliceWarning;
 	long mBeNiceSlice; //default benice in milliseconds
 	long mPerformanceUpdateFrequency; // How often PumpPython updates process performance data
-
-	// for python events
-	CPythonEvents mPyPorts[_PYPORTLAST + 1];
 
 	// exit procs
 	PyObject* mExitProcs; //a python list
@@ -266,9 +261,6 @@ public:
 	int PumpPython(
 		bool quit ) override;
 
-	void SetEventHandler(
-		IPythonEvents * handler ) override;
-
 	PyObject* BlueModule() override { return mBlueModule; }
 
 
@@ -352,13 +344,6 @@ public:
 		const char* eventName,
 		const char* format = NULL,
 		... ) override;
-
-	//--------------------------------------------------------------------
-	// IPythonEvents interface
-	//--------------------------------------------------------------------
-	void OnWrite(
-		PYPORT port,
-		const char* text ) override;
 };
 
 TYPEDEF_BLUECLASS_WR( BluePyOS ); //need weakref support for the singleton factory

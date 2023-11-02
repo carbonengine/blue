@@ -34,6 +34,9 @@ RemoteFileCache::RemoteFileCache() :
 	m_server( "http://127.0.0.1:5000" ),
 	m_prefix( "/res/"),
 	m_cacheFolder( L"cache:/ResFiles"),
+	m_registerDownloadErrors( true ),
+	m_numSequentialPrimaryServerDownloadErrors( 0 ),
+	m_primaryServerFailThreshold( 10 ),
 	m_bytesDownloaded( 0 ),
 	m_bytesCached( 0 ),
 	m_filesDownloaded( 0 ),
@@ -41,7 +44,8 @@ RemoteFileCache::RemoteFileCache() :
 	m_filesUsedFromCache( 0 ),
 	m_fullHeaderLogging( false ),
 	m_verifyContentsOnSave( true ),
-	m_verifyContentsOnLoad( true )
+	m_verifyContentsOnLoad( true ),
+	m_on_server_failed_callback()
 {
 }
 
@@ -157,12 +161,42 @@ Be::Result<std::string> RemoteFileCache::GetStreamFromPathW( const wchar_t* resP
 
 		if( !m_backupServer.empty() )
 		{
-			CCP_LOGERR_CH( s_ch, "Download failed for %S from %s - retrying from backup server", resPath, m_server.c_str() );
+
+			CCP_LOGERR_CH( s_ch, "Download failed for %S from %s - retrying from backup server: %s", resPath, m_server.c_str(), m_backupServer.c_str() );
+
+			if( m_primaryServerFailThreshold > -1 )
+			{
+				m_numSequentialPrimaryServerDownloadErrors++;
+				if( m_numSequentialPrimaryServerDownloadErrors > m_primaryServerFailThreshold )
+				{
+					// Number of sequetial failures exceeding threshold, set backup url as primary url to attempt to bring back performance
+					CCP_LOGERR_CH( s_ch, "Primary server sequential failures has exceeded the failure threshold of: %d, defaulting to backup server: %s", m_primaryServerFailThreshold, m_backupServer.c_str() );
+					m_server = m_backupServer;
+				}
+			}
+
+			if( m_registerDownloadErrors && m_on_server_failed_callback )
+			{
+				//Callback into python to register exception that will show up on Sentry
+				m_on_server_failed_callback.CallVoid( "Primary", resPath, m_server.c_str() );
+				
+			}
+
 			isOK = TryDownload( m_backupServer, filename, remoteStream, expectedSize, resPath );
 			if( !isOK )
 			{
+				if( m_registerDownloadErrors && m_on_server_failed_callback )
+				{
+					//Callback into python to register exception that will show up on Sentry
+					m_on_server_failed_callback.CallVoid( "Backup", resPath, m_backupServer.c_str() );
+				}
+
 				CCP_STATS_INC( remoteFileCacheFailedBackup );
 			}
+		}
+		else
+		{
+			m_numSequentialPrimaryServerDownloadErrors = 0;
 		}
 	}
 
@@ -344,6 +378,11 @@ void RemoteFileCache::AddFileIndexImpl( const char* contents, ssize_t size )
 			AddResPathToFolderIndex( resPath );
 		}
 	}
+}
+
+void RemoteFileCache::RegisterOnServerFailedCallback( BlueScriptCallback callback )
+{
+	m_on_server_failed_callback = callback;
 }
 
 void RemoteFileCache::AddFileIndex( const std::string& fileIndex )

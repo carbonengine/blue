@@ -47,7 +47,13 @@ class TestSysInfo(unittest.TestCase):
     def testSharedFontsDirectoryExists(self):
         self._testDirectoryExists(blue.sysinfo.GetSharedFontsDirectory())
 
+    @unittest.skip("Flaky")
     def testProcessTimesNotZero(self):
+        """
+        Skipped because of occasional failures.
+        https://ccpgames.atlassian.net/browse/PLAT-3476
+        (Flaky unittests regarding process and thread times)
+        """
         times = blue.sysinfo.GetProcessTimes()
         self.assertGreater(times.systemTime, 0)
         self.assertGreater(times.userTime, 0)
@@ -60,7 +66,13 @@ class TestSysInfo(unittest.TestCase):
             count += i
         self.assertGreater(blue.sysinfo.GetProcessTimes().userTime, before.userTime)
 
+    @unittest.skip("Flaky")
     def testThreadTimesNotZero(self):
+        """
+        Skipped because of occasional failures.
+        https://ccpgames.atlassian.net/browse/PLAT-3476
+        (Flaky unittests regarding process and thread times)
+        """
         times = blue.sysinfo.GetThreadTimes()
         self.assertGreater(times.systemTime, 0)
         self.assertGreater(times.userTime, 0)

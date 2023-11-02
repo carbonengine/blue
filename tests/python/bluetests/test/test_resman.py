@@ -11,7 +11,6 @@ class TestResMan(unittest.TestCase):
     """
 
     def setUp(self):
-        print("setting up")
         blue.motherLode.clear()
         self.tmpDir = tempfile.mkdtemp()
         self.cacheSearchPath = blue.paths.GetSearchPath("cache")
@@ -21,7 +20,6 @@ class TestResMan(unittest.TestCase):
 
     def tearDown(self):
         import stackless
-        print("tearing down", stackless.runcount)
         blue.paths.SetSearchPath("cache", self.cacheSearchPath)
         blue.paths.SetSearchPath("res", self.resSearchPath)
         def retry_handler(func, path, _):
@@ -149,7 +147,6 @@ class TestResMan(unittest.TestCase):
         res = blue.resMan.GetResource("res:/test.txt")
         blue.resMan.Wait()
         self.assertEqual(res.text, "Chinese file")
-        print("Done with test")
 
     @run_in_tasklet
     def test_OpenLanguageSpecificFile_EnglishLanguageSet(self):

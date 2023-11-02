@@ -420,6 +420,7 @@ private:
 	//str() method
 	static PyObject *tp_str_method(PyObject *self);
 	static PyObject *tp_repr_method(PyObject *self);
+	static PyObject *tp_richcompare_method(PyObject *self, PyObject* other, int op);
 	
 	//buffer protocol.
 	static int getbuffer(PyObject* exporter, Py_buffer* view, int flags);

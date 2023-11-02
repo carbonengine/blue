@@ -4,33 +4,35 @@ from . import blueunittest
 import blue
 import sys
 
-class EmptyObject(object):
-    pass
+class EmptyObject:
+    def __eq__(self, other):
+        return isinstance(other, type(self))
 
 
-class SimpleObject(object):
+class CallbackSerializedObject:
+    def __eq__(self, other):
+        return isinstance(other, type(self))
+
+
+class SimpleObject:
     def __init__(self):
         self.a = "this is a string"
         self.b = 42
         self.c = 3.14159267
 
-
-class OldSchoolObject:
-    def __init__(self):
-        self.a = "this is a string"
-        self.b = 42
-        self.c = 3.14159267
+    def __eq__(self, other):
+        return isinstance(other, type(self)) and self.a == other.a and self.b == other.b and self.c == other.c
 
 
 def SaveCallback(obj):
-    if isinstance(obj, OldSchoolObject):
+    if isinstance(obj, CallbackSerializedObject):
         return "magic"
     return None
 
 
 def LoadCallback(obj):
     if obj == "magic":
-        return OldSchoolObject()
+        return CallbackSerializedObject()
     return None
 
 
@@ -151,12 +153,8 @@ class testMarshal(blueunittest.TestCase):
         obj = SimpleObject()
         self.verify_round_trip([obj, obj, obj])
 
-    def test_instanced_old_shool_object(self):
-        obj = OldSchoolObject()
-        self.verify_round_trip([obj, obj, obj])
-
     def test_callback(self):
-        obj = [OldSchoolObject(), SimpleObject(), "this is a test"]
+        obj = [CallbackSerializedObject(), SimpleObject(), "this is a test"]
         s = blue.marshal.Save(obj, callback=SaveCallback)
         obj2 = blue.marshal.Load(s, callback=LoadCallback)
         self.assertBlueObjectsEqual(obj, obj2)
@@ -165,7 +163,7 @@ class testMarshal(blueunittest.TestCase):
         self._update_coverage()
 
     def test_checksum(self):
-        obj = [OldSchoolObject(), SimpleObject(), "this is a test"]
+        obj = [SimpleObject(), "this is a test"]
         s = blue.marshal.Save(obj, useChecksum=1)
         obj2 = blue.marshal.Load(s)
         self.assertBlueObjectsEqual(obj, obj2)
@@ -179,11 +177,11 @@ class testMarshal(blueunittest.TestCase):
         self.verify_round_trip(d)
 
     def test_wstream(self):
-        obj = [OldSchoolObject(), SimpleObject(), "this is a test"]
+        obj = [SimpleObject(), "this is a test"]
         ws = blue.marshal.Save(obj)
         self.verify_round_trip(ws)
 
     def test_converting_to_bytes_does_not_crash(self):
-        obj = [OldSchoolObject(), SimpleObject(), "this is a test"]
+        obj = [SimpleObject(), SimpleObject(), "this is a test"]
         ws = blue.marshal.Save(obj)
         self.assertIsInstance(bytes(ws), bytes)
