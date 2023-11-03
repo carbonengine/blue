@@ -348,6 +348,8 @@ target_include_directories(Blue
 set_target_properties(Blue PROPERTIES CXX_VISIBILITY_PRESET hidden)
 set_target_properties(Blue PROPERTIES OUTPUT_NAME "blue")
 
+add_subdirectory(src/_ssl)
+
 # Provide tests and an install target iff this is the top level project only
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     # tests
