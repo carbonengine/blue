@@ -76,7 +76,9 @@ void IRootWriter::WriteMembers( const IRoot &instance, IRoot* defaultInstance )
         case Be::LONG:
             WriteInt32( var->mLong );
             break;
-
+		case Be::ULONG:
+			WriteUInt32( var->mULong );
+			break;
         case Be::BYTE:
             WriteInt8(var->mByte);
             break;
@@ -176,6 +178,10 @@ void IRootWriter::WriteMembers( const IRoot &instance, IRoot* defaultInstance )
         case Be::INT64:
             WriteInt64(var->mInt64);
             break;
+
+		case Be::UINT64:
+			WriteUInt64( var->mUInt64 );
+			break;
 
         case Be::PYOBJECTPTR:
             ok = false; //WritePythonObject(var->mPyObject);

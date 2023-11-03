@@ -39,7 +39,9 @@ protected:
 	void WriteInt8( int8_t value ) override;
 	void WriteInt16( int16_t value ) override;
 	void WriteInt32( int32_t value ) override;
+	void WriteUInt32( uint32_t value ) override;
 	void WriteInt64( int64_t value ) override;
+	void WriteUInt64( uint64_t value ) override;
 	void WriteFloat( float value ) override;
 	void WriteFloatArray( float* values, size_t numValues ) override;
 	void WriteFloatMatrix( float* values, size_t numRows, size_t numColumns );

@@ -158,6 +158,11 @@ void BlackReader::ReadValue( int64_t& dst )
 	ReadValueImpl( dst );
 }
 
+void BlackReader::ReadValue( uint64_t& dst )
+{
+	ReadValueImpl( dst );
+}
+
 void BlackReader::ReadValue( int32_t& dst )
 {
 	ReadValueImpl( dst );

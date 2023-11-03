@@ -17,6 +17,7 @@ public:
 	{
 		memset( s_propertyHandlers, 0, sizeof( s_propertyHandlers ) );
 		s_propertyHandlers[Be::LONG] =			&IRootReaderBase::HandlePropertyLong;
+		s_propertyHandlers[Be::ULONG] =			&IRootReaderBase::HandlePropertyULong;
 		s_propertyHandlers[Be::FLOAT] =			&IRootReaderBase::HandlePropertyFloat;
 		s_propertyHandlers[Be::DOUBLE] =		&IRootReaderBase::HandlePropertyDouble;
 		s_propertyHandlers[Be::BOOL] =			&IRootReaderBase::HandlePropertyBool;
@@ -25,6 +26,7 @@ public:
 		s_propertyHandlers[Be::IROOTWEAKREF] =	&IRootReaderBase::HandlePropertyIRootWeakRef;
 		s_propertyHandlers[Be::CSTRING] =		&IRootReaderBase::HandlePropertyCString;
 		s_propertyHandlers[Be::INT64] =			&IRootReaderBase::HandlePropertyInt64;
+		s_propertyHandlers[Be::UINT64] =		&IRootReaderBase::HandlePropertyUInt64;
 		s_propertyHandlers[Be::REFERENCE] =		&IRootReaderBase::HandlePropertyCString;
 		s_propertyHandlers[Be::WCSTRING] =		&IRootReaderBase::HandlePropertyWCString;
 		s_propertyHandlers[Be::WREFERENCE] =	&IRootReaderBase::HandlePropertyWCString;
@@ -115,6 +117,11 @@ void IRootReaderBase::HandleAttribute( const char* attributeName, IRoot* instanc
 void IRootReaderBase::HandlePropertyLong( Be::Var* var, const Be::VarEntry* entry )
 {
 	ReadValue( var->mLong );
+}
+
+void IRootReaderBase::HandlePropertyULong( Be::Var* var, const Be::VarEntry* entry )
+{
+	ReadValue( var->mULong );
 }
 
 void IRootReaderBase::HandlePropertyByte( Be::Var* var, const Be::VarEntry* entry )
@@ -264,6 +271,11 @@ void IRootReaderBase::HandlePropertyWCString( Be::Var* var, const Be::VarEntry* 
 void IRootReaderBase::HandlePropertyInt64( Be::Var* var, const Be::VarEntry* entry )
 {
 	ReadValue( var->mInt64 );
+}
+
+void IRootReaderBase::HandlePropertyUInt64( Be::Var* var, const Be::VarEntry* entry )
+{
+	ReadValue( var->mUInt64 );
 }
 
 void IRootReaderBase::HandlePropertyBinaryBlock( Be::Var* var, const Be::VarEntry* entry )

@@ -30,6 +30,10 @@ YAML_ERROR_STRINGS_STRICT = [
 
 ]
 
+MAX_INT32   = 2147483647
+MAX_UINT32  = 4294967295
+MAX_INT64   = 9223372036854775807
+MAX_UINT64  = 18446744073709551615
 
 class TestYamlReader(unittest.TestCase):
     def testCreateObjectFromString_Simple(self):
@@ -68,18 +72,17 @@ class TestYamlWriterAndReader(unittest.TestCase):
         blue.paths.SetSearchPath("cache", self.cachePath)
 
 
-    def testYamlWriterBasics(self):
-        x = blue.BlueTestHelperAttributes()
 
-        x.myString = "Test String"
+    def _testYamlWriter(self, testHelperAttributes, expected):
 
+       
         writer = blue.YamlWriter()
-        s = writer.WriteObjectToString(x)
+        s = writer.WriteObjectToString(testHelperAttributes)
 
-        self.assertEqual(s, "type: BlueTestHelperAttributes\nmyString: \"Test String\"\n")
+        self.assertEqual(s, expected)
 
         writer.skipDefaults = False
-        sWithDefaults = writer.WriteObjectToString(x)
+        sWithDefaults = writer.WriteObjectToString(testHelperAttributes)
         writer.skipDefaults = True
 
         self.assertTrue(len(sWithDefaults) > len(s))
@@ -87,7 +90,7 @@ class TestYamlWriterAndReader(unittest.TestCase):
         # Write the same object to a memory stream - results should be the same
         # as writing to a string
         stream = blue.MemStream()
-        writer.WriteObjectToStream(x, stream)
+        writer.WriteObjectToStream(testHelperAttributes, stream)
 
         stream.Seek(0)
         s2 = stream.Read().decode('utf-8')
@@ -98,14 +101,14 @@ class TestYamlWriterAndReader(unittest.TestCase):
         rf = blue.ResFile()
         rf.Create("cache:/test.red")
 
-        writer.WriteObjectToStream(x, rf)
+        writer.WriteObjectToStream(testHelperAttributes, rf)
         rf.Seek(0)
         s3 = rf.Read().decode('utf-8')
 
         self.assertEqual(s, s3)
 
         # Write the same object to a file - results should still be the same
-        writer.WriteObjectToFile(x, "cache:/test2.red")
+        writer.WriteObjectToFile(testHelperAttributes, "cache:/test2.red")
 
         rf2 = blue.ResFile()
         rf2.Open("cache:/test2.red")
@@ -116,6 +119,62 @@ class TestYamlWriterAndReader(unittest.TestCase):
         #TODO: Test references
         #TODO: Test circular references
         #TODO: Test all base types and container types
+
+
+    def testYamlWriterString(self):
+
+        x = blue.BlueTestHelperAttributes()
+
+        x.myString = "Test String"
+        self._testYamlWriter(x,"type: BlueTestHelperAttributes\nmyString: \"Test String\"\n")
+
+    def testYamlWriterUnicodeString(self):
+
+        x = blue.BlueTestHelperAttributes()
+
+        x.myUnicode = "Test String"
+        self._testYamlWriter(x,"type: BlueTestHelperAttributes\nmyUnicode: \"Test String\"\n")
+
+    def testYamlWriterBool(self):
+
+        x = blue.BlueTestHelperAttributes()
+
+        x.myBool = True
+        self._testYamlWriter(x,"type: BlueTestHelperAttributes\nmyBool: 1\n")
+
+    def testYamlWriterInt32(self):
+
+        x = blue.BlueTestHelperAttributes()
+
+        x.myInt = MAX_INT32
+        self._testYamlWriter(x,"type: BlueTestHelperAttributes\nmyInt: {0}\n".format(MAX_INT32))
+
+        x.myInt = -MAX_INT32-1
+        self._testYamlWriter(x,"type: BlueTestHelperAttributes\nmyInt: {0}\n".format(-MAX_INT32-1))
+
+    def testYamlWriterUInt32(self):
+
+        x = blue.BlueTestHelperAttributes()
+
+        x.myUInt = MAX_UINT32
+        self._testYamlWriter(x,"type: BlueTestHelperAttributes\nmyUInt: {0}\n".format(MAX_UINT32))
+
+    def testYamlWriterDouble(self):
+
+        x = blue.BlueTestHelperAttributes()
+
+        x.myDouble = 12.34
+        self._testYamlWriter(x,"type: BlueTestHelperAttributes\nmyDouble: {0}\n".format(12.34))
+
+    def testYamlWriterInt64(self):
+
+        x = blue.BlueTestHelperAttributes()
+
+        x.myInt64 = MAX_INT64
+        self._testYamlWriter(x,"type: BlueTestHelperAttributes\nmyInt64: {0}\n".format(MAX_INT64))
+
+        x.myInt64 = -MAX_INT64-1
+        self._testYamlWriter(x,"type: BlueTestHelperAttributes\nmyInt64: {0}\n".format(-MAX_INT64-1))
 
 
     def testYamlReaderBasics(self):
