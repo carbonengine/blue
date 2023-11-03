@@ -544,7 +544,6 @@ void YamlReader::ReadBinaryBlock( ICustomPersist* customPersist, const char* pro
 
 void YamlReader::ReadValue( uint64_t& dst )
 {
-	//TODO could be a template specialisation, also the dst calc should use strtoull and doesn't then need that _WIN32 macro? Why is it using unsigned there anyway?
 	CCP_STATS_ZONE( __FUNCTION__ );
 
 	GetNextEvent();
