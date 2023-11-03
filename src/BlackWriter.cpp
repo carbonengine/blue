@@ -139,7 +139,17 @@ void BlackWriter::WriteInt32( int32_t value )
 	m_outputStream->Write( &value, sizeof( value ) );
 }
 
+void BlackWriter::WriteUInt32( uint32_t value )
+{
+	m_outputStream->Write( &value, sizeof( value ) );
+}
+
 void BlackWriter::WriteInt64( int64_t value )
+{
+	m_outputStream->Write( &value, sizeof( value ) );
+}
+
+void BlackWriter::WriteUInt64( uint64_t value )
 {
 	m_outputStream->Write( &value, sizeof( value ) );
 }

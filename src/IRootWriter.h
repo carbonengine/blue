@@ -42,7 +42,9 @@ protected:
 	virtual void WriteInt8( int8_t value ) = 0;
 	virtual void WriteInt16( int16_t value ) = 0;
     virtual void WriteInt32( int32_t value ) = 0;
+	virtual void WriteUInt32( uint32_t value ) = 0;
 	virtual void WriteInt64( int64_t value ) = 0;
+	virtual void WriteUInt64( uint64_t value ) = 0;
 	virtual void WriteFloat( float value ) = 0;
 	virtual void WriteFloatArray( float* values, size_t numValues ) = 0;
 	virtual void WriteBinaryBlock( ICustomPersist* cPersist, const char* propertyName ) = 0;

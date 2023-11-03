@@ -108,6 +108,7 @@ protected:
 
 protected:
 	// Virtual functions required by base:
+	void ReadValue( uint64_t & dst ) override;
 	void ReadValue( int64_t& dst ) override;
 	void ReadValue( uint32_t& dst ) override;
 	void ReadValue( int32_t& dst ) override;

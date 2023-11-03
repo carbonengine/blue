@@ -15,9 +15,11 @@ static BlueStructureDefinition BlueTestStructureDef[] =
 BlueTestHelperAttributes::BlueTestHelperAttributes( IRoot* lockobj ) :
 	m_myBool( false ),
 	m_myInt( 0 ),
+	m_myUInt( 0 ),
 	m_myFloat( 0 ),
 	m_myDouble( 0 ),
 	m_myInt64( 0 ),
+	m_myUInt64( 0 ),
 	PARENTLOCK( m_myVector ),
 	PARENTLOCK( m_myDict )
 #if BLUE_WITH_PYTHON
@@ -57,14 +59,24 @@ void BlueTestHelperProperties::SetBool( bool val )
 	m_myBool = val;
 }
 
-int BlueTestHelperProperties::GetInt() const
+int32_t BlueTestHelperProperties::GetInt() const
 {
 	return m_myInt;
 }
 
-void BlueTestHelperProperties::SetInt( int val )
+void BlueTestHelperProperties::SetInt( int32_t val )
 {
 	m_myInt = val;
+}
+
+uint32_t BlueTestHelperProperties::GetUInt() const
+{
+	return m_myUInt;
+}
+
+void BlueTestHelperProperties::SetUInt( uint32_t val )
+{
+	m_myUInt = val;
 }
 
 float BlueTestHelperProperties::GetFloat() const
@@ -95,6 +107,16 @@ int64_t BlueTestHelperProperties::GetInt64() const
 void BlueTestHelperProperties::SetInt64( int64_t val )
 {
 	m_myInt64 = val;
+}
+
+uint64_t BlueTestHelperProperties::GetUInt64() const
+{
+	return m_myUInt64;
+}
+
+void BlueTestHelperProperties::SetUInt64( uint64_t val )
+{
+	m_myUInt64 = val;
 }
 
 std::string BlueTestHelperProperties::GetString() const

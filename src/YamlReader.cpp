@@ -490,7 +490,19 @@ void YamlReader::ReadValue( int32_t& dst )
 
 void YamlReader::ReadValue( uint32_t& dst )
 {
-	ReadValueImpl( dst );
+	GetNextEvent();
+
+	dst = 0;
+	if( VerifyEvent( YAML_SCALAR_EVENT ) )
+	{
+		const char* start = (const char*)m_event->data.scalar.value;
+		char* end = nullptr;
+#ifdef _WIN32
+		dst = _strtoul_l( start, &end, 10, m_locale );
+#else
+		dst = strtoul( start, &end, 10 );
+#endif
+	}
 }
 
 void YamlReader::ReadValue( uint16_t& dst )
@@ -530,6 +542,26 @@ void YamlReader::ReadBinaryBlock( ICustomPersist* customPersist, const char* pro
 	}
 }
 
+void YamlReader::ReadValue( uint64_t& dst )
+{
+	//TODO could be a template specialisation, also the dst calc should use strtoull and doesn't then need that _WIN32 macro? Why is it using unsigned there anyway?
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+	GetNextEvent();
+
+	dst = 0;
+	if( VerifyEvent( YAML_SCALAR_EVENT ) )
+	{
+		const char* start = (const char*)m_event->data.scalar.value;
+		char* end = nullptr;
+#ifdef _WIN32
+		dst = _strtoull_l( start, &end, 10 , m_locale);
+#else
+		dst = strtoull( start, &end, 10 );
+#endif
+	}
+}
+
 void YamlReader::ReadValue( int64_t& dst )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
@@ -544,7 +576,7 @@ void YamlReader::ReadValue( int64_t& dst )
 		dst = _atoi64_l( start, m_locale );
 #else
 		char* end = nullptr;
-		dst = strtoull( start, &end, 10 );
+		dst = strtoll( start, &end, 10 );
 #endif
 	}
 }
