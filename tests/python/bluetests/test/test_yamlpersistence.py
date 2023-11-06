@@ -177,15 +177,15 @@ class TestYamlWriterAndReader(unittest.TestCase):
         self._testYamlWriter(x,"type: BlueTestHelperAttributes\nmyInt64: {0}\n".format(-MAX_INT64-1))
 
 
-    def testYamlReaderBasics(self):
+    def _testYamlReader(self, testHelperAttributeName, value):
         reader = blue.YamlReader()
 
-        s = "type: BlueTestHelperAttributes\nmyString: \"Test String\"\n"
+        s = "type: BlueTestHelperAttributes\n{0}: {1}\n".format(testHelperAttributeName, value)
 
         x = reader.CreateObjectFromString(s)
 
         self.assertEqual(type(x), blue.BlueTestHelperAttributes)
-        self.assertEqual(x.myString, "Test String")
+        self.assertEqual(getattr(x,testHelperAttributeName), value)
 
         stream = blue.MemStream()
         stream.Write(s.encode())
@@ -194,7 +194,7 @@ class TestYamlWriterAndReader(unittest.TestCase):
         y = reader.CreateObjectFromStream(stream)
 
         self.assertEqual(type(y), blue.BlueTestHelperAttributes)
-        self.assertEqual(y.myString, "Test String")
+        self.assertEqual(getattr(y,testHelperAttributeName), value)
 
 
         rf = blue.ResFile()
@@ -205,13 +205,26 @@ class TestYamlWriterAndReader(unittest.TestCase):
         z = reader.CreateObjectFromFile("cache:/test.red")
 
         self.assertEqual(type(z), blue.BlueTestHelperAttributes)
-        self.assertEqual(z.myString, "Test String")
+        self.assertEqual(getattr(z,testHelperAttributeName), value)
 
         #TODO: Test references
         #TODO: Test circular references
         #TODO: Test all base types and container types
         #TODO: Test malformed yaml
 
+    def testYamlReaderInt32(self):
+        self._testYamlReader("myInt",MAX_INT32)
+        self._testYamlReader("myInt",-MAX_INT32-1)
+
+    def testYamlReaderUInt32(self):
+        self._testYamlReader("myUInt",MAX_UINT32)
+
+    def testYamlReaderInt64(self):
+        self._testYamlReader("myInt64",MAX_INT64)
+        self._testYamlReader("myInt64",-MAX_INT64-1)
+
+    def testYamlReaderUInt64(self):
+        self._testYamlReader("myUInt64",MAX_UINT64)
 
     def testWriteSharedString(self):
         x = blue.BlueTestHelperAttributes()
