@@ -430,6 +430,7 @@ private:
 	//sequence protocol
 	static Py_ssize_t SequenceLength(PyObject *self);
 	static PyObject *SequenceGet(PyObject *self, Py_ssize_t i);
+	static PyObject *SequenceSubscript(PyObject *self, PyObject* key);
 	static PyObject *SequenceGetSlice(PyObject *self, Py_ssize_t ilow, Py_ssize_t ihigh);
 
 	//python picling support

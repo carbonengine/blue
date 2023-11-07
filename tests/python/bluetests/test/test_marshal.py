@@ -185,3 +185,9 @@ class testMarshal(blueunittest.TestCase):
         obj = [SimpleObject(), SimpleObject(), "this is a test"]
         ws = blue.marshal.Save(obj)
         self.assertIsInstance(bytes(ws), bytes)
+
+    def test_can_slice(self):
+        obj = [SimpleObject(), "this is a test"]
+        ws = blue.marshal.Save(obj)
+        self.assertIsInstance(ws[:5], bytes)
+        self.assertEqual(len(ws[3:6]), 3)

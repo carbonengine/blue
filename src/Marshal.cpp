@@ -521,6 +521,14 @@ bool WriteStream::InitType(PyTypeObject *type)
 		0
 	};
 	type->tp_as_sequence = &sequenceMethods;
+
+	static PyMappingMethods mappingMethods = {
+		SequenceLength,
+		SequenceSubscript,
+		nullptr
+	};
+	type->tp_as_mapping = &mappingMethods;
+
 	type->tp_str = &tp_str_method;
 	type->tp_repr = &tp_repr_method;
 	type->tp_richcompare = &tp_richcompare_method;
@@ -823,6 +831,34 @@ PyObject *WriteStream::SequenceGetSlice(PyObject *selfO, Py_ssize_t ilow, Py_ssi
 	return PyBytes_FromStringAndSize(self->mBuff+ilow, n);
 }
 
+PyObject *WriteStream::SequenceSubscript( PyObject* self, PyObject* key )
+{
+	auto _this = static_cast<WriteStream*>( self );
+	if ( PyIndex_Check( key ) ) {
+		Py_ssize_t index;
+		index = PyNumber_AsSsize_t( key, PyExc_IndexError );
+		if ( index == -1 && PyErr_Occurred() ) {
+			return nullptr;
+		}
+		return _this->SequenceGet( self, index );
+	} else if ( PySlice_Check( key ) ) {
+		Py_ssize_t start, stop, step;
+
+		if ( PySlice_Unpack( key, &start, &stop, &step ) ) {
+			return nullptr;
+		}
+
+		if (step != 1) {
+			PyErr_SetString( PyExc_NotImplementedError, "Supported for slices with a step size other than 1 is not implemented." );
+			return nullptr;
+		}
+
+		return _this->SequenceGetSlice( self, start, stop );
+	}
+
+	PyErr_Format( PyExc_TypeError, "list indices must be integers or slices, not %.200s", Py_TYPE(key)->tp_name );
+	return nullptr;
+}
 
 //custom marshaling of a write stream
 bool WriteStream::Write(Marshal &m, WriteStream &stream)
