@@ -55,7 +55,7 @@ bool MarshalInit(PyObject *module)
 	Marshal::s_typeHandlers[ TY_FLOAT_0 ] = &Marshal::ReadObjectFloatZero;
 	Marshal::s_typeHandlers[ TY_TRUE ] = &Marshal::ReadObjectTrue;
 	Marshal::s_typeHandlers[ TY_FALSE ] = &Marshal::ReadObjectFalse;
-	Marshal::s_typeHandlers[ TY_STR	] = &Marshal::ReadObjectBuffer;
+	Marshal::s_typeHandlers[ TY_STR	] = &Marshal::ReadObjectUnicode;
 	Marshal::s_typeHandlers[ TY_STR_EMPTY ] = &Marshal::ReadObjectStrEmpty;
 	Marshal::s_typeHandlers[ TY_STR_CHAR ] = &Marshal::ReadObjectStrChar;
 	Marshal::s_typeHandlers[ TY_STR_SHORT ] = &Marshal::ReadObjectStrShort;
@@ -1451,11 +1451,8 @@ PyObject *Marshal::ReadObjectBuffer(ReadStream &s)
 	const char *c;
 	if (!s.ReadInteger(len) || !s.GetBuffer(c, len))
 		return 0;
-	PyObject *o = PyUnicode_FromStringAndSize(c, len);
+	PyObject *o = PyBytes_FromStringAndSize(c, len);
 	if (!o) return 0;
-	//automatically intern short strings
-	if (len <= 30)
-		PyUnicode_InternInPlace(&o);
 	return o;
 }
 
@@ -1463,8 +1460,15 @@ PyObject *Marshal::ReadObjectBuffer(ReadStream &s)
 //reads and instantiates a global object from its string name.
 PyObject *Marshal::ReadObjectGlobal(ReadStream *stream, bool shared)
 {
-	BluePy name(ReadObjectBuffer(*stream));
+	int len;
+	const char *c;
+	if (!stream->ReadInteger(len) || !stream->GetBuffer(c, len))
+		return 0;
+	BluePy name(PyUnicode_FromStringAndSize(c, len));
 	if (!name) return 0;
+	//automatically intern short strings
+	if (len <= 30)
+		PyUnicode_InternInPlace(&name.o);
 	BluePy obj(GetGlobalObject(name));
 	if (!obj) return 0;
 	if (shared && !stream->MarkShared(obj)) return 0;
