@@ -42,11 +42,16 @@ public:
 	~SymmetricCipher();
 
 	Be::Result<std::string> IsValid() const;
-	static PyObject *LoadKey( PyObject *self, PyObject *args );
+
+	static PyObject *PyLoadKey( PyObject *self, PyObject *args );
+	void LoadKey( const std::string& key, const std::string& iv );
+
+	static PyObject *PyEncrypt( PyObject *self, PyObject *args );
 	Be::Result<std::string> Encrypt( const std::string& plainText, std::string& returnValue ) const;
+
+	static PyObject *PyDecrypt( PyObject *self, PyObject *args );
 	Be::Result<std::string> Decrypt( const std::string& encryptedText, std::string& returnValue ) const;
 
-	void SetKey( const std::string& key, const std::string& iv );
 
 private:
 	EVP_CIPHER_CTX_ptr m_encryptCtx{ nullptr, ::EVP_CIPHER_CTX_free };

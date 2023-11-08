@@ -23,3 +23,11 @@ class TestCrypto(blueunittest.TestCase):
             iv = blue.crypto.GenerateRandomBytes(len)
             with self.assertRaises(ValueError):
                 self.cipher.LoadKey(key, iv)
+
+    def test_encryption(self):
+        key = blue.crypto.GenerateRandomBytes(32)
+        iv = blue.crypto.GenerateRandomBytes(16)
+        payload = b'foobarbaz'
+        self.cipher.LoadKey(key, iv)
+        enc = self.cipher.Encrypt(payload)
+        self.assertEqual(payload, self.cipher.Decrypt(enc))

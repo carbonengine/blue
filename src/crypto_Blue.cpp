@@ -80,26 +80,26 @@ const Be::ClassInfo* SymmetricCipher::ExposeToBlue()
 		MAP_METHOD
 		(
 			"LoadKey",
-			LoadKey,
-			"Loads a key/IV string pair.\n"
-			":param key: Key string.\n"
+			PyLoadKey,
+			"Loads a key/IV bytes pair.\n"
+			":param key: Key.\n"
 			":param iv: Initialization vector. Should be generated through blue.crypto.GenerateRandomBytes().\n"
 		)
 
-		MAP_METHOD_AND_WRAP
+		MAP_METHOD
 		(
 			"Encrypt",
-			Encrypt,
-			"Encrypts a string.\n"
-			":param str: String to encrypt.\n"
+			PyEncrypt,
+			"Encrypts a payload.\n"
+			":param str: Bytes to encrypt.\n"
 		)
 
-		MAP_METHOD_AND_WRAP
+		MAP_METHOD
 		(
 			"Decrypt",
-			Decrypt,
-			"Decrypts a string.\n"
-			":param str: String to decrypt.\n"
+			PyDecrypt,
+			"Decrypts a payload.\n"
+			":param str: Bytes to decrypt.\n"
 		)
 
 	EXPOSURE_END()

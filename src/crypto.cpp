@@ -86,7 +86,7 @@ Be::Result<std::string> SymmetricCipher::IsValid() const
 	return m_encryptCtx ? std::string() : "Invalid context";
 }
 
-PyObject *SymmetricCipher::LoadKey( PyObject *self, PyObject *args )
+PyObject *SymmetricCipher::PyLoadKey( PyObject *self, PyObject *args )
 {
 	const char *key;
 	const char *iv;
@@ -109,18 +109,39 @@ PyObject *SymmetricCipher::LoadKey( PyObject *self, PyObject *args )
 	}
 
 	auto *_this = BluePythonCast<SymmetricCipher*>( self );
-	_this->SetKey( std::string( key, keyLen ), std::string( iv, ivLen ) );
+	_this->LoadKey( std::string( key, keyLen ), std::string( iv, ivLen ) );
 
 	Py_RETURN_NONE;
 }
 
-void SymmetricCipher::SetKey( const std::string& key, const std::string& iv )
+void SymmetricCipher::LoadKey( const std::string& key, const std::string& iv )
 {
 	m_encryptCtx = EVP_CIPHER_CTX_ptr( EVP_CIPHER_CTX_new(), ::EVP_CIPHER_CTX_free );
 	m_decryptCtx = EVP_CIPHER_CTX_ptr( EVP_CIPHER_CTX_new(), ::EVP_CIPHER_CTX_free );
 
 	m_key = key;
 	m_iv = iv;
+}
+
+PyObject *SymmetricCipher::PyEncrypt( PyObject* self, PyObject* args )
+{
+	const char *bytes;
+	Py_ssize_t len;
+
+	if ( !PyArg_ParseTuple( args, "y#", &bytes, &len ) ) {
+		return nullptr;
+	}
+
+	auto *_this = BluePythonCast<SymmetricCipher*>( self );
+	std::string payload( bytes, len );
+	std::string returnValue;
+	auto result = _this->Encrypt( payload, returnValue );
+	if ( !BeIsSuccess( result ) ) {
+		PyErr_SetString( PyExc_RuntimeError, result.value.c_str() );
+		return nullptr;
+	}
+
+	return PyBytes_FromStringAndSize( returnValue.c_str(), returnValue.size() );
 }
 
 Be::Result<std::string> SymmetricCipher::Encrypt( const std::string& plainText, std::string& returnValue ) const
@@ -141,6 +162,27 @@ Be::Result<std::string> SymmetricCipher::Encrypt( const std::string& plainText, 
 
 	returnValue = std::string( std::begin( buffer ), std::begin( buffer ) + totalLength );
 	return std::string();
+}
+
+PyObject *SymmetricCipher::PyDecrypt( PyObject* self, PyObject* args )
+{
+	const char *bytes;
+	Py_ssize_t len;
+
+	if ( !PyArg_ParseTuple( args, "y#", &bytes, &len ) ) {
+		return nullptr;
+	}
+
+	auto *_this = BluePythonCast<SymmetricCipher*>( self );
+	std::string payload( bytes, len );
+	std::string returnValue;
+	auto result = _this->Decrypt( payload, returnValue );
+	if ( !BeIsSuccess( result ) ) {
+		PyErr_SetString( PyExc_RuntimeError, result.value.c_str() );
+		return nullptr;
+	}
+
+	return PyBytes_FromStringAndSize( returnValue.c_str(), returnValue.size() );
 }
 
 Be::Result<std::string> SymmetricCipher::Decrypt( const std::string& encryptedText, std::string& returnValue ) const
