@@ -77,7 +77,7 @@ const Be::ClassInfo* SymmetricCipher::ExposeToBlue()
 	EXPOSURE_BEGIN( SymmetricCipher, "An AES symmetric cipher for encryption" )
 		MAP_INTERFACE( SymmetricCipher )
 
-		MAP_METHOD_AND_WRAP
+		MAP_METHOD
 		(
 			"LoadKey",
 			LoadKey,

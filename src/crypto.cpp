@@ -86,27 +86,41 @@ Be::Result<std::string> SymmetricCipher::IsValid() const
 	return m_encryptCtx ? std::string() : "Invalid context";
 }
 
-Be::Result<std::string> SymmetricCipher::LoadKey( const std::string& key, const std::string& iv, bool& returnValue )
+PyObject *SymmetricCipher::LoadKey( PyObject *self, PyObject *args )
 {
-	returnValue = false;
+	const char *key;
+	const char *iv;
+	Py_ssize_t keyLen, ivLen;
 
-	if( key.length() != 32 )
+	if ( !PyArg_ParseTuple( args, "y#y#", &key, &keyLen, &iv, &ivLen ) )
 	{
-		return std::string("Key must be 32 bytes long");
-	}
-	else if( iv.length() != 16 )
-	{
-		return std::string("IV must be 16 bytes long");
+		return nullptr;
 	}
 
+	if( keyLen != 32 )
+	{
+		PyErr_SetString(PyExc_ValueError, "Key must be 32 bytes long");
+		return nullptr;
+	}
+	else if( ivLen != 16 )
+	{
+		PyErr_SetString(PyExc_ValueError, "IV must be 16 bytes long");
+		return nullptr;
+	}
+
+	auto *_this = BluePythonCast<SymmetricCipher*>( self );
+	_this->SetKey( std::string( key, keyLen ), std::string( iv, ivLen ) );
+
+	Py_RETURN_NONE;
+}
+
+void SymmetricCipher::SetKey( const std::string& key, const std::string& iv )
+{
 	m_encryptCtx = EVP_CIPHER_CTX_ptr( EVP_CIPHER_CTX_new(), ::EVP_CIPHER_CTX_free );
 	m_decryptCtx = EVP_CIPHER_CTX_ptr( EVP_CIPHER_CTX_new(), ::EVP_CIPHER_CTX_free );
 
 	m_key = key;
 	m_iv = iv;
-
-	returnValue = true;
-	return std::string();
 }
 
 Be::Result<std::string> SymmetricCipher::Encrypt( const std::string& plainText, std::string& returnValue ) const
