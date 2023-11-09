@@ -88,9 +88,13 @@ public:
 	Be::Result<std::string> LoadPrivateKey( const std::string& key, const std::string& password, bool& returnValue );
 	Be::Result<std::string> GetPublicKey( std::string& returnValue ) const;
 	Be::Result<std::string> GetPrivateKey( const std::string& password, std::string& returnValue ) const;
+	static PyObject *PyEncrypt( PyObject *self, PyObject *args );
 	Be::Result<std::string> Encrypt( const std::string& plainText, std::string& returnValue ) const;
+	static PyObject *PyDecrypt( PyObject *self, PyObject *args );
 	Be::Result<std::string> Decrypt( const std::string& encryptedText, std::string& returnValue ) const;
+	static PyObject *PySign( PyObject *self, PyObject *args );
 	Be::Result<std::string> Sign( const std::string& text, std::string& returnValue ) const;
+	static PyObject *PyVerifySignature( PyObject *self, PyObject *args );
 	Be::Result<std::string> VerifySignature( const std::string& text, const std::string& signature, bool& returnValue ) const;
 
 private:

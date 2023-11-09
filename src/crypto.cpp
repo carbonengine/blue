@@ -423,3 +423,93 @@ Be::Result<std::string> AsymmetricCipher::VerifySignature( const std::string& te
 	returnValue = result;
 	return std::string();
 }
+
+PyObject* AsymmetricCipher::PyEncrypt( PyObject* self, PyObject* args )
+{
+	const char *bytes;
+	Py_ssize_t len;
+
+	if ( !PyArg_ParseTuple( args, "y#", &bytes, &len ) ) {
+		return nullptr;
+	}
+
+	auto *_this = BluePythonCast<AsymmetricCipher*>( self );
+	std::string payload( bytes, len );
+	std::string returnValue;
+	auto result = _this->Encrypt( payload, returnValue );
+	if ( !BeIsSuccess( result ) ) {
+		PyErr_SetString( PyExc_RuntimeError, result.value.c_str() );
+		return nullptr;
+	}
+
+	return PyBytes_FromStringAndSize( returnValue.c_str(), returnValue.size() );
+}
+
+PyObject* AsymmetricCipher::PyDecrypt( PyObject* self, PyObject* args )
+{
+	const char *bytes;
+	Py_ssize_t len;
+
+	if ( !PyArg_ParseTuple( args, "y#", &bytes, &len ) ) {
+		return nullptr;
+	}
+
+	auto *_this = BluePythonCast<AsymmetricCipher*>( self );
+	std::string payload( bytes, len );
+	std::string returnValue;
+	auto result = _this->Decrypt( payload, returnValue );
+	if ( !BeIsSuccess( result ) ) {
+		PyErr_SetString( PyExc_RuntimeError, result.value.c_str() );
+		return nullptr;
+	}
+
+	return PyBytes_FromStringAndSize( returnValue.c_str(), returnValue.size() );
+}
+
+PyObject* AsymmetricCipher::PySign( PyObject* self, PyObject* args )
+{
+	const char *bytes;
+	Py_ssize_t len;
+
+	if ( !PyArg_ParseTuple( args, "y#", &bytes, &len ) ) {
+		return nullptr;
+	}
+
+	auto *_this = BluePythonCast<AsymmetricCipher*>( self );
+	std::string payload( bytes, len );
+	std::string returnValue;
+	auto result = _this->Sign( payload, returnValue );
+	if ( !BeIsSuccess( result ) ) {
+		PyErr_SetString( PyExc_RuntimeError, result.value.c_str() );
+		return nullptr;
+	}
+
+	return PyBytes_FromStringAndSize( returnValue.c_str(), returnValue.size() );
+}
+
+PyObject* AsymmetricCipher::PyVerifySignature( PyObject* self, PyObject* args )
+{
+	const char *bytes;
+	const char *signature;
+	Py_ssize_t lenPayload, lenSignature;
+
+	if ( !PyArg_ParseTuple( args, "y#y#", &bytes, &lenPayload, &signature, &lenSignature ) ) {
+		return nullptr;
+	}
+
+	auto *_this = BluePythonCast<AsymmetricCipher*>( self );
+	std::string payload( bytes, lenPayload );
+	std::string secret( signature, lenSignature );
+	bool returnValue;
+	auto result = _this->VerifySignature( payload, secret, returnValue );
+	if ( !BeIsSuccess( result ) ) {
+		PyErr_SetString( PyExc_RuntimeError, result.value.c_str() );
+		return nullptr;
+	}
+
+	if ( returnValue ) {
+		Py_RETURN_TRUE;
+	} else {
+		Py_RETURN_FALSE;
+	}
+}

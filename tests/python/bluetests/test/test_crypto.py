@@ -1,7 +1,24 @@
 from . import blueunittest
+
 import blue
 
-class TestCrypto(blueunittest.TestCase):
+class TestAsymmetricCipher(blueunittest.TestCase):
+    def setUp(self):
+        self.cipher = blue.crypto.GetSharedAsymmetricCipher()
+        self.cipher.GenerateKey(2048)
+        self.payload = b"Lorem ipsum dolor sit amet, consectetur adipiscing elit integer."
+
+    def test_signing(self):
+        signature = self.cipher.Sign(self.payload)
+        self.assertTrue(self.cipher.VerifySignature(self.payload, signature))
+        self.assertFalse(self.cipher.VerifySignature(self.payload, b"this is not a real signature"))
+
+    def test_encryption(self):
+        encrypted_payload = self.cipher.Encrypt(self.payload)
+        self.assertEqual(self.payload, self.cipher.Decrypt(encrypted_payload))
+
+
+class TestSymmetricCipher(blueunittest.TestCase):
     def setUp(self):
         self.cipher = blue.SymmetricCipher()
 
