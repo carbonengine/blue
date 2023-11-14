@@ -154,6 +154,47 @@ class testMarshal(blueunittest.TestCase):
         obj = SimpleObject()
         self.verify_round_trip([obj, obj, obj])
 
+    def test_write_callback_called(self):
+        def callback(obj):
+            callback.called = True
+        callback.called = False
+        obj = CallbackSerializedObject()
+        blue.marshal.Save(obj, callback=callback)
+        self.assertTrue(callback.called)
+
+    def test_read_callback_called(self):
+        def write_callback(obj):
+            return "whatever"
+
+        def read_callback(obj):
+            read_callback.called = True
+        read_callback.called = False
+
+        obj = CallbackSerializedObject()
+        s = blue.marshal.Save(obj, callback=write_callback)
+        blue.marshal.Load(s, callback=read_callback)
+        self.assertTrue(read_callback.called)
+
+    def test_read_and_write_callbacks_used(self):
+        def write_callback(obj):
+            obj = SimpleObject()
+            obj.b = 123
+            return "a", obj.b
+
+        def read_callback(obj):
+            ret = SimpleObject()
+            ret.a = obj[0]
+            ret.b = obj[1] * 2
+            ret.c = obj[1] * 1.0
+            return ret
+
+        obj = SimpleObject()
+        savedObj = blue.marshal.Save(obj, callback=write_callback)
+        loadedObj = blue.marshal.Load(savedObj, callback=read_callback)
+        self.assertEqual("a", loadedObj.a)
+        self.assertEqual(246, loadedObj.b)
+        self.assertEqual(123.0, loadedObj.c)
+
     def test_callback(self):
         obj = [CallbackSerializedObject(), SimpleObject(), "this is a test"]
         s = blue.marshal.Save(obj, callback=SaveCallback)

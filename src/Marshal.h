@@ -293,6 +293,7 @@ private:
 	
 	//Pickling support routines
 	bool WriteObjectGlobal(WriteStream *s, PyObject *obj);
+	bool WriteCallbackResult( WriteStream* stream, PyObject* o );
 	bool WriteObjectInstance(WriteStream *s, PyObject *obj);
 	bool WriteObjectReduce(bool &handled, WriteStream *s, PyObject *obj);
 	bool WriteMarker(WriteStream *s);
