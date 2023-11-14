@@ -227,6 +227,14 @@ void DictReader::ReadMetadata( IRoot* owner, PyObject* metadata )
 	}
 }
 
+void DictReader::ReadValue( uint64_t& dst )
+{
+	if( !BlueExtractArgument( m_currentSource, dst, 0 ) )
+	{
+		ThrowError( "Expected an int" );
+	}
+}
+
 void DictReader::ReadValue( int64_t& dst )
 {
 	if( !BlueExtractArgument( m_currentSource, dst, 0 ) )

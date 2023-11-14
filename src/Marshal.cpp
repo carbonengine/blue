@@ -55,7 +55,7 @@ bool MarshalInit(PyObject *module)
 	Marshal::s_typeHandlers[ TY_FLOAT_0 ] = &Marshal::ReadObjectFloatZero;
 	Marshal::s_typeHandlers[ TY_TRUE ] = &Marshal::ReadObjectTrue;
 	Marshal::s_typeHandlers[ TY_FALSE ] = &Marshal::ReadObjectFalse;
-	Marshal::s_typeHandlers[ TY_STR	] = &Marshal::ReadObjectBuffer;
+	Marshal::s_typeHandlers[ TY_STR	] = &Marshal::ReadObjectUnicode;
 	Marshal::s_typeHandlers[ TY_STR_EMPTY ] = &Marshal::ReadObjectStrEmpty;
 	Marshal::s_typeHandlers[ TY_STR_CHAR ] = &Marshal::ReadObjectStrChar;
 	Marshal::s_typeHandlers[ TY_STR_SHORT ] = &Marshal::ReadObjectStrShort;
@@ -521,6 +521,14 @@ bool WriteStream::InitType(PyTypeObject *type)
 		0
 	};
 	type->tp_as_sequence = &sequenceMethods;
+
+	static PyMappingMethods mappingMethods = {
+		SequenceLength,
+		SequenceSubscript,
+		nullptr
+	};
+	type->tp_as_mapping = &mappingMethods;
+
 	type->tp_str = &tp_str_method;
 	type->tp_repr = &tp_repr_method;
 	type->tp_richcompare = &tp_richcompare_method;
@@ -823,6 +831,34 @@ PyObject *WriteStream::SequenceGetSlice(PyObject *selfO, Py_ssize_t ilow, Py_ssi
 	return PyBytes_FromStringAndSize(self->mBuff+ilow, n);
 }
 
+PyObject *WriteStream::SequenceSubscript( PyObject* self, PyObject* key )
+{
+	auto _this = static_cast<WriteStream*>( self );
+	if ( PyIndex_Check( key ) ) {
+		Py_ssize_t index;
+		index = PyNumber_AsSsize_t( key, PyExc_IndexError );
+		if ( index == -1 && PyErr_Occurred() ) {
+			return nullptr;
+		}
+		return _this->SequenceGet( self, index );
+	} else if ( PySlice_Check( key ) ) {
+		Py_ssize_t start, stop, step;
+
+		if ( PySlice_Unpack( key, &start, &stop, &step ) ) {
+			return nullptr;
+		}
+
+		if (step != 1) {
+			PyErr_SetString( PyExc_NotImplementedError, "Supported for slices with a step size other than 1 is not implemented." );
+			return nullptr;
+		}
+
+		return _this->SequenceGetSlice( self, start, stop );
+	}
+
+	PyErr_Format( PyExc_TypeError, "list indices must be integers or slices, not %.200s", Py_TYPE(key)->tp_name );
+	return nullptr;
+}
 
 //custom marshaling of a write stream
 bool WriteStream::Write(Marshal &m, WriteStream &stream)
@@ -1415,11 +1451,8 @@ PyObject *Marshal::ReadObjectBuffer(ReadStream &s)
 	const char *c;
 	if (!s.ReadInteger(len) || !s.GetBuffer(c, len))
 		return 0;
-	PyObject *o = PyUnicode_FromStringAndSize(c, len);
+	PyObject *o = PyBytes_FromStringAndSize(c, len);
 	if (!o) return 0;
-	//automatically intern short strings
-	if (len <= 30)
-		PyUnicode_InternInPlace(&o);
 	return o;
 }
 
@@ -1427,8 +1460,15 @@ PyObject *Marshal::ReadObjectBuffer(ReadStream &s)
 //reads and instantiates a global object from its string name.
 PyObject *Marshal::ReadObjectGlobal(ReadStream *stream, bool shared)
 {
-	BluePy name(ReadObjectBuffer(*stream));
+	int len;
+	const char *c;
+	if (!stream->ReadInteger(len) || !stream->GetBuffer(c, len))
+		return 0;
+	BluePy name(PyUnicode_FromStringAndSize(c, len));
 	if (!name) return 0;
+	//automatically intern short strings
+	if (len <= 30)
+		PyUnicode_InternInPlace(&name.o);
 	BluePy obj(GetGlobalObject(name));
 	if (!obj) return 0;
 	if (shared && !stream->MarkShared(obj)) return 0;

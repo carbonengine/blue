@@ -8002,6 +8002,12 @@ PyInit__slsocket(void)
 {
     PyObject *m, *has_ipv6;
 
+    PyObject *sys_modules = PyImport_GetModuleDict();
+    if ( PyDict_GetItemString( sys_modules, "_socket" ) != NULL ) {
+        PyErr_SetString( PyExc_ImportError, "_socket already imported, cannot override it with stackless compatible _slsocket module" );
+        return NULL;
+    }
+
     if (!os_init())
         return NULL;
 
@@ -8015,6 +8021,11 @@ PyInit__slsocket(void)
     m = PyModule_Create(&socketmodule);
     if (m == NULL)
         return NULL;
+
+    /* Also register as original `_socket` module since that's what some Python code calls it */
+    if ( PyDict_SetItemString( sys_modules, "_socket", m ) != 0 ) {
+        return NULL;
+    }
 
     Py_INCREF(PyExc_OSError);
     PySocketModuleAPI.error = PyExc_OSError;

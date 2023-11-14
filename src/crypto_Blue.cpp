@@ -19,52 +19,60 @@ const Be::ClassInfo* AsymmetricCipher::ExposeToBlue()
 
 		MAP_METHOD_AND_WRAP
 		(
-			"LoadPublicKey",
-			LoadPublicKey,
-			"Loads a public key from a string.\n"
-			":param key: Key string.\n"
+			"GenerateKey",
+			GenerateKey,
+			"Creates a key with the given bit size. Primarily exposed for having a valid key in the test suite."
 		)
 
 		MAP_METHOD_AND_WRAP
 		(
-			"LoadPrivateKey",
-			LoadPrivateKey,
-			"Loads a private key from a key string and a password string.\n"
+			"LoadPublicKey",
+			LoadPublicKey,
+			"Loads a public key from bytes.\n"
 			":param key: Key string.\n"
 			":param password: The password string used to decrypt the key.\n"
 		)
 
 		MAP_METHOD_AND_WRAP
 		(
-			"Encrypt",
-			Encrypt,
-			"Encrypts a string.\n"
-			":param str: String to encrypt.\n"
+			"LoadPrivateKey",
+			LoadPrivateKey,
+			"Loads a private key from bytes and a password string.\n"
+			":param key: bytes representation of the key.\n"
+			":param password: The password string used to decrypt the key.\n"
 		)
 
-		MAP_METHOD_AND_WRAP
+		MAP_METHOD
+		(
+			"Encrypt",
+			PyEncrypt,
+			"Encrypts a binary payload.\n"
+			":param str: bytes to encrypt.\n"
+		)
+
+		MAP_METHOD
 		(
 			"Decrypt",
-			Decrypt,
-			"Decrypts a string. This can only be called on a cipher which has been loaded with a private key.\n"
-			":param str: String to decrypt.\n"
+			PyDecrypt,
+			"Decrypts a binary payload. This can only be called on a cipher which has been loaded with a private key.\n"
+			":param str: bytes to decrypt.\n"
 		)
 
-		MAP_METHOD_AND_WRAP
+		MAP_METHOD
 		(
 			"Sign",
-			Sign,
-			"Signs a string and returns a signature string.\n"
-			":param str: A string to be signed.\n"
+			PySign,
+			"Signs a binary payload and returns the signature as a bytes object.\n"
+			":param str: bytes to be signed.\n"
 		)
 
-		MAP_METHOD_AND_WRAP
+		MAP_METHOD
 		(
 			"VerifySignature",
-			VerifySignature,
-			"Verifies if a signature matches a given string.\n"
-			":param str: The string for which the signature should match.\n"
-			":param signature: A signature string.\n"
+			PyVerifySignature,
+			"Verifies if a signature matches a given binary payload.\n"
+			":param str: bytes payload for which the signature should match.\n"
+			":param signature: bytes string.\n"
 		)
 
 	EXPOSURE_END()
@@ -77,29 +85,29 @@ const Be::ClassInfo* SymmetricCipher::ExposeToBlue()
 	EXPOSURE_BEGIN( SymmetricCipher, "An AES symmetric cipher for encryption" )
 		MAP_INTERFACE( SymmetricCipher )
 
-		MAP_METHOD_AND_WRAP
+		MAP_METHOD
 		(
 			"LoadKey",
-			LoadKey,
-			"Loads a key/IV string pair.\n"
-			":param key: Key string.\n"
+			PyLoadKey,
+			"Loads a key/IV bytes pair.\n"
+			":param key: Key.\n"
 			":param iv: Initialization vector. Should be generated through blue.crypto.GenerateRandomBytes().\n"
 		)
 
-		MAP_METHOD_AND_WRAP
+		MAP_METHOD
 		(
 			"Encrypt",
-			Encrypt,
-			"Encrypts a string.\n"
-			":param str: String to encrypt.\n"
+			PyEncrypt,
+			"Encrypts a payload.\n"
+			":param str: Bytes to encrypt.\n"
 		)
 
-		MAP_METHOD_AND_WRAP
+		MAP_METHOD
 		(
 			"Decrypt",
-			Decrypt,
-			"Decrypts a string.\n"
-			":param str: String to decrypt.\n"
+			PyDecrypt,
+			"Decrypts a payload.\n"
+			":param str: Bytes to decrypt.\n"
 		)
 
 	EXPOSURE_END()

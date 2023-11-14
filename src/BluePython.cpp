@@ -243,13 +243,18 @@ bool BluePyOS::InitBasicModuleSupport()
 			return false;
 	}
 
+	PyObject* sys_modules = PyImport_GetModuleDict();
 
 #if CCP_STACKLESS
 #ifndef NO_CARBONIO
 	auto carbonIoModule = PyInit_carbonio();
 #endif
 	auto stacklessIoModule = PyInit_stacklessio();
-	auto slsocketModule = PyInit__slsocket();
+
+	auto slsocketModule = PyDict_GetItemString( sys_modules, "_socket" );
+	if (! slsocketModule ) {
+		slsocketModule = PyInit__slsocket();
+	}
 	auto slselectModule = PyInit_slselect();
 
 	// c-routing support
@@ -263,7 +268,6 @@ bool BluePyOS::InitBasicModuleSupport()
 	PyDict_SetItemString(dict, "synchro", mSynchro);
 #endif
 
-	PyObject* sys_modules = PyImport_GetModuleDict();
     if ( PyDict_SetItemString( sys_modules, "blue.heapq", heapqModule ) != 0 ) {
         return false;
     }
@@ -584,8 +588,13 @@ bool BluePyOS::Startup()
 	}
 
 	// Initialize built-in Python modules
-	if ( PyImport_AppendInittab( g_moduleName, CCP_CONCATENATE( PyInit_blue, CCP_BUILD_FLAVOR ) ) == -1 ) {
-		CCP_LOGERR("Failed adding %s to inittab", g_moduleName);
+	struct _inittab ccpBuiltins[] = {
+		{ g_moduleName, CCP_CONCATENATE( PyInit_blue, CCP_BUILD_FLAVOR ) },
+		{ "_socket", PyInit__slsocket },
+		{ nullptr, nullptr, }
+	};
+	if ( PyImport_ExtendInittab( ccpBuiltins ) == -1 ) {
+		CCP_LOGERR("Failed extending inittab with CCP builtins");
 		return false;
 	}
 
