@@ -1971,8 +1971,7 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 	// Let's check if we have a callback that knows how to deal with this.
 	if( stream->mCallback )
 	{
-		bool handled = WriteCallbackResult( stream, o );
-		if( handled )
+		if( WriteCallbackResult( stream, o ) )
 		{
 			return true;
 		}
@@ -2041,7 +2040,7 @@ bool Marshal::WriteObjectGlobal(WriteStream* stream, PyObject *o)
 
 bool Marshal::WriteCallbackResult( WriteStream* stream, PyObject* o )
 {
-	if( stream->mCallback != NULL )
+	if( stream->mCallback != nullptr )
 	{
 		// Call the callback object. If the return value is not None, return the return value.
 		PyObject* args = PyTuple_New( 1 );
@@ -2053,7 +2052,7 @@ bool Marshal::WriteCallbackResult( WriteStream* stream, PyObject* o )
 			ret = PyObject_CallObject( stream->mCallback, args );
 		}
 		Py_DECREF( args );
-		if( ret == NULL )
+		if( ret == nullptr )
 		{
 			return false;
 		}
