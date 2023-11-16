@@ -9,11 +9,6 @@ class EmptyObject:
         return isinstance(other, type(self))
 
 
-class CallbackSerializedObject:
-    def __eq__(self, other):
-        return isinstance(other, type(self))
-
-
 class SimpleObject:
     def __init__(self):
         self.a = "this is a string"
@@ -23,18 +18,6 @@ class SimpleObject:
 
     def __eq__(self, other):
         return isinstance(other, type(self)) and self.a == other.a and self.b == other.b and self.c == other.c and self.d == other.d
-
-
-def SaveCallback(obj):
-    if isinstance(obj, CallbackSerializedObject):
-        return "magic"
-    return None
-
-
-def LoadCallback(obj):
-    if obj == "magic":
-        return CallbackSerializedObject()
-    return None
 
 
 class testMarshal(blueunittest.TestCase):
@@ -154,14 +137,40 @@ class testMarshal(blueunittest.TestCase):
         obj = SimpleObject()
         self.verify_round_trip([obj, obj, obj])
 
-    def test_callback(self):
-        obj = [CallbackSerializedObject(), SimpleObject(), "this is a test"]
-        s = blue.marshal.Save(obj, callback=SaveCallback)
-        obj2 = blue.marshal.Load(s, callback=LoadCallback)
-        self.assertBlueObjectsEqual(obj, obj2)
-        typeStats = blue.marshal.GetTypeStats()
-        self.assertEqual(typeStats[0], typeStats[1])
-        self._update_coverage()
+    def test_write_callback_called(self):
+        def callback(obj):
+            callback.called = True
+        callback.called = False
+        obj = SimpleObject()
+        blue.marshal.Save(obj, callback=callback)
+        self.assertTrue(callback.called)
+
+    def test_read_callback_called(self):
+        def write_callback(obj):
+            return "whatever"
+
+        def read_callback(obj):
+            read_callback.called = True
+        read_callback.called = False
+
+        obj = SimpleObject()
+        s = blue.marshal.Save(obj, callback=write_callback)
+        blue.marshal.Load(s, callback=read_callback)
+        self.assertTrue(read_callback.called)
+
+    def test_read_and_write_callbacks_used(self):
+        def write_callback(obj):
+            return 2
+
+        def read_callback(obj):
+            ret = SimpleObject()
+            ret.b = obj * 3
+            return ret
+
+        obj = SimpleObject()
+        savedObj = blue.marshal.Save(obj, callback=write_callback)
+        loadedObj = blue.marshal.Load(savedObj, callback=read_callback)
+        self.assertEqual(6, loadedObj.b)
 
     def test_checksum(self):
         obj = [SimpleObject(), "this is a test"]
