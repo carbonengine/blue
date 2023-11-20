@@ -1968,6 +1968,15 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 	//it's something else.  Check dict.
 	CHECKREF();
 	
+	// Let's check if we have a callback that knows how to deal with this.
+	if( stream->mCallback )
+	{
+		if( WriteCallbackResult( stream, o ) )
+		{
+			return true;
+		}
+	}
+
 	//okay, none of the above worked.  Let's try the simple reduce protocol (works for new style stuff)
 	bool handled;
 	if (!WriteObjectReduce(handled, stream, o))
@@ -2027,7 +2036,37 @@ bool Marshal::WriteObjectGlobal(WriteStream* stream, PyObject *o)
 	RETFAIL(WriteType(stream, TY_GLOBAL));
 	return stream->WriteBuff(buff, len);
 }
-		
+
+
+bool Marshal::WriteCallbackResult( WriteStream* stream, PyObject* o )
+{
+	if( stream->mCallback != nullptr )
+	{
+		// Call the callback object. If the return value is not None, return the return value.
+		PyObject* args = PyTuple_New( 1 );
+		PyTuple_SET_ITEM( args, 0, o );
+		Py_INCREF( o );
+		PyObject* ret;
+		{
+			AutoTasklet _at( PyOS->GetTaskletTimer(), mTimer_SaveCallback );
+			ret = PyObject_CallObject( stream->mCallback, args );
+		}
+		Py_DECREF( args );
+		if( ret == nullptr )
+		{
+			return false;
+		}
+		if( ret != Py_None )
+		{
+			bool ok = WriteType( stream, TY_CALLBACK ) && WriteObject( stream, ret );
+			Py_DECREF( ret );
+			return ok;
+		}
+		Py_DECREF( ret );
+	}
+	return false;
+}
+
 
 bool Marshal::WriteObjectInstance(WriteStream* stream, PyObject* o)
 {
