@@ -172,6 +172,15 @@ class testMarshal(blueunittest.TestCase):
         loadedObj = blue.marshal.Load(savedObj, callback=read_callback)
         self.assertEqual(6, loadedObj.b)
 
+    def test_write_uses_default_pickle_method_when_callback_raises_error(self):
+        def write_callback(obj):
+            raise RuntimeError("Write callback failed spectacularly!")
+
+        obj = SimpleObject()
+        s = blue.marshal.Save(obj, callback=write_callback)
+        loaded_obj = blue.marshal.Load(s)
+        self.assertBlueObjectsEqual(obj, loaded_obj)
+
     def test_checksum(self):
         obj = [SimpleObject(), "this is a test"]
         s = blue.marshal.Save(obj, useChecksum=1)
