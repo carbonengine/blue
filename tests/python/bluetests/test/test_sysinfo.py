@@ -1,3 +1,4 @@
+import binascii
 import ctypes
 import multiprocessing
 import unittest
@@ -154,3 +155,26 @@ class TestMemory(unittest.TestCase):
     def testAvailablePhysicalMemoryIsLessThanTotal(self):
         memory = blue.sysinfo.GetMemory()
         self.assertLess(memory.availablePhysical, memory.totalPhysical)
+
+
+class TestNetworkAdapters(unittest.TestCase):
+    def test_name(self):
+        for adapter in blue.sysinfo.GetNetworkAdapters():
+            self.assertIsInstance(adapter.name, str)
+
+    def test_uuid(self):
+        for adapter in blue.sysinfo.GetNetworkAdapters():
+            self.assertIsInstance(adapter.uuid, str)
+
+    def test_macAddress(self):
+        for adapter in blue.sysinfo.GetNetworkAdapters():
+            self.assertIsInstance(adapter.macAddress, bytes)
+
+    def test_macAddressString(self):
+        for adapter in blue.sysinfo.GetNetworkAdapters():
+            self.assertIsInstance(adapter.macAddressString, str)
+
+    def test_macAddressString_matches_macAddress(self):
+        for adapter in blue.sysinfo.GetNetworkAdapters():
+            expected = binascii.a2b_hex("".join([b for b in adapter.macAddressString.split(":")]))
+            self.assertEqual(expected, adapter.macAddress)
