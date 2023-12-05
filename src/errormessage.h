@@ -1,6 +1,13 @@
 #ifndef _ERRORMESSAGE_H_
 #define _ERRORMESSAGE_H_
 
+////////////////////////////////////////////////////////////
+//
+//  Created:		Feb 2021
+//  Copyright:		CCP 2023
+//  Documentation:	https://ccpgames.atlassian.net/wiki/spaces/TC/pages/177930592/Localizing+Early+Error+Messages
+//
+
 #include <string>
 
 #if __APPLE__
@@ -14,6 +21,11 @@
 #define IDS_VERIFYFAIL_NOTFOUND 110
 #define IDS_VERIFYFAIL_UNKNOWNFOUND 111
 #define IDS_VERIFYFAIL_INCORRECTCRC 112
+#define IDS_INVALIDMACOS 113
+#define IDS_INVALIDOS 114
+
+// Exposed so invalid os dialogs can be requested externally to blue
+extern "C" BLUEIMPORT void BlueShowInvalidOSVersionError();
 
 // Translate an error message to an appropriate language for the user - returns the original string on failure.
 std::string TranslateErrorMessage( const std::string& original, unsigned messageID );
