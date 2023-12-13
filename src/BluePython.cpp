@@ -254,7 +254,25 @@ bool BluePyOS::InitBasicModuleSupport()
 	// Insert synchro
 	mSynchro = CCP_NEW( "BluePyOS/mSyncro" ) Synchro;
 	mPySynchro = mSynchro;
-	PyDict_SetItemString(dict, "synchro", mSynchro);
+	PyDict_SetItemString(dict, "synchro", mSynchro);;
+
+	if( BeOS->HasStartupArg( L"noconsole" ) )
+	{
+		// Redirect python stdout and stderr
+		// so that we can print without error
+		// when running with no console.
+		PyObject* sysmodule = PyImport_ImportModule( "sys" );
+		PyObject* osmodule = PyImport_ImportModule( "os" );
+		BluePy devnullStr( PyObject_GetAttrString( osmodule, "devnull" ) );
+		char* mode = const_cast<char*>("w");
+		PyObject* devNull = PyFile_FromString(PyString_AsString(devnullStr), mode);
+		mDevNull = reinterpret_cast<PyFileObject*>( devNull );
+		PyObject_SetAttrString( sysmodule, "stdout", devNull );
+		PyObject_SetAttrString( sysmodule, "stderr", devNull);
+		PyFile_IncUseCount( mDevNull );
+		Py_DECREF( sysmodule );
+		Py_DECREF( osmodule );
+	}
 #endif
 
     PyObject *m = PyImport_ImportModule("blue.heapq");
@@ -329,6 +347,17 @@ bool BluePyOS::FiniBasicModuleSupport()
 	if (moduleName != g_moduleName)
 	{
 		PyDict_SetItemString(modules, moduleName, Py_None);
+	}
+
+	if (BeOS->HasStartupArg(L"noconsole"))
+	{
+		// Clean up after redirecting sys.stdin/sys.stdout to devnull.
+		PySys_SetObject( const_cast<char*>( "stdout" ) , PySys_GetObject(const_cast<char*>( "__stdout__" ) ) );
+		PySys_SetObject( const_cast<char*>( "stderr" ) , PySys_GetObject(const_cast<char*>( "__stderr__") ) );
+		PyObject_CallMethod( reinterpret_cast<PyObject*>( mDevNull ), const_cast<char*>( "close" ), const_cast<char*>("") );
+		PyFile_DecUseCount( mDevNull );
+		Py_DECREF( mDevNull );
+		mDevNull = nullptr;
 	}
 
 	mBlueModule = 0;

@@ -172,6 +172,7 @@ public:
 private:
 	double GetTimeSinceSwitch( bool update = false ); //time since last tasklet switch
 	bool UpdateTaskletRunTime( PyObject * tasklet, double elapsed );
+	PyFileObject* mDevNull = nullptr; // We redirect sys.stdout/sys.stderr here if no console.
 
 private:
 	PyObject* mBlueModule; //weak ref to us as a module;
