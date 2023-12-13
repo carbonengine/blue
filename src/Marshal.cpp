@@ -2633,7 +2633,8 @@ void Marshal::InitGlobalsBlacklist()
 		{"eve", 0},
 		{"nasty", 0},
 		{"stackless", 0},
-		{"bluepy", 0}, //our own thread management stuff
+		{"bluepy", 0}, //product specific thread management stuff
+		{"bluepycore", 0}, //our own thread management stuff
 
 		// Recent additions from Veritech, 04.04.2006
 		{"types", 0},

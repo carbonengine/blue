@@ -4,6 +4,12 @@ This package import is only necessary for blue's python test suite because those
 exefile in interpreter mode (which loads blue for you).
 """
 import os
+import sys
+
+# Importing blue messes up sys.argv.
+# Storing it here, then we restore it after importing blue.
+argv = sys.argv
+
 flavor = os.environ.get("BUILDFLAVOR", "release")
 
 if flavor == 'release':
@@ -17,5 +23,5 @@ elif flavor == 'internal':
 else:
     raise RuntimeError("Unknown build flavor: {}".format(flavor))
 
-import sys
 sys.modules["blue"] = mod
+sys.argv = argv
