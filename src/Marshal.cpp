@@ -612,7 +612,7 @@ PyObject *WriteStream::__reduce_ex__(PyObject *proto)
 
 PyObject *WriteStream::tp_str_method(PyObject *self)
 {
-	return static_cast<WriteStream*>(self)->Str();
+	return PyUnicode_FromFormat( "%R", static_cast<WriteStream*>( self )->Str() );
 }
 
 
