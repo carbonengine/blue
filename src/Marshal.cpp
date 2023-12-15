@@ -590,7 +590,10 @@ PyObject *WriteStream::Str()
 {
 	if (!mFinalized)
 		return PyErr_SetString(PyExc_RuntimeError, "stream isn't finalized yet"), nullptr;
-	return PyBytes_FromStringAndSize(mBuff, mPos);
+	PyObject* bytes = PyBytes_FromStringAndSize( mBuff, mPos );
+	PyObject* str = PyUnicode_FromFormat( "%R", bytes );
+	Py_DECREF( bytes );
+	return str;
 }
 
 
@@ -612,7 +615,7 @@ PyObject *WriteStream::__reduce_ex__(PyObject *proto)
 
 PyObject *WriteStream::tp_str_method(PyObject *self)
 {
-	return PyUnicode_FromFormat( "%R", static_cast<WriteStream*>( self )->Str() );
+	return static_cast<WriteStream*>( self )->Str();
 }
 
 
@@ -622,7 +625,7 @@ PyObject *WriteStream::tp_repr_method(PyObject *_self)
 	PyObject *str = (PyObject*)self->Str();
 	if (!str)
 		return 0;
-	PyObject *res = PyUnicode_FromFormat("<MarshalStream %R>", str);
+	PyObject *res = PyUnicode_FromFormat("<MarshalStream %U>", str);
 	Py_DECREF(str);
 	return res;
 }
