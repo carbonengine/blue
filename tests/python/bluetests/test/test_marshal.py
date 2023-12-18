@@ -210,3 +210,9 @@ class testMarshal(blueunittest.TestCase):
         ws = blue.marshal.Save(obj)
         self.assertIsInstance(ws[:5], bytes)
         self.assertEqual(len(ws[3:6]), 3)
+
+    def test_str_method(self):
+        obj = [SimpleObject(), "this is a test"]
+        ws = blue.marshal.Save(obj)
+        self.assertIsInstance(str(ws), str)
+
