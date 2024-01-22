@@ -42,6 +42,7 @@ static const StringTable stringTableDE{
 	{ IDS_VERIFYFAIL_NOTFOUND, "File not found:" },
 	{ IDS_VERIFYFAIL_UNKNOWNFOUND, "Unbekannte Dateien entdeckt:" },
 	{ IDS_VERIFYFAIL_INCORRECTCRC, "\xdc""berpr\xfc""fung fehlgeschlagen:  \'%s\', crc:%x, expected:%x" },
+	{ IDS_INVALIDMACOS, "macOS 10.15 oder h\xf6""her erforderlich"},
 };
 
 static const StringTable stringTableEN{
@@ -52,6 +53,18 @@ static const StringTable stringTableEN{
 	{ IDS_VERIFYFAIL_NOTFOUND, "File not found:" },
 	{ IDS_VERIFYFAIL_UNKNOWNFOUND, "Unknown files found:" },
 	{ IDS_VERIFYFAIL_INCORRECTCRC, "Verification failed: \'%s\', crc:%x, expected:%x." },
+	{ IDS_INVALIDMACOS, "macOS 10.15 or higher required"},
+};
+
+static const StringTable stringTableES{
+	{ IDS_VERIFYFAIL_M, "La instalaci\xf3n de tu cliente de EVE podr\xed""a tener archivos modificados, da\xf1""ados o corruptos. Debes reinstalar el juego para resolver este problema. Si necesitas ponerte en contacto con el equipo de asistencia, incluye cualquier mensaje de error que aparece a continuaci\xf3n." },
+	{ IDS_VERIFYFAIL_M1, "Hay archivos adicionales en la instalaci\xf3n de tu cliente de EVE. Si has aplicado un parche recientemente, es posible que tengas que reiniciar el ordenador. Si el problema persiste, deber\xed""as reinstalar el juego. Si necesitas contactar con el equipo de asistencia, incluye este mensaje de error." },
+	{ IDS_VERIFYFAIL_C, "Fallo de verificaci\xf3n" },
+	{ IDS_INVALIDWINDOWS, "Se requiere Windows 10 o superior" },
+	{ IDS_VERIFYFAIL_NOTFOUND, "Archivo no encontrado:" },
+	{ IDS_VERIFYFAIL_UNKNOWNFOUND, "Archivos desconocidos encontrados:" },
+	{ IDS_VERIFYFAIL_INCORRECTCRC, "Error de verificaci\xf3n: \'%s\', crc:%x, esperado:%x." },
+	{ IDS_INVALIDMACOS, "Se requiere macOS 10.15 o superior"},
 };
 
 static const StringTable stringTableES{
@@ -72,6 +85,7 @@ static const StringTable stringTableFR{
 	{ IDS_VERIFYFAIL_NOTFOUND, "File not found:" },
 	{ IDS_VERIFYFAIL_UNKNOWNFOUND, "Fichiers inconnus trouv\xe9s\xa0:" },
 	{ IDS_VERIFYFAIL_INCORRECTCRC, "\xc9""chec de v\xe9rification\xa0: \'%s\', crc:%x, expected:%x." },
+	{ IDS_INVALIDMACOS, "macOS 10.15 ou sup\xe9""rieur requis"},
 };
 
 static const StringTable stringTableJA{
@@ -82,6 +96,7 @@ static const StringTable stringTableJA{
 	{ IDS_VERIFYFAIL_NOTFOUND, "\x83t\x83@\x83""C\x83\x8b\x82\xaa\x8c\xa9\x82\xc2\x82\xa9\x82\xe8\x82\xdc\x82\xb9\x82\xf1\x81""F" },
 	{ IDS_VERIFYFAIL_UNKNOWNFOUND, "\x95s\x96\xbe\x82\xc8\x83t\x83@\x83""C\x83\x8b\x82\xaa\x8c\xa9\x82\xc2\x82\xa9\x82\xe8\x82\xdc\x82\xb5\x82\xbd\x81""F" },
 	{ IDS_VERIFYFAIL_INCORRECTCRC, "\x94""F\x8f\xd8\x82\xc9\x8e\xb8\x94s\x82\xb5\x82\xdc\x82\xb5\x82\xbd\x81""F\'%s\'\x81""Acrc\x81""F%x\x81""A\x97\\\x91z\x81""F%x\x81""B" },
+	{ IDS_INVALIDMACOS, "macOS 10.15\x88\xc8\x8f\xe3\x82\xaa\x95K\x97v\x82\xc5\x82\xb7"},
 };
 
 static const StringTable stringTableKO{
@@ -92,6 +107,7 @@ static const StringTable stringTableKO{
 	{ IDS_VERIFYFAIL_NOTFOUND, "\xc6\xc4\xc0\xcf\xc0\xbb \xc3\xa3\xc0\xbb \xbc\xf6 \xbe\xf8\xbd\xc0\xb4\xcf\xb4\xd9:" },
 	{ IDS_VERIFYFAIL_UNKNOWNFOUND, "\xbe\xcb \xbc\xf6 \xbe\xf8\xb4\xc2 \xc6\xc4\xc0\xcf:" },
 	{ IDS_VERIFYFAIL_INCORRECTCRC, "\xc0\xce\xc1\xf5 \xbd\xc7\xc6\xd0: \'%s\', crc:%x, \xbf\xb9\xbb\xf3:%x." },
+	{ IDS_INVALIDMACOS, "macOS 10.15 \xc0\xcc\xbb\xf3 \xb9\xf6\xc0\xfc\xc0\xcc \xc7\xca\xbf\xe4\xc7\xd5\xb4\xcf\xb4\xd9."},
 };
 
 static const StringTable stringTableRU{
@@ -102,6 +118,7 @@ static const StringTable stringTableRU{
 	{ IDS_VERIFYFAIL_NOTFOUND, "File not found:" },
 	{ IDS_VERIFYFAIL_UNKNOWNFOUND, "\x8e\xa1\xad\xa0\xe0\xe3\xa6\xa5\xad\xeb \xad\xa5\xa8\xa7\xa2\xa5\xe1\xe2\xad\xeb\xa5 \xe4\xa0\xa9\xab\xeb:" },
 	{ IDS_VERIFYFAIL_INCORRECTCRC, "\x8d\xa5 \xe3\xa4\xa0\xab\xae\xe1\xec \xa2\xeb\xaf\xae\xab\xad\xa8\xe2\xec \xaf\xe0\xae\xa2\xa5\xe0\xaa\xe3:  \'%s\',  crc:%x,  expected:%x." },
+	{ IDS_INVALIDMACOS, "\x92\xe0\xa5\xa1\xe3\xa5\xe2\xe1\xef macOS \xa2\xa5\xe0\xe1\xa8\xa8 10.15 \xa8\xab\xa8 \xad\xae\xa2\xa5\xa5"},
 };
 
 static const StringTable stringTableZH{
@@ -112,6 +129,7 @@ static const StringTable stringTableZH{
 	{ IDS_VERIFYFAIL_NOTFOUND, "\xce\xb4\xd5\xd2\xb5\xbd\xce\xc4\xbc\xfe\xa3\xba" },
 	{ IDS_VERIFYFAIL_UNKNOWNFOUND, "\xd5\xd2\xb5\xbd\xce\xb4\xd6\xaa\xce\xc4\xbc\xfe\xa3\xba" },
 	{ IDS_VERIFYFAIL_INCORRECTCRC, "\xd1\xe9\xd6\xa4\xca\xa7\xb0\xdc\xa3\xba\'%s\', crc:%x, expected:%x." },
+	{ IDS_INVALIDMACOS, "\xd0\xe8\xd2\xaa""macOS\xb2\xd9\xd7\xf7\xcf\xb5\xc0\xd6""10.15\xbb\xf2\xb8\xfc\xb8\xdf\xb0\xe6\xb1\xbe"},
 };
 
 static const std::map<std::string, StringTable> messageTable{
