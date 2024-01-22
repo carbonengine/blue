@@ -67,16 +67,6 @@ static const StringTable stringTableES{
 	{ IDS_INVALIDMACOS, "Se requiere macOS 10.15 o superior"},
 };
 
-static const StringTable stringTableES{
-	{ IDS_VERIFYFAIL_M, "La instalaci\xf3n de tu cliente de EVE podr\xed""a tener archivos modificados, da\xf1""ados o corruptos. Debes reinstalar el juego para resolver este problema. Si necesitas ponerte en contacto con el equipo de asistencia, incluye cualquier mensaje de error que aparece a continuaci\xf3n." },
-	{ IDS_VERIFYFAIL_M1, "Hay archivos adicionales en la instalaci\xf3n de tu cliente de EVE. Si has aplicado un parche recientemente, es posible que tengas que reiniciar el ordenador. Si el problema persiste, deber\xed""as reinstalar el juego. Si necesitas contactar con el equipo de asistencia, incluye este mensaje de error." },
-	{ IDS_VERIFYFAIL_C, "Fallo de verificaci\xf3n" },
-	{ IDS_INVALIDWINDOWS, "Se requiere Windows 10 o superior" },
-	{ IDS_VERIFYFAIL_NOTFOUND, "Archivo no encontrado:" },
-	{ IDS_VERIFYFAIL_UNKNOWNFOUND, "Archivos desconocidos encontrados:" },
-	{ IDS_VERIFYFAIL_INCORRECTCRC, "Error de verificaci\xf3n: \'%s\', crc:%x, esperado:%x." },
-};
-
 static const StringTable stringTableFR{
 	{ IDS_VERIFYFAIL_M, "Votre installation du client EVE comporte peut-\xeatre des fichiers modifi\xe9s, endommag\xe9s ou corrompus. Vous devriez r\xe9installer le jeu pour r\xe9soudre ce probl\xe8me. Si vous avez besoin de contacter l\'assistance, veuillez inclure tout message d\'erreur rencontr\xe9 ci-dessous." },
 	{ IDS_VERIFYFAIL_M1, "L\'installation de votre client EVE comporte des fichiers suppl\xe9mentaires. Si vous avez appliqu\xe9 un patch r\xe9""cemment, un red\xe9marrage de votre ordinateur pourrait \xeatre n\xe9""cessaire. Si le probl\xe8me persiste, vous devriez r\xe9installer le jeu. Si vous avez besoin de contacter l\'assistance, veuillez inclure ce message d\'erreur." },
