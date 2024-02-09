@@ -80,13 +80,13 @@ bool PyScheduler::RunTicks(long ticks)
 	long tick1, tick2;
 
 	tick1 = GetPythonTickCount();
-	mInQueue1 = PyStackless_GetRunCount()-1;
+	mInQueue1 = PyScheduler_GetRunCount()-1;
     time1 = CcpGetTimestamp();
-	PyObject *r = PyStackless_RunWatchdogEx( ticks,
+	PyObject *r = PyScheduler_RunWatchdogEx( ticks,
 		PY_WATCHDOG_SOFT | PY_WATCHDOG_IGNORE_NESTING | PY_WATCHDOG_TOTALTIMEOUT );
     time2 = CcpGetTimestamp();
 	tick2 = GetPythonTickCount();
-	mInQueue2 = PyStackless_GetRunCount()-1;
+	mInQueue2 = PyScheduler_GetRunCount()-1;
 	
 	if(!r)
 	{

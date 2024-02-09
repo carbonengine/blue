@@ -24,6 +24,7 @@ find_package(OpenSSL REQUIRED NO_CMAKE_PATH)
 find_package(PDM REQUIRED NO_CMAKE_PATH)
 find_package(YAML REQUIRED NO_CMAKE_PATH)
 find_package(ZLIB REQUIRED NO_CMAKE_PATH)
+find_package(Scheduler REQUIRED NO_CMAKE_PATH)
 
 
 set(PUBLIC_HEADER_FILES_INCLUDE
@@ -317,6 +318,7 @@ target_link_libraries(Blue
     PUBLIC
         BlueExposure
         CcpCore
+        Scheduler
     PRIVATE
         PDM::PDM
         CURL::libcurl
@@ -361,9 +363,9 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     # discover python tests ... this may be a little bit brittle since we're working around the missing `_blueexposuretest`
     # binary. As in, test discovery happens during the configure stage at which the binary does not exist yet.
     if(WIN32)
-        set(ENV{PYTHONPATH} ${BRANCH_ROOT_DIR}/carbon/common/stdlib\;${BRANCH_ROOT_DIR}/vendor/python/3.8.1+ccp-stackless/${CCP_VENDOR_BIN_PATH}\;${CMAKE_CURRENT_SOURCE_DIR}/python)
+        set(ENV{PYTHONPATH} ${BRANCH_ROOT_DIR}/carbon/common/stdlib\;${Python_ROOT}/${CCP_VENDOR_BIN_PATH}\;${CMAKE_CURRENT_SOURCE_DIR}/python)
     elseif(APPLE)
-        set(ENV{PYTHONPATH} ${BRANCH_ROOT_DIR}/carbon/common/stdlib:${BRANCH_ROOT_DIR}/vendor/python/3.8.1+ccp-stackless/${CCP_VENDOR_BIN_PATH}:${CMAKE_CURRENT_SOURCE_DIR}/python)
+        set(ENV{PYTHONPATH} ${BRANCH_ROOT_DIR}/carbon/common/stdlib:${Python_ROOT}/${CCP_VENDOR_BIN_PATH}:${CMAKE_CURRENT_SOURCE_DIR}/python)
     endif()
     execute_process(COMMAND ${PYTHON_EXECUTABLE} discover.py
         OUTPUT_VARIABLE PYTHON_TESTS_STR
@@ -384,9 +386,9 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests/python
         )
         if(WIN32)
-            set_tests_properties(${PYTHON_TEST} PROPERTIES ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:Blue>\;${BRANCH_ROOT_DIR}/carbon/common/stdlib\;${BRANCH_ROOT_DIR}/vendor/python/3.8.1+ccp-stackless/${CCP_VENDOR_BIN_PATH}\;${CMAKE_CURRENT_SOURCE_DIR}/python;BUILDFLAVOR=$<LOWER_CASE:$<CONFIG>>")
+            set_tests_properties(${PYTHON_TEST} PROPERTIES ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:Blue>\;${BRANCH_ROOT_DIR}/carbon/common/stdlib\;${Python_ROOT}/${CCP_VENDOR_BIN_PATH}\;${CMAKE_CURRENT_SOURCE_DIR}/python;BUILDFLAVOR=$<LOWER_CASE:$<CONFIG>>")
         elseif (APPLE)
-            set_tests_properties(${PYTHON_TEST} PROPERTIES ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:Blue>:${BRANCH_ROOT_DIR}/carbon/common/stdlib:${BRANCH_ROOT_DIR}/vendor/python/3.8.1+ccp-stackless/${CCP_VENDOR_BIN_PATH}:${CMAKE_CURRENT_SOURCE_DIR}/python;BUILDFLAVOR=$<LOWER_CASE:$<CONFIG>>")
+            set_tests_properties(${PYTHON_TEST} PROPERTIES ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:Blue>:${BRANCH_ROOT_DIR}/carbon/common/stdlib:${Python_ROOT}/${CCP_VENDOR_BIN_PATH}:${CMAKE_CURRENT_SOURCE_DIR}/python;BUILDFLAVOR=$<LOWER_CASE:$<CONFIG>>")
         else()
             message(FATAL_ERROR "Unsupported platform")
         endif ()

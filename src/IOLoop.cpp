@@ -122,7 +122,7 @@ bool SleepWithIo::SleepAndRun( bool &retry, float relativeSleepTime )
 	bool shouldSleep = true;
 	if ( !m_firstRun )
 	{
-		if ( PyStackless_GetRunCount() - 1 > 0 )
+		if ( PyScheduler_GetRunCount() - 1 > 0 )
 		{
 			LOGIT("nosleep due to runnable taskets");
 			shouldSleep = false;
@@ -253,7 +253,7 @@ bool SleepWithIo::CheckStacklessIo( bool &result )
 			PyOS->PyFlushError("SleepWithIO");
 			return false;
 		}
-		result = PyStackless_GetRunCount() > 1;
+		result = PyScheduler_GetRunCount() > 1;
 	} else if (s.nRunnable)
 		result = true;
 	return true;
@@ -268,7 +268,7 @@ bool SleepWithIo::CheckCarbonIo( bool &result )
 	// This is the right thing to do, but it is switchable for testing purposes.
 	if (g_carbonIoManualWakeup)
 		CioWakeupTasklets();
-	result = PyStackless_GetRunCount() > 1;
+	result = PyScheduler_GetRunCount() > 1;
 	return true;
 }
 

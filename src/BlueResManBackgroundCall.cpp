@@ -8,7 +8,7 @@
 #include "BlueStatistics.h"
 
 #if CCP_STACKLESS
-#include "stackless_api.h"
+#include <Scheduler.h>
 #endif
 
 static CcpLogChannel_t s_ch = CCP_LOG_DEFINE_CHANNEL( "ResMan" );

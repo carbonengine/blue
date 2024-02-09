@@ -1,6 +1,6 @@
 import blue
 import contextlib
-import stackless
+import scheduler
 import traceback
 import weakref
 import datetime
@@ -25,7 +25,7 @@ def _noop(*args, **kwargs):
     pass
 
 
-class TaskletExt(stackless.tasklet):
+class TaskletExt(scheduler.tasklet):
     __slots__ = [
         "context", "localStorage", "storedContext", 'startTime',
         "endTime", 'runTime', 'tasklet_id', 'origin_traceback', 'highlighted',
@@ -49,7 +49,7 @@ class TaskletExt(stackless.tasklet):
             raise TypeError("TaskletExt::__new__ argument \"method\" must be callable.")
 
         def CallWrapper(*args, **kwds):
-            current = stackless.getcurrent()
+            current = scheduler.getcurrent()
             current.startTime = blue.os.GetWallclockTimeNow()
             oldtimer = blue.pyos.taskletTimer.EnterTasklet(current.context)
             with _tasklet_trace(current):
@@ -61,9 +61,9 @@ class TaskletExt(stackless.tasklet):
                     except TaskletExit as e:
                         pass
                     except SystemExit as e:
-                        logger.info("system %s exiting with %r" % (stackless.getcurrent(), e))
+                        logger.info("system %s exiting with %r" % (scheduler.getcurrent(), e))
                     except Exception:
-                        logger.exception("Unhandled exception in %r" % stackless.getcurrent())
+                        logger.exception("Unhandled exception in %r" % scheduler.getcurrent())
                     return None  # Don't allow uncaught exceptions upwards.
                 except Exception:
                     # Problem in exception handling.  Use traceback module.
@@ -85,13 +85,13 @@ class TaskletExt(stackless.tasklet):
         tasklet_id += 1
 
         if method:
-            t = stackless.tasklet.__new__(cls, cls.GetWrapper(method))
+            t = scheduler.tasklet.__new__(cls, cls.GetWrapper(method))
         else:
-            t = stackless.tasklet.__new__(cls)
+            t = scheduler.tasklet.__new__(cls)
 
         t.creation_datetime = datetime.datetime.utcnow()
         # Inherit the localStorage from calling task.
-        c = stackless.getcurrent()
+        c = scheduler.getcurrent()
         ls = getattr(c, "localStorage", None)
         if ls is None:
             t.localStorage = {}
@@ -141,7 +141,7 @@ class TaskletExt(stackless.tasklet):
             setattr(new, 'tracer', tracer.clone())
 
     def bind(self, callableObject):
-        return stackless.tasklet.bind(self, self.CallWrapper(callableObject))
+        return scheduler.tasklet.bind(self, self.CallWrapper(callableObject))
 
     def __repr__(self):
         abps = [getattr(self, attr) for attr in ["alive", "blocked", "paused", "scheduled"]]

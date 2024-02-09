@@ -26,12 +26,11 @@
 #include <Python.h>
 
 #if CCP_STACKLESS
-#include <stackless_api.h>
+#include <Scheduler.h>
 #else
 #define CCP_NO_STACKLESS
 #endif
 
-#include <eval.h>  //for PyEval_EvalCode()
 
 // this for pylogobject
 #include <structmember.h>

@@ -335,7 +335,7 @@ void Synchro::RebaseSimClock(Be::Time oldTime, Be::Time newTime)
 // go to sleep here, because only the main thread wakes things in synchro up.
 bool Synchro::CatchMain()
 {
-	PyObject* tasklet = PyStackless_GetCurrent();
+	PyObject* tasklet = PyScheduler_GetCurrent();
 	bool result = false;
 	if (PyTasklet_IsMain((PyTaskletObject*)tasklet)) {
 		PyErr_SetString(PyExc_RuntimeError, "Main tasklet cannot block in Synchro");
@@ -454,7 +454,7 @@ PyObject* Synchro::SleepWallclock(int ms, const int64_t &due)
 		return NULL;
 	}
 
-	PyTaskletObject* me = reinterpret_cast<PyTaskletObject*>(PyStackless_GetCurrent());
+	PyTaskletObject* me = reinterpret_cast<PyTaskletObject*>(PyScheduler_GetCurrent());
 
 	Sleeper sl;
 	sl.channel = PyChannel_New(NULL);
@@ -493,7 +493,7 @@ PyObject* Synchro::SleepSim(int ms, const int64_t &due)
 		return NULL;
 	}
 
-	PyTaskletObject* me = reinterpret_cast<PyTaskletObject*>(PyStackless_GetCurrent());
+	PyTaskletObject* me = reinterpret_cast<PyTaskletObject*>(PyScheduler_GetCurrent());
 
 	Sleeper sl;
 	sl.channel = PyChannel_New(NULL);
@@ -694,11 +694,11 @@ void Synchro::AddStat()
 {
 	CCP_STATS_SET( statSleepers, mWallclockSleepers.size() + mSimSleepers.size() );
 	CCP_STATS_SET( statYielders, -PyChannel_GetBalance( mYielders ) );
-	CCP_STATS_SET( statRunnable, PyStackless_GetRunCount() - 1 );
+	CCP_STATS_SET( statRunnable, PyScheduler_GetRunCount() - 1 );
 
 	Stat stat;
 	stat.mTime = BeOS->GetActualTime();
-	stat.mRunnable = PyStackless_GetRunCount()-1; //don't count the running tasklet.
+	stat.mRunnable = PyScheduler_GetRunCount()-1; //don't count the running tasklet.
 	stat.mYielders = -PyChannel_GetBalance( mYielders );
 	stat.mSleepers = mWallclockSleepers.size() + mSimSleepers.size();
 

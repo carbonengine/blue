@@ -1,6 +1,6 @@
 import unittest
 import blue
-import stackless
+import scheduler
 
 
 def main():
@@ -21,7 +21,7 @@ def main():
             super().__init__(*args, **kwargs)
 
         def run(self, test):
-            stackless.tasklet(self._run_impl)(test)
+            scheduler.tasklet(self._run_impl)(test)
             while self.result is None:
                 blue.os.Pump()
 

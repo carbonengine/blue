@@ -1,5 +1,5 @@
 import logging
-import stackless
+import scheduler
 import traceback
 
 from ._taskletextension import TaskletExt, tasklets
@@ -18,7 +18,7 @@ def Shutdown(exitprocs):
     """
     # 1 run exitprocs.  Must happen on a taskletExt
     def RunAll():
-        stackless.getcurrent().block_trap = True
+        scheduler.getcurrent().block_trap = True
         for proc in exitprocs:
             try:
                 proc()
@@ -27,7 +27,7 @@ def Shutdown(exitprocs):
 
     if exitprocs:
         TaskletExt('Shutdown', RunAll)()
-        intr = stackless.run(1000000)
+        intr = scheduler.run(1000000)
         if intr:
             logger.error("ExitProcs interrupted at tasklet "+ repr(intr))
 
@@ -86,7 +86,7 @@ def _KillTasklets_():
     for i in range(3):
         # try three times, sometimes killing a tasklet spawns a new one!
         for tasklet in tasklets.keys():
-            if tasklet is stackless.getcurrent():
+            if tasklet is scheduler.getcurrent():
                 continue
             try:
                 if tasklet.frame:

@@ -237,7 +237,7 @@ IRoot* YamlReader::CreateObjectHelper( unsigned int objectMarker, IRoot* calling
 
 #if CCP_STACKLESS
 
-	PyTaskletObject* current = reinterpret_cast<PyTaskletObject*>( PyStackless_GetCurrent() );
+	PyTaskletObject* current = reinterpret_cast<PyTaskletObject*>( PyScheduler_GetCurrent() );
 	Py_DECREF( current );
 
 	bool taskletCantYield = !PyOS->CanYield();

@@ -217,7 +217,7 @@ IRoot* BlackReader::CreateObjectHelper( unsigned int objectMarker, IRoot * calli
 	m_errorMessage = "";
 
 #if CCP_STACKLESS
-	PyTaskletObject* current = (PyTaskletObject*)PyStackless_GetCurrent();
+	PyTaskletObject* current = (PyTaskletObject*)PyScheduler_GetCurrent();
 	Py_DECREF(current);
 
 	bool taskletCanYield;
