@@ -70,6 +70,9 @@ ccp_add_library(Blue SHARED
     src/BlueSysInfo.mm
     src/Accumulator/PercentileAccumulator.cpp
     src/Accumulator/PercentileAccumulator_Blue.cpp
+    src/AllReferences.cpp
+    src/AllReferences.h
+    src/AllReferences_Blue.cpp
     src/autoversion.h
     src/BackgroundReader.cpp
     src/BackgroundReader.h
