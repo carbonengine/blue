@@ -9,44 +9,14 @@
 #include "AllReferences.h"
 
 
-AllReferences::SeenObjectSet::SeenObjectSet()
+bool AllReferences::Reference::operator==(const Reference& other) const
 {
-	m_buckets.resize( 1024 );
+	return parent == other.parent && isAttribute == other.isAttribute && attr == other.attr;
 }
 
-bool AllReferences::SeenObjectSet::Visit( IRoot* obj )
+bool AllReferences::Reference::operator!=(const Reference& other) const
 {
-	auto h = std::hash<IRoot*>()( obj );
-	auto& bucket = m_buckets[h % m_buckets.size()];
-	auto found = std::find( begin( bucket ), end( bucket ), obj );
-	if( found == end( bucket ) )
-	{
-		bucket.push_back( obj );
-		return true;
-	}
-	return false;
-}
-
-void AllReferences::SeenObjectSet::Clear()
-{
-	for( auto& bucket : m_buckets )
-	{
-		bucket.clear();
-	}
-}
-
-
-void AllReferences::TemporaryData::Clear()
-{
-	stack.clear();
-	seen.Clear();
-}
-
-
-void AllReferences::GeneratedData::Clear()
-{
-	references.clear();
-	byType.clear();
+	return !( *this == other );
 }
 
 
@@ -59,96 +29,180 @@ bool AllReferences::Update( float sec )
 		return true;
 	}
 
-	auto endTime = CcpGetTimestamp() + uint64_t( double( sec ) * CcpGetTimestampFrequency() );
+	auto startTime = CcpGetTimestamp();
+	auto endTime = startTime + uint64_t( double( sec ) * CcpGetTimestampFrequency() );
 
-	if( m_temp.stack.empty() )
+	if( m_stack.empty() && !m_cleaningReferences )
 	{
-		m_temp.stack.push_back( m_root );
+		m_stack.push_back( m_root );
 	}
 
-	while( !m_temp.stack.empty() )
+	while( !m_stack.empty() )
 	{
 		if( CcpGetTimestamp() > endTime )
 		{
 			return false;
 		}
-		IRootPtr obj = m_temp.stack.back();
-		m_temp.stack.pop_back();
-
-		if( !m_temp.seen.Visit( obj ) )
-		{
-			continue;
-		}
-
+		IRoot* obj = m_stack.back();
+		m_stack.pop_back();
+		
 		auto type = obj->ClassType();
 		for( auto other = type; other; other = other->mParentClassInfo )
 		{
 			for( auto entry = type->mInterfaceTable; entry->mIID; entry++ )
 			{
-				m_new.byType[*entry->mIID].push_back( obj );
+				m_newByType[entry->mIID->GetHash()].push_back( obj );
 			}
 		}
-
+		
 		EnumerateChildren(
 			obj,
 			[&]( IRoot* child, const Be::VarEntry* entry, ssize_t index ) {
-				m_temp.stack.push_back( child );
+				child = child->GetRootObject();
 
 				Reference reference{};
 				reference.parent = obj;
+				reference.generation = m_generation;
 				if( entry )
 				{
-					reference.type = RouteStep::ATTRIBUTE;
+					reference.isAttribute = true;
 					reference.attr = entry;
-				}
-				else if( IBlueDictPtr dict = BlueCastPtr( obj ) )
-				{
-					reference.type = RouteStep::KEY;
-					reference.index = index;
 				}
 				else
 				{
-					reference.type = RouteStep::INDEX;
+					reference.isAttribute = false;
 					reference.index = index;
 				}
-				m_new.references[child].push_back( reference );
+				auto& refs = m_references[child];
+
+				if( !refs.first.parent )
+				{
+					child->Lock();
+					refs.first = reference;
+					refs.generation = m_generation;
+					if( child != m_root )
+					{
+						m_stack.push_back( child );
+					}
+				}
+				else
+				{
+					if( refs.generation != m_generation )
+					{
+						refs.generation = m_generation;
+						if( child != m_root )
+						{
+							m_stack.push_back( child );
+						}
+					}
+					if( refs.first != reference )
+					{
+						auto found = find( begin( refs.rest ), end( refs.rest ), reference );
+						if( found == end(refs.rest) )
+						{
+							refs.rest.push_back( reference );
+						}
+						else
+						{
+							found->generation = m_generation;
+						}
+					}
+					else
+					{
+						refs.first.generation = m_generation;
+					}
+				}
 			} );
 	}
 
-	std::swap( m_new, m_current );
+	if( !m_cleaningReferences )
 	{
-		CCP_STATS_ZONE( "Clear" );
-		m_new.Clear();
-		m_temp.Clear();
+		std::swap( m_newByType, m_currentByType );
+		for( auto& type : m_newByType )
+		{
+			type.second.clear();
+		}
+		m_clearReferencesIt = begin( m_references );
+		m_cleaningReferences = true;
+	}
+
+	if( !CleanReferences( endTime ) )
+	{
+		return false;
+	}
+	m_cleaningReferences = false;
+	++m_generation;
+
+	return true;
+}
+
+bool AllReferences::CleanReferences( uint64_t endTime )
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+	uint32_t count = 0;
+	while( m_clearReferencesIt != end( m_references ) )
+	{
+		if( ++count == 100 )
+		{
+			if( CcpGetTimestamp() > endTime )
+			{
+				return false;
+			}
+			count = 0;
+		}
+		auto& refs = m_clearReferencesIt->second;
+		auto generation = m_generation;
+		refs.rest.erase( remove_if( begin( refs.rest ), end( refs.rest ), [generation]( auto& x ) { return x.generation != generation; } ), end( refs.rest ) );
+		if( refs.first.generation != generation )
+		{
+			if( refs.rest.empty() )
+			{
+				m_clearReferencesIt->first->Unlock();
+				m_clearReferencesIt = m_references.erase( m_clearReferencesIt );
+				continue;
+			}
+			else
+			{
+				refs.first = refs.rest.back();
+				refs.rest.pop_back();
+			}
+		}
+		++m_clearReferencesIt;
 	}
 	return true;
 }
 
 BluePy AllReferences::GetReferences( IRoot* obj )
 {
-	auto found = m_current.references.find( obj );
-	if( found == end( m_current.references ) )
-	{
-		return BluePy( PyList_New( 0 ) );
-	}
+	auto found = m_references.find( obj );
 
-	auto result = PyList_New( Py_ssize_t( found->second.size() ) );
-	ssize_t i = 0;
-	for( auto& rec : found->second )
-	{
+	auto result = PyList_New( 0 );
+
+	auto AddRef = [result]( auto& rec ) {
 		PyObject* element;
-		switch( rec.type )
+		if( rec.isAttribute )
 		{
-		case RouteStep::ATTRIBUTE:
 			element = Py_BuildValue( "(Nis)", BlueWrapObjectForPython( rec.parent ), 0, rec.attr->mName );
-			break;
-		case RouteStep::KEY:
-			element = Py_BuildValue( "(Nis)", BlueWrapObjectForPython( rec.parent ), 1, IBlueDictPtr( BlueCastPtr( rec.parent ) )->GetKey( rec.index ) );
-			break;
-		default:
+		}
+		else if( IBlueDictPtr dict = BlueCastPtr( rec.parent ) )
+		{
+			element = Py_BuildValue( "(Nis)", BlueWrapObjectForPython( rec.parent ), 1, dict->GetKey( rec.index ) );
+		}
+		else
+		{
 			element = Py_BuildValue( "(Nii)", BlueWrapObjectForPython( rec.parent ), 1, rec.index );
 		}
-		PyList_SetItem( result, i++, element );
+		PyList_Append( result, element );
+		Py_XDECREF( element );
+	};
+
+	if( found != end( m_references ) )
+	{
+		AddRef( found->second.first );
+		for( auto& rec : found->second.rest )
+		{
+			AddRef( rec );
+		}
 	}
 	return BluePy( result );
 }
@@ -156,9 +210,9 @@ BluePy AllReferences::GetReferences( IRoot* obj )
 std::vector<IRootPtr> AllReferences::FindInterface( IRoot* obj, const char* iidName )
 {
 	std::vector<IRootPtr> result;
-	auto found = m_current.byType.find( Be::IID( iidName ) );
+	auto found = m_currentByType.find( Be::IID( iidName ).GetHash() );
 
-	if( found != end( m_current.byType ) )
+	if( found != end( m_currentByType ) )
 	{
 		if( obj == m_root )
 		{
@@ -170,7 +224,8 @@ std::vector<IRootPtr> AllReferences::FindInterface( IRoot* obj, const char* iidN
 			std::unordered_map<IRoot*, bool> seen;
 			for( auto& child : found->second )
 			{
-				if( HasRoute( obj, child, seen ) )
+				auto found = find( begin( result ), end( result ), child );
+				if( found == end( result ) && HasRoute( obj, child, seen ) )
 				{
 					result.push_back( child );
 				}
@@ -182,14 +237,20 @@ std::vector<IRootPtr> AllReferences::FindInterface( IRoot* obj, const char* iidN
 
 void AllReferences::SetRoot( IRoot* root )
 {
+	if( root )
+	{
+		root = root->GetRootObject();
+	}
 	if( root == m_root )
 	{
 		return;
 	}
 	m_root = root;
-	m_new.Clear();
-	m_current.Clear();
-	m_temp.Clear();
+	m_newByType.clear();
+	m_currentByType.clear();
+	m_stack.clear();
+	m_references.clear();
+	m_generation = 1;
 }
 
 IRootPtr AllReferences::GetRoot() const
@@ -199,19 +260,28 @@ IRootPtr AllReferences::GetRoot() const
 
 bool AllReferences::HasRoute( IRoot* from, IRoot* to, std::unordered_map<IRoot*, bool>& hasRoute ) const
 {
+	if( from == to )
+	{
+		return true;
+	}
 	auto seen = hasRoute.find( to );
 	if( seen != end( hasRoute ) )
 	{
 		return seen->second;
 	}
 
-	auto found = m_current.references.find( to );
-	if( found == end( m_current.references ) )
+	auto found = m_references.find( to );
+	if( found == end( m_references ) )
 	{
 		hasRoute[to] = false;
 		return false;
 	}
-	for( auto& ref : found->second )
+	if( HasRoute(from, found->second.first.parent, hasRoute) )
+	{
+		hasRoute[to] = true;
+		return true;
+	}
+	for( auto& ref : found->second.rest )
 	{
 		if( HasRoute( from, ref.parent, hasRoute ) )
 		{

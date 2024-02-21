@@ -9,24 +9,6 @@
 
 #include <Find.h>
 
-template <>
-struct std::hash<Be::IID>
-{
-	size_t operator()( const Be::IID& iid ) const
-	{
-		return size_t( iid.GetHash() );
-	}
-};
-
-template <>
-struct std::hash<IRootPtr>
-{
-	size_t operator()( const IRootPtr& obj ) const
-	{
-		return std::hash<IRoot*>()( obj.p );
-	}
-};
-
 
 BLUE_CLASS( AllReferences ) :
 	public IRoot
@@ -43,45 +25,37 @@ public:
 private:
 	struct Reference
 	{
+		bool operator==( const Reference& other ) const;
+		bool operator!=( const Reference& other ) const;
+
 		IRoot* parent;
-		const Be::VarEntry* attr;
-		ssize_t index;
-		RouteStep::StepType type;
+		union
+		{
+			const Be::VarEntry* attr;
+			ssize_t index;
+		};
+		uint64_t generation;
+		bool isAttribute;
 	};
 
-	class SeenObjectSet
+	struct References
 	{
-	public:
-		SeenObjectSet();
-		bool Visit( IRoot* obj );
-		void Clear();
-
-	private:
-		std::vector<std::vector<IRootPtr>> m_buckets;
+		Reference first = {};
+		std::vector<Reference> rest;
+		uint64_t generation = 0;
 	};
 
-	struct TemporaryData
-	{
-		void Clear();
-
-		std::vector<IRootPtr> stack;
-		SeenObjectSet seen;
-	};
-
-	struct GeneratedData
-	{
-		void Clear();
-
-		std::unordered_map<IRootPtr, std::vector<Reference>> references;
-		std::unordered_map<Be::IID, std::vector<IRoot*>> byType;
-	};
-
+	bool CleanReferences( uint64_t endTime );
 	bool HasRoute( IRoot* from, IRoot* to, std::unordered_map<IRoot*, bool>& hasRoute ) const;
 
 	IRootPtr m_root;
-	TemporaryData m_temp;
-	GeneratedData m_new;
-	GeneratedData m_current;
+	std::vector<IRoot*> m_stack;
+	std::unordered_map<unsigned, std::vector<IRoot*>> m_newByType;
+	std::unordered_map<unsigned, std::vector<IRoot*>> m_currentByType;
+	std::unordered_map<IRoot*, References> m_references;
+	std::unordered_map<IRoot*, References>::iterator m_clearReferencesIt;
+	uint64_t m_generation = 1;
+	bool m_cleaningReferences = false;
 };
 
 TYPEDEF_BLUECLASS( AllReferences );
