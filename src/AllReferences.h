@@ -14,6 +14,8 @@ BLUE_CLASS( AllReferences ) :
 	public IRoot
 {
 public:
+	~AllReferences();
+
 	EXPOSE_TO_BLUE();
 
 	bool Update( float sec );

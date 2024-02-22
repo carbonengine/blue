@@ -20,6 +20,11 @@ bool AllReferences::Reference::operator!=(const Reference& other) const
 }
 
 
+AllReferences::~AllReferences()
+{
+	SetRoot( nullptr );
+}
+
 bool AllReferences::Update( float sec )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
@@ -249,6 +254,10 @@ void AllReferences::SetRoot( IRoot* root )
 	m_newByType.clear();
 	m_currentByType.clear();
 	m_stack.clear();
+	for( auto& ref : m_references )
+	{
+		ref.first->Unlock();
+	}
 	m_references.clear();
 	m_generation = 1;
 }
