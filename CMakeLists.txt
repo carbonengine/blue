@@ -70,6 +70,9 @@ ccp_add_library(Blue SHARED
     src/BlueSysInfo.mm
     src/Accumulator/PercentileAccumulator.cpp
     src/Accumulator/PercentileAccumulator_Blue.cpp
+    src/AllReferences.cpp
+    src/AllReferences.h
+    src/AllReferences_Blue.cpp
     src/autoversion.h
     src/BackgroundReader.cpp
     src/BackgroundReader.h
@@ -310,7 +313,7 @@ target_compile_definitions(Blue
 if(APPLE)
     enable_language(OBJCXX)
     target_compile_definitions(Blue PRIVATE PORTING_TO_LINUX NO_CARBONIO)
-    target_link_libraries(Blue PRIVATE "-framework Foundation -framework IOKit -framework AppKit")
+    target_link_libraries(Blue PRIVATE "-framework SystemConfiguration -framework Foundation -framework IOKit -framework AppKit")
 endif()
 
 target_link_libraries(Blue
