@@ -35,7 +35,6 @@
 #if CCP_STACKLESS
 #include "BitPacker.h"
 #include "BlueNet.h"
-#include "BlueNetTypes.h"
 #include "BluePyCpp.h"
 #include <stacklessio_api.h>
 #endif

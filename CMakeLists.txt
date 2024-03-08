@@ -290,7 +290,6 @@ target_sources(Blue PRIVATE
     include/BlueFileUtil.h
     include/BlueMain.h
     include/BlueNet.h
-    include/BlueNetTypes.h
     include/DataStructs.h
     include/IBlueObjectRecycler.h
     include/IBlueResFileSystem.h
