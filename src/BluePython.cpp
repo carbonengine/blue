@@ -251,12 +251,6 @@ bool BluePyOS::InitBasicModuleSupport()
 #endif
 	auto stacklessIoModule = PyInit_stacklessio();
 
-	auto slsocketModule = PyDict_GetItemString( sys_modules, "_socket" );
-	if (! slsocketModule ) {
-		slsocketModule = PyInit__slsocket();
-	}
-	auto slselectModule = PyInit_slselect();
-
 	// c-routing support
 	if ( !BeNet->Init( mBlueModule ) ) {
 		return false;
@@ -271,14 +265,6 @@ bool BluePyOS::InitBasicModuleSupport()
     if ( PyDict_SetItemString( sys_modules, "blue.heapq", heapqModule ) != 0 ) {
         return false;
     }
-	if( PyDict_SetItemString( sys_modules, "_slsocket", slsocketModule ) != 0 )
-	{
-		return false;
-	}
-	if( PyDict_SetItemString( sys_modules, "slselect", slselectModule ) != 0 )
-	{
-		return false;
-	}
 #ifndef NO_CARBONIO
 	if( PyDict_SetItemString( sys_modules, "carbonio", carbonIoModule ) != 0 )
 	{
@@ -590,7 +576,6 @@ bool BluePyOS::Startup()
 	// Initialize built-in Python modules
 	struct _inittab ccpBuiltins[] = {
 		{ g_moduleName, CCP_CONCATENATE( PyInit_blue, CCP_BUILD_FLAVOR ) },
-		{ "_socket", PyInit__slsocket },
 		{ nullptr, nullptr, }
 	};
 	if ( PyImport_ExtendInittab( ccpBuiltins ) == -1 ) {

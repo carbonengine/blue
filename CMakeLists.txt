@@ -248,10 +248,6 @@ ccp_add_library(Blue SHARED
     src/md5.h
     src/RWSpinLock.h
     src/ScopedLocks.h
-    src/slsocketmodule.c
-    src/slsocketmodule.h
-    src/slselectmodule.c
-    src/slsocket.h
     src/stacklessio.cpp
     src/stacklessio_api.h
     src/version.h
@@ -259,9 +255,7 @@ ccp_add_library(Blue SHARED
     src/win32.h
 )
 
-if (APPLE)
-    target_sources(Blue PRIVATE src/slsocket_posix.cpp)
-elseif (WIN32)
+if (WIN32)
     target_sources(Blue PRIVATE
         src/CarbonIO/api.cpp
         src/CarbonIO/api.h
@@ -272,16 +266,9 @@ elseif (WIN32)
         src/CarbonIO/ssl_pipe.h
         src/CarbonIO/stats.cpp
         src/CarbonIO/stats.h
-        src/slsocket.cpp
     )
 endif()
 
-# These files don't play nicely with PCH, partially because they are C and not C++, so let's exclude them from
-# using PCH until such a time that they are converted to C++
-set_source_files_properties(
-    src/slsocketmodule.c
-    src/slselectmodule.c
-    PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
 
 target_sources(Blue PRIVATE
     include/Base64.h

@@ -21,7 +21,6 @@ Description: implementation of IO Completion Ports for stackless
 #include <zlib.h>
 
 #include "ssl_pipe.h"
-#include "slsocketmodule.h"
 
 #include <SimpleLog.h>
 
@@ -58,14 +57,9 @@ extern "C" void ciolog( const char* format, ... )
 	LeaveCriticalSection( &m_logLock );
 #endif
 }
-
-extern "C" void socket_set_extra_error_info( PyObject *o );
-extern "C" PyObject* socket_set_error( int error );
 //------------------------------------------------------------------------------
 void CarbonIO::setPyError( const char* msg, int err /*=0*/ )
 {
-	socket_set_extra_error_info( PyUnicode_FromString(msg) );
-	socket_set_error( err ? err : WSAGetLastError() );
 	if ( err )
 	{
 		WSASetLastError( err );
@@ -1323,6 +1317,84 @@ bool CarbonIO::sendPacketEx( SOCKET fd, SPacket *packet, bool GILOwned )
 	DEC_COMPLETION_REF( completion );
 
 	return result;
+}
+
+/* threadsafe helper functions to create local copies of hostent structures */
+void socket_hostent_free(struct hostent *e)
+{
+	int i;
+	if (e == NULL || e == (struct hostent*)-1)
+		return;
+	free(e->h_name);
+	if (e->h_aliases) {
+		for(i=0; e->h_aliases[i]; i++)
+			free(e->h_aliases[i]);
+		free(e->h_aliases);
+	}
+	if (e->h_addr_list) {
+		for(i=0; e->h_addr_list[i]; i++)
+			free(e->h_addr_list[i]);
+		free(e->h_addr_list);
+	}
+	free(e);
+}
+
+struct hostent *socket_hostent_dup(const struct hostent *e)
+{
+	int i;
+	struct hostent *r;
+	if (e == NULL)
+		return NULL; /* pass error results through */
+	/* use malloc directly since it is threadsafe.
+	 * We malloc directly for each alias and address instead of trying
+	 * to be clever with some large block somewhere.  Simplicity over
+	 * efficiency.
+	 */
+	r = (struct hostent*)malloc(sizeof(struct hostent));
+	if (!r)
+		return 0;
+	memset(r, 0, sizeof(struct hostent));
+	r->h_name = strdup(e->h_name);
+	if (!r->h_name)
+		goto FAIL;
+
+	for(i=0; e->h_aliases[i]; i++)
+		;
+	r->h_aliases = (char**)malloc((i+1)*sizeof(char*));
+	if (!r->h_aliases)
+		goto FAIL;
+	r->h_aliases[i] = NULL;
+	for(i=0; e->h_aliases[i]; i++) {
+		r->h_aliases[i] = strdup(e->h_aliases[i]);
+		if (!r->h_aliases[i])
+			goto FAIL;
+	}
+
+	r->h_addrtype = e->h_addrtype;
+	r->h_length = e->h_length;
+
+	for(i=0; e->h_addr_list[i]; i++)
+		;
+	r->h_addr_list = (char**)malloc((i+1)*sizeof(char*));
+	if (!r->h_addr_list)
+		goto FAIL;
+	r->h_addr_list[i] = NULL;
+	for(i=0; e->h_addr_list[i]; i++) {
+		r->h_addr_list[i]  = (char*)malloc(e->h_length);
+		if (!r->h_addr_list[i])
+			goto FAIL;
+		memcpy(r->h_addr_list[i], e->h_addr_list[i], e->h_length);
+	}
+
+	return r;
+	FAIL:
+		socket_hostent_free(r);
+#ifdef _WIN32
+	WSASetLastError(WSAENOBUFS);
+#else
+	errno = ENOBUFS;
+#endif
+	return 0;
 }
 
 //------------------------------------------------------------------------------
