@@ -1197,16 +1197,8 @@ static PyMethodDef stacklessio_extentions[] = {
 	{NULL,NULL}     //sentinel
 };
 
-#ifdef USE_ASYNC_FILE
-extern PyTypeObject PyAsyncFile_Type;
-#endif
 PyObject* PyInit_stacklessio(void)
 {
-#ifdef USE_ASYNC_FILE
-	if (PyType_Ready(&PyAsyncFile_Type) < 0)
-		return;
-#endif
-
 	/* Create the module and add the functions */
 	static struct PyModuleDef moduleDef {
 		PyModuleDef_HEAD_INIT,
@@ -1222,11 +1214,6 @@ PyObject* PyInit_stacklessio(void)
 		return nullptr;
 	}
 
-#ifdef USE_ASYNC_FILE
-	if (PyModule_AddObject(module, "asyncfile", (PyObject*)&PyAsyncFile_Type))
-		return;
-	Py_INCREF(&PyAsyncFile_Type);
-#endif
 
 	return module;
 }
