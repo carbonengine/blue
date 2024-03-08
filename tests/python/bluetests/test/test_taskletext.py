@@ -22,6 +22,14 @@ class TestCallable:
         self.kwargs = kwargs
 
 
+class RaisingCallable:
+    def __init__(self, exception):
+        self._exc = exception
+
+    def __call__(self, *args, **kwargs):
+        raise self._exc
+
+
 class TestTaskletExt(unittest.TestCase):
     def test_context_is_set(self):
         t = TaskletExt(CONTEXT)
@@ -117,3 +125,17 @@ class TestTaskletExtWithCallable(unittest.TestCase):
             blue.synchro.Yield()
         self.assertTupleEqual(args, callable.args)
         self.assertDictEqual(kwargs, callable.kwargs)
+
+    def test_set_exception_notification_handler(self):
+        callable = RaisingCallable(RuntimeError("Something bad happened"))
+
+        def handler(_):
+            handler.called = True
+        handler.called = False
+        TaskletExt.SetExceptionHandler(handler)
+
+        t = TaskletExt(CONTEXT, callable)
+        t()
+        while t.scheduled:
+            blue.synchro.Yield()
+        self.assertTrue(handler.called)

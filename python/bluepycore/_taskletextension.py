@@ -26,6 +26,7 @@ def _noop(*args, **kwargs):
 
 
 class TaskletExt(stackless.tasklet):
+    _exception_handler = logger.exception
     __slots__ = [
         "context", "localStorage", "storedContext", 'startTime',
         "endTime", 'runTime', 'tasklet_id', 'origin_traceback', 'highlighted',
@@ -63,7 +64,7 @@ class TaskletExt(stackless.tasklet):
                     except SystemExit as e:
                         logger.info("system %s exiting with %r" % (stackless.getcurrent(), e))
                     except Exception:
-                        logger.exception("Unhandled exception in %r" % stackless.getcurrent())
+                        TaskletExt._exception_handler("Unhandled exception in %r" % stackless.getcurrent())
                     return None  # Don't allow uncaught exceptions upwards.
                 except Exception:
                     # Problem in exception handling.  Use traceback module.
@@ -72,6 +73,21 @@ class TaskletExt(stackless.tasklet):
                     blue.pyos.taskletTimer.ReturnFromTasklet(oldtimer)
                     current.endTime = blue.os.GetWallclockTimeNow()
         return CallWrapper
+
+    @staticmethod
+    def SetExceptionHandler(callback):
+        """
+        Set the exception handler callback for when
+        an exception is raised within the tasklet.
+        The callback should accept one parameter
+        of type 'str'.
+
+        :params callback: The callback to call when an exception occurs.
+        :type callback: callable
+        """
+        if not callable(callback):
+            raise TypeError("Callback not callable")
+        TaskletExt._exception_handler = callback
 
     def __init__(self, context, method=None, stackless_tracing_enabled=True):
         if method is not None:
