@@ -37,9 +37,6 @@
 #if CCP_STACKLESS
 #include "BlueNet.h"
 #include "stacklessio_api.h"
-#ifndef NO_CARBONIO
-#include "CarbonIO/CarbonIO.h"
-#endif
 #endif
 
 #include "ScopedBlockTrap.h"
@@ -246,9 +243,6 @@ bool BluePyOS::InitBasicModuleSupport()
 	PyObject* sys_modules = PyImport_GetModuleDict();
 
 #if CCP_STACKLESS
-#ifndef NO_CARBONIO
-	auto carbonIoModule = PyInit_carbonio();
-#endif
 	auto stacklessIoModule = PyInit_stacklessio();
 
 	// c-routing support
@@ -265,12 +259,6 @@ bool BluePyOS::InitBasicModuleSupport()
     if ( PyDict_SetItemString( sys_modules, "blue.heapq", heapqModule ) != 0 ) {
         return false;
     }
-#ifndef NO_CARBONIO
-	if( PyDict_SetItemString( sys_modules, "carbonio", carbonIoModule ) != 0 )
-	{
-		return false;
-	}
-#endif
 	if( PyDict_SetItemString( sys_modules, "stacklessio", stacklessIoModule ) != 0 )
 	{
 		return false;
