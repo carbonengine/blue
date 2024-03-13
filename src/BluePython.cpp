@@ -22,6 +22,7 @@
 #include "BlueClipboard.h"
 #include "errormessage.h"
 #include "PyMemory.h"
+#include "SchedulerCAPI.h"
 
 #if _WIN32
 #include "win32.h"
@@ -135,12 +136,10 @@ static int OnTaskletSwitch(PyTaskletObject *from, PyTaskletObject *to)
 
 //--------------------------------------------------------------------
 BluePyOS::BluePyOS(IRoot* lockobj) :
-#if CCP_STACKLESS
 	mSynchro( nullptr ),
 	mPySynchro( nullptr ),
 	mThreads( "BluePyOS/mThreads" ),
 	mScheduler(0.25), //initialize to min 4 fps
-#endif
 	mMarkupZonesInPython(false),
 	mExceptionHandler( nullptr ),
 	PARENTLOCK( mCpuUsage ),
@@ -161,11 +160,11 @@ BluePyOS::BluePyOS(IRoot* lockobj) :
 	//default value for optimize
 	mOptimizeFlag = -1;
 
-#if CCP_STACKLESS
-	//simple tasklet timing
-    mLastSwitchTime = CcpGetTimestamp();
-	mSwitchTimePeriod = 1.0/double( CcpGetTimestampFrequency() );
-#endif
+	//Context hooks:
+	mContextHooks = PyList_New(0);
+	//attribute strings
+	mstoredContext_str = BluePy(PyUnicode_InternFromString("storedContext"));
+	mrunTime_str = BluePy(PyUnicode_InternFromString("runTime"));
 }
 
 
@@ -262,7 +261,6 @@ bool BluePyOS::InitBasicModuleSupport()
 		return false;
 	}
 
-	// Insert synchro
 	mSynchro = CCP_NEW( "BluePyOS/mSyncro" ) Synchro;
 	mPySynchro = mSynchro;
 	PyDict_SetItemString(dict, "synchro", mSynchro);
@@ -333,41 +331,6 @@ bool BluePyOS::FiniBasicModuleSupport()
 	mBlueModule = 0;
 	return true;
 }
-
-//--------------------------------------------------------------------
-bool BluePyOS::InitIncludePaths( std::wstring& path )
-{
-	std::vector<std::wstring> zips;
-
-	if( BeOS->ShouldVerifyManifest() )
-	{
-		directives_t directives;
-
-		if( !VerifyManifestAndGatherDirectives( directives ) )
-		{
-			return false;
-		}
-
-		ProcessLibDirectives( directives, zips );
-	}
-
-	//build pathlist
-	std::vector<std::wstring> pathlist = zips;
-
-	//add other paths
-	if( !zips.size() )
-	{
-		BePaths->GetExpandedSearchPaths( "lib", pathlist );
-	}
-
-	// BIN path is required.
-	BePaths->GetExpandedSearchPaths( "bin", pathlist );
-
-	BuildConcatenatedPathFromPathlist( pathlist, path );
-
-	return true;
-}
-
 
 //--------------------------------------------------------------------
 BluePythonObject* BluePyOS::WrapBlueObject(
@@ -463,167 +426,35 @@ static PyMethodDef clockthis[] = {
 #endif
 
 
-extern "C" PyObject* CCP_CONCATENATE( PyInit_blue, CCP_BUILD_FLAVOR )( void );
-
+void BluePyOS::EnsureAssertionsEnabled()
+{
+#ifdef _MSC_VER
+	//Python turns off assertions for the C runtime!  Undo that
+	_CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_WNDW);
+#endif
+}
 
 bool BluePyOS::Startup()
 {
 	if (mInit)
 		return true;
 
-	mSliceWarning = 200;
-	mBeNiceSlice = 15;
-    mPerformanceUpdateFrequency = 100000000;
+	BeTimer timer("BluePyOS::Startup()");
+
+	//simple tasklet timing
+	mLastSwitchTime = CcpGetTimestamp();
+	mSwitchTimePeriod = 1.0/double( CcpGetTimestampFrequency() );
 
 	mLastThreadCpuUsage = mLastProcessCpuUsage = 0;
 	mLastThreadKernelUsage = mLastProcessKernelUsage = 0;
-
-	BeTimer timer("BluePyOS::Startup()");
+	mLastCpuUpdate = 0;
 
 	mInterpreterMode = BeOS->HasStartupArg( L"py" );
 
-	mExceptionHandler = NULL;
+	this->EnsureAssertionsEnabled();
 
-#if CCP_STACKLESS
-	if( BeOS->HasStartupArg( L"telemetryMarkup" ) )
-	{
-		mMarkupZonesInPython = true;
-	}
-
-	// We always disable the user site directory - even in interpreter mode.
-	// The reason for this is that any C extension in the user's site directory
-	// won't be compatible with us in any case. Additionally, we seem to have an
-	// issue treating the corresponding configuration flag correctly, so we cannot
-	// just add `-s` or set `PYTHONNOUSERSITE=1` in the pythonInterpreter scipts.
-	Py_NoUserSiteDirectory++;
-
-    // Guard memory hook installation for the event that blue is imported in a vanilla python interpreter
-    // TODO Fix blue startup sequence so that module import doesn't try to bootstrap the interpreter!
-    if ( ! Py_IsInitialized() )
-    {
-        // TODO this doesn't seem to work well when mixing Python C extensions
-        // that are built in debug vs. non-debug...
-        CCP_LOG( "Installing Python memory allocators" );
-        InstallPythonMemoryHooks();
-    }
-
-	PyPreConfig preConfig;
-	PyConfig config;
-	PyStatus status;
-
-	CCP_LOG( "Pre-initializing Python" );
-	if ( !mInterpreterMode )
-	{
-		PyPreConfig_InitIsolatedConfig( &preConfig );
-	} else {
-		PyPreConfig_InitPythonConfig( &preConfig );
-	}
-
-	status = Py_PreInitialize( &preConfig );
-	CCP_LOG( "Pre-init reported exit code %d and message %s", status.exitcode, status.err_msg );
-
-	CCP_LOG( "Initializing Python" );
-	if ( !mInterpreterMode )
-	{
-		// initialize python engine
-		//		Py_DebugFlag = 0; //debugs python , outputs heaps of gunk
-		//		Py_VerboseFlag = 0; //verbosity about module loading
-		//
-		//		// Set the optimize flag: one = remove asserts, two = also remove docstrings
-		//		// initialize to 0 if it wasn't set, meaning same as regular python: asserts
-		//		// and docstrings are kept.
-		//		if (mOptimizeFlag < 0)
-		//			mOptimizeFlag = 0;
-		//		Py_OptimizeFlag += mOptimizeFlag;
-		//
-		//		Py_NoSiteFlag++; //Don't attempt evil autload of 'site' module.
-		//		Py_IgnoreEnvironmentFlag++; //ignore PYTHONPATH and like
-		//		Py_DontWriteBytecodeFlag++; // Do not read or write .pyc ro .pyo files
-		PyConfig_InitIsolatedConfig( &config );
-        config.write_bytecode = 0;
-        config.optimization_level = 2;
-        config.site_import = 0;
-    } else {
-		PyConfig_InitPythonConfig( &config );
-		// need to disable user site directory because it may contain C extensions compiled with a different compiler. Alternately: we could provide our own site directory, but what's the point?
-		config.user_site_directory = 0;
-	}
-	CCP_LOG( "Init reported exit code %d and message %s", status.exitcode, status.err_msg );
-
-    CCP_LOG( "Adding warn option ");
-	status = PyWideStringList_Append( &(config.warnoptions), L"d" );
-	CCP_LOG( "Warn option reported exit code %d and message %s", status.exitcode, status.err_msg );
-	CCP_LOG( "Setting argv");
-	status = PyConfig_SetArgv( &config, 0, nullptr );
-	CCP_LOG( "SetArgv reported exit code %d and message %s", status.exitcode, status.err_msg );
-
-	static std::wstring path;
-	if (!InitIncludePaths(path)) {
-		CCP_LOGERR( "InitSysIncludePaths() failed" );
-		return false;
-	}
-
-    std::wstringstream pathHelper(path);
-#if _WIN32
-    for (std::wstring tmp; std::getline(pathHelper, tmp, L';');)
-#elif __APPLE__
-	for (std::wstring tmp; std::getline(pathHelper, tmp, L':');)
-#else
-#error Unknown env var separator on this platform
-#endif
-    {
-        status = PyWideStringList_Append( &(config.module_search_paths), tmp.c_str() );
-        CCP_LOG( "Appending %S to sys.path candidate list (error %d: %s)", tmp.c_str(), status.exitcode, status.err_msg );
-    }
-    config.module_search_paths_set = 1;
-
-    // We want to avoid cluttering the Perforce workspace with `__pycache__` folders. Therefore, write any compiled
-    // bytecode to our usual cache location instead.
-	auto cachePath = BePaths->ResolvePathForWritingW(L"cache:/__pycache__");
-	if ( ! cachePath.empty() ) {
-		config.pycache_prefix = cachePath.data();
-		CCP_LOG( "Configured __pycache__ location to be %ls", config.pycache_prefix );
-	} else {
-		CCP_LOG( "Not configuring __pycache__ because `cache:` prefix not registered" );
-	}
-
-	// Initialize built-in Python modules
-	struct _inittab ccpBuiltins[] = {
-		{ g_moduleName, CCP_CONCATENATE( PyInit_blue, CCP_BUILD_FLAVOR ) },
-		{ "_socket", PyInit__slsocket },
-		{ nullptr, nullptr, }
-	};
-	if ( PyImport_ExtendInittab( ccpBuiltins ) == -1 ) {
-		CCP_LOGERR("Failed extending inittab with CCP builtins");
-		return false;
-	}
-
-	CCP_LOG( "Initializing Python" );
-	status = Py_InitializeFromConfig( &config );
-
-	if (!Py_IsInitialized())
-	{
-        PyFlushError( "Failed initializing Python" );
-        CCP_LOGERR( "Py_Initialize() failed with error %d: %s", status.exitcode, status.err_msg );
-		return false;
-	}
-
-	CCP_LOG( "Importing Stackless" );
-	if (!PyImport_ImportModule("stackless")) {
-		PyFlushError( "Failed importing Stackless" );
-		CCP_LOGERR( "Importing stackless failed" );
-		return false;
-	}
-
-#ifdef _MSC_VER
-	//Python turns off assertions for the C runtime!  Undo that
-	_CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_WNDW);
-#endif
-
-	// Now, python has been started!
 	for (unsigned int i = 0; i < sizeof TIMERS / sizeof *TIMERS; i++)
 		TIMERS[i].mContext = PyUnicode_InternFromString(TIMERS[i].mName);
-
 
 	// insert clockthis utility functions
 	for (PyMethodDef* md = clockthis; md->ml_meth != NULL; md++)
@@ -634,25 +465,11 @@ bool BluePyOS::Startup()
 		}
 		Py_DECREF(fn);
 	}
-#endif
-
-	mLastCpuUpdate = 0;
 
 	for (unsigned int i = 0; i < sizeof TASKLETS / sizeof TASKLETS[0]; i++)
 	{
 		TASKLETS[i].mContext = PyUnicode_InternFromString(TASKLETS[i].mName);
 	}
-
-
-	//Context hooks:
-	mContextHooks = PyList_New(0);
-
-#if CCP_STACKLESS
-	//attribute strings
-	mstoredContext_str = BluePy(PyUnicode_InternFromString("storedContext"));
-	mrunTime_str = BluePy(PyUnicode_InternFromString("runTime"));
-#endif
-
 
 	CCP_LOG( "Init basic module support" );
 	if (!InitBasicModuleSupport())
@@ -663,7 +480,6 @@ bool BluePyOS::Startup()
 		return false;
 	}
 
-#if CCP_STACKLESS
     if ( !mTTimer.InitPythonObjects() ) {
         CCP_LOGERR( "Failed initalizing TaskletTimers" );
         PyFlushError( nullptr );
@@ -671,8 +487,7 @@ bool BluePyOS::Startup()
     }
     // Reset the tasklet counter (can only do this after pyinit and module support, we register modules and types)
 	mTTimer.Reset();
-	PyStackless_SetScheduleFastcallback(::OnTaskletSwitch);
-#endif
+	SchedulerAPI()->PyScheduler_SetScheduleFastCallback( ::OnTaskletSwitch );
 
 	mInit = true;
 	return true;
@@ -723,7 +538,7 @@ void BluePyOS::Shutdown(int level)
 
 	// And the stackless fastcallback stuff
 #if CCP_STACKLESS
-	PyStackless_SetScheduleFastcallback(0);
+	SchedulerAPI()->PyScheduler_SetScheduleFastCallback( 0 );
 	Py_XDECREF(mContextHooks);
 	mrunTime_str.Release();
 	mstoredContext_str.Release();
@@ -763,7 +578,7 @@ static PyObject *GetContext(PyTaskletObject *task)
 {
 	if (!task)
 		return TASKLETS[VOODOOTASKLET].mContext;
-	if(PyTasklet_IsMain(task))
+	if(SchedulerAPI()->PyTasklet_IsMain(task))
 		return TASKLETS[MAINTASKLET].mContext;
 	PyObject *r = PyObject_GetAttrString((PyObject*)task, "storedContext");
 	Py_XDECREF(r);
@@ -806,7 +621,7 @@ void BluePyOS::OnTaskletSwitch(PyObject* _from, PyObject* _to)
 	PyObject *prev = mTTimer.SwitchStack((intptr_t)to);
 
 	//Store the context we came from in our tasklet extension object.
-	bool fromNotMain = from && !PyTasklet_IsMain(from);
+	bool fromNotMain = from && !SchedulerAPI()->PyTasklet_IsMain(from);
 	if (fromNotMain && PyObject_SetAttr((PyObject*)from, mstoredContext_str, prev) < 0)
 		PyErr_Clear();
 	Py_DECREF(prev);
@@ -900,13 +715,13 @@ int BluePyOS::	PumpPython(bool quit)
 			PyFlushError("PumpPython::Scheduler");
 		}
 
-		if( PyStackless_GetRunCount() > 1 )
+		if( SchedulerAPI()->PyScheduler_GetRunCount() > 1 )
 		{
 			// Not all tasklets got a chance to run
 			BeOS->NextScheduledEvent( 0 );
 		}
 
-		CCP_STATS_SET( runnablesLeftOver, PyStackless_GetRunCount() - 1 );
+		CCP_STATS_SET( runnablesLeftOver, SchedulerAPI()->PyScheduler_GetRunCount() - 1 );
 	}
 
 	LogCpuUsageAndOtherStats();
@@ -1125,9 +940,9 @@ bool BluePyOS::CanYield()
 {
 #if CCP_STACKLESS
 
-	PyTaskletObject *current = (PyTaskletObject *)PyStackless_GetCurrent();
-	int isMain = PyTasklet_IsMain( current );
-	int blockTrap = PyTasklet_GetBlockTrap( current );
+	PyTaskletObject *current = (PyTaskletObject *)SchedulerAPI()->PyScheduler_GetCurrent();
+	int isMain = SchedulerAPI()->PyTasklet_IsMain( current );
+	int blockTrap = SchedulerAPI()->PyTasklet_GetBlockTrap( current );
 	Py_DECREF(current);
 
 	if( isMain )
@@ -1225,8 +1040,10 @@ PyObject* BluePyOS::CreateTasklet(
 		int callerline;
 		PyFrameObject* callframe = PyEval_GetFrame();
 		if (callframe && PyFrame_Check(callframe)) {
-			caller = PyUnicode_AsUTF8(callframe->f_code->co_filename);
-			callerline = callframe->f_lineno;
+			auto frameCode = PyFrame_GetCode( callframe );
+			caller = PyUnicode_AsUTF8( frameCode->co_filename );
+			callerline = PyFrame_GetLineNumber( callframe );
+			Py_DECREF( frameCode );
 		} else {
 			caller = "CFrame";
 			callerline = 0;
@@ -1282,7 +1099,7 @@ PyObject* BluePyOS::CreateTaskletImpl(
 	{
 		return nullptr;
 	}
-	if( args && meth && PyTasklet_Setup( (PyTaskletObject*)result.o, args, kw ) < 0 )
+	if( args && meth && SchedulerAPI()->PyTasklet_Setup( (PyTaskletObject*)result.o, args, kw ) < 0 )
 	{
 		return nullptr;
 	}
@@ -1306,10 +1123,10 @@ PyObject *BluePyOS::CallPyObjectWithTrap(
 
 	//capture old block_trap, set it
 	int oldTrap;
-	BluePy current(PyStackless_GetCurrent());
+	BluePy current( SchedulerAPI()->PyScheduler_GetCurrent() );
 	if (current) {
-		oldTrap = PyTasklet_GetBlockTrap((PyTaskletObject*)(PyObject*)current);
-		PyTasklet_SetBlockTrap((PyTaskletObject*)(PyObject*)current, 1);
+		oldTrap = SchedulerAPI()->PyTasklet_GetBlockTrap((PyTaskletObject*)(PyObject*)current);
+		SchedulerAPI()->PyTasklet_SetBlockTrap((PyTaskletObject*)(PyObject*)current, 1);
 	}
 
 	BluePy ret;
@@ -1321,7 +1138,7 @@ PyObject *BluePyOS::CallPyObjectWithTrap(
 
 	//restore block trap
 	if (current)
-		PyTasklet_SetBlockTrap((PyTaskletObject*)(PyObject*)current, oldTrap);
+		SchedulerAPI()->PyTasklet_SetBlockTrap((PyTaskletObject*)(PyObject*)current, oldTrap);
 	return ret.Detach();
 
 #else
@@ -1757,10 +1574,10 @@ PyObject* BluePyOS::PyBeNice(PyObject* args)
 	//convert to seconds, which is what GetElapsed returns
 	timeSlice *= 0.001f;
 
-	PyTaskletObject* tasklet = (PyTaskletObject*)PyStackless_GetCurrent();
+	PyTaskletObject* tasklet = (PyTaskletObject*)SchedulerAPI()->PyScheduler_GetCurrent();
 	if (!tasklet)
 		return 0;
-	if (PyTasklet_IsMain(tasklet) || PyTasklet_GetBlockTrap(tasklet)) {
+	if (SchedulerAPI()->PyTasklet_IsMain(tasklet) || SchedulerAPI()->PyTasklet_GetBlockTrap(tasklet)) {
 		//silently do nothing.  This allows any code to be interspersed with benice comments.
 		Py_DECREF(tasklet);
 		Py_INCREF(Py_None);
@@ -1825,10 +1642,10 @@ PyObject * BluePyOS::CallMethodWithTrap(PyObject *target, const char *method, co
 
 	//capture old block_trap, set it
 	int oldTrap;
-	BluePy current(PyStackless_GetCurrent());
+	BluePy current( SchedulerAPI()->PyScheduler_GetCurrent() );
 	if (current) {
-		oldTrap = PyTasklet_GetBlockTrap((PyTaskletObject*)(PyObject*)current);
-		PyTasklet_SetBlockTrap((PyTaskletObject*)(PyObject*)current, 1);
+		oldTrap = SchedulerAPI()->PyTasklet_GetBlockTrap((PyTaskletObject*)(PyObject*)current);
+		SchedulerAPI()->PyTasklet_SetBlockTrap((PyTaskletObject*)(PyObject*)current, 1);
 	}
 	BluePy ret;
 	if (ctxt) {
@@ -1846,7 +1663,7 @@ PyObject * BluePyOS::CallMethodWithTrap(PyObject *target, const char *method, co
 
 	//restore block trap
 	if (current)
-		PyTasklet_SetBlockTrap((PyTaskletObject*)(PyObject*)current, oldTrap);
+		SchedulerAPI()->PyTasklet_SetBlockTrap((PyTaskletObject*)(PyObject*)current, oldTrap);
 
 	return ret.Detach();
 
@@ -1967,88 +1784,6 @@ void BluePyOS::LogCpuUsageAndOtherStats()
 #endif
 }
 
-void BluePyOS::ShowMessageBoxForVerificationFailure( const std::string& errmsg )
-{
-	std::string msg = TranslateErrorMessage( "Your EVE client installation may have modified, damaged or corrupt files.", IDS_VERIFYFAIL_M );
-	std::string caption = TranslateErrorMessage( "Verification Failure", IDS_VERIFYFAIL_C );
-
-	msg += "\n\n" + errmsg;
-	DisplayErrorMessageBox( caption.c_str(), msg.c_str() );
-}
-
-bool BluePyOS::VerifyManifestAndGatherDirectives( directives_t& directives )
-{
-	//We always read our manifest.  We have a null manifest that we try first for kicks.
-	if( !BeIsSuccess( VerifyManifestFile( "root:/manifest.dat", directives ) ) )
-	{
-		// Try again with a different path.
-		Be::Result<std::string> result = VerifyManifestFile( "bin:/manifest.dat", directives );
-		if( !BeIsSuccess( result ) )
-		{
-			BeOS->SetError( BEFLUSH );
-			ShowMessageBoxForVerificationFailure( result.value );
-			return false;
-		}
-	}
-
-	return true;
-}
-
-void BluePyOS::ProcessLibDirectives( const directives_t& directives, std::vector<std::wstring>& zips )
-{
-	//now, process lib directives from the file
-	mPackaged = false;
-
-	for( const std::string& directive : directives )
-	{
-		if( directive.find( "lib:" ) == 0 )
-		{
-			mPackaged = true;
-			CCP_LOG_CH( s_chPy, "Directive %s", directive.c_str() );
-			zips.push_back( BePaths->ResolvePathW( std::wstring( std::begin( directive ) + 4, std::end( directive ) ) ) );
-		}
-	}
-}
-
-void BluePyOS::BuildConcatenatedPathFromPathlist( const std::vector<std::wstring>& pathlist, std::wstring& path )
-{
-#ifdef _WIN32
-	const wchar_t separator = L';';
-#else
-    const wchar_t separator = L':';
-#endif
-	path.clear();
-
-	// We need to obey the environment settings when running in interpreter mode.
-	// NB: this is only necessary because our Stackless fork overrides the way sys.path is bootstrapped,
-	// and as such we kind of need to re-implement a part of `calculate_path()` in stackless' getpathp.c.
-	if( mInterpreterMode )
-	{
-        // in case you're wondering about the maximum length of an environment variable on Windows:
-        // https://devblogs.microsoft.com/oldnewthing/20100203-00/?p=15083
-        // And for posix, see "Limits on size of arguments and environment here:
-        // https://man7.org/linux/man-pages/man2/execve.2.html
-        wchar_t pythonpath[4096] = {'\0'};
-        auto pythonpath_env = std::getenv("PYTHONPATH");
-        if (pythonpath_env) {
-            mbstowcs(pythonpath, pythonpath_env, sizeof(pythonpath)/sizeof(wchar_t));
-            path = pythonpath;
-            path += separator;
-        }
-	}
-
-	for(size_t i = 0; i<pathlist.size(); i++) {
-		std::wstring elem = pathlist[i];
-		while (elem[elem.size()-1] == L'/' || elem[elem.size()-1] == L'\\')
-			elem.erase(elem.size()-1);
-		if (!elem.size())
-			continue;
-		if (i)
-			path += separator;
-		path += elem;
-	}
-}
-
 #ifdef _WIN32
 //--------------------------------------------------------------------
 extern "C" BOOL WINAPI GetProcessMemoryInfo(
@@ -2084,6 +1819,11 @@ PyObject* LoadPythonExtension( PyObject* self, PyObject* args )
 	{
 		return nullptr;
 	}
+
+	return BlueLoadPythonExtension( name );
+}
+
+PyObject* BlueLoadPythonExtension(const char* name) {
 
 // accommodate for release builds, which use `-DCCP_BUILD_FLAVOR=`, e.g. macro without a value
 #if ~(~CCP_BUILD_FLAVOR + 0) == 0 && ~(~CCP_BUILD_FLAVOR + 1) == 1

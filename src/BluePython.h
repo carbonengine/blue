@@ -118,7 +118,6 @@ public:
 
 	bool InitIncludePaths( std::wstring & path );
 
-	void BuildConcatenatedPathFromPathlist( const std::vector<std::wstring>& pathlist, std::wstring& path );
 
 	void LogCpuUsageAndOtherStats();
 
@@ -207,6 +206,9 @@ public:
 private:
 	void HandleException( const char* message );
 
+//	startup functions
+	static void EnsureAssertionsEnabled();
+
 public:
 	EXPOSE_TO_BLUE();
 
@@ -284,6 +286,14 @@ public:
 	bool IsPackaged() override
 	{
 		return mPackaged;
+	}
+	void SetPackaged( bool packaged ) override
+	{
+		mPackaged = packaged;
+	}
+	void SetMarkupZonesInPython(bool markupZonesInPython) override
+	{
+		mMarkupZonesInPython = markupZonesInPython;
 	}
 	bool IsInterpreterMode() override
 	{
@@ -402,6 +412,7 @@ static void PureVirtualCall()
 }
 MAP_FUNCTION_AND_WRAP( "PureVirtualCall", PureVirtualCall, "Induces a C++ pure virtual call that is supposed to crash the process." );
 
+extern "C" BLUEIMPORT PyObject* BlueLoadPythonExtension( const char* name );
 
 PyObject* LoadPythonExtension( PyObject*, PyObject* args );
 MAP_FUNCTION(

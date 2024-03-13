@@ -11,6 +11,7 @@
 #include "stacklessio_api.h"
 #include "CarbonIO/dll_exports.h"
 #include "CarbonIO/protocol.h"
+#include "SchedulerCAPI.h"
 
 #ifdef __APPLE__
 #include <dispatch/dispatch.h>  // for timeouts and async calls
@@ -354,9 +355,9 @@ void IORequest::WaitForCompletion()
 
 	//create the channel on demand.  It is important that no one has tried to dispatch
 	//us yet.
-	mChannel = PyChannelObjectPtr(Ccp::PyCheck(PyChannel_New(&PyChannel_Type)));
+	mChannel = PyChannelObjectPtr(Ccp::PyCheck(SchedulerAPI()->PyChannel_New(SchedulerAPI()->PyChannelType)));
 	// Wait for the request to be dispatched!
-	PyObjectPtr dummy(PyChannel_Receive(mChannel));
+	PyObjectPtr dummy(SchedulerAPI()->PyChannel_Receive(mChannel));
 	if (!dummy) {
 		PyStacklessIOEventQueue.IncrementTimer("request::Ready::Error",
 				Ccp::GetPerformanceTime() - mSubmitTime);
@@ -416,7 +417,7 @@ int IORequest::QueueDispatch() {
 		return 0;
 	}
 
-	if (!PyChannel_GetBalance(mChannel)) {
+	if (!SchedulerAPI()->PyChannel_GetBalance(mChannel)) {
 		//nobody listening, they were aborted or something worse.
 		Ccp::performance_t time = Ccp::GetPerformanceTime() - mSubmitTime;
 		PyStacklessIOEventQueue.IncrementTimer("request::wakeup::Zombie", time);
@@ -424,8 +425,8 @@ int IORequest::QueueDispatch() {
 	} else {
 		//make certain that we continue execution, i.e. the receiver is only made
 		//runnable at this point.
-		PyChannel_SetPreference(mChannel, 0);
-		if (PyChannel_Send(mChannel, Py_None))
+		SchedulerAPI()->PyChannel_SetPreference(mChannel, 0);
+		if (SchedulerAPI()->PyChannel_Send(mChannel, Py_None))
 			throw Ccp::PyError();
 		return 1;
 	}
@@ -666,7 +667,7 @@ void IOEventQueue::GetStatus(Status &s)
 	//Instead of maintaining complex bookkeeping on the wakeups of sleeping tasklets,
 	//including the possibility that a waiting tasklet may wake up not by a tick but by
 	//an external influence, we just use this here.  A shortcut, ifyou will.
-	s.nRunnable = PyStackless_GetRunCount()-1;
+	s.nRunnable = SchedulerAPI()->PyScheduler_GetRunCount() - 1;
 }
 
 

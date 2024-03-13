@@ -61,6 +61,7 @@ set(PUBLIC_HEADER_FILES_INCLUDE
     include/BluePlatformWin32.h
     include/Rect.h
     include/stacklessio.h
+    include/SchedulerCAPI.h
 )
 
 
@@ -255,6 +256,7 @@ ccp_add_library(Blue SHARED
     src/slsocket.h
     src/stacklessio.cpp
     src/stacklessio_api.h
+    src/schedulerCAPI.cpp
     src/version.h
     src/win32.cpp
     src/win32.h

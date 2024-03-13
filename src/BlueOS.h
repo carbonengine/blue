@@ -29,6 +29,7 @@
 #include "IBluePython.h"
 #include "BlueTime.h"
 #include "WatchdogThread.h"
+#include "manifest.h"
 
 #include <vector>
 #include <list>
@@ -64,8 +65,6 @@ public:
 	typedef TrackableStdVector<TerminationCallback*> TerminationCallbacks;
 	TerminationCallbacks mIndispensableTerminationSteps;
 	void RegisterIndispensableTerminationStep( TerminationCallback* callback ) override;
-
-	ManifestVerification mManifestVerification;
 
 	// error stuff
 	typedef TrackableStdVector<IBlueOS::Error> ErrorLog;
@@ -137,9 +136,16 @@ public:
 	Be::Time mExitTime, mExternalTime;
 	
 	CcpProcessId_t mPID; // Process ID
+
+	bool IsPackaged()
+	{
+		return mPackaged;
+	}
 	
 	// class registration stuff
 private:
+
+	bool mPackaged = false;
 
 	uint64_t m_startupTime;
 	
@@ -246,19 +252,15 @@ public:
 	/////////////////////////////////////////
 	// IBlueOS interface
 
-
 	// Blue OS startup / termination
 	bool Startup(
-		int pyOptimizeVersion,
-		ManifestVerification manifestVerification
+		int pyOptimizeVersion
 		) override;
 
 	bool RunStackless() override;
 
 	void Terminate( int retCode ) override;
 	
-	bool ShouldVerifyManifest() const override;
-
 	// Scheduling and such...
 	void RegisterForTicks(
 		IBlueEvents *cb,
@@ -318,6 +320,10 @@ public:
     
     void ShowErrorMessageBox( const wchar_t* title, const wchar_t* message );
 
+	bool ConstructPathListFromManifest( std::vector<std::wstring>& pathlist, bool verifyManifest ) override;
+	void SetMarkupZonesInPython( bool markupZonesInPython ) override;
+	void GetInitTab( std::vector<_inittab>& tabs ) const override;
+
 private:
     void PumpOSInternal();
     
@@ -325,6 +331,9 @@ private:
 	void TickTickers();
 	void CaptureLogCountsToStats();
 
+	bool VerifyManifestAndGatherDirectives( directives_t& directives );
+	void ShowMessageBoxForVerificationFailure( const std::string& errmsg );
+	void ProcessLibDirectives( const directives_t& directives, std::vector<std::wstring>& zips );
 };
 
 

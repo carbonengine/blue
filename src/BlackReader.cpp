@@ -12,6 +12,7 @@
 #include "IBlueObjectProxy.h"
 #include "IBluePaths.h"
 #include "IBlueOS.h"
+#include "SchedulerCAPI.h"
 
 namespace
 {
@@ -217,7 +218,7 @@ IRoot* BlackReader::CreateObjectHelper( unsigned int objectMarker, IRoot * calli
 	m_errorMessage = "";
 
 #if CCP_STACKLESS
-	PyTaskletObject* current = (PyTaskletObject*)PyScheduler_GetCurrent();
+	PyTaskletObject* current = (PyTaskletObject*)SchedulerAPI()->PyScheduler_GetCurrent();
 	Py_DECREF(current);
 
 	bool taskletCanYield;

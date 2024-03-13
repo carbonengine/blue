@@ -30,7 +30,11 @@ static PyObject* PyOpen( PyObject* self, PyObject* args )
 		return NULL;
 	}
 
-	bool ok = pThis->OpenW( (const wchar_t*)PyUnicode_AsUnicode( filename ), readonly != 0);
+	wchar_t* fileNameWCString = PyUnicode_AsWideCharString( filename, NULL );
+
+	bool ok = pThis->OpenW( fileNameWCString, readonly != 0 );
+
+	PyMem_Free( fileNameWCString );
 
 	return PyBool_FromLong( ok );
 }
@@ -52,7 +56,11 @@ static PyObject* PyOpenAlways( PyObject* self, PyObject* args )
 		return NULL;
 	}
 
-	bool ok = pThis->OpenW( (const wchar_t*)PyUnicode_AsUnicode( filename ), readonly != 0);
+	wchar_t* fileNameWCString = PyUnicode_AsWideCharString( filename, NULL );
+
+	bool ok = pThis->OpenW( fileNameWCString, readonly != 0 );
+
+	PyMem_Free( fileNameWCString );
 
 	if( !ok )
 	{
@@ -80,7 +88,11 @@ static PyObject* PyCreate( PyObject* self, PyObject* args )
 		return NULL;
 	}
 
-	bool ok = pThis->CreateW( (const wchar_t*)PyUnicode_AsUnicode( filename ) );
+	wchar_t* fileNameWCString = PyUnicode_AsWideCharString( filename, NULL );
+
+	bool ok = pThis->CreateW( fileNameWCString );
+
+	PyMem_Free( fileNameWCString );
 
 	return PyLong_FromLong( ok );
 }

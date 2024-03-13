@@ -6,6 +6,7 @@
 #include "IBlueOS.h"
 #include "IBluePython.h"
 #include "ITaskletTimer.h"
+#include "SchedulerCAPI.h"
 
 static CcpLogChannel_t s_ch = CCP_LOG_DEFINE_CHANNEL( "Synchro" );
 
@@ -47,10 +48,11 @@ enum
 //--------------------------------------------------------------------
 Synchro::Synchro()
 {
+	auto schedulerApi = SchedulerAPI();
 	mTickers = PyList_New(0);
 	mTimeSyncs = PyList_New(0);
-	mYielders = PyChannel_New(NULL);
-	PyChannel_SetPreference(mYielders, 0); //slow wakeup, just make it runnable.
+	mYielders = schedulerApi->PyChannel_New(schedulerApi->PyChannelType);
+	schedulerApi->PyChannel_SetPreference(mYielders, 0); //slow wakeup, just make it runnable.
 	mShutdown = false;
 	
 	for (int i = 0; i < sizeof TIMERS / sizeof *TIMERS; i++)
@@ -99,10 +101,10 @@ void Synchro::Shutdown()
 	//ok, now wake them all
 	PyObject *value = 0;
 	if (yielders) {
-		for(int i = PyChannel_GetBalance(yielders);  i<0; i++) {
+		for(int i = SchedulerAPI()->PyChannel_GetBalance(yielders);  i<0; i++) {
 			if (!value)
 				value = PyUnicode_FromString("Synchro is shutting down");
-			int fail = PyChannel_SendException(yielders, PyExc_TaskletExit, value);
+			int fail = SchedulerAPI()->PyChannel_SendException(yielders, *SchedulerAPI()->TaskletExit, value);
 			if (fail)
 				PyOS->PyError();
 		}
@@ -110,20 +112,20 @@ void Synchro::Shutdown()
 	}
 
 	for(SleeperIt it = wallSleepers.begin(); it!= wallSleepers.end(); ++it) {
-		if (PyChannel_GetBalance(it->channel)) {
+		if (SchedulerAPI()->PyChannel_GetBalance(it->channel)) {
 			if (!value)
 				value = PyUnicode_FromString("Synchro is shutting down");
-			int fail = PyChannel_SendException(it->channel, PyExc_TaskletExit, value);
+			int fail = SchedulerAPI()->PyChannel_SendException(it->channel, *SchedulerAPI()->TaskletExit, value);
 			if (fail)
 				PyOS->PyError();
 		}
 	}
 
 	for(SleeperIt it = mSimSleepers.begin(); it!= mSimSleepers.end(); ++it) {
-		if (PyChannel_GetBalance(it->channel)) {
+		if (SchedulerAPI()->PyChannel_GetBalance(it->channel)) {
 			if (!value)
 				value = PyUnicode_FromString("Synchro is shutting down");
-			int fail = PyChannel_SendException(it->channel, PyExc_TaskletExit, value);
+			int fail = SchedulerAPI()->PyChannel_SendException(it->channel, *SchedulerAPI()->TaskletExit, value);
 			if (fail)
 				PyOS->PyError();
 		}
@@ -184,11 +186,11 @@ bool Synchro::Tick()
 				Be::Time nnow = BeOS->GetActualTime();
 				for(unsigned int i = 0; i<sleepers.size(); i++) {
 					Sleeper &s = sleepers[i];
-					int balance = PyChannel_GetBalance(s.channel);
+					int balance = SchedulerAPI()->PyChannel_GetBalance(s.channel);
 					if( balance < 0 )
 					{
 						if (nnow-s.due > 50*10*1000*1000) { //50s
-							PyObject *head = PyChannel_GetQueue(s.channel);
+							PyObject *head = SchedulerAPI()->PyChannel_GetQueue(s.channel);
 							if (head) {
 								BluePy str(PyObject_Str(head));
 								if (str)
@@ -197,7 +199,7 @@ bool Synchro::Tick()
 								Py_DECREF(head);
 							}
 						}
-						int res = PyChannel_Send(s.channel, Py_None);
+						int res = SchedulerAPI()->PyChannel_Send(s.channel, Py_None);
 						if( res )
 						{
 							CCP_LOGWARN( "Send failed" );
@@ -223,8 +225,8 @@ bool Synchro::Tick()
 			if (sleepers.size()) {
 				for(unsigned int i = 0; i<sleepers.size(); i++) {
 					Sleeper &s = sleepers[i];
-					if (PyChannel_GetBalance(s.channel)) {
-						int res = PyChannel_Send(s.channel, Py_None);
+					if (SchedulerAPI()->PyChannel_GetBalance(s.channel)) {
+						int res = SchedulerAPI()->PyChannel_Send(s.channel, Py_None);
 						if (res)
 							PyOS->PyError();
 					}
@@ -257,12 +259,12 @@ bool Synchro::Tick()
 
 	// Resume yielders  Gather those due for wakeup now, don't do it on the
 	// fly to avoid reentrancy.
-	int nYielders = -PyChannel_GetBalance(mYielders); //wake up only those that are here already.
+	int nYielders = - SchedulerAPI()->PyChannel_GetBalance(mYielders); //wake up only those that are here already.
 	if (nYielders>0) {
 		AutoTasklet _at(PyOS->GetTaskletTimer(), TIMERS[TIMER_YIELDERS].mContext);
 		while (nYielders--)
 		{
-			int res = PyChannel_Send(mYielders, Py_None);
+			int res = SchedulerAPI()->PyChannel_Send(mYielders, Py_None);
 			if (res)
 				PyOS->PyError();
 		}
@@ -335,9 +337,9 @@ void Synchro::RebaseSimClock(Be::Time oldTime, Be::Time newTime)
 // go to sleep here, because only the main thread wakes things in synchro up.
 bool Synchro::CatchMain()
 {
-	PyObject* tasklet = PyScheduler_GetCurrent();
+	PyObject* tasklet = SchedulerAPI()->PyScheduler_GetCurrent();
 	bool result = false;
-	if (PyTasklet_IsMain((PyTaskletObject*)tasklet)) {
+	if (SchedulerAPI()->PyTasklet_IsMain((PyTaskletObject*)tasklet)) {
 		PyErr_SetString(PyExc_RuntimeError, "Main tasklet cannot block in Synchro");
 		result = true;
 	}
@@ -454,13 +456,13 @@ PyObject* Synchro::SleepWallclock(int ms, const int64_t &due)
 		return NULL;
 	}
 
-	PyTaskletObject* me = reinterpret_cast<PyTaskletObject*>(PyScheduler_GetCurrent());
+	PyTaskletObject* me = reinterpret_cast<PyTaskletObject*>(SchedulerAPI()->PyScheduler_GetCurrent());
 
 	Sleeper sl;
-	sl.channel = PyChannel_New(NULL);
+	sl.channel = SchedulerAPI()->PyChannel_New(NULL);
 	if (!sl.channel)
 		return 0;
-	PyChannel_SetPreference(sl.channel, 0); //just make runnable on wakeup
+	SchedulerAPI()->PyChannel_SetPreference(sl.channel, 0); //just make runnable on wakeup
 	sl.due = due;
 	sl.tasklet = me;
 
@@ -468,7 +470,7 @@ PyObject* Synchro::SleepWallclock(int ms, const int64_t &due)
 	BeOS->NextScheduledEvent(ms);
 	
 	// Go to sleep and wake up!
-	PyObject *ret = PyChannel_Receive(sl.channel);
+	PyObject *ret = SchedulerAPI()->PyChannel_Receive(sl.channel);
 
 	if( !ret ) {
 		//we were killed, so lets try and find us in the queue, to release resources.
@@ -493,13 +495,13 @@ PyObject* Synchro::SleepSim(int ms, const int64_t &due)
 		return NULL;
 	}
 
-	PyTaskletObject* me = reinterpret_cast<PyTaskletObject*>(PyScheduler_GetCurrent());
+	PyTaskletObject* me = reinterpret_cast<PyTaskletObject*>(SchedulerAPI()->PyScheduler_GetCurrent());
 
 	Sleeper sl;
-	sl.channel = PyChannel_New(NULL);
+	sl.channel = SchedulerAPI()->PyChannel_New(NULL);
 	if (!sl.channel)
 		return 0;
-	PyChannel_SetPreference(sl.channel, 0); //just make runnable on wakeup
+	SchedulerAPI()->PyChannel_SetPreference(sl.channel, 0); //just make runnable on wakeup
 	sl.due = due;
 	sl.tasklet = me;
 
@@ -507,7 +509,7 @@ PyObject* Synchro::SleepSim(int ms, const int64_t &due)
 	BeOS->NextScheduledEvent(int(ms / BeOS->GetInfo()->mSimDilation));
 	
 	// Go to sleep and wake up!
-	PyObject *ret = PyChannel_Receive(sl.channel);
+	PyObject *ret = SchedulerAPI()->PyChannel_Receive(sl.channel);
 
 	if (!ret) {
 		//we were killed, so lets try and find us in the queue, to release resources.
@@ -525,7 +527,7 @@ PyObject* Synchro::SleepSim(int ms, const int64_t &due)
 bool Synchro::FindTasklet(PyObject *tasklet, Heap<Sleeper> &sleeperHeap, SleeperIt &outSleeper)
 {
 	for(outSleeper = sleeperHeap.begin(); outSleeper != sleeperHeap.end(); outSleeper++) {
-		PyObject *queue = PyChannel_GetQueue(outSleeper->channel);
+		PyObject *queue = SchedulerAPI()->PyChannel_GetQueue(outSleeper->channel);
 		bool eq = queue == (PyObject*)tasklet;
 		Py_XDECREF(queue);
 		if (eq)
@@ -549,7 +551,7 @@ PyObject* Synchro::Wakeup(PyObject *args)
 	Sleeper s;
 	SleeperIt it;
 
-	if (!PyArg_ParseTuple(args, "O!|O", &PyTasklet_Type, &tasklet, &arg))
+	if (!PyArg_ParseTuple(args, "O!|O", &SchedulerAPI()->PyTaskletType, &tasklet, &arg))
 		return 0;
 
 	if (!FindTasklet((PyObject *)tasklet, mWallclockSleepers, it)) {
@@ -563,8 +565,8 @@ PyObject* Synchro::Wakeup(PyObject *args)
 		s = mWallclockSleepers.Remove(it);
 	}
 
-	if (PyChannel_GetBalance(s.channel)) {
-		int res = PyChannel_Send(s.channel, Py_None);
+	if (SchedulerAPI()->PyChannel_GetBalance(s.channel)) {
+		int res = SchedulerAPI()->PyChannel_Send(s.channel, Py_None);
 		if (res)
 			PyOS->PyError();
 	}
@@ -580,7 +582,7 @@ PyObject *Synchro::WakeupAtWallclock(PyObject *args)
 	PyTaskletObject *tasklet;
 	Be::Time newdue = 0;
 	PyObject *arg = Py_None;
-	if (!PyArg_ParseTuple(args, "O!|LO:Reschedule", &PyTasklet_Type, &tasklet, &newdue, &arg))
+	if (!PyArg_ParseTuple(args, "O!|LO:Reschedule", &SchedulerAPI()->PyTaskletType, &tasklet, &newdue, &arg))
 		return 0;
 
 	//find the tasklet.We must be careful not to let iterators survive past channel sends
@@ -604,8 +606,8 @@ PyObject *Synchro::WakeupAtWallclock(PyObject *args)
 			s = mWallclockSleepers.Remove(it);
 	}
 	if (s.channel) {
-		if (PyChannel_GetBalance(s.channel)) {
-			int res = PyChannel_Send(s.channel, arg);
+		if (SchedulerAPI()->PyChannel_GetBalance(s.channel)) {
+			int res = SchedulerAPI()->PyChannel_Send(s.channel, arg);
 			if (res)
 				PyOS->PyError();
 		}
@@ -622,7 +624,7 @@ PyObject *Synchro::WakeupAtSim(PyObject *args)
 	PyTaskletObject *tasklet;
 	Be::Time newdue = 0;
 	PyObject *arg = Py_None;
-	if (!PyArg_ParseTuple(args, "O!L|O:Reschedule", &PyTasklet_Type, &tasklet, &newdue, &arg))
+	if (!PyArg_ParseTuple(args, "O!L|O:Reschedule", &SchedulerAPI()->PyTaskletType, &tasklet, &newdue, &arg))
 		return 0;
 
 	//find the tasklet.We must be careful not to let iterators survive past channel sends
@@ -646,8 +648,8 @@ PyObject *Synchro::WakeupAtSim(PyObject *args)
 			s = mSimSleepers.Remove(it);
 	}
 	if (s.channel) {
-		if (PyChannel_GetBalance(s.channel)) {
-			int res = PyChannel_Send(s.channel, arg);
+		if (SchedulerAPI()->PyChannel_GetBalance(s.channel)) {
+			int res = SchedulerAPI()->PyChannel_Send(s.channel, arg);
 			if (res)
 				PyOS->PyError();
 		}
@@ -666,7 +668,7 @@ PyObject* Synchro::Yield()
 		return 0;
 	if (mShutdown)
 		Py_RETURN_NONE;
-	PyObject *result = PyChannel_Receive(mYielders);
+	PyObject *result = SchedulerAPI()->PyChannel_Receive(mYielders);
 	return result;
 }
 
@@ -693,13 +695,13 @@ PyObject* Synchro::Get_sleepers()
 void Synchro::AddStat()
 {
 	CCP_STATS_SET( statSleepers, mWallclockSleepers.size() + mSimSleepers.size() );
-	CCP_STATS_SET( statYielders, -PyChannel_GetBalance( mYielders ) );
-	CCP_STATS_SET( statRunnable, PyScheduler_GetRunCount() - 1 );
+	CCP_STATS_SET( statYielders, -SchedulerAPI()->PyChannel_GetBalance( mYielders ) );
+	CCP_STATS_SET( statRunnable, SchedulerAPI()->PyScheduler_GetRunCount() - 1 );
 
 	Stat stat;
 	stat.mTime = BeOS->GetActualTime();
-	stat.mRunnable = PyScheduler_GetRunCount()-1; //don't count the running tasklet.
-	stat.mYielders = -PyChannel_GetBalance( mYielders );
+	stat.mRunnable = SchedulerAPI()->PyScheduler_GetRunCount()-1; //don't count the running tasklet.
+	stat.mYielders = -SchedulerAPI()->PyChannel_GetBalance( mYielders );
 	stat.mSleepers = mWallclockSleepers.size() + mSimSleepers.size();
 
 	//shuffle the vectors around
@@ -734,7 +736,7 @@ void Synchro::RemoveSleeper( Heap<Sleeper> &sleepers, Sleeper &sl )
 			{
 				CCP_LOGWARN("Sleeper found based on channel but tasklet doesn't match");
 
-				PyObject *head = PyChannel_GetQueue(sl.channel);
+				PyObject *head = SchedulerAPI()->PyChannel_GetQueue(sl.channel);
 				if( head ) {
 					BluePy str(PyObject_Str(head));
 					if( str )

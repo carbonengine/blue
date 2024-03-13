@@ -139,7 +139,8 @@ namespace Ccp {
     }
 }
 
-void InstallPythonMemoryHooks() {
+extern "C" BLUEIMPORT void BlueInstallPythonMemoryHooks()
+{
     static RawAllocator *rawAllocator{nullptr};
 
     if (rawAllocator != nullptr) {

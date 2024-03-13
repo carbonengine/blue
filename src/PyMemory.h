@@ -1,7 +1,7 @@
 #ifndef BLUE_PYMEMORY_H
 #define BLUE_PYMEMORY_H
 
-void InstallPythonMemoryHooks();
+extern "C" BLUEIMPORT void BlueInstallPythonMemoryHooks();
 
 // The memory allocators passed on to Python are forward declared for the tests. Do not call them directly,
 // or Bad Things may happen.

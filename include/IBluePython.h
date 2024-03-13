@@ -209,6 +209,8 @@ BLUE_INTERFACE(IBluePyOS) : public IRoot
 	virtual bool PythonEvent(const char *event, PyObject * arg) = 0;
 
 	virtual bool IsPackaged() = 0;
+	virtual void SetPackaged( bool packaged ) = 0;
+	virtual void SetMarkupZonesInPython( bool markupZonesInPython ) = 0;
 
 	virtual bool IsInterpreterMode() = 0;
 		

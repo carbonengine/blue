@@ -191,8 +191,6 @@ bool CarbonIO::init()
 
 	memset( &m_stats, 0, sizeof(CioStats) );
 
-	PyEval_InitThreads(); 
-	
 	// create the pool
 	m_completionHandle = CreateIoCompletionPort( INVALID_HANDLE_VALUE, 0, 0, c_concurrentCioThreads ); 
 	if ( m_completionHandle == INVALID_HANDLE_VALUE )
@@ -2364,7 +2362,7 @@ int CarbonIO::recvEx( SOCKET fd,
 				}
 				emitStatusMessage( "Spining[%d] RecvEx[%p] block OUT[%d] want[%p] i am[%p] {%d}", tries, completion->workHandle, completion->readJobsUnscheduled, completion->jobSequence, job, thread );
 
-				PyObject* ret = PyStackless_Schedule( Py_None, 0 );
+				PyObject* ret = SchedulerAPI()->PyScheduler_Schedule( Py_None, 0 );
 				Py_XDECREF( ret );
 			}
 
@@ -2466,12 +2464,12 @@ int CarbonIO::recvEx( SOCKET fd,
 		if ( yield )
 		{
 			SJob *job = getJob(); // blank job as a placeholder
-			job->tasklet = (PyTaskletObject *)PyStackless_GetCurrent();
+			job->tasklet = (PyTaskletObject*)SchedulerAPI()->PyScheduler_GetCurrent();
 			linkSequenceJob( completion, job ); // prevent any other packets from being delivered
 			completion->readJobsUnscheduled++;
 			ulock.release();
 
-			PyObject* ret = PyStackless_Schedule( Py_None, 0 ); // force a yield with a single spin
+			PyObject* ret = SchedulerAPI()->PyScheduler_Schedule( Py_None, 0 ); // force a yield with a single spin
 			Py_XDECREF( ret );
 
 			EnterCriticalSection( &completion->unitLock );

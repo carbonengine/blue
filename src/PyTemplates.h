@@ -35,11 +35,18 @@ namespace PyErr
 	PyObject* SetErr32(int err, const char* format, ...);
 };
 
+/// <summary>
+/// this is a replacement for:
+/// `typedef PyObject* ( *PyNoArgsFunction )( PyObject* )`
+/// which was removed from the CPython API in Python3.9
+/// </summary>
+/// 
+using BlueNoArgsFunction = std::add_pointer<PyObject*(PyObject*)>::type;
 
 // -------------------------------------------------------------
 // Macro which declares METH_NOARGS python method definition
 #define METHOD_NOARGS(_fn, _doc) \
-	{#_fn, (PyCFunction)(PyNoArgsFunction)PyCFuncNoArgs<&_ClassType::_fn>, METH_NOARGS, _doc},
+	{ #_fn, (PyCFunction)(BlueNoArgsFunction)PyCFuncNoArgs<&_ClassType::_fn>, METH_NOARGS, _doc },
 
 // -------------------------------------------------------------
 // Macro which declares METH_O python method definition

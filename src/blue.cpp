@@ -11,6 +11,7 @@
 #include "BlueSocketLogger.h"
 #if BLUE_WITH_PYTHON
 #include "BluePyCpp.h"
+#include "SchedulerCAPI.h"
 #include <Find.h>
 #include "version.h"
 #endif
@@ -99,7 +100,7 @@ PyObject* PyAtomicFileRead(PyObject *self, PyObject* args)
 	DWORD fileSize;
 	BY_HANDLE_FILE_INFORMATION info;
 	{
-        Py_UNICODE *fileName = PyUnicode_AS_UNICODE(ufn.o);
+		wchar_t* fileName = PyUnicode_AsWideCharString( ufn.o, NULL );
 		Ccp::PyAllowThreads _allow;
 		for(int i = 0; i<10; i++) {
             h = CreateFileW(fileName,
@@ -113,6 +114,7 @@ PyObject* PyAtomicFileRead(PyObject *self, PyObject* args)
 			}
 			break;
 		}
+		PyMem_Free( fileName );
 		if (h==INVALID_HANDLE_VALUE)
 			goto HERR;
 
@@ -218,7 +220,7 @@ PyObject* PyAtomicFileWrite(PyObject *self, PyObject* args)
 //	Py_ssize_t segcount;
 	HANDLE h;
 	{
-        Py_UNICODE *fileName = PyUnicode_AS_UNICODE(ufn);
+		wchar_t* fileName = PyUnicode_AsWideCharString( ufn, NULL );
 		Ccp::PyAllowThreads _allow;
 		for(int i = 0; i<10; i++) {
             h = CreateFileW(fileName,
@@ -232,6 +234,7 @@ PyObject* PyAtomicFileWrite(PyObject *self, PyObject* args)
 			}
 			break;
 		}
+		PyMem_Free( fileName );
 		if (h==INVALID_HANDLE_VALUE)
 			goto HERR;
 	}
@@ -618,6 +621,19 @@ void PatchPythonExit()
 PyMODINIT_FUNC BLUE_EXPORTED_INIT
 	CCP_CONCATENATE( PyInit_blue, CCP_BUILD_FLAVOR ) (void)
 {
+
+	CCP_LOG( "Importing scheduler" );
+	if (PyImport_ImportModule("scheduler") == nullptr) {
+		CCP_LOGERR( "Importing scheduler failed" );
+		return NULL;
+	}
+
+	if( SchedulerAPI() == nullptr )
+	{
+		CCP_LOGERR( "Importing Scheduler CAPI failed" );
+		return NULL;
+	}
+
 	BlueModuleStartup();
 
 	BlueInitializeSocketLogger();
@@ -630,7 +646,7 @@ PyMODINIT_FUNC BLUE_EXPORTED_INIT
 	// If blue is imported in a normal stackless interpreter then we need to do some additional bootstrapping
 	if (!PyOS) {
 		CCP_LOG( "BeOS Startup" );
-		BeOS->Startup(0, IGNORE_MANIFEST);
+		BeOS->Startup(0);
 	}
 
 	PatchPythonExit();
@@ -638,5 +654,6 @@ PyMODINIT_FUNC BLUE_EXPORTED_INIT
 	auto blueModule = PyOS->BlueModule();
 	return blueModule;
 }
+
 
 #endif

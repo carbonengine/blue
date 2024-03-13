@@ -82,7 +82,6 @@
 #include <BluePlatform.h>
 
 #include <Python.h>
-#include <stackless_api.h>
 
 #include <deque>
 #include <vector>

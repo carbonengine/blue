@@ -19,6 +19,7 @@
 #include "BlueResFile.h"
 #include "BlueSocketLogger.h"
 #include "crypto.h"
+#include "errormessage.h"
 
 #if BLUE_WITH_PYTHON
 #include "ITaskletTimer.h"
@@ -44,6 +45,7 @@
 #include <algorithm>
 #include <iomanip>
 #include "BlueTimeoutHandler.h"
+#include "SchedulerCAPI.h"
 
 static CcpLogChannel_t s_chOS = CCP_LOG_DEFINE_CHANNEL( "OS" );
 static CcpLogChannel_t s_chErr = CCP_LOG_DEFINE_CHANNEL( "ERR" );
@@ -244,94 +246,6 @@ static void IOWakeupWatchdogThread( void *arg )
 #endif
 }
 
-
-//------------------------------------------------------------------------------
-int runPyMain( std::vector<std::wstring> &argv )
-{/*
-	This is so that we can have blue behave as a standard python interpreter.
- */
-    if (BeCrashes) {
-        // Signal to the crash reporting system that we're running in interpreter mode
-        BeCrashes->SetCrashKeyValue("interpreterMode", "true");
-        // And this allows us to filter for these kinds of crashes in sentry.io
-		// using snake_csae to be consistent with the other search able keys on sentry.
-        BeCrashes->SetCrashKeyValue("sentry", R"({"tags": {"interpreter_mode": "true"}})");
-    }
-
-	// We want vanilla python behaviour.
-	// Every argument after /py gets forwarded to Py_Main
-	unsigned int nPythonArgs;
-	unsigned int vanillaIndex = 0;
-	char** pythonArguments;
-	// PyMain actually fucks with the arguments
-	// so we need to backup the pointer to clean them up
-	char** backupPythonArguments;
-
-	// At what index is the vanilla marker
-	for( unsigned int i = 0; i < argv.size(); i++ )
-	{
-		const std::wstring &arg = argv[i];
-		if( arg == L"/py")
-		{
-			vanillaIndex = i;
-			break;
-		}
-	}
-
-	// Create the parameter list for the main python function
-	nPythonArgs = (unsigned int)argv.size() - vanillaIndex;
-
-	// Convert all the unicode strings to ascii
-	// We are going to be very careful about allocating memory and reporting
-	// anything that goes wrong.
-	pythonArguments = (char**)CCP_MALLOC("RunPyMain: Argument Array",  nPythonArgs*sizeof(char*) );
-	if( pythonArguments == NULL )
-	{
-		CCP_LOGERR( "runPyMain() -> Couldn't allocate memory for the python arguments" );
-		return 1;
-	}
-
-	backupPythonArguments = (char**)CCP_MALLOC("RunPyMain: Argument Array",  nPythonArgs*sizeof(char*) );
-	if( backupPythonArguments == NULL )
-	{
-		CCP_LOGERR( "runPyMain() -> Couldn't allocate memory for the backup python arguments" );
-		return 1;
-	}
-
-	unsigned int index = 0;
-	unsigned int counter = 0;
-	do
-	{
-		unsigned int slen = (unsigned int)argv[index].size() + 1; // Plus one for the null terminator
-		pythonArguments[counter] = (char*)CCP_MALLOC( "RunPyMain: Array Element",  slen*sizeof(char) );
-		if( pythonArguments[counter] == NULL )
-		{
-			CCP_LOGERR( "runPyMain() -> Couldn't allocate memory for one of the python parameters" );
-			return 1;
-		}
-		strncpy_s( pythonArguments[counter], slen, CW2A(argv[index].c_str()), _TRUNCATE );
-		++counter;
-		index = vanillaIndex + counter;
-	} while ( index < argv.size() );
-
-	// backup the pointers
-	for( unsigned int i = 0; i < nPythonArgs; i++ )
-	{
-		backupPythonArguments[i] = pythonArguments[i];
-	}
-
-	// Success,... now lets hope the arguments make sense
-	int result = Py_BytesMain( nPythonArgs, pythonArguments );
-
-	// Cleanup
-	for( unsigned int i = 0; i < nPythonArgs; i++ )
-	{
-		CCP_FREE( backupPythonArguments[i] );
-	}
-	CCP_FREE( pythonArguments );
-	CCP_FREE( backupPythonArguments );
-	return result;
-}
 #endif
 
 #if BLUE_WITH_PYTHON
@@ -500,7 +414,8 @@ void BlueOS::UnregisterForTicks( IBlueEvents *cb, void* cookie )
 	}
 }
 
-void Py_FatalError( char *msg )
+
+void _Py_FatalErrorFunc( const char* _func, const char* msg )
 {
 	CCP_LOGERR_CH( s_chOS, "Py_FatalError: %s", msg );
 	fprintf( stderr, "Fatal Python error: %s\n", msg );
@@ -508,7 +423,7 @@ void Py_FatalError( char *msg )
 	RaiseException( 0xE0000011, EXCEPTION_NONCONTINUABLE, 0, NULL );
 	TerminateProcess( GetCurrentProcess(), -3 ); // shouldn't get here
 #else
-    kill( getpid(), SIGKILL );
+	kill( getpid(), SIGKILL );
 #endif
 }
 
@@ -591,7 +506,7 @@ void BlueOS::DoSleep()
 			{
 				CioWakeupTasklets();
 			}
-			if( PyStackless_GetRunCount() > 1 )
+			if( SchedulerAPI()->PyScheduler_GetRunCount() > 1 )
 			{
 				break; //stuff to be done
 			}
@@ -1018,10 +933,8 @@ void BlueOS::PumpOSInternal()
 //
 //////////////////////////////////////////////////////////////////////
 
-bool BlueOS::Startup( int pyOptimizeFlag, ManifestVerification manifestVerification )
+bool BlueOS::Startup( int pyOptimizeFlag )
 {
-	mManifestVerification = manifestVerification;
-
 	//start up crypto
 	if( !InitCrypto() )
 	{
@@ -1049,6 +962,7 @@ bool BlueOS::Startup( int pyOptimizeFlag, ManifestVerification manifestVerificat
 		goto FAIL;
 	}
 
+	PyOS->SetPackaged( mPackaged );
 	PyOS->mOptimizeFlag = pyOptimizeFlag;
 	if( !PyOS->Startup() )
 	{
@@ -1091,21 +1005,10 @@ FAIL:
 bool BlueOS::RunStackless()
 {
 #if CCP_STACKLESS
-
-	// Now, enter stackless and continue running from there.  This allows stackless to initialize
-	// the main tasklet.
-	if( !PyOS->IsPackaged() && PyOS->IsInterpreterMode() )
-	{
-		std::vector<std::wstring> argv = GetStartupArgs();
-		int ret = runPyMain(argv);
-		// exit with the interpreter's failure exit code
-		Terminate(ret);
-	}
-
 	PyObject* me = BlueWrapObjectForPython( this );
 	if( me )
 	{
-		PyObject* ret = PyStackless_CallMethod_Main(me, (char*)"StacklessMain", NULL);
+		 PyObject* ret = SchedulerAPI()->PyScheduler_CallMethod_Main(me, (char*)"StacklessMain", NULL);
 		Py_DECREF(me);
 		if (!ret)
 		{
@@ -1154,10 +1057,10 @@ PyObject* BlueOS::PyStacklessMain( PyObject* args )
 
 	// Set the main tasklet as block trapped.
 	{
-		BluePy current(PyStackless_GetCurrent());
+		BluePy current(SchedulerAPI()->PyScheduler_GetCurrent());
 		if (!current)
 			return NULL;
-		PyTasklet_SetBlockTrap((PyTaskletObject*)(PyObject*)current, 1);
+		SchedulerAPI()->PyTasklet_SetBlockTrap((PyTaskletObject*)(PyObject*)current, 1);
 	}
 
 	//autoexec can reside in a .zip lib
@@ -1289,11 +1192,6 @@ void BlueOS::Terminate( int retCode )
 	// in the meantime we use _exit which quits without cleanup
 	_exit( retCode );
 #endif
-}
-
-bool BlueOS::ShouldVerifyManifest() const
-{
-	return mManifestVerification == VERIFY_MANIFEST;
 }
 
 bool BlueOS::IsOnMainTasklet()
@@ -2272,8 +2170,9 @@ PyObject* BlueOS::PyShellExecute(PyObject* args)
 			return 0;
 		}
 	}
-
-	std::wstring file( reinterpret_cast<const wchar_t*>( PyUnicode_AsUnicode( fn ) ) );
+	auto param = PyUnicode_AsWideCharString( fn, NULL );
+	std::wstring file( param );
+	PyMem_Free( param );
 	Py_DECREF(fn);
 	bool http = file.find(L"http://") == 0 || file.find(L"https://") == 0;
 
@@ -2291,12 +2190,14 @@ PyObject* BlueOS::PyShellExecute(PyObject* args)
 	memset(&ei, 0, sizeof(ei));
 	ei.cbSize = sizeof(ei);
 	std::wstring tmp;
+	wchar_t* wcharParams = nullptr;
 	if( !http )
 	{
 		ei.lpFile = file.c_str();
 		if( params )
 		{
-			ei.lpParameters = PyUnicode_AsUnicode(params);
+			wcharParams = PyUnicode_AsWideCharString( params, NULL );
+			ei.lpParameters = wcharParams;
 		}
 	}
 	else
@@ -2309,6 +2210,7 @@ PyObject* BlueOS::PyShellExecute(PyObject* args)
 	}
 	ei.nShow = SW_SHOWNORMAL;
 	BOOL OK = ShellExecuteExW(&ei);
+	PyMem_Free( wcharParams );
 
 	if( !OK )
 	{
@@ -2470,6 +2372,92 @@ void BlueOS::ShowErrorMessageBox( const wchar_t* title, const wchar_t* message )
 	CFRelease( messageRef );
 #endif
 }
+
+void BlueOS::SetMarkupZonesInPython(bool markupZonesInPython)
+{
+	PyOS->SetMarkupZonesInPython( markupZonesInPython );
+}
+
+void BlueOS::ShowMessageBoxForVerificationFailure( const std::string& errmsg )
+{
+	std::string msg = TranslateErrorMessage( "Your EVE client installation may have modified, damaged or corrupt files.", IDS_VERIFYFAIL_M );
+	std::string caption = TranslateErrorMessage( "Verification Failure", IDS_VERIFYFAIL_C );
+
+	msg += "\n\n" + errmsg;
+	DisplayErrorMessageBox( caption.c_str(), msg.c_str() );
+}
+
+bool BlueOS::VerifyManifestAndGatherDirectives( directives_t& directives )
+{
+	//We always read our manifest.  We have a null manifest that we try first for kicks.
+	if( !BeIsSuccess( VerifyManifestFile( "root:/manifest.dat", directives ) ) )
+	{
+		// Try again with a different path.
+		Be::Result<std::string> result = VerifyManifestFile( "bin:/manifest.dat", directives );
+		if( !BeIsSuccess( result ) )
+		{
+			BeOS->SetError( BEFLUSH );
+			ShowMessageBoxForVerificationFailure( result.value );
+			return false;
+		}
+	}
+
+	return true;
+}
+
+void BlueOS::ProcessLibDirectives( const directives_t& directives, std::vector<std::wstring>& zips )
+{
+
+	mPackaged = false;
+
+	//process lib directives from the file
+	for( const std::string& directive : directives )
+	{
+		if( directive.find( "lib:" ) == 0 )
+		{
+			mPackaged = true;
+			CCP_LOG_CH( s_chOS, "Directive %s", directive.c_str() );
+			zips.push_back( BePaths->ResolvePathW( std::wstring( std::begin( directive ) + 4, std::end( directive ) ) ) );
+		}
+	}
+}
+
+bool BlueOS::ConstructPathListFromManifest(std::vector<std::wstring>& pathlist,  bool verifyManifest)
+{
+	//build pathlist
+	if( verifyManifest )
+	{
+		directives_t directives;
+
+		if( !VerifyManifestAndGatherDirectives( directives ) )
+		{
+			return false;
+		}
+
+		ProcessLibDirectives( directives, pathlist );
+	}
+
+	//add other paths
+	if( !pathlist.size() )
+	{
+		BePaths->GetExpandedSearchPaths( "lib", pathlist );
+	}
+
+	// BIN path is required.
+	BePaths->GetExpandedSearchPaths( "bin", pathlist );
+
+	return true;
+}
+
+extern "C" PyObject* CCP_CONCATENATE( PyInit_blue, CCP_BUILD_FLAVOR )( void );
+
+void BlueOS::GetInitTab( std::vector<_inittab>& tabs ) const
+{
+	tabs.push_back( { g_moduleName, CCP_CONCATENATE( PyInit_blue, CCP_BUILD_FLAVOR ) } );
+	tabs.push_back( { "_socket", PyInit__slsocket } );
+	tabs.push_back( { nullptr, nullptr } );
+}
+
 
 #ifdef OptimizeOff
 #pragma optimize("", on)

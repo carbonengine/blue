@@ -33,6 +33,7 @@
 #undef Py_BUILD_CORE
 
 #include "PyScheduler.h"
+#include "SchedulerCAPI.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -66,10 +67,13 @@ PyScheduler::PyScheduler(double maxTime)
 	}
 }
 
-// There's probably a smarter way to measure elapsed Python ticks than relying on an internal API include
+
+// This functionality will not be required when we move fully to scheduler, hence why it is commented out 
+// and just returns 0
 int GetPythonTickCount() {
-	PyThreadState *tstate = PyThreadState_Get();
-	return tstate->st.tick_counter * tstate->interp->check_interval;
+	//PyThreadState *tstate = PyThreadState_Get();
+	//return tstate->st.tick_counter * tstate->interp->check_interval;
+	return 0;
 }
 
 bool PyScheduler::RunTicks(long ticks)
@@ -80,23 +84,23 @@ bool PyScheduler::RunTicks(long ticks)
 	long tick1, tick2;
 
 	tick1 = GetPythonTickCount();
-	mInQueue1 = PyScheduler_GetRunCount()-1;
+	mInQueue1 = SchedulerAPI()->PyScheduler_GetRunCount()-1;
     time1 = CcpGetTimestamp();
-	PyObject *r = PyScheduler_RunWatchdogEx( ticks,
+	PyObject *r = SchedulerAPI()->PyScheduler_RunWatchdogEx( ticks,
 		PY_WATCHDOG_SOFT | PY_WATCHDOG_IGNORE_NESTING | PY_WATCHDOG_TOTALTIMEOUT );
     time2 = CcpGetTimestamp();
 	tick2 = GetPythonTickCount();
-	mInQueue2 = PyScheduler_GetRunCount()-1;
+	mInQueue2 = SchedulerAPI()->PyScheduler_GetRunCount()-1;
 	
 	if(!r)
 	{
 		return false;
 	}
 
-	if( PyTasklet_Check(r) )
+	if( PyObject_TypeCheck( r, SchedulerAPI()->PyTaskletType ) )
 	{
 		CCP_LOGWARN("RunWatchdog returned a tasklet - rescheduling it");
-		PyTasklet_Insert((PyTaskletObject*)r);
+		SchedulerAPI()->PyTasklet_Insert((PyTaskletObject*)r);
 	}
 	else if( r != Py_None )
 	{

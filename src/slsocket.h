@@ -33,7 +33,7 @@ extern "C" {
     //The slsocket recv function.  Will steal the buffer to make sure it
     //exists while worker threads operate, even if the waiting tasklet
     //is killed during IO..  Optionally returns address.
-    ssize_t slsock_recvfrom(PySocketSockObject *s, Py_buffer *buf, int len, int flags,
+    Py_ssize_t slsock_recvfrom(PySocketSockObject *s, Py_buffer *buf, int len, int flags,
                             struct sockaddr *from, int *fromlen);
 
 #endif

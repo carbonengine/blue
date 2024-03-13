@@ -1869,7 +1869,7 @@ void slsock_releasesocket(PySocketSockObject *s)
 
 
 //Replacement for socket receive.  Will have called s->errorhandler() on error.
-ssize_t slsock_recvfrom(PySocketSockObject *s, Py_buffer *dest, int len, int flags,
+Py_ssize_t slsock_recvfrom(PySocketSockObject *s, Py_buffer *dest, int len, int flags,
 						struct sockaddr *from, int *fromlen)
 {
 	try {

@@ -8,6 +8,7 @@
 #include "BlueMemStream.h"
 #include "IBluePaths.h"
 #include "IBlueObjectMetadata.h"
+#include "SchedulerCAPI.h"
 #ifndef _WIN32
 #include <locale>
 #include <codecvt>
@@ -237,7 +238,7 @@ IRoot* YamlReader::CreateObjectHelper( unsigned int objectMarker, IRoot* calling
 
 #if CCP_STACKLESS
 
-	PyTaskletObject* current = reinterpret_cast<PyTaskletObject*>( PyScheduler_GetCurrent() );
+	PyTaskletObject* current = reinterpret_cast<PyTaskletObject*>( SchedulerAPI()->PyScheduler_GetCurrent() );
 	Py_DECREF( current );
 
 	bool taskletCantYield = !PyOS->CanYield();

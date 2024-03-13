@@ -430,7 +430,7 @@ public:
             mState = PyEval_SaveThread();
         } else {
             //only do it if we have the state.  Can be done in
-            if (PyGilHave() && PyEval_ThreadsInitialized())
+            if (PyGilHave())
                 mState = PyEval_SaveThread();
         }
     }

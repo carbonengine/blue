@@ -7,6 +7,7 @@
 
 #include "StdAfx.h"
 #include "IBlueOS.h"
+#include "SchedulerCAPI.h"
 
 static CBlueStatistics s_statisticsInstance;
 BlueStatistics* g_statistics = &s_statisticsInstance;
@@ -45,7 +46,7 @@ const char *Immortalize( PyObject *s )
         return NULL;
     }
     Py_INCREF( s ); //must own the reference we intern
-    PyUnicode_InternImmortal( &s );
+    PyUnicode_InternInPlace( &s );
     const char *result = PyUnicode_AsUTF8( s );
     Py_DECREF( s );
     return result;
@@ -148,9 +149,13 @@ int PythonProfiler( PyObject* obj, PyFrameObject* frame, int what, PyObject* arg
 {
 	switch( what )
 	{
-	case PyTrace_CALL:
-		tmEnterEx( 0, nullptr, 0, 0, PyUnicode_AsUTF8( frame->f_code->co_filename ), PyFrame_GetLineNumber( frame ), TMZF_NONE, "%s", PyUnicode_AsUTF8( frame->f_code->co_name ) );
-		tmZoneColor( 0, 94.f / 255.f, 32.f / 255.f );
+	case PyTrace_CALL: 
+		{
+			auto frameCode = PyFrame_GetCode( frame );
+			tmEnterEx( 0, nullptr, 0, 0, PyUnicode_AsUTF8( frameCode->co_filename ), PyFrame_GetLineNumber( frame ), TMZF_NONE, "%s", PyUnicode_AsUTF8( frameCode->co_name ) );
+			Py_DECREF( frameCode );
+			tmZoneColor( 0, 94.f / 255.f, 32.f / 255.f );
+		}
 		break;
 	case PyTrace_EXCEPTION:
 	case PyTrace_RETURN:
@@ -355,12 +360,12 @@ void BlueStatistics::OnTaskletSwitch( PyObject* _from, PyObject* _to )
 		StoreFree( from );
 		StoreFree( to );
 
-		if( s_isTelemetryTaskletCaptureEnabled && from && !PyTasklet_IsMain( from ) )
+		if( s_isTelemetryTaskletCaptureEnabled && from && !SchedulerAPI()->PyTasklet_IsMain( from ) )
 		{
 			tmEndTimeSpanEx( 0, reinterpret_cast<uintptr_t>( from ), s_lastTasklet.filename, s_lastTasklet.line );
 		}
 
-		if( !to || PyTasklet_IsMain( to ) )
+		if( !to || SchedulerAPI()->PyTasklet_IsMain( to ) )
 		{
 			tmSwitchToFiber( 0, 0 );
 		}

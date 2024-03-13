@@ -8017,7 +8017,7 @@ PyInit__slsocket(void)
     }
 #endif
 
-    Py_TYPE(&sock_type) = &PyType_Type;
+    Py_SET_TYPE( &sock_type, &PyType_Type );
     m = PyModule_Create(&socketmodule);
     if (m == NULL)
         return NULL;

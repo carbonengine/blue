@@ -33,7 +33,7 @@ Description: implementation of IO Completion Ports for stackless
 #include <Ws2tcpip.h>
 #include <mswsock.h>
 
-#include "stackless_api.h"
+#include "SchedulerCAPI.h"
 #include "api.h"
 #include "dll_exports.h"
 #include "protocol.h"
@@ -629,7 +629,7 @@ void CarbonIO::spinUntilNoReadJobsScheduled( SCompletionUnit* completion )
 	int tries = 500;
 	while( completion->readJobsUnscheduled && --tries )
 	{
-		PyObject* ret = PyStackless_Schedule( Py_None, 0 );
+		PyObject* ret = SchedulerAPI()->PyScheduler_Schedule( Py_None, 0 );
 		Py_XDECREF( ret );
 	}
 
@@ -703,8 +703,8 @@ void CarbonIO::failAllTasklets( SJob *list, int errType /*=0*/ )
 bool CarbonIO::blockCurrentTasklet( SJob *job )
 {
 	// put the tasklet in here for CarbonIO to wake us later
-	job->tasklet = (PyTaskletObject *)PyStackless_GetCurrent();
-	PyObject* ret = PyStackless_Schedule( Py_None, 1 );
+	job->tasklet = (PyTaskletObject *)SchedulerAPI()->PyScheduler_GetCurrent();
+	PyObject* ret = SchedulerAPI()->PyScheduler_Schedule( Py_None, 1 );
 	// now I have woken up
 	Py_XDECREF( ret );
 	m_singleton.m_events.inc( "request::Ready::OK", m_singleton.getPerformanceCounter() - job->t0 );
@@ -892,7 +892,7 @@ bool CarbonIO::wakeupEx( SJob* job )
 		// and that it owns the job, and should reap it itself.
 		PyTaskletObject *tasklet = job->tasklet;
 		job->tasklet = NULL;
-		int fail = PyTasklet_Insert(tasklet);
+		int fail = SchedulerAPI()->PyTasklet_Insert(tasklet);
 		Py_DECREF( tasklet );
 		if (fail)
 		{

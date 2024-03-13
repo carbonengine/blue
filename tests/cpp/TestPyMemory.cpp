@@ -5,7 +5,7 @@ CCP_STATS_DECLARED_ELSEWHERE( pyMemory );
 class PythonMemoryAllocatorTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        InstallPythonMemoryHooks();
+        BlueInstallPythonMemoryHooks();
 		// We need to initialize the Python interpreter when running tests, otherwise calls to the Python C API will fail.
 		// There are a few things that we need to take care of when initializing the interpreter for the tests. Primarily,
 		// blueExposure - just like blue - doesn't have access to our `pythonInterpreter` files. Therefore, we need to

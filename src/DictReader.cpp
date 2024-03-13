@@ -359,10 +359,12 @@ const char* DictReader::ReadString()
 const wchar_t* DictReader::ReadWString()
 {
 	PyErr_Clear();
-	const wchar_t* val = (const wchar_t*)PyUnicode_AsUnicode( m_currentSource );
+	wchar_t* val = PyUnicode_AsWideCharString( m_currentSource, NULL );
 	if( val )
 	{
-		return CCP_WSTRDUP( "DictReader/ReadWChar", val );
+		wchar_t* duped_val = CCP_WSTRDUP( "DictReader/ReadWChar", val );
+		PyMem_Free( val );
+		return duped_val;
 	}
         return nullptr;
 }
