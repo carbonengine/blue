@@ -666,14 +666,14 @@ void BluePyOS::Shutdown(int level)
 		SetLogEchoFunction( CCP::LOGTYPE_LOWEST, Py_None );
 
 		// call exit procs
-		BluePy bluepy(PyImport_ImportModule("bluepy"));
+		BluePy bluepy(PyImport_ImportModule("bluepycore"));
 		if (bluepy) {
-			CCP_LOG_CH( s_chPy, "Running bluepy.Shutdown");
+			CCP_LOG_CH( s_chPy, "Running bluepycore.Shutdown");
 			BluePy res(BluePy(PyObject_CallMethod(bluepy, const_cast<char*>( "Shutdown" ), const_cast<char*>( "O" ), mExitProcs?mExitProcs:Py_None)));
 			Py_CLEAR(mExitProcs);
 			if (!res)
-				HandleException("BluePyOS::Shutdown::bluepy.Shutdown");
-			CCP_LOG_CH( s_chPy, "Finished running bluepy.Shutdown");
+				HandleException("BluePyOS::Shutdown::bluepycore.Shutdown");
+			CCP_LOG_CH( s_chPy, "Finished running bluepycore.Shutdown");
 		}
 		PyErr_Clear();
 		return;
@@ -1238,7 +1238,7 @@ PyObject* BluePyOS::CreateTaskletImpl(
 	if( !mTaskletExt )
 	{
 		//The tasklet extension class
-		PyObject *bluepy = PyImport_ImportModule("bluepy");
+		PyObject *bluepy = PyImport_ImportModule("bluepycore");
 		if( !bluepy )
 		{
 			return nullptr;
@@ -1386,7 +1386,7 @@ bool BluePyOS::DispatchEvent(
 	}
 	else
 	{
-		BluePy tasklet(CreateTaskletImpl(bound, args, Py_None, ctx));
+		BluePy tasklet( CreateTaskletImpl( bound, args, nullptr, ctx ) );
 		if (!tasklet) {
 			PyError();
 			retval = false;

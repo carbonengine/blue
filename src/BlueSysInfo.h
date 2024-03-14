@@ -30,10 +30,10 @@ TYPEDEF_BLUECLASS( BlueSysInfoCpu );
 BLUE_CLASS( BlueSysInfoTaskTimes ): public IRoot
 {
 public:
-    EXPOSE_TO_BLUE();
+	EXPOSE_TO_BLUE();
 
-    double m_userTime;
-    double m_systemTime;
+	double m_userTime;
+	double m_systemTime;
 };
 
 TYPEDEF_BLUECLASS( BlueSysInfoTaskTimes );

@@ -260,4 +260,16 @@ const Be::ClassInfo* BlueTestStructureLists::ExposeToBlue()
 	EXPOSURE_END()
 }
 
+BLUE_DEFINE( BlueTestEvents );
+
+const Be::ClassInfo* BlueTestEvents::ExposeToBlue()
+{
+	EXPOSURE_BEGIN( BlueTestEvents, "" )
+
+		MAP_INTERFACE( BlueTestEvents )
+		MAP_METHOD_AS_METHOD( "SendEvent", PySendEvent, "Sends DoSendEvent via PyOS->SendEvent" );
+		MAP_METHOD_AS_METHOD( "PostEvent", PyPostEvent, "Sends OnPostEvent via PyOS->PostEvent" );
+
+	EXPOSURE_END()
+}
 #endif

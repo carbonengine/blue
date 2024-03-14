@@ -2,6 +2,10 @@
 
 #include "BlueTestHelpers.h"
 
+#if BLUE_WITH_PYTHON
+#include "BluePython.h"
+#endif
+
 CcpLogChannel_t s_myChannel = CCP_LOG_DEFINE_CHANNEL( "myChannel" );
 
 static BlueStructureDefinition BlueTestStructureDef[] =
@@ -369,6 +373,53 @@ BlueTestStructureLists::BlueTestStructureLists( IRoot* lockobj )
 	m_matrix.SetStructureDefinition( MatrixDef );
 	m_bool.SetStructureDefinition( BoolDef );
 	m_enum.SetStructureDefinition( EnumDef );
+}
+
+PyObject* BlueTestEvents::PyPostEvent( PyObject* args )
+{
+	int first;
+	double second;
+
+	if( !PyArg_ParseTuple( args, "id", &first, &second ) )
+		return nullptr;
+
+	bool success = PyOS->PostEvent(
+		GetRawRoot(),
+		"BlueTestEvents::OnPostEvent",
+		"OnPostEvent",
+		"id",
+		first,
+		second);
+
+	if( !success )
+	{
+		Py_RETURN_FALSE;
+	}
+	Py_RETURN_TRUE;
+}
+
+PyObject* BlueTestEvents::PySendEvent( PyObject* args )
+{
+	int first;
+	double second;
+
+	if( !PyArg_ParseTuple( args, "id", &first, &second ) )
+		return nullptr;
+
+	bool success = PyOS->SendEvent(
+		GetRawRoot(),
+		"BlueTestEvents::DoSendEvent",
+		"DoSendEvent",
+		nullptr,
+		"id",
+		first,
+		second );
+
+	if( !success )
+	{
+		Py_RETURN_FALSE;
+	}
+	Py_RETURN_TRUE;
 }
 
 #endif

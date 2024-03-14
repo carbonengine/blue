@@ -3,7 +3,6 @@ import unittest
 import blue
 import tempfile
 import shutil
-from . import run_in_tasklet
 
 class TestResMan(unittest.TestCase):
     """
@@ -52,7 +51,6 @@ class TestResMan(unittest.TestCase):
         self.assertTrue(blue.motherLode)
         self.assertTrue(blue.motherLode.size() == 0)
 
-    @run_in_tasklet
     def testGetResource(self):
         # Get a resource. BlueTestAsyncRes doesn't really load anything
         # but simulates a load by sleeping when it should be loading
@@ -69,7 +67,6 @@ class TestResMan(unittest.TestCase):
         self.assertTrue(res1.isGood)
         self.assertEqual(blue.motherLode.size(), 1)
 
-    @run_in_tasklet
     def testGetResource_UnicodeName(self):
         res1 = blue.resMan.GetResource(u"ss_001.blueasync")
         self.assertEqual(type(res1), blue.BlueTestAsyncRes)
@@ -82,7 +79,6 @@ class TestResMan(unittest.TestCase):
         self.assertTrue(res1.isGood)
         self.assertTrue(blue.motherLode.size() == 1)
 
-    @run_in_tasklet
     def testGetResource_WithEx(self):
         # Get a resource. BlueTestAsyncRes doesn't really load anything
         # but simulates a load by sleeping when it should be loading
@@ -103,7 +99,6 @@ class TestResMan(unittest.TestCase):
     def testGetResource_UnknownResourceType(self):
         self.assertRaises( RuntimeError, blue.resMan.GetResource, "ss_001.bogus_type")
 
-    @run_in_tasklet
     def testGetResource_SecondGetShouldBeShared(self):
         res1 = blue.resMan.GetResource("ss_001.blueasync")
         blue.resMan.Wait()
@@ -112,7 +107,6 @@ class TestResMan(unittest.TestCase):
 
         self.assertTrue(res1 == res2)
 
-    @run_in_tasklet
     def testGetResource_Caching(self):
         res1 = blue.resMan.GetResource("ss_001.blueasync")
         blue.resMan.Wait()
@@ -130,8 +124,6 @@ class TestResMan(unittest.TestCase):
         zhContents = "Chinese file"
         self._createFile(zhFilePath, zhContents)
 
-
-    @run_in_tasklet
     def test_OpenLanguageSpecificFile_NoLanguageSet(self):
         self.CreateLanguageFiles()
 
@@ -139,8 +131,6 @@ class TestResMan(unittest.TestCase):
         blue.resMan.Wait()
         self.assertEqual(res.text, "Default file")
 
-
-    @run_in_tasklet
     def test_OpenLanguageSpecificFile_ChineseLanguageSet(self):
         self.CreateLanguageFiles()
         blue.os.languageID = "ZH"
@@ -148,7 +138,6 @@ class TestResMan(unittest.TestCase):
         blue.resMan.Wait()
         self.assertEqual(res.text, "Chinese file")
 
-    @run_in_tasklet
     def test_OpenLanguageSpecificFile_EnglishLanguageSet(self):
         self.CreateLanguageFiles()
         blue.os.languageID = "EN"

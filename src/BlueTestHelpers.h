@@ -209,6 +209,17 @@ private:
 
 TYPEDEF_BLUECLASS( BlueTestStructureLists );
 
+BLUE_CLASS( BlueTestEvents ) : public IRoot
+{
+	public:
+		EXPOSE_TO_BLUE();
+	private:
+		PyObject* PyPostEvent( PyObject* args );
+		PyObject* PySendEvent( PyObject * args );
+};
+
+TYPEDEF_BLUECLASS( BlueTestEvents );
+
 #endif
 
 #endif // BlueTestHelpers_h
