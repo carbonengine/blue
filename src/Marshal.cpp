@@ -1739,7 +1739,7 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 	}\
 } while(false)
 
-	switch (o->ob_type->tp_name[0])
+	switch ( Py_TYPE( o )->tp_name[0] )
 	{
 	case 'd':
 		if (o->ob_type == &PyDict_Type) //PyDict_CheckExact(o)
@@ -1985,7 +1985,7 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 		return true;
 
 	//The above simple rules did not apply.  Generic approach, then:
-	CCP_LOGWARN_CH( s_ch, "defaulting to pickle for object %p of type %s", o, o->ob_type->tp_name);
+	CCP_LOGWARN_CH( s_ch, "defaulting to pickle for object %p of type %s", o, Py_TYPE( o )->tp_name );
 	
 	//new style pickle generation fallback.
 	PyObject *p = stream->GetPickler();
@@ -2054,6 +2054,7 @@ bool Marshal::WriteCallbackResult( WriteStream* stream, PyObject* o )
 		Py_DECREF( args );
 		if( ret == nullptr )
 		{
+			PyOS->PyFlushError( "Marshalling callback failed" );
 			return false;
 		}
 		if( ret != Py_None )
