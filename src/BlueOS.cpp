@@ -436,14 +436,6 @@ BlueOS::BlueOS() :
 
 	mMiniDump = false;
 
-#if CCP_STACKLESS && !defined(NO_CARBONIO)
-	gBreakSleep = CreateEvent(NULL, FALSE, FALSE, NULL);
-	gBreakCarbonIo = CreateEvent(NULL, FALSE, FALSE, NULL);
-
-	CioSetOnTaskletScheduledCallback( OnIOTaskletScheduled );
-	_beginthread( IOWakeupWatchdogThread, 0, 0 );
-#endif
-
 #if BLUE_WITH_PYTHON
 	mFrameClock = 0;
 #endif
@@ -461,9 +453,6 @@ BlueOS::~BlueOS()
 {
 #if BLUE_WITH_PYTHON
 	Py_XDECREF(mFrameClock);
-#endif
-#ifndef NO_CARBONIO
-	CloseHandle(gBreakSleep);
 #endif
 }
 
@@ -920,10 +909,6 @@ void BlueOS::PumpOSInternal()
 		DoSleep();
 		mNextScheduledEvent = int( mSleepTime );
 	}
-#ifndef NO_CARBONIO
-	// alert the IO watchdog that events have been delivered recently
-	sNextScheduledIOWakeup = GetTickCount() + MIN_SCHEDULED_IO_INTERVAL;
-#endif
 
 	BeNet->DeliverCPackets(); // dispatch any waiting callbacks
 #endif
@@ -1387,9 +1372,6 @@ void BlueOS::NextScheduledEvent(int millisec)
 #if CCP_STACKLESS
 	if( millisec <= 0 )
 	{
-#ifndef NO_CARBONIO
-		SetEvent(gBreakSleep); //If we are sleeping (this could be an async window message we're in, wake up!)
-#endif
 		mNextScheduledEvent = -1;
 	}
 	else if( millisec < mNextScheduledEvent )
