@@ -243,8 +243,6 @@ bool BluePyOS::InitBasicModuleSupport()
 	PyObject* sys_modules = PyImport_GetModuleDict();
 
 #if CCP_STACKLESS
-	auto stacklessIoModule = PyInit_stacklessio();
-
 	// c-routing support
 	if ( !BeNet->Init( mBlueModule ) ) {
 		return false;
@@ -259,10 +257,6 @@ bool BluePyOS::InitBasicModuleSupport()
     if ( PyDict_SetItemString( sys_modules, "blue.heapq", heapqModule ) != 0 ) {
         return false;
     }
-	if( PyDict_SetItemString( sys_modules, "stacklessio", stacklessIoModule ) != 0 )
-	{
-		return false;
-	}
 
 	return true;
 }
@@ -647,6 +641,8 @@ bool BluePyOS::Startup()
 	PyStackless_SetScheduleFastcallback(::OnTaskletSwitch);
 #endif
 
+	mSocketAPI = reinterpret_cast<PySocketModule_APIObject*>( PySocketModule_ImportModuleAndAPI() );
+
 	mInit = true;
 	return true;
 }
@@ -840,7 +836,7 @@ bool BluePyOS::UpdateTaskletRunTime(PyObject *tasklet, double elapsed)
 
 
 //--------------------------------------------------------------------
-int BluePyOS::	PumpPython(bool quit)
+int BluePyOS::PumpPython(bool quit)
 {
 #if CCP_STACKLESS
 	if (PyErr_Occurred())
@@ -852,6 +848,12 @@ int BluePyOS::	PumpPython(bool quit)
 
 		SafeAutoTasklet _at(&mTTimer, TIMERS[TIMER_STACKLESSIO].mContext);
 		PyStacklessIoDispatchEvents("PumpPython");
+	}
+
+	{
+		CCP_STATS_ZONE( "Blue/CarbonIO" );
+		SafeAutoTasklet _at(&mTTimer, TIMERS[TIMER_STACKLESSIO].mContext);
+		mSocketAPI->dispatch();
 	}
 
 	// Synchro.  This will make tasklets runnable

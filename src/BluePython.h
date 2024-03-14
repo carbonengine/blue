@@ -34,6 +34,8 @@
 #include <stackless_api.h>
 #endif
 
+#include <socketmodule.h>
+
 #include "manifest.h"
 
 #include <vector>
@@ -194,6 +196,8 @@ private:
 	BluePy mstoredContext_str; //attribute name strings
 	BluePy mrunTime_str;
 #endif
+
+	PySocketModule_APIObject *mSocketAPI;
 
 public:
 	void OnTaskletSwitch( PyObject *from, PyObject *to ) override;
