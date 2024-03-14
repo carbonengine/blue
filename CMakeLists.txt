@@ -186,8 +186,6 @@ ccp_add_library(Blue SHARED
     src/IBlueObjectBuilder_Blue.cpp
     src/IBluePlacementObserver_Blue.cpp
     src/InterfaceDefinitions.cpp
-    src/IOLoop.cpp
-    src/IOLoop.h
     src/IRootReader.cpp
     src/IRootReader.h
     src/IRootWriter.cpp
