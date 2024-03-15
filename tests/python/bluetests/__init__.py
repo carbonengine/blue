@@ -6,11 +6,9 @@ exefile in interpreter mode (which loads blue for you).
 import os
 import sys
 
-# Importing blue messes up sys.argv.
-# Storing it here, then we restore it after importing blue.
-argv = sys.argv
-
 flavor = os.environ.get("BUILDFLAVOR", "release")
+# need to back up sys.argv because importing blue ends up overriding it
+orig_argv = sys.argv
 
 if flavor == 'release':
     import blue as mod
@@ -24,4 +22,4 @@ else:
     raise RuntimeError("Unknown build flavor: {}".format(flavor))
 
 sys.modules["blue"] = mod
-sys.argv = argv
+sys.argv = orig_argv

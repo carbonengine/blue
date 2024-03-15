@@ -7,8 +7,6 @@ extern "C" {
 #endif
 
 extern PyObject* PyInit_stacklessio( void );
-extern PyObject* PyInit__slsocket( void );
-extern PyObject* PyInit_slselect( void );
 
 int PyStacklessIoDispatchEvents(const char *from);
     
