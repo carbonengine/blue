@@ -1,3 +1,8 @@
+import unittest
+import blue
+import stackless
+
+
 def main():
     import sys
     if sys.argv[0].endswith("__main__.py"):
@@ -10,10 +15,22 @@ def main():
         sys.argv[0] = executable + " -m unittest"
         del os
 
-    # Cannot import unittest before we patch the socket, because unittest imports socket.
-    import unittest
-    __unittest = True
-    unittest.main(module=None)
+    class TaskletTestRunner(unittest.TextTestRunner):
+        def __init__(self, *args, **kwargs):
+            self.result = None
+            super().__init__(*args, **kwargs)
+
+        def run(self, test):
+            stackless.tasklet(self._run_impl)(test)
+            while self.result is None:
+                blue.os.Pump()
+
+            return self.result
+
+        def _run_impl(self, test):
+            self.result = super().run(test)
+
+    unittest.main(module=None, testRunner=TaskletTestRunner())
 
 
 main()
