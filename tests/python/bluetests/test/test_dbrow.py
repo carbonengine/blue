@@ -1,6 +1,7 @@
 from . import blueunittest
 import blue
 
+
 class TestDBRow(blueunittest.TestCase):
     """
     A set of test cases for the DBRow class.
@@ -10,7 +11,7 @@ class TestDBRow(blueunittest.TestCase):
         self.columns = (("nodeID", 4), ("ipAddress", 129), ("port", 3))
         self.row = blue.DBRow(blue.DBRowDescriptor(self.columns))
 
-    def test_sliceSubscript(self):
+    def testSliceSubscript(self):
         sliceTest = self.row[:]
 
         self.assertIsInstance(sliceTest, list)
@@ -25,15 +26,27 @@ class TestDBRow(blueunittest.TestCase):
         with self.assertRaises(NotImplementedError):
             self.row[::2]
 
-    def test_indexSubscript(self):
+    def testIndexSubscript(self):
         self.assertEqual(self.row[0], 0.0)
         self.assertEqual(self.row[-1], 0)
 
         with self.assertRaises(IndexError):
             self.row[len(self.row)]
 
-    def test_unicodeSubscript(self):
+    def testUnicodeSubscript(self):
         self.assertEqual(self.row["nodeID"], 0)
 
         with self.assertRaises(KeyError):
             self.row["test"]
+
+    def testEquivalencyComparison(self):
+        self.assertFalse(self.row == None)
+        self.assertNotEqual(self.row, None)
+
+        self.assertFalse(self.row == 1)
+        self.assertNotEqual(self.row, 1)
+
+        self.assertFalse(self.row == blue.DBRowDescriptor(self.columns))
+        self.assertNotEqual(self.row, blue.DBRowDescriptor(self.columns))
+
+        self.assertEqual(self.row, blue.DBRow(blue.DBRowDescriptor(self.columns)))

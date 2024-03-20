@@ -959,23 +959,36 @@ bool DBRow::InitDB(PyObject *dataO, PyObject *reuse)
 
 PyObject* DBRow::Compare(PyObject *a, PyObject *b, int op)
 {
-	auto lhs = static_cast<DBRow *>(a);
-	auto rhs = static_cast<DBRow *>(b);
+	// Object a is guaranteed to be of type blue.DBRow, second object can be NoneType
+	if( a->ob_type != b->ob_type )
+	{
+		switch( op )
+		{
+		case Py_EQ:
+			Py_RETURN_FALSE;
+		case Py_NE:
+			Py_RETURN_TRUE;
+		default:
+			Py_RETURN_NOTIMPLEMENTED;
+		}
+	}
 
-	switch(op) {
+	auto lhs = static_cast<DBRow*>( a );
+	auto rhs = static_cast<DBRow*>( b );
+
+	switch( op )
+	{
 	case Py_EQ:
-		if ( *lhs == *rhs )
+		if( *lhs == *rhs )
 			Py_RETURN_TRUE;
 		Py_RETURN_FALSE;
 	case Py_LT:
-		if ( lhs < rhs ) {
+		if( lhs < rhs )
 			Py_RETURN_TRUE;
-		}
 		Py_RETURN_FALSE;
 	case Py_GT:
-		if ( lhs > rhs ) {
+		if( lhs > rhs )
 			Py_RETURN_TRUE;
-		}
 		Py_RETURN_FALSE;
 	default:
 		Py_RETURN_NOTIMPLEMENTED;
