@@ -7,6 +7,8 @@
 
 #include "StdAfx.h"
 
+#include <socketmodule.h>
+
 #if __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
@@ -21,7 +23,6 @@
 
 #include "stdlib.h"
 #include "stdio.h"
-#include "ctype.h"
 
 #include <SimpleLog.h>
 
@@ -298,7 +299,7 @@ BlueNet::~BlueNet()
 }
 
 //------------------------------------------------------------------------------
-bool BlueNet::Init( PyObject* blueModule )
+bool BlueNet::Init( PyObject* blueModule, PySocketModule_APIObject* socketAPI )
 {
 #ifdef BN_DEBUG_LOG
 	char buf[256];
@@ -1690,7 +1691,7 @@ PyObject* BlueNet::PySetMode( PyObject *self, PyObject *args )
 	}
 
 	// install our routing
-	CioAddPacketCallbackPostDecompress( OnPostDecompress );
+	m_singleton.m_socketAPI->add_oob_data_callback( OnPostDecompress );
 
 	Py_RETURN_NONE;
 }
@@ -1856,7 +1857,7 @@ PyObject* BlueNet::PyGetRoutingMode( PyObject *self, PyObject *unused )
 }
 
 //------------------------------------------------------------------------------
-bool BlueNet::OnPostDecompress( long long descriptor, const char* data, const int len, const char* OobData, const int OobLen )
+int BlueNet::OnPostDecompress( long long descriptor, const char* data, const int len, const char* OobData, const int OobLen )
 {
 	if ( !OobData || (OobLen <= sizeof(unsigned short)) )
 	{

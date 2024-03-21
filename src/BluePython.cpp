@@ -244,7 +244,7 @@ bool BluePyOS::InitBasicModuleSupport()
 
 #if CCP_STACKLESS
 	// c-routing support
-	if ( !BeNet->Init( mBlueModule ) ) {
+	if ( !BeNet->Init( mBlueModule, mSocketAPI ) ) {
 		return false;
 	}
 

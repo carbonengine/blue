@@ -79,7 +79,7 @@ class Marshal;
 class BlueNet
 {
 public:
-	static bool Init( PyObject* blueModule );
+	static bool Init( PyObject* blueModule, PySocketModule_APIObject* socketAPI );
 
 	//---------------------------------------
 	struct PacketInfo
@@ -271,7 +271,7 @@ private:
 	void RegisterCallback( ExtendedDataCallback callback, const int blueNetKey, int style =CALLBACK_SYNC );
 
 	// check for sub-macho delivery
-	static bool OnPostDecompress( long long descriptor, const char* data, const int len, const char* OobData, const int OobLen );
+	static int OnPostDecompress( long long descriptor, const char* data, const int len, const char* OobData, const int OobLen );
 
 	bool ParseHeader( const char* data, const int len, BlueNetHeader *header );
 	void PurgeTransport( long long transportID );
@@ -404,6 +404,8 @@ private:
 
 	static void LogStatus( const char* msg );
 	static void LogError( const char* msg );
+
+	PySocketModule_APIObject *m_socketAPI;
 };
 
 extern BLUEIMPORT BlueNet* BeNet; // for external access to the singleton
