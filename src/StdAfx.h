@@ -25,12 +25,8 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 
-#if CCP_STACKLESS
+// include the carbon-scheduler
 #include <Scheduler.h>
-#else
-#define CCP_NO_STACKLESS
-#endif
-
 
 // this for pylogobject
 #include <structmember.h>

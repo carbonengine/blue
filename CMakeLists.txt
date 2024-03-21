@@ -330,6 +330,7 @@ target_link_libraries(Blue
         ZLIB::ZLIB
         OpenSSL::Crypto
         OpenSSL::SSL
+        Scheduler
 )
 
 if(WIN32)
@@ -345,10 +346,8 @@ if(WIN32)
 )
 endif()
 
-get_target_property(SCHEDULER_INCLUDE_DIR Scheduler INTERFACE_INCLUDE_DIRECTORIES)
 target_include_directories(Blue
     PUBLIC
-        ${SCHEDULER_INCLUDE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/include
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src

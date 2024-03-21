@@ -17,6 +17,7 @@ target_link_libraries(BlueCppUnitTests
     Blue
     GTest::GTest
     Python
+    Scheduler
 )
 
 # Unfortunately the Python runtime is required for test discovery to work. It's not possible to override the working
