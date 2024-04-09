@@ -12,7 +12,6 @@
 #include "IBlueObjectProxy.h"
 #include "IBluePaths.h"
 #include "IBlueOS.h"
-#include "SchedulerCAPI.h"
 
 namespace
 {

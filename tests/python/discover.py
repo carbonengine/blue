@@ -3,6 +3,7 @@ import unittest
 
 
 sys.modules['blue'] = sys
+sys.modules['greenlet'] = sys
 
 
 def print_suite(suite):

@@ -33,7 +33,7 @@ Description: implementation of IO Completion Ports for stackless
 #include <Ws2tcpip.h>
 #include <mswsock.h>
 
-#include "SchedulerCAPI.h"
+#include <Scheduler.h>
 #include "api.h"
 #include "dll_exports.h"
 #include "protocol.h"

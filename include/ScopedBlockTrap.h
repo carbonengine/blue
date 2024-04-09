@@ -10,6 +10,7 @@
 #define ScopedBlockTrap_h
 
 #include <CcpMacros.h>
+#include <Scheduler.h>
 
 // Description:
 //   ScopedBlockTrap provides a way to set and restore blocktrap state around

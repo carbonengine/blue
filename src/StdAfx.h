@@ -25,9 +25,6 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 
-// include the carbon-scheduler
-#include <Scheduler.h>
-
 // this for pylogobject
 #include <structmember.h>
 #include <compile.h>

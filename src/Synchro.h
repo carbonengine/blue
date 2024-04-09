@@ -28,6 +28,7 @@
 #include "PyTemplates.h"
 #include <set>
 #include <vector>
+#include <Scheduler.h>
 
 #undef Yield
 

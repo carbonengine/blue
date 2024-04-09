@@ -78,7 +78,7 @@
 #pragma pack(pop)
 #endif
 
-#include <Scheduler.h>   // Including it here as a stopgap until stacklessio.h is deprecated. Not needed once carbon-io is ready.
+#include <Scheduler.h>
 #include <BluePyCpp.h>
 #include <BluePlatform.h>
 

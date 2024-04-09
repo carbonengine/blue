@@ -7,7 +7,7 @@
 
 #include "StdAfx.h"
 #include "IBlueOS.h"
-#include "SchedulerCAPI.h"
+#include <Scheduler.h>
 
 static CBlueStatistics s_statisticsInstance;
 BlueStatistics* g_statistics = &s_statisticsInstance;

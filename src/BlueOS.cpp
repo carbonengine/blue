@@ -45,7 +45,7 @@
 #include <algorithm>
 #include <iomanip>
 #include "BlueTimeoutHandler.h"
-#include "SchedulerCAPI.h"
+#include <Scheduler.h>
 
 static CcpLogChannel_t s_chOS = CCP_LOG_DEFINE_CHANNEL( "OS" );
 static CcpLogChannel_t s_chErr = CCP_LOG_DEFINE_CHANNEL( "ERR" );

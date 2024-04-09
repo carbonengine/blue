@@ -33,7 +33,7 @@
 #undef Py_BUILD_CORE
 
 #include "PyScheduler.h"
-#include "SchedulerCAPI.h"
+#include <Scheduler.h>
 
 #ifdef _WIN32
 #include <windows.h>

@@ -15,6 +15,7 @@
 #include "IBluePersist.h"
 #include "IMotherLode.h"
 #include "ICacheable.h"
+#include <Scheduler.h>
 
 BLUE_CLASS( BlackReader ) :
 	public IBlueObjectBuilder,

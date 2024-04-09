@@ -16,7 +16,6 @@
 #include "BlueFileUtil.h"
 #include "IBlueObjectBuilder.h"
 #include "IBluePaths.h"
-#include "SchedulerCAPI.h"
 
 #include <cctype>
 #include <cwctype>

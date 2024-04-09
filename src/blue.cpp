@@ -11,7 +11,7 @@
 #include "BlueSocketLogger.h"
 #if BLUE_WITH_PYTHON
 #include "BluePyCpp.h"
-#include "SchedulerCAPI.h"
+#include <Scheduler.h>
 #include <Find.h>
 #include "version.h"
 #endif

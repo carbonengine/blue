@@ -8,7 +8,6 @@
 #include "BlueMemStream.h"
 #include "IBluePaths.h"
 #include "IBlueObjectMetadata.h"
-#include "SchedulerCAPI.h"
 #ifndef _WIN32
 #include <locale>
 #include <codecvt>

@@ -11,6 +11,7 @@
 #include <string>
 #include <yaml.h>
 #include <cstdint>
+#include <Scheduler.h>
 
 
 struct PoolAllocatedYamlEvent : public yaml_event_t

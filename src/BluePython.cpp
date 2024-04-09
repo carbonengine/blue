@@ -22,7 +22,6 @@
 #include "BlueClipboard.h"
 #include "errormessage.h"
 #include "PyMemory.h"
-#include "SchedulerCAPI.h"
 
 #if _WIN32
 #include "win32.h"

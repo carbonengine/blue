@@ -11,7 +11,6 @@
 #include "stacklessio_api.h"
 #include "CarbonIO/dll_exports.h"
 #include "CarbonIO/protocol.h"
-#include "SchedulerCAPI.h"
 
 #ifdef __APPLE__
 #include <dispatch/dispatch.h>  // for timeouts and async calls

@@ -10,6 +10,8 @@
 #ifndef BlueResManBackgroundCall_h
 #define BlueResManBackgroundCall_h
 
+#include <Scheduler.h>
+
 class IBlueResManBackgroundCall
 {
 public:

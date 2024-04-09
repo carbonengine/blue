@@ -7,9 +7,6 @@
 #include "IBluePython.h"
 #include "BlueStatistics.h"
 
-#if CCP_STACKLESS
-#include "SchedulerCAPI.h"
-#endif
 
 static CcpLogChannel_t s_ch = CCP_LOG_DEFINE_CHANNEL( "ResMan" );
 

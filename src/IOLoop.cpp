@@ -34,7 +34,7 @@
 
 #include "PyScheduler.h"
 
-#include "SchedulerCAPI.h"
+#include <Scheduler.h>
 
 #include <stacklessio_api.h>
 #include <CarbonIO/dll_exports.h>
