@@ -204,7 +204,6 @@ PyMethodDef BlueNet::m_methods[] =
 	{ "SetMinScheduledIOInterval", PySetMinScheduledIOInterval, METH_VARARGS, "SetMinScheduledIOInterval(ms)\n\nMinimum time the communications engine will wake up Blue with a packet event <default 15ms>" },
 	{ "SetWatchdogInterval", PySetWatchdogInterval, METH_VARARGS, "SetWatchdogInterval(ms)\n\nInterval the watchdog wakes up to check for unserviced packets <default 23ms>" },
 	{ "SetWakeupMethod", PySetWakeupMethod, METH_VARARGS, "SetWakeupMethod(['static'|'dynamic'|'pending'|'hangpending'])\nSet the underlying CarbonIO tasklet wakeup methodology" },
-	{ "InstallLoggingCallbacks", PyInstallLoggingCallbacks, METH_VARARGS, "InstallLoggingCallbacks()\n\nallow underlying CarbonIO to emit CCP log messages" },
 	{ "GetLatencyToFirstHop", PyGetLatencyToFirstHop, METH_NOARGS, "GetLatencyToFirstHop()\n\nValid for client only, reprots latency to the proxy" },
 	{ "GetWakeupMethod", PyGetWakeupMethod, METH_VARARGS, "GetWakeupMethod()\nread what underlying taklet wakeup methodology CarbonIO is using" },
 	{ "GetRoutingMode", PyGetRoutingMode, METH_NOARGS, "GetRoutingMode()\n\nreturns 'proxy', 'server', 'client' or 'none'" },
@@ -331,8 +330,6 @@ bool BlueNet::Init( PyObject* blueModule, PySocketModule_APIObject* socketAPI )
 		entry->frequency = 0;
 		entry->newString = 0;
 	}
-
-	CioSetErrorLogCallback( LogError ); // always allow errors
 
 	m_singleton.m_aggregateSendIntervalMilliseconds = 0;
 
