@@ -468,7 +468,8 @@ PyObject* BlueNet::PySetMinScheduledIOInterval( PyObject *self, PyObject *args )
 //------------------------------------------------------------------------------
 PyObject* BlueNet::PyGetWakeupMethod( PyObject *self, PyObject *args )
 {
-	return CioGetWakeupMethod();
+	PyErr_WarnEx( PyExc_DeprecationWarning, "GetWakeupMethod no longer serves any purpose" , 1 );
+	Py_RETURN_NONE;
 }
 
 //------------------------------------------------------------------------------
@@ -485,32 +486,7 @@ PyObject* BlueNet::PySetWatchdogInterval( PyObject *self, PyObject *args )
 //------------------------------------------------------------------------------
 PyObject* BlueNet::PySetWakeupMethod( PyObject *self, PyObject *args )
 {
-	char *buf;
-	if ( !PyArg_ParseTuple(args, "s", &buf) )
-	{
-		return NULL;
-	}
-
-	if ( !_strnicmp(buf, "dynamic", 7) )
-	{
-		CioSetWakeupMethod( WAKEUP_DYNAMIC_CONTEXT );
-	}
-	else if ( !_strnicmp(buf, "pending", 7) )
-	{
-		CioSetWakeupMethod( WAKEUP_PENDING_CALL );
-	}
-	else
-	{
-		return PyErr_Format( PyExc_RuntimeError, "Unknown CarbonIO wake-up method [%s]", buf );
-	}
-
-	Py_RETURN_NONE;
-}
-
-//------------------------------------------------------------------------------
-PyObject* BlueNet::PyInstallLoggingCallbacks( PyObject *self, PyObject *args )
-{
-	CioSetStatusLogCallback( LogStatus );
+	PyErr_WarnEx( PyExc_DeprecationWarning, "SetWakeupMethod serves no purpose any more", 1 );
 	Py_RETURN_NONE;
 }
 

@@ -60,11 +60,6 @@ CCP_STATS_DECLARE( logNotice,		"Blue/logNotice",		false,	CST_COUNTER_LOW, "Count
 CCP_STATS_DECLARE( logWarn,			"Blue/logWarn",			false,	CST_COUNTER_LOW, "Count of warning logs" );
 CCP_STATS_DECLARE( logErr,			"Blue/logErr",			false,	CST_COUNTER_LOW, "Count of error logs" );
 
-// CarbonIO wake up mode
-bool g_carbonIoFastWakeup = false;
-
-bool g_carbonIoManualWakeup = true;
-
 #if CCP_STACKLESS
 
 const int BNT_SIMCLOCK_SYNC_INIT = BlueNet::BlueNetKeyFromName( "SimClock::SycInit" );
@@ -194,31 +189,6 @@ BlueOsError::~BlueOsError()
 #endif
 
 #if CCP_STACKLESS
-
-//------------------------------------------------------------------------------
-static void OnIOTaskletScheduled( bool force )
-{
-#ifndef NO_CARBONIO
-	if( g_carbonIoFastWakeup )
-	{
-		SetEvent(gBreakCarbonIo);
-	}
-	else
-	{
-		unsigned int current = GetTickCount();
-		if( (current > sNextScheduledIOWakeup) || force )
-		{
-			sNextScheduledIOWakeup = current + BeNet->GetMinScheduledIOInterval();
-			sPendingWakeup = false;
-			SetEvent( gBreakSleep ); // tends to cause an immediate context-switch, do it last
-		}
-		else
-		{
-			sPendingWakeup = true;
-		}
-	}
-#endif
-}
 
 //------------------------------------------------------------------------------
 static void IOWakeupWatchdogThread( void *arg )
@@ -570,15 +540,6 @@ void BlueOS::DoSleep()
 		}
 		else if (result == WAIT_OBJECT_0 + 2)
 		{
-			//CarbonIo signal
-			// Depending on this flag, now have carbonIO wake up its tasklets.  Perhaps it
-			// didn't already do so (because it merely scheduled a pending call) so this forces
-			// the issue.
-			// This is the right thing to do, but it is switchable for testing purposes.
-			if( g_carbonIoManualWakeup )
-			{
-				CioWakeupTasklets();
-			}
 			if( PyStackless_GetRunCount() > 1 )
 			{
 				break; //stuff to be done
