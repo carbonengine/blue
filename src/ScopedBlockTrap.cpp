@@ -7,6 +7,7 @@
 
 #include "StdAfx.h"
 #include "ScopedBlockTrap.h"
+#include <Scheduler.h>
 
 ScopedBlockTrap::ScopedBlockTrap()
 {

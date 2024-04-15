@@ -10,7 +10,8 @@
 #define ScopedBlockTrap_h
 
 #include <CcpMacros.h>
-#include <Scheduler.h>
+
+class PyTaskletObject;   // Forward declare the PyTaskletObject type from <Schdeuler.h> which is included in .cpp file.
 
 // Description:
 //   ScopedBlockTrap provides a way to set and restore blocktrap state around
