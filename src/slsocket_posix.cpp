@@ -982,8 +982,15 @@ public:
 		if (mGAIError == EAI_SYSTEM)
             throw SystemError("getaddrinfo");
 	}
-	typedef std::basic_string<char, std::char_traits<char>, Ccp::PyAllocator<char> > pystring;
-	pystring mServ, mNode;
+
+#if __APPLE__
+#if __MAC_OS_X_VERSION_MAX_ALLOWED < __MAC_14_0
+    typedef std::basic_string<char, std::char_traits<char>, Ccp::PyAllocator<char> > pystring;
+#else
+    typedef std::string pystring;
+#endif
+#endif
+    pystring mServ, mNode;
 	bool mS, mN;
 	struct addrinfo mHints;
 	struct addrinfo *GetRes() { //take ownership of the res
@@ -1019,7 +1026,13 @@ public:
             mRes = socket_hostent_dup(e);
 	}
 
-	typedef std::basic_string<char, std::char_traits<char>, Ccp::PyAllocator<char> > pystring;
+#if __APPLE__
+#if __MAC_OS_X_VERSION_MAX_ALLOWED < __MAC_14_0
+    typedef std::basic_string<char, std::char_traits<char>, Ccp::PyAllocator<char> > pystring;
+#else
+    typedef std::string pystring;
+#endif
+#endif
 	pystring mName, mAddr;
 	int mLen, mType;
 	struct hostent *mRes;
