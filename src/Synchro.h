@@ -28,7 +28,10 @@
 #include "PyTemplates.h"
 #include <set>
 #include <vector>
-#include <Scheduler.h>
+
+// Forward declare types from the <Scheduler.h> header, include will be in .cpp file
+struct PyTaskletObject;
+struct PyChannelObject;
 
 #undef Yield
 

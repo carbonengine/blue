@@ -11,7 +11,9 @@
 #include <string>
 #include <yaml.h>
 #include <cstdint>
-#include <Scheduler.h>
+
+// Forward declare type from the <Scheduler.h> header, include will be in .cpp file
+struct PyTaskletObject;
 
 
 struct PoolAllocatedYamlEvent : public yaml_event_t

@@ -11,6 +11,7 @@
 #include "IBlueResMan.h"
 #include "IBlueObjectRecycler.h"
 #include "IBluePaths.h"
+#include <Scheduler.h>
 
 #include "blueloginmemory.h"
 #include "LogToPython.h"
@@ -211,7 +212,7 @@ bool BluePyOS::InitBasicModuleSupport()
 		return false;
 
     PyObject* heapqModule = InitHeapq();
-	if ( !InitHeapq() )
+	if ( !heapqModule )
 		throw PyError();
     if ( PyModule_AddObject( mBlueModule, "heapq", heapqModule ) ) {
         return false;

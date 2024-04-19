@@ -623,7 +623,7 @@ PyMODINIT_FUNC BLUE_EXPORTED_INIT
 {
 
 	CCP_LOG( "Importing scheduler" );
-	if (PyImport_ImportModule("scheduler") == nullptr) {
+	if (PyImport_ImportModule("scheduler") == nullptr) {      //  TODO: Refactor -> This should call BlueLoadOythonExtension() instead
 		CCP_LOGERR( "Importing scheduler failed" );
 		return NULL;
 	}

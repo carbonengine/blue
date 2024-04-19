@@ -6,6 +6,7 @@
 #include "IBlueOS.h"
 #include "IBluePython.h"
 #include "ITaskletTimer.h"
+#include <Scheduler.h>
 
 static CcpLogChannel_t s_ch = CCP_LOG_DEFINE_CHANNEL( "Synchro" );
 
