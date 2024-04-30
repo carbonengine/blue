@@ -3,7 +3,9 @@ import unittest
 
 
 sys.modules['blue'] = sys
-sys.modules['greenlet'] = sys
+# Load release scheduler during discover
+import _scheduler as mod
+sys.modules['scheduler'] = mod
 
 
 def print_suite(suite):

@@ -14,6 +14,7 @@
 #include <Scheduler.h>
 #include <Find.h>
 #include "version.h"
+#include "BluePython.h"
 #endif
 
 const char* g_moduleName = "blue";
@@ -443,6 +444,22 @@ void BlueLogFuncChannel( CcpLogChannel_t& logObject, CCP::LogType type, unsigned
 	LogFuncChannel_v( logObject, type, userData, format, args );
 }
 
+bool ImportScheduler()
+{
+	CCP_LOG( "Importing scheduler" );
+	PyObject* scheduler_module = BlueLoadPythonExtension( "_scheduler" );
+
+	// Set '_scheduler_BUILDFLAVOR' to be 'scheduler'. Required as capsule name refers to this and the file is constant between flavors.
+	PyObject* sysmodule = PyImport_ImportModule( "sys" );
+	PyObject* dict = PyModule_GetDict( sysmodule );
+	PyObject* modules = PyDict_GetItemString( dict, "modules" );
+	PyDict_SetItemString( modules, "scheduler", scheduler_module );
+	Py_DECREF( sysmodule );
+	Py_DecRef( scheduler_module );
+
+	return SchedulerAPI() != nullptr;
+}
+
 void BlueModuleStartup()
 {
     // Inform the logging system of the main thread
@@ -621,19 +638,13 @@ void PatchPythonExit()
 PyMODINIT_FUNC BLUE_EXPORTED_INIT
 	CCP_CONCATENATE( PyInit_blue, CCP_BUILD_FLAVOR ) (void)
 {
-
-	CCP_LOG( "Importing scheduler" );
-	if (PyImport_ImportModule("scheduler") == nullptr) {      //  TODO: Refactor -> This should call BlueLoadOythonExtension() instead
-		CCP_LOGERR( "Importing scheduler failed" );
-		return NULL;
-	}
-
-	if( SchedulerAPI() == nullptr )
+	
+	if(!ImportScheduler())
 	{
 		CCP_LOGERR( "Importing Scheduler CAPI failed" );
-		return NULL;
+		return nullptr;
 	}
-
+	
 	BlueModuleStartup();
 
 	BlueInitializeSocketLogger();

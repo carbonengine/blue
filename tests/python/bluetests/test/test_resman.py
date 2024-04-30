@@ -18,7 +18,6 @@ class TestResMan(unittest.TestCase):
         blue.paths.SetSearchPath("res", self.tmpDir)
 
     def tearDown(self):
-        import stackless
         blue.paths.SetSearchPath("cache", self.cacheSearchPath)
         blue.paths.SetSearchPath("res", self.resSearchPath)
         def retry_handler(func, path, _):
