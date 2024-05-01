@@ -65,14 +65,14 @@ class TestRemoteFileCache(blueunittest.TestCase):
 		self.remoteFileCache.AddFileIndex(SIMPLE_INDEX)
 
 		result = self.remoteFileCache.ListDir("res:/")
-		self.assertEquals(["a", "b", "f1"], result)
+		self.assertEqual(["a", "b", "f1"], result)
 
 	
 	def testlistdir_subfolder(self):
 		self.remoteFileCache.AddFileIndex(SIMPLE_INDEX)
 
 		result = self.remoteFileCache.ListDir("res:/f1")
-		self.assertEquals(["a", "b", "c"], result)
+		self.assertEqual(["a", "b", "c"], result)
 
 	
 	def testlistdir_NotAResPath(self):
