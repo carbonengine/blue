@@ -2635,7 +2635,7 @@ void Marshal::InitGlobalsBlacklist()
 		{"base", 0},
 		{"eve", 0},
 		{"nasty", 0},
-		{"stackless", 0},
+		{"scheduler", 0},
 		{"bluepy", 0}, //product specific thread management stuff
 		{"bluepycore", 0}, //our own thread management stuff
 
