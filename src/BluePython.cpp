@@ -536,7 +536,6 @@ void BluePyOS::Shutdown(int level)
 	// Finish basic module support
 	FiniBasicModuleSupport();
 
-	// And the stackless fastcallback stuff
 #if CCP_STACKLESS
 	SchedulerAPI()->PyScheduler_SetScheduleFastCallback( 0 );
 	Py_XDECREF(mContextHooks);

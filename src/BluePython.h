@@ -30,10 +30,6 @@
 #include "TaskletTimer.h"
 #include "PyScheduler.h"
 
-#ifdef STACKLESS
-#include <stackless_api.h>
-#endif
-
 #include "manifest.h"
 
 #include <vector>

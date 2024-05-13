@@ -11,7 +11,7 @@
 	Description:
 
 		IBluePyOS is the interface on a static object which handles most Python
-		related activity in Blue, like the stackless thread support.  It also
+		related activity in Blue, like the scheduler thread support.  It also
 		wraps Blue object instances into Python objects.  'PyOS' is a global
 		variable which always points to the static instance of IBluePyOS.
 

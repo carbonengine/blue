@@ -108,8 +108,8 @@ public:
 	//         any thread
 	// Sync - Issue callbacks serially from the single thread that
 	//        calls DeliverCPackets();
-	// FromPython - Issue callbacks from a valid Python/Stackless
-	//              context using Py_AddPendingCall(...)
+	// FromPython - Issue callbacks from a valid Python context
+	//              using Py_AddPendingCall(...)
 	void RegisterCallbackAsync( DataCallback callback, const int blueNetKey );
 	void RegisterCallbackSync( DataCallback callback, const int blueNetKey );
 	void RegisterCallbackFromPython( DataCallback callback, const int blueNetKey );
@@ -263,8 +263,8 @@ private:
 	//---------------------
 	enum CallbackStyle
 	{
-		CALLBACK_SYNC, // make the callback in C outside the normal Python tick, but sychronous with the main thread
-		CALLBACK_PYTHON, // sychrnous, but deliver in a valid Stackless context from within Python
+		CALLBACK_SYNC, // make the callback in C outside the normal Python tick, but synchronous with the main thread
+		CALLBACK_PYTHON, // synchronous, but deliver in a valid Python context
 		CALLBACK_ASYNC, // you get it when we get it, on whatever thread it arrived on (here there be dragons)
 	};
 	void RegisterCallback( DataCallback callback, const int blueNetKey, int style =CALLBACK_SYNC );

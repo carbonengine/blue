@@ -337,7 +337,8 @@ PyObject * TaskletTimer::SwitchStack(intptr_t contextID)
 	else
 		//Entering a fresh context! make it ready.
 		newStack = & mStackMap.insert(stackmap_t::value_type(contextID, Stack(contextID))).first->second;
-	
+
+	// TODO: Verify if still an issue outside of stackless
 	//catch an edge case.  Sometimes, stackless switches to same tasklet.  This happens mainly when
 	//the main tasklet is re-initialized, and gets the same ID!  We mustn't do anything here because
 	//we would typically delete the old stack later, but that would be the same as deleting the current one.

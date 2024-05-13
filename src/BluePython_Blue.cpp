@@ -139,7 +139,7 @@ const Be::ClassInfo* BluePyOS::ExposeToBlue()
 			":type args: tuple\n"
 			":param kwargs: function keyword arguments\n"
 			":type kwargs: dict\n"
-			":rtype: stackless.tasklet"
+			":rtype: scheduler.tasklet"
 		)
 		MAP_METHOD_AS_METHOD
 		(

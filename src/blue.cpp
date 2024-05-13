@@ -654,7 +654,7 @@ PyMODINIT_FUNC BLUE_EXPORTED_INIT
 	CCP_LOG( "Initializing Resource Loading" );
 	BlueInitializeResourceLoading();
 
-	// If blue is imported in a normal stackless interpreter then we need to do some additional bootstrapping
+	// If blue is imported in a normal interpreter then we need to do some additional bootstrapping
 	if (!PyOS) {
 		CCP_LOG( "BeOS Startup" );
 		BeOS->Startup(0);
