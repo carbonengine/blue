@@ -8,9 +8,6 @@
 #include "BluePlatform.h"
 
 #include <Python.h>
-#ifdef STACKLESS
-#include <stackless_api.h>
-#endif
 
 
 #include <stddef.h> //size_t et al
