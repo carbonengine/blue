@@ -73,6 +73,10 @@ def _GetTaskletDump(logIt=True):
 
 def _KillTasklets():
     """
+    TODO: This is leftover from our migration away from stackless and should be verified whether it's still required.
+    """
+
+    """
     This must happen in a tasklet, otherwise, Stackless freaks out!
     """
     t = TaskletExt("KillTasklets", _KillTasklets_)
