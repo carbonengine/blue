@@ -9,7 +9,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-TRACING_ENABLED_KEY = "tracing_enabled"
+STACKLESS_TRACING_ENABLED_KEY = "stackless_tracing_enabled"
 
 # Counter that gets incremented
 # to generate tasklet ids.
@@ -33,7 +33,7 @@ class TaskletExt(scheduler.tasklet):
         'parent_callsite',
 
         # trace context slots
-        'tracer',      # None, or a scheduler_tracing.CloneableTracer
+        'tracer',      # None, or a stackless_tracing.CloneableTracer
         'trace_id',    # OTEL trace context trace_id
         'parent_id',   # OTEL trace context span_id
         'sampled',     # OTEL trace context sampled
@@ -73,13 +73,13 @@ class TaskletExt(scheduler.tasklet):
                     current.endTime = blue.os.GetWallclockTimeNow()
         return CallWrapper
 
-    def __init__(self, context, method=None, tracing_enabled=True):
+    def __init__(self, context, method=None, stackless_tracing_enabled=True):
         if method is not None:
             super().__init__(TaskletExt.GetWrapper(method))
         else:
             super().__init__(method)
 
-    def __new__(cls, ctx, method=None, tracing_enabled=True):
+    def __new__(cls, ctx, method=None, stackless_tracing_enabled=True):
         global tasklet_id
         tid = tasklet_id
         tasklet_id += 1
@@ -112,7 +112,7 @@ class TaskletExt(scheduler.tasklet):
         parent_method_name = getattr(c, "method_name", "unknown_parent_method")
         t.parent_callsite = "{}.{}".format(parent_module_name, parent_method_name),
 
-        if tracing_enabled:
+        if stackless_tracing_enabled:
             cls._copy_tracer_and_state(c, t)
 
         t.runTime = 0.0
@@ -197,9 +197,9 @@ def _no_tasklet_tracer():
 
 
 def _tracing_enabled(**kwargs):
-    if TRACING_ENABLED_KEY not in list(kwargs.keys()):
+    if STACKLESS_TRACING_ENABLED_KEY not in list(kwargs.keys()):
         return True, kwargs
 
-    tracing_enabled = kwargs[TRACING_ENABLED_KEY]
-    del kwargs[TRACING_ENABLED_KEY]
-    return tracing_enabled, kwargs
+    stackless_tracing_enabled = kwargs[STACKLESS_TRACING_ENABLED_KEY]
+    del kwargs[STACKLESS_TRACING_ENABLED_KEY]
+    return stackless_tracing_enabled, kwargs
