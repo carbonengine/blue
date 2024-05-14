@@ -344,6 +344,8 @@ bool BlueNet::Init( PyObject* blueModule, PySocketModule_APIObject* socketAPI )
 		return false;
 	}
 
+	m_singleton.m_socketAPI = socketAPI;
+
 	CcpCreateThread( &BatchThread, nullptr, CCP_THREAD_PRIORITY_NORMAL );
 
 	return true;
@@ -1409,7 +1411,7 @@ unsigned int BlueNet::Flush()
 			BN_AGG(bnlog("transport[%lld] had[%d] bytes scheduled for transmit", transport->ID, transport->bytesAggregated));
 
 			CcpAutoMutex tlock( transport->packetAggregateLock );
-			CioSendFormattedPacket( transport->descriptor, transport->packetAggregator, transport->bytesAggregated );
+			m_socketAPI->send_formatted_packet( transport->descriptor, transport->packetAggregator, transport->bytesAggregated );
 			bytesFlushed += transport->bytesAggregated;
 			transport->bytesAggregated = 0;
 		}
@@ -2387,14 +2389,14 @@ bool BlueNet::SendPacketEx( TransportRepr *transport,
 							unsigned int headerLen,
 							const int priority  )
 {
+	int maxPacketsize = sizeof(uint32_t) * 2 + len + headerLen;
+
 	if ( !m_aggregateSendIntervalMilliseconds )
 	{
-		BN_AGG(bnlog("not aggregating, just forwarding [%d]bytes to [%lld]", CioGetMaxPacketsize(len, headerLen), transport->ID ));
+		BN_AGG(bnlog("not aggregating, just forwarding [%d]bytes to [%lld]", maxPacketsize, transport->ID ));
 		// don't want to use the aggregate functionality? okay
-		return CioSendPacket( transport->descriptor, data, len, headerData, headerLen );
+		return m_socketAPI->send_packet( transport->descriptor, data, len, headerData, headerLen );
 	}
-
-	int maxPacketsize = CioGetMaxPacketsize( len, headerLen );
 
 	CcpAutoMutex tlock( transport->packetAggregateLock );
 
@@ -2403,7 +2405,7 @@ bool BlueNet::SendPacketEx( TransportRepr *transport,
 	{
 		BN_AGG(bnlog("Normal, adding [%d] to the end of current[%d]", maxPacketsize, transport->bytesAggregated ));
 		// simple case, its normal priority and fits in the queue
-		transport->bytesAggregated += CioFormatPacket( transport->packetAggregator + transport->bytesAggregated, data, len, headerData, headerLen );
+		transport->bytesAggregated += m_socketAPI->format_packet( transport->packetAggregator + transport->bytesAggregated, data, len, headerData, headerLen );
 		return true;
 	}
 
@@ -2415,8 +2417,8 @@ bool BlueNet::SendPacketEx( TransportRepr *transport,
 		BN_AGG(bnlog("shifting out[%d] appended with[%d]", maxPacketsize, transport->bytesAggregated ));
 
 		// enough room to send the whole lot, append it to the end and do so
-		transport->bytesAggregated += CioFormatPacket( transport->packetAggregator + transport->bytesAggregated, data, len, headerData, headerLen );
-		bool ret = CioSendFormattedPacket( transport->descriptor, transport->packetAggregator, transport->bytesAggregated );
+		transport->bytesAggregated += m_socketAPI->format_packet( transport->packetAggregator + transport->bytesAggregated, data, len, headerData, headerLen );
+		bool ret = m_socketAPI->send_formatted_packet( transport->descriptor, transport->packetAggregator, transport->bytesAggregated );
 		transport->bytesAggregated = 0;
 		return ret;
 	}
@@ -2424,9 +2426,9 @@ bool BlueNet::SendPacketEx( TransportRepr *transport,
 	BN_AGG(bnlog("shifting out[%d] and current[%d]", maxPacketsize, transport->bytesAggregated ));
 
 	// nope, its just huge, shift out everything
-	bool ret = CioSendFormattedPacket( transport->descriptor, transport->packetAggregator, transport->bytesAggregated );
+	bool ret = m_socketAPI->send_formatted_packet( transport->descriptor, transport->packetAggregator, transport->bytesAggregated );
 	transport->bytesAggregated = 0;
-	return CioSendPacket( transport->descriptor, data, len, headerData, headerLen ) ? ret : false;
+	return m_socketAPI->send_packet( transport->descriptor, data, len, headerData, headerLen ) ? ret : false;
 }
 
 //------------------------------------------------------------------------------
@@ -2440,7 +2442,7 @@ unsigned int BlueNet::FlushTransport( TransportRepr* transport )
 	CcpAutoMutex tlock( transport->packetAggregateLock );
 
 	unsigned int bytes = transport->bytesAggregated;
-	bool ret = CioSendFormattedPacket( transport->descriptor, transport->packetAggregator, transport->bytesAggregated );
+	bool ret = m_socketAPI->send_formatted_packet( transport->descriptor, transport->packetAggregator, transport->bytesAggregated );
 	transport->bytesAggregated = 0;
 
 	return ret ? bytes : 0;
@@ -2462,7 +2464,7 @@ void BlueNet::AnswerPing( TransportRepr* transport, unsigned long long timestamp
 
 	BN_PING(bnlog("timestamp[0x%016llX] received from [%lld] sending pong", timestamp, transport->ID ));
 
-	CioSendPacket( transport->descriptor, pingData, 4, pingData, pingPacker.Finalize() ); // 4 bytes of dummy data
+	m_socketAPI->send_packet( transport->descriptor, pingData, 4, pingData, pingPacker.Finalize() ); // 4 bytes of dummy data
 
 	if ( timestamp & TIMESTAMP_PINGBACK_BIT )
 	{

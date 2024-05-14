@@ -11,7 +11,6 @@
 
 #pragma warning (disable : 4996) // remove Windows nagging about using _strincmp() etc
 
-#include <CarbonIO/dll_exports.h>
 #include <LinkHash.h>
 #include <RWSpinLock.h>
 #include <ScopedLocks.h>

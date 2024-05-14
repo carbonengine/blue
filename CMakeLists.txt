@@ -66,8 +66,6 @@ set(PUBLIC_HEADER_FILES_INCLUDE
 
 ccp_add_library(Blue SHARED
     src/Logger/Logger.cpp
-    src/CarbonIO/dll_exports.h
-    src/CarbonIO/protocol.h
     src/BlueSysInfo.mm
     src/Accumulator/PercentileAccumulator.cpp
     src/Accumulator/PercentileAccumulator_Blue.cpp
@@ -257,21 +255,6 @@ ccp_add_library(Blue SHARED
     src/win32.h
 )
 
-if (WIN32)
-    target_sources(Blue PRIVATE
-        src/CarbonIO/api.cpp
-        src/CarbonIO/api.h
-        src/CarbonIO/CarbonIO.cpp
-        src/CarbonIO/CarbonIO.h
-        src/CarbonIO/dll_exports.cpp
-        src/CarbonIO/ssl_pipe.cpp
-        src/CarbonIO/ssl_pipe.h
-        src/CarbonIO/stats.cpp
-        src/CarbonIO/stats.h
-    )
-endif()
-
-
 target_sources(Blue PRIVATE
     include/Base64.h
     include/BitPacker.h
@@ -300,6 +283,9 @@ if(APPLE)
     target_compile_definitions(Blue PRIVATE PORTING_TO_LINUX NO_CARBONIO)
     target_link_libraries(Blue PRIVATE "-framework SystemConfiguration -framework Foundation -framework IOKit -framework AppKit")
 endif()
+
+get_target_property(CARBONIO_INCLUDE_DIR carbonio INTERFACE_INCLUDE_DIRECTORIES)
+target_include_directories(Blue PRIVATE ${CARBONIO_INCLUDE_DIR})
 
 target_link_libraries(Blue
     PUBLIC
