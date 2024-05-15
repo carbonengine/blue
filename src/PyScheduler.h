@@ -32,8 +32,8 @@ class PyScheduler
 public:
 	PyScheduler(double maxTime = 0.0);
 
-	//Schedule pytthon taskets for "t" seconds.  May over or undershoot.
-	bool RunTime(double t);
+	//Schedule pytthon taskets for "t" seconds.  May overshoot.
+	bool RunTime( double t );
 
 	//Same as above, but use the maxTime used in the constructor.
 	bool Run()
@@ -54,14 +54,10 @@ public:
 		return mMaxTime;
 	}
 
-private:
-	bool RunTicks(long ticks);
 
 private:
-	static double mTPS; //ticks per seconds, estimate
-	float mMaxTime; //max time we want to take.
-	long mOvershoot; //overshoot in ticks, estimate.
-	long mMinTicks; //minimum non-zero ticks seen used to estimate "checkinterval"
+	float mMaxTime; //max time we want to take (seconds).
+	long mOvershoot; //overshoot in time (seconds), estimate.
 	static double mPt; //duration of a performance 'tick'
 	int mInQueue1;		//runnables in queue before run
 	int mInQueue2;		//runnables in queue after run

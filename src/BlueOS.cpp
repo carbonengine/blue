@@ -1008,16 +1008,32 @@ bool BlueOS::RunStackless()
 	PyObject* me = BlueWrapObjectForPython( this );
 	if( me )
 	{
-		 PyObject* ret = SchedulerAPI()->PyScheduler_CallMethod_Main(me, (char*)"StacklessMain", NULL);
-		Py_DECREF(me);
-		if (!ret)
+		//Just call StacklessMain callable
+		PyObject* stacklessMainCallable = PyObject_GetAttrString( me, "StacklessMain" );
+
+		if( !PyCallable_Check( stacklessMainCallable ) )
 		{
 			PyOS->PyError();
 			return false;
 		}
+
+		// Get ref to schedule manager for main thread
+		// This will ensure the main thread's schedule manager alive throughout game usage
+		PyObject* mainScheduler = SchedulerAPI()->PyScheduler_GetScheduler();
+
+		// Call "StacklessMain" which contains main game loop, see BlueOS::PyStacklessMain
+		PyObject* ret = PyObject_Call( stacklessMainCallable, nullptr, nullptr );
+		
+		if( !ret )
+		{
+			PyOS->PyError();
+			Py_DecRef( mainScheduler );
+			return false;
+		}
 		else
 		{
-			Py_DECREF(ret);
+			Py_DecRef( mainScheduler );
+			Py_DECREF( ret );
 		}
 	}
 	else

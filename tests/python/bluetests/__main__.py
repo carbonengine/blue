@@ -22,6 +22,8 @@ def main():
 
         def run(self, test):
             scheduler.tasklet(self._run_impl)(test)
+            # Required to avoid sleep when all tasklets yield
+            blue.os.sleeptime = 0
             while self.result is None:
                 blue.os.Pump()
 
