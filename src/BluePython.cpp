@@ -620,6 +620,13 @@ bool BluePyOS::Startup()
 	mrunTime_str = BluePy(PyUnicode_InternFromString("runTime"));
 #endif
 
+	mSocketAPI = reinterpret_cast<PySocketModule_APIObject*>( PySocketModule_ImportModuleAndAPI() );
+	if ( !mSocketAPI )
+	{
+		CCP_LOGERR( "Failed acquiring carbon-io socket module" );
+		PyFlushError( nullptr );
+		return false;
+	}
 
 	CCP_LOG( "Init basic module support" );
 	if (!InitBasicModuleSupport())
@@ -640,8 +647,6 @@ bool BluePyOS::Startup()
 	mTTimer.Reset();
 	PyStackless_SetScheduleFastcallback(::OnTaskletSwitch);
 #endif
-
-	mSocketAPI = reinterpret_cast<PySocketModule_APIObject*>( PySocketModule_ImportModuleAndAPI() );
 
 	mInit = true;
 	return true;
