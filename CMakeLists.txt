@@ -20,6 +20,7 @@ include(CcpPackageConfigHelpers)
 
 find_package(BlueExposure REQUIRED NO_CMAKE_PATH)
 find_package(CarbonIO REQUIRED NO_CMAKE_PATH)
+find_package(CcpLog REQUIRED NO_CMAKE_PATH)
 find_package(CURL REQUIRED NO_CMAKE_PATH)
 find_package(OpenSSL REQUIRED NO_CMAKE_PATH)
 find_package(PDM REQUIRED NO_CMAKE_PATH)
@@ -298,7 +299,6 @@ target_link_libraries(Blue
         ZLIB::ZLIB
         OpenSSL::Crypto
         OpenSSL::SSL
-        carbonio
 )
 
 if(WIN32)
