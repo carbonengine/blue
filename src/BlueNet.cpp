@@ -7,6 +7,8 @@
 
 #include "StdAfx.h"
 
+#include <socketmodule.h>
+
 #if __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
@@ -21,7 +23,6 @@
 
 #include "stdlib.h"
 #include "stdio.h"
-#include "ctype.h"
 
 #include <SimpleLog.h>
 
@@ -203,7 +204,6 @@ PyMethodDef BlueNet::m_methods[] =
 	{ "SetMinScheduledIOInterval", PySetMinScheduledIOInterval, METH_VARARGS, "SetMinScheduledIOInterval(ms)\n\nMinimum time the communications engine will wake up Blue with a packet event <default 15ms>" },
 	{ "SetWatchdogInterval", PySetWatchdogInterval, METH_VARARGS, "SetWatchdogInterval(ms)\n\nInterval the watchdog wakes up to check for unserviced packets <default 23ms>" },
 	{ "SetWakeupMethod", PySetWakeupMethod, METH_VARARGS, "SetWakeupMethod(['static'|'dynamic'|'pending'|'hangpending'])\nSet the underlying CarbonIO tasklet wakeup methodology" },
-	{ "InstallLoggingCallbacks", PyInstallLoggingCallbacks, METH_VARARGS, "InstallLoggingCallbacks()\n\nallow underlying CarbonIO to emit CCP log messages" },
 	{ "GetLatencyToFirstHop", PyGetLatencyToFirstHop, METH_NOARGS, "GetLatencyToFirstHop()\n\nValid for client only, reprots latency to the proxy" },
 	{ "GetWakeupMethod", PyGetWakeupMethod, METH_VARARGS, "GetWakeupMethod()\nread what underlying taklet wakeup methodology CarbonIO is using" },
 	{ "GetRoutingMode", PyGetRoutingMode, METH_NOARGS, "GetRoutingMode()\n\nreturns 'proxy', 'server', 'client' or 'none'" },
@@ -298,7 +298,7 @@ BlueNet::~BlueNet()
 }
 
 //------------------------------------------------------------------------------
-bool BlueNet::Init( PyObject* blueModule )
+bool BlueNet::Init( PyObject* blueModule, PySocketModule_APIObject* socketAPI )
 {
 #ifdef BN_DEBUG_LOG
 	char buf[256];
@@ -331,8 +331,6 @@ bool BlueNet::Init( PyObject* blueModule )
 		entry->newString = 0;
 	}
 
-	CioSetErrorLogCallback( LogError ); // always allow errors
-
 	m_singleton.m_aggregateSendIntervalMilliseconds = 0;
 
 	memset( &m_singleton.m_stats, 0, sizeof(BlueNet::Stats) );
@@ -345,6 +343,8 @@ bool BlueNet::Init( PyObject* blueModule )
 		CCP_LOGERR("Failed adding net submodule to blue");
 		return false;
 	}
+
+	m_singleton.m_socketAPI = socketAPI;
 
 	CcpCreateThread( &BatchThread, nullptr, CCP_THREAD_PRIORITY_NORMAL );
 
@@ -467,7 +467,8 @@ PyObject* BlueNet::PySetMinScheduledIOInterval( PyObject *self, PyObject *args )
 //------------------------------------------------------------------------------
 PyObject* BlueNet::PyGetWakeupMethod( PyObject *self, PyObject *args )
 {
-	return CioGetWakeupMethod();
+	PyErr_WarnEx( PyExc_DeprecationWarning, "GetWakeupMethod no longer serves any purpose" , 1 );
+	Py_RETURN_NONE;
 }
 
 //------------------------------------------------------------------------------
@@ -484,32 +485,7 @@ PyObject* BlueNet::PySetWatchdogInterval( PyObject *self, PyObject *args )
 //------------------------------------------------------------------------------
 PyObject* BlueNet::PySetWakeupMethod( PyObject *self, PyObject *args )
 {
-	char *buf;
-	if ( !PyArg_ParseTuple(args, "s", &buf) )
-	{
-		return NULL;
-	}
-
-	if ( !_strnicmp(buf, "dynamic", 7) )
-	{
-		CioSetWakeupMethod( WAKEUP_DYNAMIC_CONTEXT );
-	}
-	else if ( !_strnicmp(buf, "pending", 7) )
-	{
-		CioSetWakeupMethod( WAKEUP_PENDING_CALL );
-	}
-	else
-	{
-		return PyErr_Format( PyExc_RuntimeError, "Unknown CarbonIO wake-up method [%s]", buf );
-	}
-
-	Py_RETURN_NONE;
-}
-
-//------------------------------------------------------------------------------
-PyObject* BlueNet::PyInstallLoggingCallbacks( PyObject *self, PyObject *args )
-{
-	CioSetStatusLogCallback( LogStatus );
+	PyErr_WarnEx( PyExc_DeprecationWarning, "SetWakeupMethod serves no purpose any more", 1 );
 	Py_RETURN_NONE;
 }
 
@@ -1435,7 +1411,7 @@ unsigned int BlueNet::Flush()
 			BN_AGG(bnlog("transport[%lld] had[%d] bytes scheduled for transmit", transport->ID, transport->bytesAggregated));
 
 			CcpAutoMutex tlock( transport->packetAggregateLock );
-			CioSendFormattedPacket( transport->descriptor, transport->packetAggregator, transport->bytesAggregated );
+			m_socketAPI->send_formatted_packet( transport->descriptor, transport->packetAggregator, transport->bytesAggregated );
 			bytesFlushed += transport->bytesAggregated;
 			transport->bytesAggregated = 0;
 		}
@@ -1690,7 +1666,7 @@ PyObject* BlueNet::PySetMode( PyObject *self, PyObject *args )
 	}
 
 	// install our routing
-	CioAddPacketCallbackPostDecompress( OnPostDecompress );
+	m_singleton.m_socketAPI->add_oob_data_callback( OnPostDecompress );
 
 	Py_RETURN_NONE;
 }
@@ -1856,7 +1832,7 @@ PyObject* BlueNet::PyGetRoutingMode( PyObject *self, PyObject *unused )
 }
 
 //------------------------------------------------------------------------------
-bool BlueNet::OnPostDecompress( long long descriptor, const char* data, const int len, const char* OobData, const int OobLen )
+int BlueNet::OnPostDecompress( long long descriptor, const char* data, const int len, const char* OobData, const int OobLen )
 {
 	if ( !OobData || (OobLen <= sizeof(unsigned short)) )
 	{
@@ -2413,14 +2389,14 @@ bool BlueNet::SendPacketEx( TransportRepr *transport,
 							unsigned int headerLen,
 							const int priority  )
 {
+	int maxPacketsize = sizeof(uint32_t) * 2 + len + headerLen;
+
 	if ( !m_aggregateSendIntervalMilliseconds )
 	{
-		BN_AGG(bnlog("not aggregating, just forwarding [%d]bytes to [%lld]", CioGetMaxPacketsize(len, headerLen), transport->ID ));
+		BN_AGG(bnlog("not aggregating, just forwarding [%d]bytes to [%lld]", maxPacketsize, transport->ID ));
 		// don't want to use the aggregate functionality? okay
-		return CioSendPacket( transport->descriptor, data, len, headerData, headerLen );
+		return m_socketAPI->send_packet( transport->descriptor, data, len, headerData, headerLen );
 	}
-
-	int maxPacketsize = CioGetMaxPacketsize( len, headerLen );
 
 	CcpAutoMutex tlock( transport->packetAggregateLock );
 
@@ -2429,7 +2405,7 @@ bool BlueNet::SendPacketEx( TransportRepr *transport,
 	{
 		BN_AGG(bnlog("Normal, adding [%d] to the end of current[%d]", maxPacketsize, transport->bytesAggregated ));
 		// simple case, its normal priority and fits in the queue
-		transport->bytesAggregated += CioFormatPacket( transport->packetAggregator + transport->bytesAggregated, data, len, headerData, headerLen );
+		transport->bytesAggregated += m_socketAPI->format_packet( transport->packetAggregator + transport->bytesAggregated, data, len, headerData, headerLen );
 		return true;
 	}
 
@@ -2441,8 +2417,8 @@ bool BlueNet::SendPacketEx( TransportRepr *transport,
 		BN_AGG(bnlog("shifting out[%d] appended with[%d]", maxPacketsize, transport->bytesAggregated ));
 
 		// enough room to send the whole lot, append it to the end and do so
-		transport->bytesAggregated += CioFormatPacket( transport->packetAggregator + transport->bytesAggregated, data, len, headerData, headerLen );
-		bool ret = CioSendFormattedPacket( transport->descriptor, transport->packetAggregator, transport->bytesAggregated );
+		transport->bytesAggregated += m_socketAPI->format_packet( transport->packetAggregator + transport->bytesAggregated, data, len, headerData, headerLen );
+		bool ret = m_socketAPI->send_formatted_packet( transport->descriptor, transport->packetAggregator, transport->bytesAggregated );
 		transport->bytesAggregated = 0;
 		return ret;
 	}
@@ -2450,9 +2426,9 @@ bool BlueNet::SendPacketEx( TransportRepr *transport,
 	BN_AGG(bnlog("shifting out[%d] and current[%d]", maxPacketsize, transport->bytesAggregated ));
 
 	// nope, its just huge, shift out everything
-	bool ret = CioSendFormattedPacket( transport->descriptor, transport->packetAggregator, transport->bytesAggregated );
+	bool ret = m_socketAPI->send_formatted_packet( transport->descriptor, transport->packetAggregator, transport->bytesAggregated );
 	transport->bytesAggregated = 0;
-	return CioSendPacket( transport->descriptor, data, len, headerData, headerLen ) ? ret : false;
+	return m_socketAPI->send_packet( transport->descriptor, data, len, headerData, headerLen ) ? ret : false;
 }
 
 //------------------------------------------------------------------------------
@@ -2466,7 +2442,7 @@ unsigned int BlueNet::FlushTransport( TransportRepr* transport )
 	CcpAutoMutex tlock( transport->packetAggregateLock );
 
 	unsigned int bytes = transport->bytesAggregated;
-	bool ret = CioSendFormattedPacket( transport->descriptor, transport->packetAggregator, transport->bytesAggregated );
+	bool ret = m_socketAPI->send_formatted_packet( transport->descriptor, transport->packetAggregator, transport->bytesAggregated );
 	transport->bytesAggregated = 0;
 
 	return ret ? bytes : 0;
@@ -2488,7 +2464,7 @@ void BlueNet::AnswerPing( TransportRepr* transport, unsigned long long timestamp
 
 	BN_PING(bnlog("timestamp[0x%016llX] received from [%lld] sending pong", timestamp, transport->ID ));
 
-	CioSendPacket( transport->descriptor, pingData, 4, pingData, pingPacker.Finalize() ); // 4 bytes of dummy data
+	m_socketAPI->send_packet( transport->descriptor, pingData, 4, pingData, pingPacker.Finalize() ); // 4 bytes of dummy data
 
 	if ( timestamp & TIMESTAMP_PINGBACK_BIT )
 	{

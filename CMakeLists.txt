@@ -19,6 +19,8 @@ include(CcpGlobalSettings)
 include(CcpPackageConfigHelpers)
 
 find_package(BlueExposure REQUIRED NO_CMAKE_PATH)
+find_package(CarbonIO REQUIRED NO_CMAKE_PATH)
+find_package(CcpLog REQUIRED NO_CMAKE_PATH)
 find_package(CURL REQUIRED NO_CMAKE_PATH)
 find_package(OpenSSL REQUIRED NO_CMAKE_PATH)
 find_package(PDM REQUIRED NO_CMAKE_PATH)
@@ -66,8 +68,6 @@ set(PUBLIC_HEADER_FILES_INCLUDE
 
 ccp_add_library(Blue SHARED
     src/Logger/Logger.cpp
-    src/CarbonIO/dll_exports.h
-    src/CarbonIO/protocol.h
     src/BlueSysInfo.mm
     src/Accumulator/PercentileAccumulator.cpp
     src/Accumulator/PercentileAccumulator_Blue.cpp
@@ -189,8 +189,6 @@ ccp_add_library(Blue SHARED
     src/IBlueObjectBuilder_Blue.cpp
     src/IBluePlacementObserver_Blue.cpp
     src/InterfaceDefinitions.cpp
-    src/IOLoop.cpp
-    src/IOLoop.h
     src/IRootReader.cpp
     src/IRootReader.h
     src/IRootWriter.cpp
@@ -252,40 +250,12 @@ ccp_add_library(Blue SHARED
     src/md5.h
     src/RWSpinLock.h
     src/ScopedLocks.h
-    src/slsocketmodule.c
-    src/slsocketmodule.h
-    src/slselectmodule.c
-    src/slsocket.h
     src/stacklessio.cpp
     src/stacklessio_api.h
     src/version.h
     src/win32.cpp
     src/win32.h
 )
-
-if (APPLE)
-    target_sources(Blue PRIVATE src/slsocket_posix.cpp)
-elseif (WIN32)
-    target_sources(Blue PRIVATE
-        src/CarbonIO/api.cpp
-        src/CarbonIO/api.h
-        src/CarbonIO/CarbonIO.cpp
-        src/CarbonIO/CarbonIO.h
-        src/CarbonIO/dll_exports.cpp
-        src/CarbonIO/ssl_pipe.cpp
-        src/CarbonIO/ssl_pipe.h
-        src/CarbonIO/stats.cpp
-        src/CarbonIO/stats.h
-        src/slsocket.cpp
-    )
-endif()
-
-# These files don't play nicely with PCH, partially because they are C and not C++, so let's exclude them from
-# using PCH until such a time that they are converted to C++
-set_source_files_properties(
-    src/slsocketmodule.c
-    src/slselectmodule.c
-    PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
 
 target_sources(Blue PRIVATE
     include/Base64.h
@@ -294,7 +264,6 @@ target_sources(Blue PRIVATE
     include/BlueFileUtil.h
     include/BlueMain.h
     include/BlueNet.h
-    include/BlueNetTypes.h
     include/DataStructs.h
     include/IBlueObjectRecycler.h
     include/IBlueResFileSystem.h
@@ -314,8 +283,11 @@ target_compile_definitions(Blue
 if(APPLE)
     enable_language(OBJCXX)
     target_compile_definitions(Blue PRIVATE PORTING_TO_LINUX NO_CARBONIO)
-    target_link_libraries(Blue PRIVATE "-framework Foundation -framework IOKit -framework AppKit")
+    target_link_libraries(Blue PRIVATE "-framework SystemConfiguration -framework Foundation -framework IOKit -framework AppKit")
 endif()
+
+get_target_property(CARBONIO_INCLUDE_DIR carbonio INTERFACE_INCLUDE_DIRECTORIES)
+target_include_directories(Blue PRIVATE ${CARBONIO_INCLUDE_DIR})
 
 target_link_libraries(Blue
     PUBLIC
@@ -353,8 +325,6 @@ target_include_directories(Blue
 set_target_properties(Blue PROPERTIES CXX_VISIBILITY_PRESET hidden)
 set_target_properties(Blue PROPERTIES OUTPUT_NAME "blue")
 
-add_subdirectory(src/_ssl)
-
 # Provide tests and an install target iff this is the top level project only
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     # tests
@@ -363,6 +333,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     if(BUILD_TESTING)
         add_subdirectory(tests)
     endif()
+    set(CARBONIO_BIN_DIR "${CarbonIO_DIR}/${CCP_VENDOR_BIN_PATH}")
     # discover python tests ... this may be a little bit brittle since we're working around the missing `_blueexposuretest`
     # binary. As in, test discovery happens during the configure stage at which the binary does not exist yet.
     if(WIN32)

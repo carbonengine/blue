@@ -959,23 +959,36 @@ bool DBRow::InitDB(PyObject *dataO, PyObject *reuse)
 
 PyObject* DBRow::Compare(PyObject *a, PyObject *b, int op)
 {
-	auto lhs = static_cast<DBRow *>(a);
-	auto rhs = static_cast<DBRow *>(b);
+	// Object a is guaranteed to be of type blue.DBRow, second object can be NoneType
+	if( a->ob_type != b->ob_type )
+	{
+		switch( op )
+		{
+		case Py_EQ:
+			Py_RETURN_FALSE;
+		case Py_NE:
+			Py_RETURN_TRUE;
+		default:
+			Py_RETURN_NOTIMPLEMENTED;
+		}
+	}
 
-	switch(op) {
+	auto lhs = static_cast<DBRow*>( a );
+	auto rhs = static_cast<DBRow*>( b );
+
+	switch( op )
+	{
 	case Py_EQ:
-		if ( *lhs == *rhs )
+		if( *lhs == *rhs )
 			Py_RETURN_TRUE;
 		Py_RETURN_FALSE;
 	case Py_LT:
-		if ( lhs < rhs ) {
+		if( lhs < rhs )
 			Py_RETURN_TRUE;
-		}
 		Py_RETURN_FALSE;
 	case Py_GT:
-		if ( lhs > rhs ) {
+		if( lhs > rhs )
 			Py_RETURN_TRUE;
-		}
 		Py_RETURN_FALSE;
 	default:
 		Py_RETURN_NOTIMPLEMENTED;
@@ -1363,13 +1376,55 @@ const ColumnDescriptor *DBRow::GetCD(int &idx, PyObject *key, PyObject *exceptio
 }
 
 
-PyObject *DBRow::MappingSubscript(DBRow *row, PyObject *key)
+PyObject* DBRow::MappingSubscript( DBRow* row, PyObject* key )
 {
-	int idx;
-	const ColumnDescriptor *cd = row->GetCD(idx, key, PyExc_KeyError);
-	if (!cd)
-		return 0;
-	return row->Get(*cd, idx);
+	const int columnCount = static_cast<int>( row->mRD->mColumnList.size() );
+
+	if( PyUnicode_Check( key ) )
+	{
+		const char* unicodeKey = PyUnicode_AsUTF8( key );
+		const auto iterator = row->mRD->mColumnMap.find( unicodeKey );
+
+		if( iterator == row->mRD->mColumnMap.end() )
+			return PyErr_Format( PyExc_KeyError, "Row has no field %s", unicodeKey ), nullptr;
+
+		const auto index = iterator->second.second;
+		return SequenceGet( row, index );
+	}
+
+	if( PyIndex_Check( key ) )
+	{
+		Py_ssize_t index = PyNumber_AsSsize_t( key, PyExc_IndexError );
+
+		if( index == -1 && PyErr_Occurred() )
+			return nullptr;
+
+		if( index < 0 )
+			index += columnCount;
+
+		return SequenceGet( row, index );
+	}
+
+	if( PySlice_Check( key ) )
+	{
+		Py_ssize_t start, stop, step;
+
+		if( PySlice_Unpack( key, &start, &stop, &step ) )
+			return nullptr;
+
+		PySlice_AdjustIndices( columnCount, &start, &stop, step );
+
+		if( step != 1 )
+		{
+			PyErr_SetString( PyExc_NotImplementedError, "Supported for slices with a step size other than 1 is not implemented." );
+			return nullptr;
+		}
+
+		return SequenceGetSlice( row, start, stop );
+	}
+
+	PyErr_Format( PyExc_TypeError, "list indices must be integers or slices, not %.200s", Py_TYPE( key )->tp_name );
+	return nullptr;
 }
 
 

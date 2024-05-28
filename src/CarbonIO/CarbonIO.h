@@ -45,7 +45,53 @@ Description: implementation of IO Completion Ports for stackless
 #include <ScopedLocks.h>
 
 typedef struct _PySocketSockObject PySocketSockObject;
-typedef union sock_addr sock_addr_t;
+
+#ifdef HAVE_SYS_UN_H
+# include <sys/un.h>
+#else
+# undef AF_UNIX
+#endif
+
+/* Socket address */
+typedef union sock_addr {
+	struct sockaddr_in in;
+	struct sockaddr sa;
+#ifdef AF_UNIX
+	struct sockaddr_un un;
+#endif
+#ifdef AF_NETLINK
+	struct sockaddr_nl nl;
+#endif
+#ifdef ENABLE_IPV6
+	struct sockaddr_in6 in6;
+	struct sockaddr_storage storage;
+#endif
+#ifdef HAVE_BLUETOOTH_BLUETOOTH_H
+	struct sockaddr_l2 bt_l2;
+	struct sockaddr_rc bt_rc;
+	struct sockaddr_sco bt_sco;
+	struct sockaddr_hci bt_hci;
+#endif
+#ifdef HAVE_NETPACKET_PACKET_H
+	struct sockaddr_ll ll;
+#endif
+#ifdef HAVE_LINUX_CAN_H
+	struct sockaddr_can can;
+#endif
+#ifdef HAVE_SYS_KERN_CONTROL_H
+	struct sockaddr_ctl ctl;
+#endif
+#ifdef HAVE_SOCKADDR_ALG
+	struct sockaddr_alg alg;
+#endif
+#ifdef AF_QIPCRTR
+	struct sockaddr_qrtr sq;
+#endif
+#ifdef AF_VSOCK
+	struct sockaddr_vm vm;
+#endif
+} sock_addr_t;
+
 extern "C" void ciolog( const char* format, ... );
 
 PyMODINIT_FUNC PyInit_carbonio( void );

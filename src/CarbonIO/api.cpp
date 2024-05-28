@@ -26,7 +26,6 @@ Description: interface with a C-compile only file
 extern "C" void ciolog( const char* format, ... );
 
 #include "CarbonIO.h"
-#include "slsocketmodule.h"
 
 //------------------------------------------------------------------------------
 // for debug purposes, should never be part of a checkin

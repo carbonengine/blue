@@ -11,7 +11,6 @@
 
 #pragma warning (disable : 4996) // remove Windows nagging about using _strincmp() etc
 
-#include <CarbonIO/dll_exports.h>
 #include <LinkHash.h>
 #include <RWSpinLock.h>
 #include <ScopedLocks.h>
@@ -79,7 +78,7 @@ class Marshal;
 class BlueNet
 {
 public:
-	static bool Init( PyObject* blueModule );
+	static bool Init( PyObject* blueModule, PySocketModule_APIObject* socketAPI );
 
 	//---------------------------------------
 	struct PacketInfo
@@ -233,7 +232,6 @@ private:
 	static PyObject* PySetMinScheduledIOInterval( PyObject *self, PyObject *args ); // Minimum time the communications engine will wake up Blue with a packet event <default 15ms>
 	static PyObject* PySetWatchdogInterval( PyObject *self, PyObject *args ); //SetWatchdogInterval(ms)\n\nInterval the watchdog wakes up to check for unserviced packets <default 23ms>
 	static PyObject* PySetWakeupMethod( PyObject *self, PyObject *unused ); // control how CarbonIO wakes stuff up
-	static PyObject* PyInstallLoggingCallbacks( PyObject *self, PyObject *args ); // allow underlying CarbonIO to emit CCP log messages
 	static PyObject* PyEnumerateTransport( PyObject *self, PyObject *args ); // expose routing table
 	static PyObject* PyPurgeTransport( PyObject *self, PyObject *args ); // only internal cleanup, remove it
 	static PyObject* PySendBlueNetPacket( PyObject *self, PyObject *args ); // given a message create a bitpacked header
@@ -271,7 +269,7 @@ private:
 	void RegisterCallback( ExtendedDataCallback callback, const int blueNetKey, int style =CALLBACK_SYNC );
 
 	// check for sub-macho delivery
-	static bool OnPostDecompress( long long descriptor, const char* data, const int len, const char* OobData, const int OobLen );
+	static int OnPostDecompress( long long descriptor, const char* data, const int len, const char* OobData, const int OobLen );
 
 	bool ParseHeader( const char* data, const int len, BlueNetHeader *header );
 	void PurgeTransport( long long transportID );
@@ -404,6 +402,8 @@ private:
 
 	static void LogStatus( const char* msg );
 	static void LogError( const char* msg );
+
+	PySocketModule_APIObject *m_socketAPI;
 };
 
 extern BLUEIMPORT BlueNet* BeNet; // for external access to the singleton

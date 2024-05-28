@@ -17,6 +17,8 @@
 #include "BluePython.h"
 #endif
 
+ICrashReporter* BeCrashes{nullptr};
+
 const char* g_moduleName = "blue";
 std::wstring s_logDeviceName( L"EVE" );
 
@@ -434,9 +436,19 @@ void BlueShutdownSocketLogger()
 	StopSocketLogger();
 }
 
+void LogToCrashReporter( CcpLogChannel_t& logObject, CCP::LogType type, unsigned long userData, const char* message )
+{
+	static char buf[256]{};
+	// Copy up to one byte less than the buffer to ensure the buffer is null terminated
+	strncpy_s( buf, std::extent_v<decltype(buf)>, message, std::extent_v<decltype(buf)> - 1 );
+
+	BeCrashes->SetCrashKeyValue( "lastLoggedError", buf );
+}
+
 void BlueSetCrashReporter( ICrashReporter* crashReporter )
 {
 	BeCrashes = crashReporter;
+	CCP::RegisterLogEcho(LogToCrashReporter, CCP::LOGTYPE_ERR, true);
 }
 
 void BlueLogFuncChannel( CcpLogChannel_t& logObject, CCP::LogType type, unsigned long userData, const char* format, va_list args )

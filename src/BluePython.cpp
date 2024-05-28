@@ -38,9 +38,6 @@
 #if CCP_STACKLESS
 #include "BlueNet.h"
 #include "stacklessio_api.h"
-#ifndef NO_CARBONIO
-#include "CarbonIO/CarbonIO.h"
-#endif
 #endif
 
 #include "ScopedBlockTrap.h"
@@ -245,19 +242,8 @@ bool BluePyOS::InitBasicModuleSupport()
 	PyObject* sys_modules = PyImport_GetModuleDict();
 
 #if CCP_STACKLESS
-#ifndef NO_CARBONIO
-	auto carbonIoModule = PyInit_carbonio();
-#endif
-	auto stacklessIoModule = PyInit_stacklessio();
-
-	auto slsocketModule = PyDict_GetItemString( sys_modules, "_socket" );
-	if (! slsocketModule ) {
-		slsocketModule = PyInit__slsocket();
-	}
-	auto slselectModule = PyInit_slselect();
-
 	// c-routing support
-	if ( !BeNet->Init( mBlueModule ) ) {
+	if ( !BeNet->Init( mBlueModule, mSocketAPI ) ) {
 		return false;
 	}
 
@@ -269,24 +255,6 @@ bool BluePyOS::InitBasicModuleSupport()
     if ( PyDict_SetItemString( sys_modules, "blue.heapq", heapqModule ) != 0 ) {
         return false;
     }
-	if( PyDict_SetItemString( sys_modules, "_slsocket", slsocketModule ) != 0 )
-	{
-		return false;
-	}
-	if( PyDict_SetItemString( sys_modules, "slselect", slselectModule ) != 0 )
-	{
-		return false;
-	}
-#ifndef NO_CARBONIO
-	if( PyDict_SetItemString( sys_modules, "carbonio", carbonIoModule ) != 0 )
-	{
-		return false;
-	}
-#endif
-	if( PyDict_SetItemString( sys_modules, "stacklessio", stacklessIoModule ) != 0 )
-	{
-		return false;
-	}
 
 	return true;
 }
@@ -469,6 +437,14 @@ bool BluePyOS::Startup()
 	for (unsigned int i = 0; i < sizeof TASKLETS / sizeof TASKLETS[0]; i++)
 	{
 		TASKLETS[i].mContext = PyUnicode_InternFromString(TASKLETS[i].mName);
+	}
+
+	mSocketAPI = reinterpret_cast<PySocketModule_APIObject*>( PySocketModule_ImportModuleAndAPI() );
+	if ( !mSocketAPI )
+	{
+		CCP_LOGERR( "Failed acquiring carbon-io socket module" );
+		PyFlushError( nullptr );
+		return false;
 	}
 
 	CCP_LOG( "Init basic module support" );
@@ -681,7 +657,7 @@ bool BluePyOS::UpdateTaskletRunTime(PyObject *tasklet, double elapsed)
 
 
 //--------------------------------------------------------------------
-int BluePyOS::	PumpPython(bool quit)
+int BluePyOS::PumpPython(bool quit)
 {
 #if CCP_STACKLESS
 	if (PyErr_Occurred())
@@ -693,6 +669,12 @@ int BluePyOS::	PumpPython(bool quit)
 
 		SafeAutoTasklet _at(&mTTimer, TIMERS[TIMER_STACKLESSIO].mContext);
 		PyStacklessIoDispatchEvents("PumpPython");
+	}
+
+	{
+		CCP_STATS_ZONE( "Blue/CarbonIO" );
+		SafeAutoTasklet _at(&mTTimer, TIMERS[TIMER_STACKLESSIO].mContext);
+		mSocketAPI->dispatch();
 	}
 
 	// Synchro.  This will make tasklets runnable

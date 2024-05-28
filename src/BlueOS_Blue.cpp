@@ -8,42 +8,16 @@
 
 #if BLUE_WITH_PYTHON
 
-extern bool g_carbonIoFastWakeup;
 static PyObject *PyCarbonIoFastWakeup( PyObject* self, PyObject* args)
 {
-	PyObject *arg;
-	if ( !PyArg_ParseTuple( args, "O", &arg ) )
-	{
-		return NULL;
-	}
-	int v = PyObject_IsTrue( arg );
-	if (v == -1)
-	{
-		return NULL;
-	}
-	PyObject *res = g_carbonIoFastWakeup ? Py_True : Py_False;
-	g_carbonIoFastWakeup = v != 0;
-	Py_INCREF( res );
-	return res;
+	PyErr_WarnEx( PyExc_DeprecationWarning, "fast wakeup has no more effect", 1 );
+	Py_RETURN_FALSE;
 }
 
-extern bool g_carbonIoManualWakeup;
 static PyObject *PyCarbonIoManualWakeup( PyObject* self, PyObject* args)
 {
-	PyObject *arg;
-	if ( !PyArg_ParseTuple( args, "O", &arg ) )
-	{
-		return NULL;
-	}
-	int v = PyObject_IsTrue( arg );
-	if (v == -1)
-	{
-		return NULL;
-	}
-	PyObject *res = g_carbonIoManualWakeup ? Py_True : Py_False;
-	g_carbonIoManualWakeup = v != 0;
-	Py_INCREF( res );
-	return res;
+	PyErr_WarnEx( PyExc_DeprecationWarning, "manual wakeup has no more effect", 1 );
+	Py_RETURN_FALSE;
 }
 
 void SetCrashKeyValues( const std::string& k, const std::string& v )

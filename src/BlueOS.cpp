@@ -36,7 +36,6 @@
 #if CCP_STACKLESS
 #include "BitPacker.h"
 #include "BlueNet.h"
-#include "BlueNetTypes.h"
 #include "BluePyCpp.h"
 #include <stacklessio_api.h>
 #endif
@@ -62,11 +61,6 @@ CCP_STATS_DECLARE( logInfo,			"Blue/logInfo",			false,	CST_COUNTER_LOW, "Count o
 CCP_STATS_DECLARE( logNotice,		"Blue/logNotice",		false,	CST_COUNTER_LOW, "Count of notice logs" );
 CCP_STATS_DECLARE( logWarn,			"Blue/logWarn",			false,	CST_COUNTER_LOW, "Count of warning logs" );
 CCP_STATS_DECLARE( logErr,			"Blue/logErr",			false,	CST_COUNTER_LOW, "Count of error logs" );
-
-// CarbonIO wake up mode
-bool g_carbonIoFastWakeup = false;
-
-bool g_carbonIoManualWakeup = true;
 
 #if CCP_STACKLESS
 
@@ -199,31 +193,6 @@ BlueOsError::~BlueOsError()
 #if CCP_STACKLESS
 
 //------------------------------------------------------------------------------
-static void OnIOTaskletScheduled( bool force )
-{
-#ifndef NO_CARBONIO
-	if( g_carbonIoFastWakeup )
-	{
-		SetEvent(gBreakCarbonIo);
-	}
-	else
-	{
-		unsigned int current = GetTickCount();
-		if( (current > sNextScheduledIOWakeup) || force )
-		{
-			sNextScheduledIOWakeup = current + BeNet->GetMinScheduledIOInterval();
-			sPendingWakeup = false;
-			SetEvent( gBreakSleep ); // tends to cause an immediate context-switch, do it last
-		}
-		else
-		{
-			sPendingWakeup = true;
-		}
-	}
-#endif
-}
-
-//------------------------------------------------------------------------------
 static void IOWakeupWatchdogThread( void *arg )
 {
 #ifndef NO_CARBONIO
@@ -351,14 +320,6 @@ BlueOS::BlueOS() :
 
 	mMiniDump = false;
 
-#if CCP_STACKLESS && !defined(NO_CARBONIO)
-	gBreakSleep = CreateEvent(NULL, FALSE, FALSE, NULL);
-	gBreakCarbonIo = CreateEvent(NULL, FALSE, FALSE, NULL);
-
-	CioSetOnTaskletScheduledCallback( OnIOTaskletScheduled );
-	_beginthread( IOWakeupWatchdogThread, 0, 0 );
-#endif
-
 #if BLUE_WITH_PYTHON
 	mFrameClock = 0;
 #endif
@@ -376,9 +337,6 @@ BlueOS::~BlueOS()
 {
 #if BLUE_WITH_PYTHON
 	Py_XDECREF(mFrameClock);
-#endif
-#ifndef NO_CARBONIO
-	CloseHandle(gBreakSleep);
 #endif
 }
 
@@ -497,15 +455,6 @@ void BlueOS::DoSleep()
 		}
 		else if (result == WAIT_OBJECT_0 + 2)
 		{
-			//CarbonIo signal
-			// Depending on this flag, now have carbonIO wake up its tasklets.  Perhaps it
-			// didn't already do so (because it merely scheduled a pending call) so this forces
-			// the issue.
-			// This is the right thing to do, but it is switchable for testing purposes.
-			if( g_carbonIoManualWakeup )
-			{
-				CioWakeupTasklets();
-			}
 			if( SchedulerAPI()->PyScheduler_GetRunCount() > 1 )
 			{
 				break; //stuff to be done
@@ -836,10 +785,6 @@ void BlueOS::PumpOSInternal()
 		DoSleep();
 		mNextScheduledEvent = int( mSleepTime );
 	}
-#ifndef NO_CARBONIO
-	// alert the IO watchdog that events have been delivered recently
-	sNextScheduledIOWakeup = GetTickCount() + MIN_SCHEDULED_IO_INTERVAL;
-#endif
 
 	BeNet->DeliverCPackets(); // dispatch any waiting callbacks
 #endif
@@ -1023,7 +968,7 @@ bool BlueOS::RunStackless()
 
 		// Call "StacklessMain" which contains main game loop, see BlueOS::PyStacklessMain
 		PyObject* ret = PyObject_Call( stacklessMainCallable, nullptr, nullptr );
-		
+
 		if( !ret )
 		{
 			PyOS->PyError();
@@ -1302,9 +1247,6 @@ void BlueOS::NextScheduledEvent(int millisec)
 #if CCP_STACKLESS
 	if( millisec <= 0 )
 	{
-#ifndef NO_CARBONIO
-		SetEvent(gBreakSleep); //If we are sleeping (this could be an async window message we're in, wake up!)
-#endif
 		mNextScheduledEvent = -1;
 	}
 	else if( millisec < mNextScheduledEvent )
