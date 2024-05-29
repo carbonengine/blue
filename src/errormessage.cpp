@@ -277,7 +277,7 @@ std::string GetLanguageCode()
 	if( BeOS->HasStartupArg( languageArgName ) )
 	{
 		auto code = std::string( CW2A( BeOS->GetStartupArgValue( languageArgName ).c_str() ) );
-		std::transform( code.begin(), code.end(), code.begin(), std::tolower );
+		std::transform( code.begin(), code.end(), code.begin(), []( char a ){ return std::tolower(a); } );
 		return code;
 	}
 	else
