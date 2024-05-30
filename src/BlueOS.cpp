@@ -2412,7 +2412,6 @@ extern "C" PyObject* CCP_CONCATENATE( PyInit_blue, CCP_BUILD_FLAVOR )( void );
 void BlueOS::GetInitTab( std::vector<_inittab>& tabs ) const
 {
 	tabs.push_back( { g_moduleName, CCP_CONCATENATE( PyInit_blue, CCP_BUILD_FLAVOR ) } );
-	tabs.push_back( { "_socket", PyInit__slsocket } );
 	tabs.push_back( { nullptr, nullptr } );
 }
 
