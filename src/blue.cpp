@@ -6,7 +6,6 @@
 #include "Blue.h"
 #include "BluePaths.h"
 #include "BlueOS.h"
-#include "Logger/Logger.h"
 #include "ResourceLoading.h"
 #include "BlueSocketLogger.h"
 #if BLUE_WITH_PYTHON
@@ -164,7 +163,7 @@ HERR:
 
 #elif defined(__APPLE__)
 
-	CW2A filenameStr( reinterpret_cast<const wchar_t*>( PyUnicode_AS_UNICODE( ufn.o ) ) );
+	CW2A filenameStr( reinterpret_cast<const wchar_t*>( PyUnicode_AsWideCharString( ufn.o, nullptr ) ) );
 	int f;
 	long fileSize;
 	{
@@ -270,7 +269,7 @@ HERR:
 
 #elif defined(__APPLE__)
 
-	Py_UNICODE *fileName = PyUnicode_AS_UNICODE(ufn);
+	Py_UNICODE *fileName = PyUnicode_AsWideCharString(ufn, nullptr);
 	CW2A filenameStr( reinterpret_cast<const wchar_t*>( fileName ) );
 	int f;
 	{
