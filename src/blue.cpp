@@ -460,6 +460,9 @@ bool ImportScheduler()
 {
 	CCP_LOG( "Importing scheduler" );
 	PyObject* scheduler_module = BlueLoadPythonExtension( "_scheduler" );
+	if (!scheduler_module) {
+		return false;
+	}
 
 	// Set '_scheduler_BUILDFLAVOR' to be 'scheduler'. Required as capsule name refers to this and the file is constant between flavors.
 	PyObject* sysmodule = PyImport_ImportModule( "sys" );
