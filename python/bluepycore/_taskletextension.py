@@ -6,6 +6,8 @@ import weakref
 import datetime
 import logging
 
+from scheduler import TaskletExit
+
 logger = logging.getLogger(__name__)
 
 
