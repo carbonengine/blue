@@ -192,6 +192,8 @@ private:
 	BluePy mrunTime_str;
 #endif
 
+	BluePy mMainScheduler;
+
 	PySocketModule_APIObject *mSocketAPI;
 
 public:

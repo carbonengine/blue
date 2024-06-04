@@ -191,6 +191,10 @@ bool BluePyOS::InitBasicModuleSupport()
 	BlueRegisterObjectsToModule( mBlueModule, BlueRegistration::GetObjectRegs() );
 	BlueRegisterExceptionsToModule( mBlueModule, BlueRegistration::GetExceptionRegs() );
 
+	// Get ref to schedule manager for main thread
+	// This will ensure the main thread's schedule manager alive throughout game usage
+	mMainScheduler = BluePy( SchedulerAPI()->PyScheduler_GetScheduler() );
+
 		// Initialize error exception
     PyDict_SetItemString(dict, "error", PyExc_BlueError);
 
