@@ -1008,14 +1008,6 @@ PyObject* BlueOS::PyStacklessMain( PyObject* args )
 		g_statistics->Update();
 	}
 
-	// Set the main tasklet as block trapped.
-	{
-		BluePy current(SchedulerAPI()->PyScheduler_GetCurrent());
-		if (!current)
-			return NULL;
-		SchedulerAPI()->PyTasklet_SetBlockTrap((PyTaskletObject*)(PyObject*)current, 1);
-	}
-
 	//autoexec can reside in a .zip lib
 	PyObject *module = PyImport_ImportModule( "autoexec" );
 	if( !module )

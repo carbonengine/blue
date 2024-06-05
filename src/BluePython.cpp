@@ -195,6 +195,12 @@ bool BluePyOS::InitBasicModuleSupport()
 	// This will ensure the main thread's schedule manager alive throughout game usage
 	mMainScheduler = BluePy( SchedulerAPI()->PyScheduler_GetScheduler() );
 
+	// Set the main tasklet as block trapped.
+	BluePy currentTasklet(SchedulerAPI()->PyScheduler_GetCurrent());
+	if (!currentTasklet)
+		return NULL;
+	SchedulerAPI()->PyTasklet_SetBlockTrap((PyTaskletObject*)(PyObject*)currentTasklet, 1);
+
 		// Initialize error exception
     PyDict_SetItemString(dict, "error", PyExc_BlueError);
 
