@@ -464,11 +464,15 @@ bool ImportScheduler()
 	}
 
 	// Set '_scheduler_BUILDFLAVOR' to be 'scheduler'. Required as capsule name refers to this and the file is constant between flavors.
-	PyObject* sysmodule = PyImport_ImportModule( "sys" );
-	PyObject* dict = PyModule_GetDict( sysmodule );
-	PyObject* modules = PyDict_GetItemString( dict, "modules" );
-	PyDict_SetItemString( modules, "scheduler", scheduler_module );
-	Py_DECREF( sysmodule );
+	PyObject* dict = PyImport_GetModuleDict();
+	if (!dict)
+	{
+		return false;
+	}
+	if ( PyDict_SetItemString( dict, "scheduler", scheduler_module ) != 0)
+	{
+		return false;
+	}
 	Py_DecRef( scheduler_module );
 
 	return SchedulerAPI() != nullptr;

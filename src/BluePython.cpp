@@ -273,9 +273,6 @@ bool BluePyOS::InitBasicModuleSupport()
 //--------------------------------------------------------------------
 bool BluePyOS::FiniBasicModuleSupport()
 {
-
-	PyObject* sysmodule = PyImport_ImportModule("sys");
-
 #if CCP_STACKLESS
 
 	//synchro and pysynchro share a reference
@@ -299,9 +296,8 @@ bool BluePyOS::FiniBasicModuleSupport()
 	PyExc_BlueError = 0;
 
 	//now, get the sys.modules dict
-	dict = PyModule_GetDict(sysmodule);
+	dict = PyImport_GetModuleDict();
 	PyObject *modules = PyDict_GetItemString(dict, "modules");
-	Py_DECREF(sysmodule);
 
 	//and delete the "blue" module (by replacing it with None)
 	PyDict_SetItemString(modules, g_moduleName, Py_None);
