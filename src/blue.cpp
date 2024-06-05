@@ -658,10 +658,6 @@ PyMODINIT_FUNC BLUE_EXPORTED_INIT
 		CCP_LOGERR( "Importing Scheduler CAPI failed" );
 		return nullptr;
 	}
-	
-	BlueModuleStartup();
-
-	BlueInitializeSocketLogger();
 
 	CCP_LOG( "Initializing Paths" );
 	BlueInitializePaths(L"");
