@@ -327,6 +327,13 @@ set_target_properties(Blue PROPERTIES OUTPUT_NAME "blue")
 
 # Provide tests and an install target iff this is the top level project only
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+    # Running tests happen through exefile in interpreter mode. For that we need to determine the correct name of Exefile,
+    # which differs by platform. Additionally, we kind of guess it here because there's no CMake target which could be
+    # queried for the property instead.
+    set(EXEFILE_NAME Exefile)
+    if(WIN32)
+        set(EXEFILE_NAME ${EXEFILE_NAME}.exe)
+    endif()
     # tests
     option(BUILD_TESTING "Build tests. Enabled by default." ON)
     include(CTest)
@@ -341,6 +348,8 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     elseif(APPLE)
         set(ENV{PYTHONPATH} ${BRANCH_ROOT_DIR}/carbon/common/stdlib:${Python_ROOT}/${CCP_VENDOR_BIN_PATH}:${CMAKE_CURRENT_SOURCE_DIR}/python:${Scheduler_ROOT}/${CCP_VENDOR_LIB_PATH}:${Greenlet_ROOT}/${CCP_VENDOR_BIN_PATH}\:${Greenlet_ROOT}/python)
     endif()
+    # Discovery works with the standard python interpreter because it isn't running anything, it just needs to find all
+    # the defined test cases. Therefore, just use that one, even though it cannot run the discovered test cases.
     execute_process(COMMAND ${PYTHON_EXECUTABLE} discover.py
         OUTPUT_VARIABLE PYTHON_TESTS_STR
         OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -356,13 +365,13 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     foreach(PYTHON_TEST ${PYTHON_TESTS})
         message(STATUS "Found test ${PYTHON_TEST}")
         add_test(NAME ${PYTHON_TEST}
-            COMMAND ${PYTHON_EXECUTABLE} -m bluetests -v ${PYTHON_TEST}
+            COMMAND $<TARGET_FILE_DIR:Blue>/${EXEFILE_NAME} /inherit /buildflavor=$<LOWER_CASE:$<CONFIG>> /py -m bluetests -v ${PYTHON_TEST}
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests/python
         )
         if(WIN32)
             set_tests_properties(${PYTHON_TEST} PROPERTIES ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:Blue>\;${BRANCH_ROOT_DIR}/carbon/common/stdlib\;${Python_ROOT}/${CCP_VENDOR_BIN_PATH}\;${Scheduler_ROOT}/${CCP_VENDOR_BIN_PATH}\;${Greenlet_ROOT}/${CCP_VENDOR_BIN_PATH}\;${Greenlet_ROOT}/python\;${CMAKE_CURRENT_SOURCE_DIR}/python;BUILDFLAVOR=$<LOWER_CASE:$<CONFIG>>")
         elseif (APPLE)
-            set_tests_properties(${PYTHON_TEST} PROPERTIES ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:Blue>:${BRANCH_ROOT_DIR}/carbon/common/stdlib:${Python_ROOT}/${CCP_VENDOR_BIN_PATH}:${CMAKE_CURRENT_SOURCE_DIR}/python;BUILDFLAVOR=$<LOWER_CASE:$<CONFIG>>")#TODO
+            set_tests_properties(${PYTHON_TEST} PROPERTIES ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:Blue>:${BRANCH_ROOT_DIR}/carbon/common/stdlib:${Python_ROOT}/${CCP_VENDOR_BIN_PATH}:${Scheduler_ROOT}/${CCP_VENDOR_LIB_PATH}:${Greenlet_ROOT}/${CCP_VENDOR_BIN_PATH}:${Greenlet_ROOT}/python:${CMAKE_CURRENT_SOURCE_DIR}/python;BUILDFLAVOR=$<LOWER_CASE:$<CONFIG>>")
         else()
             message(FATAL_ERROR "Unsupported platform")
         endif ()
