@@ -564,11 +564,7 @@ void BlueModuleStartup()
     }
 
 	// We need to call RegisterClasses early so that BluePaths can be correctly constructed.
-	// However, this code path is still hit twice at the moment, so we need to avoid double
-	// registration.
-	if (!PyOS) {
-		BeClasses->RegisterClasses( BlueRegistration::GetClassRegs() );
-	}
+	BeClasses->RegisterClasses( BlueRegistration::GetClassRegs() );
 }
 
 #if BLUE_WITH_PYTHON
@@ -665,10 +661,10 @@ PyMODINIT_FUNC BLUE_EXPORTED_INIT
 	CCP_LOG( "Initializing Resource Loading" );
 	BlueInitializeResourceLoading();
 
-	// If blue is imported in a normal interpreter then we need to do some additional bootstrapping
-	if (!PyOS) {
-		CCP_LOG( "BeOS Startup" );
-		BeOS->Startup(0);
+	CCP_LOG( "BeOS Startup" );
+	if ( ! BeOS->Startup(0) )
+	{
+			return nullptr;
 	}
 
 	PatchPythonExit();
