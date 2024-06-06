@@ -656,15 +656,12 @@ void PatchPythonExit()
 PyMODINIT_FUNC BLUE_EXPORTED_INIT
 	CCP_CONCATENATE( PyInit_blue, CCP_BUILD_FLAVOR ) (void)
 {
-	
 	if(!ImportScheduler())
 	{
 		CCP_LOGERR( "Importing Scheduler CAPI failed" );
 		return nullptr;
 	}
 
-	CCP_LOG( "Initializing Paths" );
-	BlueInitializePaths(L"");
 	CCP_LOG( "Initializing Resource Loading" );
 	BlueInitializeResourceLoading();
 
