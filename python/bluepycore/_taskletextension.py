@@ -107,7 +107,7 @@ class TaskletExt(scheduler.tasklet):
         else:
             t = scheduler.tasklet.__new__(cls)
 
-        t.creation_datetime = datetime.datetime.utcnow()
+        t.creation_datetime = datetime.datetime.now(datetime.UTC)
         # Inherit the localStorage from calling task.
         c = scheduler.getcurrent()
         ls = getattr(c, "localStorage", None)
