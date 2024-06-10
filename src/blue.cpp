@@ -455,6 +455,86 @@ void BlueLogFuncChannel( CcpLogChannel_t& logObject, CCP::LogType type, unsigned
 	LogFuncChannel_v( logObject, type, userData, format, args );
 }
 
+void BlueShowError()
+{
+	if ( ! BeOS )
+	{
+		fprintf( stderr, "Cannot show blue errors before blue was initialized" );
+		return;
+	}
+
+	if( BeOS->GetError( 0 ) )
+	{
+		char* err{nullptr};
+		BeOS->FormatError( &err );
+		BeOS->SetError( BEFLUSH ); //output to logger
+		BeOS->SetError( BECLEAR ); //clear it
+	}
+}
+
+bool BlueSetSearchPaths( const std::vector<std::wstring>& searchPaths )
+{
+	for( const std::wstring& s : searchPaths )
+	{
+		size_t pos = s.find_first_of( L'=' );
+		if( pos == std::wstring::npos )
+		{
+			CCP_LOGWARN( "Invalid path specification: %S", s.c_str() );
+			continue;
+		}
+
+		std::wstring keyW = s.substr( 0, pos );
+		std::wstring valueW = s.substr( pos + 1 );
+
+		if( !BeIsSuccess( BePaths->SetSearchPathW( CW2A( keyW.c_str() ), valueW.c_str() ) ) )
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
+void BlueSetStartupArgs( const std::vector<std::wstring>& args )
+{
+	BeOS->SetStartupArgs( args );
+}
+
+bool BlueHasStartupArg( const std::wstring& name )
+{
+	return BeOS->HasStartupArg( name );
+}
+
+bool BlueRunStackless()
+{
+	return BeOS->RunStackless();
+}
+
+void BlueTerminate( int exitCode )
+{
+	BeOS->Terminate( exitCode );
+}
+
+bool BlueIsPackaged()
+{
+	return BeOS->IsPackaged();
+}
+
+void BlueGetInitTab( std::vector<_inittab>& inittab )
+{
+	BeOS->GetInitTab( inittab );
+}
+
+bool BlueConstructPathListFromManifest( std::vector<std::wstring>& pathList, bool verifyManifest )
+{
+	return BeOS->ConstructPathListFromManifest( pathList, verifyManifest );
+}
+
+void BlueResolvePathForWritingW( const std::wstring& path, std::wstring& resolved )
+{
+	resolved = BePaths->ResolvePathForWritingW( path );
+}
+
 bool ImportScheduler()
 {
 	CCP_LOG( "Importing scheduler" );

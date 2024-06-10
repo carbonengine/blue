@@ -38,8 +38,18 @@ extern "C"
 	BLUEIMPORT void BlueModuleStartup();
 	BLUEIMPORT void BlueInitializeSocketLogger();
 	BLUEIMPORT void BlueShutdownSocketLogger();
+	BLUEIMPORT void BlueShowError();
 	BLUEIMPORT void BlueSetCrashReporter( ICrashReporter* crashReporter );
 	BLUEIMPORT void BlueLogFuncChannel( CcpLogChannel_t& logObject, CCP::LogType type, unsigned long userData, const char* format, va_list args );
+	BLUEIMPORT void BlueGetInitTab( std::vector<_inittab>& inittab );
+	BLUEIMPORT bool BlueConstructPathListFromManifest( std::vector<std::wstring>& pathlist, bool verifyManifest );
+	BLUEIMPORT void BlueResolvePathForWritingW( const std::wstring& path, std::wstring& resolved );
+	BLUEIMPORT void BlueSetStartupArgs( const std::vector<std::wstring>& args );
+	BLUEIMPORT bool BlueHasStartupArg( const std::wstring& name );
+	BLUEIMPORT bool BlueRunStackless();
+	BLUEIMPORT void BlueTerminate( int );
+	BLUEIMPORT bool BlueIsPackaged();
+	BLUEIMPORT bool BlueSetSearchPaths( const std::vector<std::wstring>& searchPaths );
 }
 
 #if CCP_MEMORY_REPLACE_OPERATOR_NEW
