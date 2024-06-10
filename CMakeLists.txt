@@ -300,7 +300,6 @@ target_link_libraries(Blue
         ZLIB::ZLIB
         OpenSSL::Crypto
         OpenSSL::SSL
-        Scheduler
 )
 
 if(WIN32)
@@ -316,10 +315,12 @@ if(WIN32)
 )
 endif()
 
+get_target_property(SCHEDULER_INCLUDE_DIR Scheduler INTERFACE_INCLUDE_DIRECTORIES)
 target_include_directories(Blue
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
     PRIVATE
+        ${SCHEDULER_INCLUDE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 set_target_properties(Blue PROPERTIES CXX_VISIBILITY_PRESET hidden)
