@@ -37,6 +37,16 @@ if(CMAKE_IMPORT_LIBRARY_SUFFIX)
             VERBATIM
     )
 endif()
+if(APPLE)
+    add_custom_command(TARGET BlueCppUnitTests POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy ${Exefile_ROOT}/${CCP_VENDOR_BIN_PATH}${EXEFILE_NAME} $<TARGET_FILE_DIR:Blue>
+            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_LINKER_FILE:ccp::log> $<TARGET_FILE_DIR:Blue>
+            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_LINKER_FILE:Python> $<TARGET_FILE_DIR:Blue>
+            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_LINKER_FILE:Python> $<TARGET_FILE_DIR:BlueCppUnitTests>
+            COMMAND_EXPAND_LISTS
+            VERBATIM
+    )
+endif()
 
 # C++ test discovery needs to be delayed until tests are about to be run because they need the above post-build step.
 gtest_discover_tests(BlueCppUnitTests
