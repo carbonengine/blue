@@ -1,7 +1,6 @@
 import unittest
 from bluepycore import TaskletExt, tasklets
 import blue
-import sys
 
 
 CONTEXT = "test::context"
@@ -31,7 +30,6 @@ class RaisingCallable:
         raise self._exc
 
 
-@unittest.skipIf(sys.platform == "darwin", "These tests pass but crash on shutdown, see https://ccpgames.atlassian.net/browse/PLAT-6078")
 class TestTaskletExt(unittest.TestCase):
     def test_context_is_set(self):
         t = TaskletExt(CONTEXT)
@@ -108,7 +106,6 @@ class TestTaskletExt(unittest.TestCase):
         self.assertIn(t, tasklets)
 
 
-@unittest.skipIf(sys.platform == "darwin", "These tests pass but crash on shutdown, see https://ccpgames.atlassian.net/browse/PLAT-6078")
 class TestTaskletExtWithCallable(unittest.TestCase):
     def test_called(self):
         callable = TestCallable()
