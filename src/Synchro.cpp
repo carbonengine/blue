@@ -546,18 +546,18 @@ PyObject* Synchro::Wakeup(PyObject *args)
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	PyTaskletObject *tasklet;
+	PyObject *tasklet;
 	PyObject *arg = Py_None;
 	Sleeper s;
 	SleeperIt it;
 
-	if (!PyArg_ParseTuple(args, "O!|O", &SchedulerAPI()->PyTaskletType, &tasklet, &arg))
-		return 0;
+	if (!PyArg_ParseTuple(args, "O!|O", SchedulerAPI()->PyTaskletType, &tasklet, &arg))
+		return nullptr;
 
-	if (!FindTasklet((PyObject *)tasklet, mWallclockSleepers, it)) {
-		if (!FindTasklet((PyObject *)tasklet, mSimSleepers, it)) {
+	if (!FindTasklet(tasklet, mWallclockSleepers, it)) {
+		if (!FindTasklet(tasklet, mSimSleepers, it)) {
 			PyErr_SetString(PyExc_ValueError, "tasklet not found in sleepers");
-			return NULL;
+			return nullptr;
 		} else {
 			s = mSimSleepers.Remove(it);
 		}
@@ -579,11 +579,11 @@ PyObject *Synchro::WakeupAtWallclock(PyObject *args)
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	PyTaskletObject *tasklet;
+	PyObject *tasklet;
 	Be::Time newdue = 0;
 	PyObject *arg = Py_None;
-	if (!PyArg_ParseTuple(args, "O!|LO:Reschedule", &SchedulerAPI()->PyTaskletType, &tasklet, &newdue, &arg))
-		return 0;
+	if (!PyArg_ParseTuple(args, "O!|LO:Reschedule", SchedulerAPI()->PyTaskletType, &tasklet, &newdue, &arg))
+		return nullptr;
 
 	//find the tasklet.We must be careful not to let iterators survive past channel sends
 	//due to iterator debugging (they live on the stack)
@@ -591,9 +591,9 @@ PyObject *Synchro::WakeupAtWallclock(PyObject *args)
 	SleeperIt it;
 	s.channel = 0;
 	{
-		if (!FindTasklet((PyObject *) tasklet, mWallclockSleepers, it)) {
+		if (!FindTasklet(tasklet, mWallclockSleepers, it)) {
 			PyErr_SetString(PyExc_ValueError, "tasklet not found in wallclock sleepers");
-			return NULL;
+			return nullptr;
 		}
 
 		Be::Time now = BeOS->GetInfo()->mRealTime;
@@ -621,11 +621,13 @@ PyObject *Synchro::WakeupAtSim(PyObject *args)
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	PyTaskletObject *tasklet;
+	PyObject *tasklet;
 	Be::Time newdue = 0;
 	PyObject *arg = Py_None;
-	if (!PyArg_ParseTuple(args, "O!L|O:Reschedule", &SchedulerAPI()->PyTaskletType, &tasklet, &newdue, &arg))
-		return 0;
+	if (!PyArg_ParseTuple(args, "O!L|O:Reschedule", SchedulerAPI()->PyTaskletType, &tasklet, &newdue, &arg))
+	{
+		return nullptr;
+	}
 
 	//find the tasklet.We must be careful not to let iterators survive past channel sends
 	//due to iterator debugging (they live on the stack)
@@ -633,9 +635,9 @@ PyObject *Synchro::WakeupAtSim(PyObject *args)
 	SleeperIt it;
 	s.channel = 0;
 	{
-		if (!FindTasklet((PyObject *) tasklet, mSimSleepers, it)) {
+		if (!FindTasklet(tasklet, mSimSleepers, it)) {
 			PyErr_SetString(PyExc_ValueError, "tasklet not found in sim sleepers");
-			return NULL;
+			return nullptr;
 		}
 
 		Be::Time now = BeOS->GetInfo()->mSimTime;
