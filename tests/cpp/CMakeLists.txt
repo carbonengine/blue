@@ -1,4 +1,5 @@
 find_package(GTest REQUIRED)
+find_package(Crashpad REQUIRED NO_CMAKE_PATH)
 add_executable(BlueCppUnitTests
     main.cpp
     TestPyMemory.cpp
@@ -43,6 +44,7 @@ if(APPLE)
             COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_LINKER_FILE:ccp::log> $<TARGET_FILE_DIR:Blue>
             COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_LINKER_FILE:Python> $<TARGET_FILE_DIR:Blue>
             COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_LINKER_FILE:Python> $<TARGET_FILE_DIR:BlueCppUnitTests>
+            COMMAND ${CMAKE_COMMAND} -E copy ${CRASHPAD_EXECUTABLE} $<TARGET_FILE_DIR:Blue>
             COMMAND_EXPAND_LISTS
             VERBATIM
     )
