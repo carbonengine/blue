@@ -29,8 +29,6 @@
 #ifdef _WIN32
 #include "win32.h"
 #include <shellapi.h>
-#else
-#include <codecvt>
 #endif
 
 #if CCP_STACKLESS
@@ -382,6 +380,7 @@ void _Py_FatalErrorFunc( const char* _func, const char* msg )
 	TerminateProcess( GetCurrentProcess(), -3 ); // shouldn't get here
 #else
 	kill( getpid(), SIGKILL );
+	__builtin_unreachable();
 #endif
 }
 
@@ -2160,8 +2159,8 @@ PyObject* BlueOS::PyShellExecute(PyObject* args)
 		return PyErr_SetFromWindowsErrWithFilename(GetLastError(), (char*)filename);
 	}
 #else
-    std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
-    std::string command = "open " + conv.to_bytes( file );
+	std::string file_utf8{WideToUTF8( file )};
+    std::string command = "open " + file_utf8;
     system( command.c_str() );
 #endif
 	Py_INCREF(Py_None);

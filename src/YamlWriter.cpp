@@ -66,7 +66,6 @@ Be::Result<std::string> YamlWriter::WriteObjectToStream( const IRoot* root, IBlu
 
 	yaml_emitter_set_output( &emitter, WriteToStreamStatic, (void*)this );
 
-	int debugCounter = 0;
 	for( EventArray_t::iterator it = m_events.begin(); it != m_events.end(); ++it )
 	{
 		yaml_event_t* event = *it;
@@ -76,8 +75,6 @@ Be::Result<std::string> YamlWriter::WriteObjectToStream( const IRoot* root, IBlu
 			CCP_LOGERR( emitter.problem );
 			yaml_emitter_flush( &emitter );
 		}
-
-		++debugCounter;
 	}
 	yaml_emitter_flush( &emitter );
 	// This cleans up all memory allocated by *_event_initialize calls because the
@@ -255,8 +252,7 @@ void YamlWriter::WriteWChar( const wchar_t* value )
 		AddScalarEvent( buffer, YAML_DOUBLE_QUOTED_SCALAR_STYLE );
 		CCP_DELETE [] buffer;
 #else
-        std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
-        auto str = conv.to_bytes( value );
+        auto str = WideToUTF8( value );
         AddScalarEvent( str.c_str(), YAML_DOUBLE_QUOTED_SCALAR_STYLE );
 #endif
 	}

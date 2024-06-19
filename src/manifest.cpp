@@ -11,7 +11,7 @@
 #include "crypto.h"
 #include "BlueResFile.h"
 #include "IBluePaths.h"
-#include "ErrorMessage.h"
+#include "errormessage.h"
 
 #include <vector>
 #include <string>

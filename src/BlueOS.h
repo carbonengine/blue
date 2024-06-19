@@ -137,7 +137,7 @@ public:
 	
 	CcpProcessId_t mPID; // Process ID
 
-	bool IsPackaged()
+	bool IsPackaged() override
 	{
 		return mPackaged;
 	}

@@ -74,7 +74,7 @@ using BlueNoArgsFunction = std::add_pointer<PyObject*(PyObject*)>::type;
 		{
 
 #define PYTHON_METHODS_END() \
-			{NULL, NULL} \
+			{0, 0} \
 		}; \
 		return defs;\
 	}

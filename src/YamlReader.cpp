@@ -807,8 +807,7 @@ const wchar_t* YamlReader::ReadWString()
 	wchar_t* ret = (wchar_t*)CCP_MALLOC( (const char*)m_event->data.scalar.tag, sizeReq * sizeof( wchar_t ) );
 	MultiByteToWideChar( CP_UTF8, 0, asString, -1, ret, sizeReq );
 #else
-	std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
-	auto str = conv.from_bytes( (const char*)m_event->data.scalar.value );
+	auto str = UTF8ToWide( (const char*)m_event->data.scalar.value ) ;
 
 	wchar_t* ret = (wchar_t*)CCP_MALLOC( (const char*)m_event->data.scalar.tag, ( str.length() + 1 ) * sizeof( wchar_t ) );
 	std::copy( begin( str ), end( str ), ret );

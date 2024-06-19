@@ -198,7 +198,7 @@ bool BluePyOS::InitBasicModuleSupport()
 	// Set the main tasklet as block trapped.
 	BluePy currentTasklet(SchedulerAPI()->PyScheduler_GetCurrent());
 	if (!currentTasklet)
-		return NULL;
+		return false;
 	SchedulerAPI()->PyTasklet_SetBlockTrap((PyTaskletObject*)(PyObject*)currentTasklet, 1);
 
 		// Initialize error exception

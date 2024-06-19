@@ -750,7 +750,7 @@ IRootPtr BlueResMan::LoadObject(const wchar_t* unnormalizedName, Be::LOADOBJECT_
 
 	CCP_LOG_CH( s_ch, "Creating object from %S", filename.c_str() );
 	IRootPtr obj;
-	obj.Attach( builder->CreateObjectWithYield( NULL, NULL ) );
+	obj.Attach( builder->CreateObjectWithYield( 0, nullptr ) );
 
 	if( !obj )
 	{
