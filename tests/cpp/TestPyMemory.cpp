@@ -5,6 +5,13 @@ CCP_STATS_DECLARED_ELSEWHERE( pyMemory );
 class PythonMemoryAllocatorTest : public ::testing::Test {
 protected:
     void SetUp() override {
+		PyPreConfig preConfig;
+		PyPreConfig_InitIsolatedConfig( &preConfig );
+		preConfig.allocator = PYMEM_ALLOCATOR_NOT_SET;
+		auto status = Py_PreInitialize( &preConfig );
+		if ( PyStatus_Exception( status ) ) {
+			GTEST_FAIL() << "Failed pre-initializing Python: " << status.err_msg << "\n";
+		}
         BlueInstallPythonMemoryHooks();
 		// We need to initialize the Python interpreter when running tests, otherwise calls to the Python C API will fail.
 		// There are a few things that we need to take care of when initializing the interpreter for the tests. Primarily,

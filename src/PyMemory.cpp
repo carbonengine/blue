@@ -153,40 +153,48 @@ namespace Ccp {
 
 extern "C" BLUEIMPORT void BlueInstallPythonMemoryHooks()
 {
-    static RawAllocator *rawAllocator{nullptr};
+    static RawAllocator rawAllocator;
 
-    if (rawAllocator != nullptr) {
-        return;
-    }
-
-    rawAllocator = new RawAllocator();
-
-    PyMemAllocatorEx rawAllocatorEx = {
-            /* .ctx = */ rawAllocator,
+    static PyMemAllocatorEx rawAllocatorEx = {
+            /* .ctx = */ &rawAllocator,
             /* .malloc = */ Ccp::PyRawMalloc,
             /* .calloc = */ Ccp::PyRawCalloc,
             /* .realloc = */ Ccp::PyRawRealloc,
             /* .free = */ Ccp::PyRawFree,
     };
-    PyMem_SetAllocator(PYMEM_DOMAIN_RAW, &rawAllocatorEx);
+	PyMemAllocatorEx alloc;
 
-    PyMemAllocatorEx objAllocatorEx = {
-            /* .ctx = */ rawAllocator,
+	PyMem_GetAllocator(PYMEM_DOMAIN_RAW, &alloc);
+	if ( alloc.ctx != &rawAllocator ) {
+		PyMem_SetAllocator(PYMEM_DOMAIN_RAW, &rawAllocatorEx);
+	}
+
+    static PyMemAllocatorEx objAllocatorEx = {
+            /* .ctx = */ &rawAllocator,
             /* .malloc = */ Ccp::PyMallocWithGIL,
             /* .calloc = */ Ccp::PyCallocWithGIL,
             /* .realloc = */ Ccp::PyReallocWithGIL,
             /* .free = */ Ccp::PyFreeWithGIL,
     };
-    PyMem_SetAllocator(PYMEM_DOMAIN_OBJ, &objAllocatorEx);
 
-    PyMemAllocatorEx memAllocatorEx = {
-            /* .ctx = */ rawAllocator,
+	PyMem_GetAllocator(PYMEM_DOMAIN_OBJ, &alloc);
+	if ( alloc.ctx != &rawAllocator ) {
+		PyMem_SetAllocator(PYMEM_DOMAIN_OBJ, &objAllocatorEx);
+	}
+
+    static PyMemAllocatorEx memAllocatorEx = {
+            /* .ctx = */ &rawAllocator,
             /* .malloc = */ Ccp::PyMallocWithGIL,
             /* .calloc = */ Ccp::PyCallocWithGIL,
             /* .realloc = */ Ccp::PyReallocWithGIL,
             /* .free = */ Ccp::PyFreeWithGIL,
     };
-    PyMem_SetAllocator(PYMEM_DOMAIN_MEM, &memAllocatorEx);
+
+	PyMem_GetAllocator(PYMEM_DOMAIN_MEM, &alloc);
+	if ( alloc.ctx != &rawAllocator ) {
+		PyMem_SetAllocator(PYMEM_DOMAIN_MEM, &memAllocatorEx);
+	}
+
 }
 
 #endif
