@@ -20,7 +20,8 @@ public:
         }
         auto ret = CCP_MALLOC("PyRawMalloc", size);
         if (ret) {
-            mStats.Add(int64_t(size));
+			int64_t tmp = CCP_MSIZE( ret );
+            mStats.Add( tmp );
         } else {
             CcpCrashOnPurpose();
         }
@@ -34,6 +35,11 @@ public:
         }
 
         auto ret = CCP_CALLOC("PyRawCalloc", nelem, size);
+		if ( ret )
+		{
+			int64_t tmp = CCP_MSIZE( ret );
+			mStats.Add( tmp );
+		}
 
         return ret;
     }
@@ -44,11 +50,14 @@ public:
         }
         if (ptr != nullptr) {
             int64_t oldSize(CCP_MSIZE(ptr));
-            mStats.Add(-oldSize);
+			if ( oldSize >= 0 ) {
+				mStats.Add(-oldSize);
+			}
         }
         auto ret = CCP_REALLOC("Ccp_PyRawRealloc", ptr, newSize);
         if (ret != nullptr) {
-            mStats.Add(int64_t(newSize));
+			int64_t tmp = CCP_MSIZE( ret );
+            mStats.Add( tmp );
         } else {
             CcpCrashOnPurpose();
         }
@@ -57,7 +66,10 @@ public:
 
     void free(void *ptr) {
         if (ptr != nullptr) {
-            mStats.Add(-int64_t(CCP_MSIZE(ptr)));
+			int64_t tmp = CCP_MSIZE( ptr );
+			if ( tmp >= 0 ) {
+				mStats.Add( -tmp );
+			}
         }
         CCP_FREE(ptr);
     }
