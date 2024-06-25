@@ -54,4 +54,5 @@ endif()
 # C++ test discovery needs to be delayed until tests are about to be run because they need the above post-build step.
 gtest_discover_tests(BlueCppUnitTests
         DISCOVERY_MODE PRE_TEST
+        PROPERTIES ENVIRONMENT "CCP_EVE_PERFORCE_BRANCH_PATH=$ENV{CCP_EVE_PERFORCE_BRANCH_PATH}"
 )
