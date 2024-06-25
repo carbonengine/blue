@@ -341,7 +341,6 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     if(BUILD_TESTING)
         add_subdirectory(tests)
     endif()
-    set(CARBONIO_BIN_DIR "${CarbonIO_DIR}/${CCP_VENDOR_BIN_PATH}")
     # discover python tests ... this may be a little bit brittle since we're working around the missing `_blueexposuretest`
     # binary. As in, test discovery happens during the configure stage at which the binary does not exist yet.
     if(WIN32)
