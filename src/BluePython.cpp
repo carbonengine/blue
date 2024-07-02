@@ -37,7 +37,6 @@
 
 #if CCP_STACKLESS
 #include "BlueNet.h"
-#include "stacklessio_api.h"
 #endif
 
 #include "ScopedBlockTrap.h"
@@ -668,14 +667,6 @@ int BluePyOS::PumpPython(bool quit)
 #if CCP_STACKLESS
 	if (PyErr_Occurred())
 		PyFlushError("PumpPython::start");
-
-	//StacklessIO
-	{
-		CCP_STATS_ZONE( "Blue/StacklessIO" );
-
-		SafeAutoTasklet _at(&mTTimer, TIMERS[TIMER_STACKLESSIO].mContext);
-		PyStacklessIoDispatchEvents("PumpPython");
-	}
 
 	{
 		CCP_STATS_ZONE( "Blue/CarbonIO" );

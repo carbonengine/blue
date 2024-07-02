@@ -35,7 +35,6 @@
 #include "BitPacker.h"
 #include "BlueNet.h"
 #include "BluePyCpp.h"
-#include <stacklessio_api.h>
 #endif
 
 #include <sstream> // for message creation
@@ -184,33 +183,6 @@ BlueOsError::~BlueOsError()
     {
         free( message );
     }
-}
-
-#endif
-
-#if CCP_STACKLESS
-
-//------------------------------------------------------------------------------
-static void IOWakeupWatchdogThread( void *arg )
-{
-#ifndef NO_CARBONIO
-	// periodically wake up and check to see if a pending wakeup was
-	// issued but never serviced, this will happen only when IO is unbusy.
-	for(;;)
-	{
-        if ( sPendingWakeup )
-		{
-			unsigned int current = GetTickCount();
-			if ( current > sNextScheduledIOWakeup )
-			{
-				SetEvent( gBreakSleep );
-				sPendingWakeup = false;
-			}
-		}
-
-		Sleep( BeNet->GetWatchdogInterval() );
-	}
-#endif
 }
 
 #endif
@@ -390,83 +362,11 @@ void _Py_FatalErrorFunc( const char* _func, const char* msg )
 // that there is, in fact, no IO to be done.
 void BlueOS::DoSleep()
 {
-#if CCP_STACKLESS
-#ifdef NO_CARBONIO
     if( mNextScheduledEvent <= 0 )
     {
         return;
     }
     CcpThreadSleep( mNextScheduledEvent );
-#else
-	if( mNextScheduledEvent <= 0 )
-	{
-		// Quick return if there is no desire to sleep
-		ResetEvent( gBreakSleep );
-		return;
-	}
-
-	// Mark this as an idle timer
-	SafeAutoTasklet _at2(PyOS->GetTaskletTimer(),TASKLETS[IDLETASKLET].mContext, true, IDLE);
-
-	HANDLE handles[3];
-	handles[0] = PyStacklessIoGetWakeupEventHandle();
-	handles[1] = gBreakSleep;
-	handles[2] = gBreakCarbonIo;
-	__int64 startTime, frequency=0;
-
-	int orgsleeptime = mNextScheduledEvent;
-	int sleeptime = orgsleeptime;
-	QueryPerformanceCounter((LARGE_INTEGER*)&startTime);
-	while( sleeptime > 0 )
-	{
-		DWORD result;
-		{
-			Ccp::PyAllowThreads _allow; //allow python threads during the sleep
-			result = MsgWaitForMultipleObjectsEx(
-				_countof(handles), handles,
-				sleeptime, QS_ALLEVENTS, MWMO_ALERTABLE);
-		}
-
-		// We appear to have been woken by stacklessIO.  But this may be an old state, and StackelssIO
-		// may have been serviced in the mean time.  therefore, we must check if servicing it is still
-		// necessary.
-		if( result == WAIT_OBJECT_0 )
-		{
-			PyStacklessIoStatus_t s;
-			s.struct_size = sizeof(s);
-			PyStacklessIoGetStatus(&s);
-			if( s.nNonRunnable || s.nRunnable )
-			{
-				break; //There is stuff to be done
-			}
-			else
-			{
-				//[yawn,] no need to panic.
-				__int64 nowTime;
-				QueryPerformanceCounter((LARGE_INTEGER*)&nowTime);
-				if( !frequency )
-				{
-					QueryPerformanceFrequency((LARGE_INTEGER*)&frequency);
-				}
-				double time_spent = (double)(nowTime-startTime)/(double)frequency;
-				sleeptime = orgsleeptime - (int)(time_spent*1000.0); //milliseconds
-			}
-		}
-		else if (result == WAIT_OBJECT_0 + 2)
-		{
-			if( SchedulerAPI()->PyScheduler_GetRunCount() > 1 )
-			{
-				break; //stuff to be done
-			}
-		}
-		else
-		{
-			break; //interrupted or timed out
-		}
-	}
-	ResetEvent( gBreakSleep );
-#endif
-#endif
 }
 
 //------------------------------------------------------------------------------
@@ -887,7 +787,7 @@ bool BlueOS::Startup( int pyOptimizeFlag )
 	}
 
 	// pump yielding
-	mSleepTime = 10000;
+	mSleepTime = 1;
 	mOverrideFG = 0;
 
 	// framerate counters

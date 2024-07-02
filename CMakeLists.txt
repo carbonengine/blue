@@ -250,8 +250,6 @@ ccp_add_library(Blue SHARED
     src/md5.h
     src/RWSpinLock.h
     src/ScopedLocks.h
-    src/stacklessio.cpp
-    src/stacklessio_api.h
     src/version.h
     src/win32.cpp
     src/win32.h
@@ -282,7 +280,7 @@ target_compile_definitions(Blue
 
 if(APPLE)
     enable_language(OBJCXX)
-    target_compile_definitions(Blue PRIVATE PORTING_TO_LINUX NO_CARBONIO)
+    target_compile_definitions(Blue PRIVATE PORTING_TO_LINUX)
     target_link_libraries(Blue PRIVATE "-framework SystemConfiguration -framework Foundation -framework IOKit -framework AppKit")
 endif()
 
