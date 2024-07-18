@@ -609,7 +609,7 @@ PyObject *WriteStream::__reduce_ex__(PyObject *proto)
 {
 	if (!mFinalized)
 		return PyErr_SetString(PyExc_RuntimeError, "stream isn't finalized yet"), nullptr;
-	return Py_BuildValue("O(s#)", GetType(), mBuff, mPos);
+	return Py_BuildValue("O(y#)", GetType(), mBuff, mPos);
 }
 
 
