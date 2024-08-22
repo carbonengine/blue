@@ -535,29 +535,6 @@ void BlueResolvePathForWritingW( const std::wstring& path, std::wstring& resolve
 	resolved = BePaths->ResolvePathForWritingW( path );
 }
 
-bool ImportScheduler()
-{
-	CCP_LOG( "Importing scheduler" );
-	PyObject* scheduler_module = BlueLoadPythonExtension( "_scheduler" );
-	if (!scheduler_module) {
-		return false;
-	}
-
-	// Set '_scheduler_BUILDFLAVOR' to be 'scheduler'. Required as capsule name refers to this and the file is constant between flavors.
-	PyObject* dict = PyImport_GetModuleDict();
-	if (!dict)
-	{
-		return false;
-	}
-	if ( PyDict_SetItemString( dict, "scheduler", scheduler_module ) != 0)
-	{
-		return false;
-	}
-	Py_DecRef( scheduler_module );
-
-	return SchedulerAPI() != nullptr;
-}
-
 void BlueModuleStartup()
 {
     // Inform the logging system of the main thread
@@ -732,12 +709,6 @@ void PatchPythonExit()
 PyMODINIT_FUNC BLUE_EXPORTED_INIT
 	CCP_CONCATENATE( PyInit_blue, CCP_BUILD_FLAVOR ) (void)
 {
-	if(!ImportScheduler())
-	{
-		CCP_LOGERR( "Importing Scheduler CAPI failed" );
-		return nullptr;
-	}
-
 	CCP_LOG( "Initializing Resource Loading" );
 	BlueInitializeResourceLoading();
 
