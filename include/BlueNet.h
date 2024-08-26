@@ -172,15 +172,6 @@ public:
 	unsigned int FlushToClientList( const unsigned long long* clientList, const int listLen );
 	unsigned int FlushToCharList( const unsigned long long* charList, const int listLen );
 
-	// kick off the ping/pong buffer batch transmit thread
-#if _WIN32
-	void TransmitBatch() { SetEvent( m_singleton.m_batchReadyEvent ); }
-#elif __APPLE__
-	void TransmitBatch() { dispatch_semaphore_signal( m_singleton.m_batchReadyEvent ); }
-#else
-#error "Missing implementation"
-#endif
-
 	//---------------------
 	enum Mode
 	{
@@ -281,8 +272,6 @@ private:
 	static int m_constMinPingFrequency;
 	time_t m_fastTime; // updated once per frame rather than for every packet
 
-	unsigned int m_aggregateSendIntervalMilliseconds; // the maximum time all blue-aggregate transports must be visited
-
 	// Using Ccp::LinkHash instead of STL HashSet because we need the speed here
 	Ccp::LinkHash<TransportRepr*> m_transportsBySocket;
 	Ccp::LinkHash<TransportRepr*> m_transportsByTransportID;
@@ -357,20 +346,7 @@ private:
 
 	static void BlueNetCallback( const BlueNet::PacketInfo* info, const char* data, const int len );
 
-	BlueNetPacketBatch *m_batchPing;
-	BlueNetPacketBatch *m_batchPong;
-	CcpMutex m_batchLock;
-#if _WIN32
-	HANDLE m_batchReadyEvent;
-#elif __APPLE__
-	dispatch_semaphore_t m_batchReadyEvent;
-#else
-#error "Missing implementation!"
-#endif
-	static uint32_t BatchThread( void *arg );
-
 	int m_blueNetHandlerPacketKey;
-	bool m_batchingEnabled;
 
 	void PackString( const char* string, const unsigned int len, BitPackerManaged& packer );
 	bool UnpackString( char** string, unsigned int* len, BitPacker& packer );
