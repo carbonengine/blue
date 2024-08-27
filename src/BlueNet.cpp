@@ -271,18 +271,6 @@ BlueNet::BlueNet() :
 }
 
 //------------------------------------------------------------------------------
-BlueNet::~BlueNet()
-{
-#if _WIN32
-	CloseHandle( m_batchReadyEvent );
-#elif __APPLE__
-	// dispatch_sempahore_t does not need to be destroyed
-#else
-#error "Missing implementation!"
-#endif
-}
-
-//------------------------------------------------------------------------------
 bool BlueNet::Init( PyObject* blueModule, PySocketModule_APIObject* socketAPI )
 {
 #ifdef BN_DEBUG_LOG

@@ -213,7 +213,6 @@ public:
 private:
 
 	BlueNet();
-	~BlueNet();
 
 	// python interface
 	static PyObject* PySetMyNodeID( PyObject *self, PyObject *args );
