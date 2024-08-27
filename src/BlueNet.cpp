@@ -239,7 +239,7 @@ PyMethodDef BlueNet::m_methods[] =
 //------------------------------------------------------------------------------
 BlueNet::BlueNet() :
 	m_callbackJobLock( "BlueNet", "m_callbackJobLock" ), m_callbackPoolLock( "BlueNet", "m_callbackPoolLock" ),
-	m_batchLock( "BlueNet", "m_batchLock" ), m_transportLock( "BlueNet", "m_transportLock" ),
+	m_transportLock( "BlueNet", "m_transportLock" ),
 	m_callbackListLock( "BlueNet", "m_callbackListLock" ), m_clientSessionCallbackListLock( "BlueNet", "m_clientSessionCallbackListLock" )
 {
 	BeNet = this;
@@ -261,18 +261,6 @@ BlueNet::BlueNet() :
 	m_minScheduledIOInterval = MIN_SCHEDULED_IO_INTERVAL;
 	m_watchdogInterval = MIN_SCHEDULED_IO_INTERVAL / 2;
 
-#if _WIN32
-	m_batchReadyEvent = CreateEvent( 0, false, false, "BlueNet/m_batchReadyEvent" );
-#elif __APPLE__
-    m_batchReadyEvent = dispatch_semaphore_create(0);
-#else
-#error "Missing implementation"
-#endif
-	m_batchPing = CCP_NEW( "BlueNet/DestinyPacketBatch" ) BlueNetPacketBatch;
-	m_batchPong = CCP_NEW( "BlueNet/DestinyPacketBatch" ) BlueNetPacketBatch;
-
-	m_batchingEnabled = false; // DO NOT CHECK THIS IN TRUE=====================================<<<<<<<<< .. yet
-
 	m_NewStringMaxLen = 0;
 
 	m_marshal = 0;
@@ -280,21 +268,6 @@ BlueNet::BlueNet() :
 	m_pendingCallPending = false;
 
 	m_blueNetHandlerPacketKey = BlueNetKeyFromName( "BlueNet::BatchPacket" );
-}
-
-//------------------------------------------------------------------------------
-BlueNet::~BlueNet()
-{
-#if _WIN32
-	CloseHandle( m_batchReadyEvent );
-#elif __APPLE__
-	// dispatch_sempahore_t does not need to be destroyed
-#else
-#error "Missing implementation!"
-#endif
-
-	CCP_DELETE( m_batchPing );
-	CCP_DELETE( m_batchPong );
 }
 
 //------------------------------------------------------------------------------
@@ -331,8 +304,6 @@ bool BlueNet::Init( PyObject* blueModule, PySocketModule_APIObject* socketAPI )
 		entry->newString = 0;
 	}
 
-	m_singleton.m_aggregateSendIntervalMilliseconds = 0;
-
 	memset( &m_singleton.m_stats, 0, sizeof(BlueNet::Stats) );
 
 	m_singleton.m_marshal = Marshal::New();
@@ -345,8 +316,6 @@ bool BlueNet::Init( PyObject* blueModule, PySocketModule_APIObject* socketAPI )
 	}
 
 	m_singleton.m_socketAPI = socketAPI;
-
-	CcpCreateThread( &BatchThread, nullptr, CCP_THREAD_PRIORITY_NORMAL );
 
 	return true;
 }
@@ -443,13 +412,7 @@ PyObject* BlueNet::PySetMinPingFrequency( PyObject *self, PyObject *args )
 //------------------------------------------------------------------------------
 PyObject* BlueNet::PySetAggregateThreadFrequency( PyObject *self, PyObject *args )
 {
-	bool startThread = m_singleton.m_aggregateSendIntervalMilliseconds == 0 ? true : false;
-
-	if ( !PyArg_ParseTuple(args, "i", &m_singleton.m_aggregateSendIntervalMilliseconds) )
-	{
-		return NULL;
-	}
-
+	PyErr_WarnEx( PyExc_DeprecationWarning, "SetAggregateThreadFrequency no longer serves any purpose" , 1 );
 	Py_RETURN_NONE;
 }
 
@@ -1159,124 +1122,28 @@ PyObject* BlueNet::PyClearProxyNodes( PyObject *self, PyObject *unused )
 //----------------------------------------------------------------------------------------------------------
 PyObject* BlueNet::PyAddSendEvent( PyObject* module, PyObject* args )
 {
-	PyObject* clientList;
-	PyObject* message;
-	char* type;
-	Py_ssize_t len;
-
-	if ( !PyArg_ParseTuple(args, "Os#O", &clientList, &type, &len, &message) )
-	{
-		BN_ADD_MESSAGE(bnlog("AddSendEvent parse tuple failed"));
-		return 0;
-	}
-
-	if ( !PyTuple_Check(message) )
-	{
-		return PyErr_Format( PyExc_RuntimeError, "AddSendEvent third argument must be a tuple" );
-	}
-
-	CcpAutoMutex block( m_singleton.m_batchLock ); // this must all be done under lock of course
-
-	BlueNetPacketBatch* batch = m_singleton.m_batchPing;
-
-	if ( batch->m_numberOfEntries >= batch->m_listSize ) // list big enough?
-	{
-		BN_ADD_MESSAGE(bnlog("reached limit, growing[%d] entries", batch->m_listSize));
-		batch->Grow();
-	}
-
-	BlueNetPacket* packet = batch->m_list[batch->m_numberOfEntries++];
-	packet->listEntries = 0;
-	if ( packet->listSize == 0 )
-	{
-		packet->listSize = 4;
-		BN_ADD_MESSAGE(bnlog("new list entry, initting to [%d]", packet->listSize));
-		packet->recipientList = CCP_NEW("BlueNet/recipientList") unsigned long long[ packet->listSize ];
-	}
-
-	// were we passed a list of clients or a single one? pack that info
-	if ( !PyList_Check(clientList) )
-	{
-		PyErr_Clear();
-		packet->recipientList[0] = PyLong_AsLongLong( clientList );
-		packet->listEntries = 1;
-
-		BN_ADD_MESSAGE(bnlog("Single client [%lld]", PyLong_AsLongLong(clientList)));
-
-		if ( PyErr_Occurred() )
-		{
-			return 0;
-		}
-	}
-	else
-	{
-		packet->listEntries = (int)PyList_GET_SIZE( clientList );
-		if ( (packet->listSize < packet->listEntries) || !packet->listSize )
-		{
-			CCP_DELETE[] packet->recipientList;
-			packet->listSize = (packet->listEntries > 0) ? packet->listEntries : 4;
-			packet->recipientList = CCP_NEW("BlueNet/recipientList") unsigned long long[ packet->listSize ];
-		}
-
-		BN_ADD_MESSAGE(bnlog("multiple[%d] clients", packet->listEntries ));
-
-		for( int i=0; i<packet->listEntries; i++ )
-		{
-			BN_ADD_MESSAGE(bnlog("[%d]: [%lld]", i, PyLong_AsLongLong(PyList_GET_ITEM(clientList, i))));
-			packet->recipientList[i] = PyLong_AsLongLong(PyList_GET_ITEM(clientList, i));
-		}
-
-		if ( PyErr_Occurred() )
-		{
-			BN_ADD_MESSAGE(bnlog("error occured?"));
-			return 0;
-		}
-	}
-
-	packet->payload.Reset();
-	m_singleton.PackString( type, (unsigned int)len, packet->payload );
-
-	if ( !m_singleton.SerializeObject(message, packet->payload) )
-	{
-		return 0;
-	}
-
-	m_singleton.m_stats.bytes += packet->payload.Finalize();
-
+	PyErr_WarnEx( PyExc_DeprecationWarning, "AddSendEvent no longer serves any purpose" , 1 );
 	Py_RETURN_NONE;
 }
 
 //----------------------------------------------------------------------------------------------------------
 PyObject* BlueNet::PyTransmitBatch( PyObject* module, PyObject* args )
 {
-	m_singleton.TransmitBatch();
+	PyErr_WarnEx( PyExc_DeprecationWarning, "TransmitBatch no longer serves any purpose" , 1 );
 	Py_RETURN_NONE;
 }
 
 //----------------------------------------------------------------------------------------------------------
 PyObject* BlueNet::PyIsBatchingEnabled( PyObject* module, PyObject* args )
 {
-	if ( m_singleton.m_batchingEnabled )
-	{
-		Py_RETURN_TRUE;
-	}
-	else
-	{
-		Py_RETURN_FALSE;
-	}
+	PyErr_WarnEx( PyExc_DeprecationWarning, "IsBatchingEnabled no longer serves any purpose" , 1 );
+	Py_RETURN_FALSE;
 }
 
 //----------------------------------------------------------------------------------------------------------
 PyObject* BlueNet::PySetBatchingEnabled( PyObject* module, PyObject* args )
 {
-	int enable;
-	if ( !PyArg_ParseTuple(args, "i", &enable) )
-	{
-		return NULL;
-	}
-
-	m_singleton.m_batchingEnabled = enable ? true : false;
-
+	PyErr_WarnEx( PyExc_DeprecationWarning, "SetBatchingEnabled no longer serves any purpose" , 1 );
 	Py_RETURN_NONE;
 }
 
@@ -1636,12 +1503,7 @@ PyObject* BlueNet::PySetMode( PyObject *self, PyObject *args )
 	if ( !_strnicmp(mode, "proxy", 5) )
 	{
 		CCP_LOG_CH( s_blueNetChannel, "BlueNet personality set to PROXY");
-
 		m_singleton.m_routingMode = MODE_PROXY;
-		if ( !m_singleton.m_aggregateSendIntervalMilliseconds )
-		{
-			m_singleton.m_aggregateSendIntervalMilliseconds = 200;
-		}
 	}
 	else if ( !_strnicmp(mode, "server", 6) )
 	{
@@ -1652,10 +1514,6 @@ PyObject* BlueNet::PySetMode( PyObject *self, PyObject *args )
 	{
 		CCP_LOG_CH( s_blueNetChannel, "BlueNet personality set to CLIENT");
 		m_singleton.m_routingMode = MODE_CLIENT;
-		if ( !m_singleton.m_aggregateSendIntervalMilliseconds )
-		{
-			m_singleton.m_aggregateSendIntervalMilliseconds = 200;
-		}
 	}
 	else
 	{
@@ -2389,46 +2247,7 @@ bool BlueNet::SendPacketEx( TransportRepr *transport,
 							unsigned int headerLen,
 							const int priority  )
 {
-	int maxPacketsize = sizeof(uint32_t) * 2 + len + headerLen;
-
-	if ( !m_aggregateSendIntervalMilliseconds )
-	{
-		BN_AGG(bnlog("not aggregating, just forwarding [%d]bytes to [%lld]", maxPacketsize, transport->ID ));
-		// don't want to use the aggregate functionality? okay
-		return m_socketAPI->send_packet( transport->descriptor, data, len, headerData, headerLen );
-	}
-
-	CcpAutoMutex tlock( transport->packetAggregateLock );
-
-	if ( priority == PRIORITY_NORMAL
-		 && ((maxPacketsize + transport->bytesAggregated) < BLUE_TRANSPORT_PACKET_AGGREGATOR_SIZE) )
-	{
-		BN_AGG(bnlog("Normal, adding [%d] to the end of current[%d]", maxPacketsize, transport->bytesAggregated ));
-		// simple case, its normal priority and fits in the queue
-		transport->bytesAggregated += m_socketAPI->format_packet( transport->packetAggregator + transport->bytesAggregated, data, len, headerData, headerLen );
-		return true;
-	}
-
-	// would overflow the buffer or needs immediate send, flush some/all
-
-	// enough room to format the whole lot and shift it out? then do so
-	if ( (maxPacketsize + transport->bytesAggregated) < (BLUE_TRANSPORT_PACKET_AGGREGATOR_SIZE*2) )
-	{
-		BN_AGG(bnlog("shifting out[%d] appended with[%d]", maxPacketsize, transport->bytesAggregated ));
-
-		// enough room to send the whole lot, append it to the end and do so
-		transport->bytesAggregated += m_socketAPI->format_packet( transport->packetAggregator + transport->bytesAggregated, data, len, headerData, headerLen );
-		bool ret = m_socketAPI->send_formatted_packet( transport->descriptor, transport->packetAggregator, transport->bytesAggregated );
-		transport->bytesAggregated = 0;
-		return ret;
-	}
-
-	BN_AGG(bnlog("shifting out[%d] and current[%d]", maxPacketsize, transport->bytesAggregated ));
-
-	// nope, its just huge, shift out everything
-	bool ret = m_socketAPI->send_formatted_packet( transport->descriptor, transport->packetAggregator, transport->bytesAggregated );
-	transport->bytesAggregated = 0;
-	return m_socketAPI->send_packet( transport->descriptor, data, len, headerData, headerLen ) ? ret : false;
+	return m_socketAPI->send_packet( transport->descriptor, data, len, headerData, headerLen );
 }
 
 //------------------------------------------------------------------------------
@@ -2509,74 +2328,6 @@ void BlueNet::BlueNetCallback( const BlueNet::PacketInfo* info, const char* data
 Callback_release:
 
 	PyGILState_Release( pyGILState );
-}
-
-//------------------------------------------------------------------------------
-uint32_t BlueNet::BatchThread( void *arg )
-{
-	int ret = 0;
-	int waitTime = 0;
-	do
-	{
-#if _WIN32
-		if( ret == WAIT_OBJECT_0 ) // actually woken up by an event?
-#elif __APPLE__
-		if( ret == 0 )
-#else
-#error "Missing implementation!"
-#endif
-		{
-			// we have been kicked, swap the buffers so a new one can begin
-			// accumulating
-			m_singleton.m_batchLock.Acquire();
-			BlueNetPacketBatch* batch = m_singleton.m_batchPing;
-			m_singleton.m_batchPing = m_singleton.m_batchPong;
-			m_singleton.m_batchPong = batch;
-			m_singleton.m_batchLock.Release();
-
-			// we are now "off the clock" on a separate CPU so do as much
-			// work here as possible
-			for( int i = 0; i < batch->m_numberOfEntries; i++ )
-			{
-				BlueNetPacket* packet = batch->m_list[i];
-				char* buf;
-				unsigned int len = packet->payload.Finalize( &buf );
-				if( !buf || !len )
-				{
-					BN_BATCH( bnlog( "entry[%d] had problems buf[%p] len[%d] entries[%d]", i, buf, len, packet->listEntries ) );
-					continue;
-				}
-
-				BN_BATCH( bnlog( "sending entry[%d] len[%d] entries[%d]", i, len, packet->listEntries ) );
-
-				if( packet->listEntries )
-				{
-					m_singleton.SendPacketToClientList( packet->recipientList, packet->listEntries, m_singleton.m_blueNetHandlerPacketKey, buf, len );
-				}
-				else
-				{
-					m_singleton.SendPacketToAllClients( m_singleton.m_blueNetHandlerPacketKey, buf, len );
-				}
-			}
-
-			batch->m_numberOfEntries = 0;
-		}
-
-		m_singleton.Flush(); // in any case flush
-
-		waitTime = m_singleton.m_aggregateSendIntervalMilliseconds ? m_singleton.m_aggregateSendIntervalMilliseconds : 500;
-#if _WIN32
-	} while( ( ret = WaitForSingleObject( m_singleton.m_batchReadyEvent, waitTime ) ) != WAIT_FAILED );
-	// FIXME the above assignment-followed-by-comparison looks very odd.
-
-	CCP_LOGERR_CH( s_blueNetChannel, "BlueNet:Destiny error in BatchThread wait[%d]", GetLastError() );
-#elif __APPLE__
-	    ret = dispatch_semaphore_wait( m_singleton.m_batchReadyEvent, dispatch_time( DISPATCH_TIME_NOW, int64_t( waitTime ) * 1000000 ) );
-    } while ( true );  // FIXME: is this really correct?
-#else
-#error "Missing implementation"
-#endif
-	return 0;
 }
 
 //-------------------------------------------------------------------------------
