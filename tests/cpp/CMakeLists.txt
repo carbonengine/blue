@@ -47,6 +47,7 @@ if(APPLE)
             COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_LINKER_FILE:Python> $<TARGET_FILE_DIR:Blue>
             COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_LINKER_FILE:Python> $<TARGET_FILE_DIR:BlueCppUnitTests>
             COMMAND ${CMAKE_COMMAND} -E copy ${CRASHPAD_EXECUTABLE} $<TARGET_FILE_DIR:Blue>
+            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:libuv::uv> $<TARGET_FILE_DIR:Blue>/libuv.1.dylib  # Required to import _socket module.
             COMMAND ${CMAKE_COMMAND} -E copy ${CARBONIO_DLL} $<TARGET_FILE_DIR:Blue>
             COMMAND_EXPAND_LISTS
             VERBATIM
