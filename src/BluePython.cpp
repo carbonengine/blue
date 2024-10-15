@@ -1494,6 +1494,15 @@ PyObject* BluePyOS::PyCreateTasklet(PyObject* _args)
 	return CreateTasklet(meth, args, kw);
 }
 
+//--------------------------------------------------------------------
+// NextScheduledEvent
+//--------------------------------------------------------------------
+PyObject* BluePyOS::PyNextScheduledEvent(PyObject* args)
+{
+	PyErr_WarnEx( PyExc_DeprecationWarning, "NextScheduledEvent serves no purpose any more", 1 );
+	Py_RETURN_NONE;
+}
+
 
 //--------------------------------------------------------------------
 // SetClipboardData.  Thunks to the BlueClipboard
