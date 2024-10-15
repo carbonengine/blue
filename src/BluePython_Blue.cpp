@@ -144,7 +144,7 @@ const Be::ClassInfo* BluePyOS::ExposeToBlue()
 		MAP_METHOD_AS_METHOD
 		(
 			"NextScheduledEvent",
-			PyNextScheduledEvent,	
+			PyNextScheduledEvent,
 			"NextScheduledEvent\n" 
 			":param ms: milliseconds\n"
 			":type ms: int\n"

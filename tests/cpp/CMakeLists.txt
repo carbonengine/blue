@@ -1,5 +1,6 @@
 find_package(GTest REQUIRED)
 find_package(Crashpad REQUIRED NO_CMAKE_PATH)
+find_package(libuv REQUIRED NO_CMAKE_PATH)
 add_executable(BlueCppUnitTests
     main.cpp
     TestPyMemory.cpp
@@ -33,6 +34,7 @@ if(CMAKE_IMPORT_LIBRARY_SUFFIX)
             COMMAND ${CMAKE_COMMAND} -E copy ${CARBONIO_DLL} $<TARGET_FILE_DIR:BlueCppUnitTests>
             COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:BlueCppUnitTests> $<TARGET_FILE_DIR:Blue>
             COMMAND ${CMAKE_COMMAND} -E copy ${CARBONIO_DLL} $<TARGET_FILE_DIR:Blue>
+            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:libuv::uv> $<TARGET_FILE_DIR:Blue>  # Required to import _socket module.
             COMMAND ${CMAKE_COMMAND} -E copy ${Exefile_ROOT}/${CCP_VENDOR_BIN_PATH}/${EXEFILE_NAME} $<TARGET_FILE_DIR:Blue>
             COMMAND_EXPAND_LISTS
             VERBATIM

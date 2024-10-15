@@ -285,7 +285,6 @@ BlueOS::BlueOS() :
 	mBuildno = -1;
 
 	// New order
-	mNextScheduledEvent = 0;
 	mInsidePump = false;
 
 	mMiniDump = false;
@@ -357,16 +356,13 @@ void _Py_FatalErrorFunc( const char* _func, const char* msg )
 }
 
 //--------------------------------------------------------------------
-// This function handles the intricacies of sleeping for a particular
-// time. In particular, it will resume an interrupted sleep if it finds
-// that there is, in fact, no IO to be done.
-void BlueOS::DoSleep()
+// Just yield in order to give other threads an opportunity to run.
+// Sleeping doesn't make sense since our IO loop needs to be ticked
+// from the thread it belongs to, and in order to be responsive we need
+// to process it promptly.
+void BlueOS::Yield()
 {
-    if( mNextScheduledEvent <= 0 )
-    {
-        return;
-    }
-    CcpThreadSleep( mNextScheduledEvent );
+    std::this_thread::yield();
 }
 
 //------------------------------------------------------------------------------
@@ -673,16 +669,12 @@ void BlueOS::PumpOSInternal()
 #if CCP_STACKLESS
 
 	SafeAutoTasklet _at(PyOS->GetTaskletTimer(), TASKLETS[BLUETASKLET].mContext);
-
-	// Sleep until we need to wake up
 	{
-		//CCP_STATS_ZONE( "BlueOS/PumpOS/DoSleep" );
 		// Defining this directly to be able to mark this as an "idle" telemetry zone
 #if CCP_TELEMETRY_ENABLED
-		tmZone( TMCM_GENERAL, TMZF_IDLE, "BlueOS/PumpOS/DoSleep" );
+		tmZone( TMCM_GENERAL, TMZF_IDLE, "BlueOS/PumpOS/Yield" );
 #endif
-		DoSleep();
-		mNextScheduledEvent = int( mSleepTime );
+		Yield(); 
 	}
 
 	BeNet->DeliverCPackets(); // dispatch any waiting callbacks
@@ -1118,24 +1110,6 @@ Be::Time BlueOS::GetSmoothedTime()
 	}
 
 	return time;
-#endif
-}
-
-
-void BlueOS::NextScheduledEvent(int millisec)
-{
-	if ( millisec > 10 ) {
-		millisec = 10;
-	}
-#if CCP_STACKLESS
-	if( millisec <= 0 )
-	{
-		mNextScheduledEvent = -1;
-	}
-	else if( millisec < mNextScheduledEvent )
-	{
-		mNextScheduledEvent = millisec;
-	}
 #endif
 }
 

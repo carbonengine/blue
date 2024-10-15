@@ -54,8 +54,6 @@ bool BlueResManBackgroundCall::Wait()
 		return true;
 	}
 
-	// Go to sleep and wake up! *(the sender releases the channel)
-	BeOS->NextScheduledEvent(0);
 	PyObject *ret = SchedulerAPI()->PyChannel_Receive( m_channel );
 
 	// We don't want to run in the context of the resman update. MarkAsDone below
@@ -112,8 +110,7 @@ void BlueResManBackgroundCall::MarkAsDone( void* pContext )
 
 #if CCP_STACKLESS
 	BlueResManBackgroundCall* args = static_cast<BlueResManBackgroundCall*>( pContext );
-
-	BeOS->NextScheduledEvent(0);
+	
 	SchedulerAPI()->PyChannel_Send( args->m_channel, Py_None );
 #endif
 }

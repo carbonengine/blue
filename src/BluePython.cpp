@@ -693,12 +693,6 @@ int BluePyOS::PumpPython(bool quit)
 			PyFlushError("PumpPython::Scheduler");
 		}
 
-		if( SchedulerAPI()->PyScheduler_GetRunCount() > 1 )
-		{
-			// Not all tasklets got a chance to run
-			BeOS->NextScheduledEvent( 0 );
-		}
-
 		CCP_STATS_SET( runnablesLeftOver, SchedulerAPI()->PyScheduler_GetRunCount() - 1 );
 	}
 
@@ -1505,14 +1499,8 @@ PyObject* BluePyOS::PyCreateTasklet(PyObject* _args)
 //--------------------------------------------------------------------
 PyObject* BluePyOS::PyNextScheduledEvent(PyObject* args)
 {
-	int ms;
-	if (!PyArg_ParseTuple(args, "i", &ms))
-		return NULL;
-
-	BeOS->NextScheduledEvent(ms);
-
-	Py_INCREF(Py_None);
-	return Py_None;
+	PyErr_WarnEx( PyExc_DeprecationWarning, "NextScheduledEvent serves no purpose any more", 1 );
+	Py_RETURN_NONE;
 }
 
 
@@ -1565,7 +1553,6 @@ PyObject* BluePyOS::PyBeNice(PyObject* args)
 
 	double elapsed = GetTimeSinceSwitch();
 	if (elapsed >= timeSlice) {
-		BeOS->NextScheduledEvent(0); //make wakeup fast!
 		return mSynchro->Yield();
 	}
 

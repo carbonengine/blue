@@ -200,7 +200,6 @@ PyObject *BluePyOS::PyXUtil_Index(PyObject *args)
 			float elapsed = GetTaskletTimer()->GetElapsed();
 			if (elapsed >= timeSlice) 
 			{
-				BeOS->NextScheduledEvent(0); //make wakeup fast!
 				if( !Yield() )
 				{
 					return 0;

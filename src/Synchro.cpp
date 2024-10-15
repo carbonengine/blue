@@ -157,7 +157,6 @@ void Synchro::ScheduleTick()
 	}
 
 	int ms = int(std::min(wallSleepersDue, simSleepersDue)) / 10000;
-	BeOS->NextScheduledEvent(ms);
 }
 
 
@@ -467,7 +466,6 @@ PyObject* Synchro::SleepWallclock(int ms, const int64_t &due)
 	sl.tasklet = me;
 
 	mWallclockSleepers.Insert(sl);
-	BeOS->NextScheduledEvent(ms);
 	
 	// Go to sleep and wake up!
 	PyObject *ret = SchedulerAPI()->PyChannel_Receive(sl.channel);
@@ -506,7 +504,6 @@ PyObject* Synchro::SleepSim(int ms, const int64_t &due)
 	sl.tasklet = me;
 
 	mSimSleepers.Insert(sl);
-	BeOS->NextScheduledEvent(int(ms / BeOS->GetInfo()->mSimDilation));
 	
 	// Go to sleep and wake up!
 	PyObject *ret = SchedulerAPI()->PyChannel_Receive(sl.channel);
