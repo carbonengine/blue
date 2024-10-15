@@ -223,7 +223,6 @@ public:
 	PyObject* Pywrite( PyObject* args );
 	PyObject* PyGetThunkers( PyObject* args );
 	PyObject* PyCreateTasklet( PyObject* args );
-	PyObject* PyNextScheduledEvent( PyObject* args );
 	PyObject* PySetClipboardData( PyObject* args );
 	PyObject* PyGetTimeSinceSwitch( PyObject* args );
 	PyObject* PyBeNice( PyObject* args );

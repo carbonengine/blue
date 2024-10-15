@@ -60,7 +60,6 @@ public:
 #endif
 
 	Be::Time GetSmoothedTime();
-	void NextScheduledEvent(int millisec) override;
 	
 	typedef TrackableStdVector<TerminationCallback*> TerminationCallbacks;
 	TerminationCallbacks mIndispensableTerminationSteps;
@@ -83,7 +82,6 @@ public:
 	// scheduling and event notifications
 	BeTimer mTimer;
 	bool mUseRDTSC; //if true, use the RDTSC instruction for performance counting
-	int mNextScheduledEvent; //for the sleep loop
 
 	// Pumping
 	bool mInsidePump;
@@ -327,7 +325,7 @@ public:
 private:
     void PumpOSInternal();
     
-	void DoSleep();
+	void Yield();
 	void TickTickers();
 	void CaptureLogCountsToStats();
 

@@ -425,8 +425,6 @@ void BlackReader::ReadMembers( IRoot* instance, uint8_t* streamEnd )
 #if CCP_STACKLESS
 		if( m_allowYield && ( m_timeSinceYield.GetSeconds() > m_timeSlice ) )
 		{
-			//This is a benice thing.  We want to wake up immediately, not just at leisure.
-			BeOS->NextScheduledEvent(0);
 			if( !PyOS->Yield() )
 			{
 				throw TaskletKilledException();

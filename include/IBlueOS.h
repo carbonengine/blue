@@ -198,10 +198,6 @@ BLUE_INTERFACE(IBlueOS) : public IRoot
 	virtual Be::Time GetActualTime(
 		) = 0;
 
-	virtual void NextScheduledEvent(
-		int millisec
-		) = 0;
-
 	virtual bool IsPackaged() = 0;
 
 	// This returns the cached values of GetSmoothedTime

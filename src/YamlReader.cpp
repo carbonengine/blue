@@ -406,9 +406,6 @@ void YamlReader::GetNextEvent()
 #if CCP_STACKLESS
 	if( m_allowYield && ( m_timeSinceYield.GetSeconds() > m_timeSlice ) )
 	{
-		//This is a benice thing.  We want to wake up immediately, not just at leisure.
-		//Sleep(0)
-		BeOS->NextScheduledEvent( 0 );
 		if( !PyOS->Yield() )
 		{
 			throw TaskletKilledException();
