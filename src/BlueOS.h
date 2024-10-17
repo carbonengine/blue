@@ -325,13 +325,14 @@ public:
 private:
     void PumpOSInternal();
     
-	void Yield();
+	void Sleep();
 	void TickTickers();
 	void CaptureLogCountsToStats();
 
 	bool VerifyManifestAndGatherDirectives( directives_t& directives );
 	void ShowMessageBoxForVerificationFailure( const std::string& errmsg );
 	void ProcessLibDirectives( const directives_t& directives, std::vector<std::wstring>& zips );
+	std::chrono::time_point<std::chrono::steady_clock> mNextFrame;
 };
 
 

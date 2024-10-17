@@ -356,13 +356,23 @@ void _Py_FatalErrorFunc( const char* _func, const char* msg )
 }
 
 //--------------------------------------------------------------------
-// Just yield in order to give other threads an opportunity to run.
-// Sleeping doesn't make sense since our IO loop needs to be ticked
-// from the thread it belongs to, and in order to be responsive we need
-// to process it promptly.
-void BlueOS::Yield()
+// Frame rate is capped at 100 max frames per second (10ms per frame).
+// If there is time remaining in the frame, then sleep for the available
+// duration. Otherwise, yield to give other threads an opportunity to run
+// before continuing execution.
+void BlueOS::Sleep()
 {
-    std::this_thread::yield();
+	const auto minFrameDurationMS = 10; 
+	auto now = std::chrono::steady_clock::now();
+	if( now < mNextFrame )
+	{
+		std::this_thread::sleep_until(mNextFrame);
+	}
+	else
+	{
+		std::this_thread::yield();
+	}
+	mNextFrame = std::chrono::steady_clock::now() + std::chrono::milliseconds( minFrameDurationMS );
 }
 
 //------------------------------------------------------------------------------
@@ -672,9 +682,9 @@ void BlueOS::PumpOSInternal()
 	{
 		// Defining this directly to be able to mark this as an "idle" telemetry zone
 #if CCP_TELEMETRY_ENABLED
-		tmZone( TMCM_GENERAL, TMZF_IDLE, "BlueOS/PumpOS/Yield" );
+		tmZone( TMCM_GENERAL, TMZF_IDLE, "BlueOS/PumpOS/Sleep" );
 #endif
-		Yield(); 
+		Sleep(); 
 	}
 
 	BeNet->DeliverCPackets(); // dispatch any waiting callbacks
