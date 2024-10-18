@@ -356,23 +356,29 @@ void _Py_FatalErrorFunc( const char* _func, const char* msg )
 }
 
 //--------------------------------------------------------------------
-// Frame rate is capped at 100 max frames per second (10ms per frame).
+// Frame rate is capped at ~100 max frames per second (10ms per frame).
 // If there is time remaining in the frame, then sleep for the available
 // duration. Otherwise, yield to give other threads an opportunity to run
 // before continuing execution.
 void BlueOS::Sleep()
 {
-	const auto minFrameDurationMS = 10; 
+	const auto frameDurationMS = 10;
 	auto now = std::chrono::steady_clock::now();
-	if( now < mNextFrame )
+	// We don't want to sleep for less than 1 millisecond, since switching out of and back
+	// into a large thread can be quite heavy, so this could be a waste of resources.
+	if( now + std::chrono::milliseconds( 1 ) <= mNextFrame )
 	{
-		std::this_thread::sleep_until(mNextFrame);
+		std::this_thread::sleep_until( mNextFrame );
 	}
 	else
 	{
 		std::this_thread::yield();
 	}
-	mNextFrame = std::chrono::steady_clock::now() + std::chrono::milliseconds( minFrameDurationMS );
+	// Set the next frame to 1 millisecond before the actual desired value.
+	// This is because on Windows, the granularity of timers used for sleep has been set to 1ms in exefile.
+	// It doesn't get any more precise than that on Windows, so we may well oversleep by up to 1ms,
+	// even if there is nothing else for the processor to do than run our thread.
+	mNextFrame = std::chrono::steady_clock::now() + std::chrono::milliseconds( frameDurationMS - 1 );
 }
 
 //------------------------------------------------------------------------------
