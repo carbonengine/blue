@@ -251,6 +251,53 @@ bool BluePyOS::InitBasicModuleSupport()
 	PyObject* sys_modules = PyImport_GetModuleDict();
 
 #if CCP_STACKLESS
+	auto carbonSocketModule = PyImport_ImportModule( "_carbonsocket" );
+	if( !carbonSocketModule )
+	{
+		CCP_LOGERR_CH( s_chPy, "Failed to import `_carbonsocket` module" );
+		return false;
+	}
+
+	if( PyDict_SetItemString( sys_modules, "_socket", carbonSocketModule ) != 0 )
+	{
+		CCP_LOGERR_CH( s_chPy, "Failed to patch `_socket` module" );
+		return false;
+	}
+
+	// Reload socket module with patched _socket module in order for the module
+	// to pick up on our _socket implementation. This is necessary if the socket module
+	// has already been imported.
+	if( auto socketModule = PyDict_GetItemString( sys_modules, "socket" ) )
+	{
+		PyImport_ReloadModule( socketModule );
+	}
+
+	auto carbonSSLModule = PyImport_ImportModule( "_carbonssl" );
+	if( !carbonSSLModule )
+	{
+		CCP_LOGERR_CH( s_chPy, "Failed to import `_carbonssl` module" );
+		return false;
+	}
+
+	if( PyDict_SetItemString( sys_modules, "_ssl", carbonSSLModule ) != 0 )
+	{
+		CCP_LOGERR_CH( s_chPy, "Failed to patch `_ssl` module" );
+		return false;
+	}
+
+	auto carbonSelectModule = PyImport_ImportModule( "carbonselect" );
+	if( !carbonSelectModule )
+	{
+		CCP_LOGERR_CH( s_chPy, "Failed to import `carbonselect` module" );
+		return false;
+	}
+
+	if( PyDict_SetItemString( sys_modules, "select", carbonSelectModule ) != 0 )
+	{
+		CCP_LOGERR_CH( s_chPy, "Failed to patch select module" );
+		return false;
+	}
+
 	// c-routing support
 	if ( !BeNet->Init( mBlueModule, mSocketAPI ) ) {
 		return false;
