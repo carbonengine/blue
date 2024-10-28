@@ -65,11 +65,18 @@ public:
 	//	size_t blueMemory;
 	// Scheduler
 	double fps{0.0};
-	uint64_t taskletsProcessed{0};
 	size_t taskletsYielding{0};
 	size_t taskletsSleeping{0};
-	float taskletsSchedulerDuration{0.f};
+	double taskletsSchedulerDuration{0.0};
+	double taskletsSchedulerMaxDuration{ 0.0 };
+	double taskletsSchedulerDurationOvershoot{ 0.0 };
 	uint64_t taskletsQueued{0};
+	uint64_t taskletsActive{ 0 };
+	uint64_t scheduleManagersActive{ 0 };
+	uint64_t channelsActive{ 0 };
+	uint64_t taskletsProcessed{ 0 };
+	uint64_t taskletsSwitched{ 0 };
+
 };
 BLUE_DECLARE_VECTOR( BlueCpuUsage );
 TYPEDEF_BLUECLASS( BlueCpuUsage );
@@ -305,11 +312,7 @@ public:
 	bool CanYield() override;
 	bool Yield() override;
 
-	void GetSchedulerStats(
-		int& inQueue1,
-		int& inQueue2,
-		float& lastTime,
-		float& maxTime ) override;
+	SchedulerStats& GetSchedulerStats( ) override;
 
 //	void DoStackTrace(
 //		PyObject* frame = 0 ) override;
