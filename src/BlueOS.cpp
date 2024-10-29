@@ -685,11 +685,8 @@ void BlueOS::PumpOSInternal()
 
 	SafeAutoTasklet _at(PyOS->GetTaskletTimer(), TASKLETS[BLUETASKLET].mContext);
 	{
-		// Defining this directly to be able to mark this as an "idle" telemetry zone
-#if CCP_TELEMETRY_ENABLED
-		tmZone( TMCM_GENERAL, TMZF_IDLE, "BlueOS/PumpOS/Sleep" );
-#endif
-		Sleep(); 
+		CCP_STATS_ZONE( "BlueOS/PumpOS/DoSleep" );
+		Sleep();
 	}
 
 	BeNet->DeliverCPackets(); // dispatch any waiting callbacks
