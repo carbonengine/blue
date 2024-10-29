@@ -195,9 +195,13 @@ private:
 
 	WatchdogThread m_frameTimeWatchdog;
 	uint32_t m_frameTimeTimeout;
+	int32_t m_desiredFrameTimeMilliseconds{10};
 	
 	uint32_t GetFrameTimeTimeout() const;
 	void SetFrameTimeTimeout( uint32_t val );
+
+	uint32_t GetDesiredFrameTimeMilliseconds() const;
+	void SetDesiredFrameTimeMilliseconds( uint32_t val );
 
 	// If true (the default) then Pump will advance the time. This can be set to false to disable
 	// time advancement - used by butter smooth rendering where fixed time steps are used and time

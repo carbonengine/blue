@@ -291,6 +291,15 @@ const Be::ClassInfo* BlueOS::ExposeToBlue()
 			"Set this value to 0 to disable hang detection altogether."
 		)
 
+		MAP_PROPERTY
+		(
+			"desiredFrameTimeMilliseconds",
+			GetDesiredFrameTimeMilliseconds, SetDesiredFrameTimeMilliseconds,
+			"Set the value, in milliseconds, for the desired duration of one frame in milliseconds.\n"
+			"Any time left over at the end of a frame will be used for sleep.\n"
+			"If the value is set to 0 or 1, the process will yield each frame, but never sleep.\n"
+		)
+
 		MAP_METHOD_AS_METHOD
 		(
 			"GetTime",

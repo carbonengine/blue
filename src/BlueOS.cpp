@@ -362,11 +362,10 @@ void _Py_FatalErrorFunc( const char* _func, const char* msg )
 // before continuing execution.
 void BlueOS::Sleep()
 {
-	const auto frameDurationMS = 10;
 	auto now = std::chrono::steady_clock::now();
 	// We don't want to sleep for less than 1 millisecond, since switching out of and back
 	// into a large thread can be quite heavy, so this could be a waste of resources.
-	if( now + std::chrono::milliseconds( 1 ) <= mNextFrame )
+	if( now < mNextFrame )
 	{
 		std::this_thread::sleep_until( mNextFrame );
 	}
@@ -378,7 +377,7 @@ void BlueOS::Sleep()
 	// This is because on Windows, the granularity of timers used for sleep has been set to 1ms in exefile.
 	// It doesn't get any more precise than that on Windows, so we may well oversleep by up to 1ms,
 	// even if there is nothing else for the processor to do than run our thread.
-	mNextFrame = std::chrono::steady_clock::now() + std::chrono::milliseconds( frameDurationMS - 1 );
+	mNextFrame = std::chrono::steady_clock::now() + std::chrono::milliseconds( m_desiredFrameTimeMilliseconds - 1 );
 }
 
 //------------------------------------------------------------------------------
@@ -2139,6 +2138,16 @@ void BlueOS::SetFrameTimeTimeout( uint32_t val )
 	m_frameTimeTimeout = val;
 	s_timeoutHandler.Reset();
 	m_frameTimeWatchdog.Start( m_frameTimeTimeout, &s_timeoutHandler );
+}
+
+uint32_t BlueOS::GetDesiredFrameTimeMilliseconds() const
+{
+	return m_desiredFrameTimeMilliseconds;
+}
+
+void BlueOS::SetDesiredFrameTimeMilliseconds( uint32_t val )
+{
+	m_desiredFrameTimeMilliseconds = val;
 }
 
 void BlueOS::TickTickers()
