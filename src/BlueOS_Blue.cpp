@@ -255,7 +255,7 @@ const Be::ClassInfo* BlueOS::ExposeToBlue()
 		// other stuff
 		MAP_PROPERTY
 		(
-			"sleepTime",
+			"sleeptime",
 			GetSleepTime, SetSleepTime,
 			"Deprecated (Sleep in ms. for pumping.)\n"
 		)
