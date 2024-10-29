@@ -117,8 +117,7 @@ private:
 
 	PyObject *SleepWallclock(int ms, const int64_t &due);
 	PyObject *SleepSim(int ms, const int64_t &due);
-	
-	void ScheduleTick();
+
 	bool FindTasklet(PyObject *tasklet, Heap<Sleeper> &sleeperHeap, SleeperIt &outSleeper);
 	
 	// Python blurb	

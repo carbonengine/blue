@@ -253,7 +253,12 @@ const Be::ClassInfo* BlueOS::ExposeToBlue()
 		)
 
 		// other stuff
-		MAP_ATTRIBUTE( "sleeptime",		mSleepTime,	"Sleep in ms. for pumping", Be::READWRITE | Be::PERSIST )
+		MAP_PROPERTY
+		(
+			"sleeptime",
+			GetSleepTime, SetSleepTime,
+			"Deprecated (Sleep in ms. for pumping.)\n"
+		)
 		MAP_ATTRIBUTE( "overridefg",		mOverrideFG, "Override foreground mode", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "debuglevel",		mDebugLevel, "Level of debug checks", Be::READWRITE )
 		MAP_ATTRIBUTE(
@@ -289,6 +294,15 @@ const Be::ClassInfo* BlueOS::ExposeToBlue()
 			"Time out value, in milliseconds, for frame time. If frame time exceeds the given\n"
 			"time out value the process is assumed to be hanging and will be treated as a crash.\n"
 			"Set this value to 0 to disable hang detection altogether."
+		)
+
+		MAP_PROPERTY
+		(
+			"desiredFrameTimeMilliseconds",
+			GetDesiredFrameTimeMilliseconds, SetDesiredFrameTimeMilliseconds,
+			"Set the value, in milliseconds, for the desired duration of one frame in milliseconds.\n"
+			"Any time left over at the end of a frame will be used for sleep.\n"
+			"If the value is set to 0 or 1, the process will yield each frame, but never sleep.\n"
 		)
 
 		MAP_METHOD_AS_METHOD
