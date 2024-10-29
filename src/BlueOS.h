@@ -203,6 +203,9 @@ private:
 	uint32_t GetDesiredFrameTimeMilliseconds() const;
 	void SetDesiredFrameTimeMilliseconds( uint32_t val );
 
+	int32_t GetSleepTime() const;
+	void SetSleepTime( int32_t val );
+
 	// If true (the default) then Pump will advance the time. This can be set to false to disable
 	// time advancement - used by butter smooth rendering where fixed time steps are used and time
 	// is set explicitly with SetTime.

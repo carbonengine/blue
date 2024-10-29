@@ -2150,6 +2150,19 @@ void BlueOS::SetDesiredFrameTimeMilliseconds( uint32_t val )
 	m_desiredFrameTimeMilliseconds = val;
 }
 
+int32_t BlueOS::GetSleepTime() const
+{
+	PyErr_WarnEx( PyExc_DeprecationWarning, "blue.os.sleeptime no longer serves any purpose" , 1 );
+	return mSleepTime;
+}
+
+void BlueOS::SetSleepTime( int32_t val )
+{
+	PyErr_WarnEx( PyExc_DeprecationWarning, "blue.os.sleeptime no longer serves any purpose" , 1 );
+	mSleepTime = val;
+}
+
+
 void BlueOS::TickTickers()
 {
 	// Copy tickers, which can get mutated during ticks
