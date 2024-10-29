@@ -136,31 +136,6 @@ void Synchro::Shutdown()
 
 
 //--------------------------------------------------------------------
-void Synchro::ScheduleTick()
-{
-	if (mWallclockSleepers.empty() && mSimSleepers.empty())
-		return;
-
-	Be::Time wallSleepersDue;
-	if (!mWallclockSleepers.empty()) {
-		wallSleepersDue = mWallclockSleepers.begin()->due - BeOS->GetInfo()->mRealTime;
-	} else {
-		wallSleepersDue = LONG_MAX; // A suitably large number
-	}
-	Be::Time simSleepersDue;
-	if (!mSimSleepers.empty()) {
-		simSleepersDue = mSimSleepers.begin()->due - BeOS->GetInfo()->mSimTime;
-		// Bring the sim due time back to real time
-		simSleepersDue = Be::Time(simSleepersDue / BeOS->GetInfo()->mSimDilation);
-	} else {
-		simSleepersDue = LONG_MAX; // A suitably large number
-	}
-
-	int ms = int(std::min(wallSleepersDue, simSleepersDue)) / 10000;
-}
-
-
-//--------------------------------------------------------------------
 bool Synchro::Tick()
 {
 	AutoTasklet _at(PyOS->GetTaskletTimer(), TIMERS[TIMER_TICK].mContext);
@@ -233,7 +208,6 @@ bool Synchro::Tick()
 			}
 		}
 	}
-	ScheduleTick(); //add a tick for the current head of the sleepers queue
 
 	// Tick tickers
 	{
