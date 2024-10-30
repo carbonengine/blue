@@ -69,12 +69,12 @@ const TaskletInfo s_fallbackInfo = { "Tasklet?", "", 0 };
 TaskletInfo s_lastTasklet = s_fallbackInfo;  // need to remember last activated tasklet for tmEnd
 
 std::unordered_map<PyTypeObject*, freefunc> s_taskletFree; // original tp_free functions for tasklet types
-tm_uint32 s_taskletTrackID = 0;  // telemetry track ID for tasklet time spans
+uint32_t s_taskletTrackID = 0;  // telemetry track ID for tasklet time spans
 
 // Overriden tp_free function for tasklets: notify telemetry and call original tp_free
 void OnTaskletFree( void* tasklet )
 {
-	tmEndFiber( 0, reinterpret_cast<uintptr_t>( tasklet ) );
+//	tmEndFiber( 0, reinterpret_cast<uintptr_t>( tasklet ) );
 
 	auto found = s_taskletFree.find( Py_TYPE( tasklet ) );
 	if( found != end( s_taskletFree ) )
@@ -145,21 +145,36 @@ TaskletInfo GetTaskletInfo( PyTaskletObject* tasklet )
 	return info;
 }
 
-int PythonProfiler( PyObject* obj, PyFrameObject* frame, int what, PyObject* arg )
+}
+
+#endif
+
+namespace
+{
+
+#include <map>
+#include <set>
+
+static uintptr_t g_activeFiber;
+typedef std::unordered_map<uintptr_t, std::string> FiberNameStore;
+static FiberNameStore g_fiberNameStore;
+
+typedef std::unordered_map<void*, tmTaskletZone> TasketZoneStore;
+static TasketZoneStore g_taskletZoneStore;
+
+int PythonProfiler( PyObject*, PyFrameObject* frame, int what, PyObject* )
 {
 	switch( what )
 	{
-	case PyTrace_CALL: 
+	case PyTrace_CALL:
 		{
-			auto frameCode = PyFrame_GetCode( frame );
-			tmEnterEx( 0, nullptr, 0, 0, PyUnicode_AsUTF8( frameCode->co_filename ), PyFrame_GetLineNumber( frame ), TMZF_NONE, "%s", PyUnicode_AsUTF8( frameCode->co_name ) );
-			Py_DECREF( frameCode );
-			tmZoneColor( 0, 94.f / 255.f, 32.f / 255.f );
+			auto codeObj = PyFrame_GetCode( frame );
+			TracyEnterZone( frame, PyUnicode_AsUTF8( codeObj->co_name ), PyUnicode_AsUTF8( codeObj->co_filename ), static_cast<uint32_t>( PyFrame_GetLineNumber( frame ) ) );
 		}
 		break;
 	case PyTrace_EXCEPTION:
 	case PyTrace_RETURN:
-		tmLeave( 0 );
+		TracyLeaveZone( frame );
 		break;
 	default:
 		break;
@@ -168,8 +183,6 @@ int PythonProfiler( PyObject* obj, PyFrameObject* frame, int what, PyObject* arg
 }
 
 }
-
-#endif
 
 #endif
 
@@ -205,7 +218,7 @@ void BlueStatistics::StartTimedTelemetry( const std::string& server, float sampl
 	}
 
 	s_telemetryServerOrFileSystemDumpPath = server;
-	s_telemetryConnectionType = TMCT_TCP;
+//	s_telemetryConnectionType = TMCT_TCP;
 	s_telemetrySamplePeriod = (float)samplePeriod;
 	s_isTelemetryConnectionRequested = true;
 #else
@@ -220,7 +233,7 @@ void BlueStatistics::StartTelemetryDump( const std::string& dumpFolder, float sa
 		CCP_LOGERR( "Telemetry is already running!" );
 		return;
 	}
-	s_telemetryConnectionType = TMCT_FILE;
+//	s_telemetryConnectionType = TMCT_FILE;
 	s_telemetryServerOrFileSystemDumpPath = dumpFolder;
 	s_telemetrySamplePeriod = (float)samplePeriod;
 	s_isTelemetryConnectionRequested = true;
@@ -231,7 +244,6 @@ void BlueStatistics::StartTelemetryDump( const std::string& dumpFolder, float sa
 void BlueStatistics::PauseTelemetry()
 {
 #if CCP_TELEMETRY_ENABLED
-	tmPause( TMCM_GENERAL, 1 );
 	s_isTelemetryPaused = true;
 #endif
 }
@@ -239,7 +251,6 @@ void BlueStatistics::PauseTelemetry()
 void BlueStatistics::ResumeTelemetry()
 {
 #if CCP_TELEMETRY_ENABLED
-	tmPause( TMCM_GENERAL, 0 );
 	s_isTelemetryPaused = false;
 #endif
 }
@@ -255,8 +266,6 @@ void BlueStatistics::StopTelemetry()
 	{
 		s_isTelemetryConnected = false;
 		s_isTelemetryShuttingDown = true;
-
-		tmPause( TMCM_GENERAL, 1 );
 	}
 #endif
 }
@@ -297,12 +306,12 @@ void BlueStatistics::UpdateTelemetry()
 				PyEval_SetProfile( &PythonProfiler, nullptr );
 			}
 
-			if( s_isTelemetryTaskletCaptureEnabled )
-			{
-				s_taskletTrackID = tmNewTimeSpanTrackID();
-				tmTrackName( 0, s_taskletTrackID, "Tasklets" );
-				tmTrackOrder( 0, s_taskletTrackID, 0 );
-			}
+//			if( s_isTelemetryTaskletCaptureEnabled )
+//			{
+//				s_taskletTrackID = tmNewTimeSpanTrackID();
+//				tmTrackName( 0, s_taskletTrackID, "Tasklets" );
+//				tmTrackOrder( 0, s_taskletTrackID, 0 );
+//			}
 #endif
 		}
 		s_isTelemetryConnectionRequested = false;
@@ -314,6 +323,15 @@ void BlueStatistics::UpdateTelemetry()
 
 	if( s_isTelemetryShuttingDown )
 	{
+		if (CcpTelemetryIsConnected()) {
+			g_taskletZoneStore.clear();
+			if ( g_activeFiber ) {
+				TracyFiberLeave;
+				g_activeFiber = 0;
+			}
+			FrameMark;
+			g_fiberNameStore.clear();
+		}
 		CcpStopTelemetry();
 
 		if( s_isTelemetryPythonCaptureEnabled )
@@ -355,30 +373,28 @@ void BlueStatistics::OnTaskletSwitch( PyObject* _from, PyObject* _to )
 	PyTaskletObject* from = (PyTaskletObject*)_from;
 	PyTaskletObject* to = (PyTaskletObject*)_to;
 
-	if( tmRunning() )
+	if( CcpTelemetryIsConnected() && from != to )
 	{
-		StoreFree( from );
-		StoreFree( to );
+		auto toUint = reinterpret_cast<uintptr_t>( to );
+		auto fromUint = reinterpret_cast<uintptr_t>( from );
 
-		if( s_isTelemetryTaskletCaptureEnabled && from && !SchedulerAPI()->PyTasklet_IsMain( from ) )
+		if( from != nullptr && fromUint == g_activeFiber )
 		{
-			tmEndTimeSpanEx( 0, reinterpret_cast<uintptr_t>( from ), s_lastTasklet.filename, s_lastTasklet.line );
+			g_activeFiber = 0;
+			TracyFiberLeave;
 		}
 
-		if( !to || SchedulerAPI()->PyTasklet_IsMain( to ) )
+		if( to != nullptr && !SchedulerAPI()->PyTasklet_IsMain( to ) && g_activeFiber != toUint )
 		{
-			tmSwitchToFiber( 0, 0 );
-		}
-		else
-		{
-			tmSwitchToFiber( 0, reinterpret_cast<uintptr_t>( to ) );
-
-			if( s_isTelemetryTaskletCaptureEnabled )
+			auto existing = g_fiberNameStore.find( toUint );
+			if( existing == g_fiberNameStore.end() )
 			{
 				auto toInfo = GetTaskletInfo( to );
-				tmBeginColoredTimeSpanEx( 0, reinterpret_cast<uintptr_t>( to ), s_taskletTrackID, 0, TMZF_NONE, toInfo.filename, toInfo.line, "%s", toInfo.name );
-				s_lastTasklet = toInfo;
+				g_fiberNameStore[toUint] = std::string( toInfo.name );
+				existing = g_fiberNameStore.find( toUint );
 			}
+			g_activeFiber = toUint;
+			TracyFiberEnter( existing->second.c_str() );
 		}
 	}
 #endif
@@ -482,9 +498,6 @@ ICcpStatisticsAccumulator* BlueStatistics::GetAccumulator( const std::string& na
 
 void BlueStatistics::SetTimelineSectionName( const char* name )
 {
-#if CCP_TELEMETRY_ENABLED
-	tmSetTimelineSectionName( TMCM_GENERAL, name );
-#endif
 }
 
 void BlueStatistics::SetCppCaptureEnabled( bool b )
@@ -525,11 +538,6 @@ uint32_t BlueStatistics::GetTelemetryMaxThreadCount() const
 void BlueStatistics::SetTelemetryMaxThreadCount( uint32_t maxThreadCount )
 {
 	m_telemetryMaxThreadCount = maxThreadCount;
-}
-
-void BlueStatistics::PrimeTelemetry()
-{
-	CcpPrimeTelemetry( m_telemetryMaxThreadCount );
 }
 
 CcpStatisticsEntry::CcpStatisticsEntry( IRoot* lockobj ) :
@@ -718,39 +726,69 @@ void CcpStatisticsEntry::SetResetPerFrame( bool val )
 
 #if CCP_TELEMETRY_ENABLED
 
-// Enter a zone in Python
-void tmTaskletEnter( uint32_t ctx, const char* name )
+void TracyEnterZone( void* key, const char* name, const char* filename, uint32_t lineno )
 {
-	// Current Telemetry version (3.5.0.13) has a bug when using capture masks along with fiber switching
-	// so we have to filter out zones manually
-	if( s_isTelemetryCppCaptureEnabled || (ctx & TMCM_CPP) == 0 )
+	if( CcpTelemetryIsConnected() )
 	{
-		tmEnter( ctx, TMZF_NONE, "%s", name );
+		if( g_taskletZoneStore.find( key ) == g_taskletZoneStore.end() )
+		{
+			g_taskletZoneStore.insert( { key, tmTaskletZone( TMCM_CPP, name, filename, lineno, 16765248u ) } );
+		}
 	}
 }
 
-// Leave a zone in Python
-void tmTaskletLeave( uint32_t ctx)
+void TracyLeaveZone( void* key )
 {
-	if( s_isTelemetryCppCaptureEnabled || ( ctx & TMCM_CPP ) == 0 )
+	if( CcpTelemetryIsConnected() )
 	{
-		tmLeave( ctx );
+		if( g_taskletZoneStore.find( key ) != g_taskletZoneStore.end() )
+		{
+			g_taskletZoneStore.erase( key );
+		}
 	}
 }
 
-void tmTaskletAppendText( uint32_t ctx, const char* appendText )
+void BLUEIMPORT TracyZoneAddText( void* key, const char* text )
 {
-	tmMessage( ctx, TMMF_ZONE_SUBLABEL, "%s", tmDynamicString( TMCM_GENERAL, appendText ) );
+	if( CcpTelemetryIsConnected() )
+	{
+		auto zone = g_taskletZoneStore.find( key );
+		if( zone != g_taskletZoneStore.end() )
+		{
+			zone->second.text( text );
+		}
+	}
 }
 
-tmTaskletZone::tmTaskletZone( uint32_t ctx, const char* name ) : m_telemetryContext( ctx )
+tmTaskletZone::tmTaskletZone( uint32_t ctx, const char* name, const char* filename, uint32_t lineno, uint32_t color )
 {
-	tmTaskletEnter( ctx, name );
+	if( CcpTelemetryIsConnected() )
+	{
+		auto data = ___tracy_alloc_srcloc( lineno, filename, strlen( filename ), name, strlen( name ), color );
+		m_zone = ___tracy_emit_zone_begin_alloc( data, ctx & TMCM_CPP );
+	}
+}
+
+tmTaskletZone::tmTaskletZone( tmTaskletZone&& other ) : m_zone( other.m_zone )
+{
+	// mark this instance's zone as inactive in case the destructor runs
+	m_zone.active = 0;
 }
 
 tmTaskletZone::~tmTaskletZone()
 {
-	tmTaskletLeave( m_telemetryContext );
+	if( CcpTelemetryIsConnected() && m_zone.active )
+	{
+		___tracy_emit_zone_end( m_zone );
+	}
+}
+
+void tmTaskletZone::text( const char* text ) const
+{
+	if( CcpTelemetryIsConnected() && m_zone.active )
+	{
+		___tracy_emit_zone_text( m_zone, text, strlen( text ) );
+	}
 }
 
 #endif

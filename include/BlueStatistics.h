@@ -77,7 +77,6 @@ public:
 
 	void PauseTelemetry();
 	void ResumeTelemetry();
-	void PrimeTelemetry();
 	void StopTelemetry();
 	void UpdateTelemetry();
 	void SetTimelineSectionName( const char* name );
@@ -130,6 +129,7 @@ protected:
 	TrackableStdHashMap<std::string, std::vector<double>> m_capture;
 	uint32_t m_telemetryMaxThreadCount;
 	bool m_isCapturing;
+	std::string m_applicationName;
 };
 
 TYPEDEF_BLUECLASS( BlueStatistics );
@@ -141,24 +141,37 @@ extern BlueStatistics* g_statistics;
 class BLUEIMPORT tmTaskletZone
 {
 public:
-	tmTaskletZone( uint32_t ctx, const char* name );
+	tmTaskletZone( uint32_t ctx, const char* name, const char* filename, uint32_t fileno, uint32_t color = 3766446u );
+	tmTaskletZone( tmTaskletZone&& other );
+	tmTaskletZone( const tmTaskletZone& ) = delete;
+	tmTaskletZone& operator=( tmTaskletZone&& ) = delete;
+	tmTaskletZone& operator=( const tmTaskletZone& ) = delete;
 	~tmTaskletZone();
 
+	void text( const char* text ) const;
+
 private:
-	uint32_t m_telemetryContext;
+	TracyCZoneCtx m_zone{0};
 };
 
-void BLUEIMPORT tmTaskletEnter( uint32_t ctx, const char* name );
-void BLUEIMPORT tmTaskletLeave( uint32_t ctx );
-void tmTaskletAppendText( uint32_t ctx, const char* appendText );
+#endif
+
+#include <tracy/Tracy.hpp>
+#include <tracy/TracyC.h>
+
+void BLUEIMPORT TracyEnterZone( void* key, const char* name, const char* filename, uint32_t lineno );
+void BLUEIMPORT TracyLeaveZone( void* key );
+void BLUEIMPORT TracyZoneAddText( void* key, const char* text );
+
+#if CCP_TELEMETRY_ENABLED
 
 #define CCP_STATS_SCOPED_TIME( identifier ) \
-	tmTaskletZone zone_##_COUNTER_( TMCM_CPP, g_ccpStatistics_##identifier.GetName().c_str() );\
+	tmTaskletZone zone_##_COUNTER_( TMCM_CPP, g_ccpStatistics_##identifier.GetName().c_str(), __FILE__, __LINE__ );\
 	CcpStatisticsStopwatch ccpStatsStopwatch_##identifier( g_ccpStatistics_##identifier )
 
 #undef CCP_STATS_ZONE
 #define CCP_STATS_ZONE( name ) \
-	tmTaskletZone zone_##_COUNTER_( TMCM_CPP, name )
+	tmTaskletZone zone_##_COUNTER_( TMCM_CPP, name, __FILE__, __LINE__ )
 #else
 
 #define CCP_STATS_SCOPED_TIME( identifier ) CcpStatisticsStopwatch ccpStatsStopwatch_##identifier( g_ccpStatistics_##identifier )
