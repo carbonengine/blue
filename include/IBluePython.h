@@ -43,6 +43,7 @@
 struct BluePythonObject;
 struct IList;
 struct ITaskletTimer;
+struct SchedulerStats;
 
 #undef Yield
 
@@ -222,12 +223,7 @@ BLUE_INTERFACE(IBluePyOS) : public IRoot
 	// been killed.
 	virtual bool Yield() = 0;
 
-	virtual void GetSchedulerStats(
-		int &inQueue1,
-		int &inQueue2,
-		float &lastTime,
-		float &maxTime
-		) = 0;
+	virtual SchedulerStats& GetSchedulerStats( ) = 0;
 
 	//Turns a Blue error into a python error.  There must be a pending blue error.
 	//always returns 0.

@@ -46,39 +46,54 @@ static char logbuf[256];
 #define LOGIT(text, ...) (void)0
 #endif
 
-double PyScheduler::mPt = 0.0;
+using doubleMsType = std::chrono::duration<double, std::milli>;
 
-PyScheduler::PyScheduler(double maxTime)
+PyScheduler::PyScheduler( double maxTime ) :
+	mMaxTimeSec( (float)maxTime )
 {
-	mMaxTime = (float)maxTime;
-	mOvershoot = 0;
-	mLastDuration = 0.0f;
-	mInQueue1 = mInQueue2 = 0;
-	if ( !mPt )
-	{
-		mPt = 1.0/(double)CcpGetTimestampFrequency();
-	}
+
+}
+
+void PyScheduler::UpdatePreTickStats()
+{
+	mStats.numberOfTaskletsInQueuePreTick = SchedulerAPI()->PyScheduler_GetRunCount() - 1;
+}
+
+void PyScheduler::UpdatePostTickStats( std::chrono::duration<double> maxTimeSec, std::chrono::duration<double> lastDurationSec )
+{
+	mStats.numberOfActiveScheduleManagers = SchedulerAPI()->PyScheduler_GetNumberOfActiveScheduleManagers();
+	mStats.numberOfActiveChannels = SchedulerAPI()->PyScheduler_GetNumberOfActiveChannels();
+	mStats.numberOfActiveTaskets = SchedulerAPI()->PyScheduler_GetActiveTaskletCount();
+	mStats.numberOfTaskletsInQueuePostTick = SchedulerAPI()->PyScheduler_GetRunCount() - 1;
+	mStats.numberOfTaskletsCompletedLastTick = SchedulerAPI()->PyScheduler_GetTaskletsCompletedLastRunWithTimeout();
+	mStats.numberOfTaskletsSwitchedLastTick = SchedulerAPI()->PyScheduler_GetTaskletsSwitchedLastRunWithTimeout();
+	
+	// All times given in milliseconds
+	mStats.maxTimeMs = std::chrono::duration_cast<doubleMsType>( maxTimeSec ).count();
+	mStats.lastDurationMs = std::chrono::duration_cast<doubleMsType>( lastDurationSec ).count();
+	mStats.overshootMs = lastDurationSec > maxTimeSec ? std::chrono::duration_cast<doubleMsType>( lastDurationSec - maxTimeSec ).count() : 0;
 }
 
 bool PyScheduler::RunTime( double t )
 {
+	// Run tasklets for time, measuring the time taken.
+
 	LOGIT( "Running %d seconds", t );
 
-	// Run tasklets for time, measuring the time required.
-	uint64_t time1, time2;
+	auto maxTimeSec = std::chrono::duration<double>( t );
 
-	mInQueue1 = SchedulerAPI()->PyScheduler_GetRunCount() - 1;
+	
+	UpdatePreTickStats();
+	
+	std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
 
-	time1 = CcpGetTimestamp();
+	long long runTimeInNanoseconds = std::chrono::duration_cast<std::chrono::nanoseconds>( maxTimeSec ).count();
 
-	long long runTimeInNanoseconds = t * 1000000000;
+	PyObject* r = SchedulerAPI()->PyScheduler_RunWithTimeout( runTimeInNanoseconds );
 
-	PyObject* r = SchedulerAPI()->PyScheduler_RunWatchdogEx( runTimeInNanoseconds,
-															 PY_WATCHDOG_SOFT | PY_WATCHDOG_IGNORE_NESTING | PY_WATCHDOG_TOTALTIMEOUT );
+	std::chrono::steady_clock::time_point endTime = std::chrono::steady_clock::now();
 
-	time2 = CcpGetTimestamp();
-
-	mInQueue2 = SchedulerAPI()->PyScheduler_GetRunCount() - 1;
+	auto lastDurationSec = std::chrono::duration<double>( endTime - startTime );
 
 	if( !r )
 	{
@@ -87,35 +102,10 @@ bool PyScheduler::RunTime( double t )
 
 	Py_DECREF( r );
 
-	double dt = ( time2 - time1 ) * mPt;
+	LOGIT( "Ran for %fs, runqueue=%d", dt, mStats.numberOfTaskletsInQueuePostTick );
 
-	//check for positive, since QueryPerformanceCounter may be broken on some
-	//machines, giving us negative results.  The average of the positive ones ought
-	//to be in the ballpark, though.  Also catches rollover.
-	if( dt < 0.0 )
-	{
-		return true; //in case of rollover, do nothing
-	}
-	mLastDuration = (float)dt;
+	UpdatePostTickStats( maxTimeSec, lastDurationSec );
 
-	LOGIT( "Ran for %fs, runqueue=%d", dt, mInQueue2 );
-
-	//If we interrupted we can now learn on our interrupt behaviour.
-	//Test for positive to catch integer rollovers.
-	
-	//Overshoot is calculated but not currently used anywhere
-	//However this is a useful metric to track and warn game code developers of
-	if( dt > t )
-	{
-		//update overshoot estimate.
-		//We will overshoot our request because switch will not occur right away.
-		//The overshoot will vary, but we try to find a good average.
-		///We start estimating from 0, so that we slowly zoom into a something safe
-		long over = dt - t;
-		//smooth the overshoot
-		double s = 0.01;
-		mOvershoot = (long)( s * over + ( 1.0 - s ) * mOvershoot );
-	}
 	return true;
 }
 

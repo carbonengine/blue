@@ -1009,16 +1009,10 @@ bool BluePyOS::Yield()
 #endif
 }
 
-void BluePyOS::GetSchedulerStats(
-		int &inQueue1,
-		int &inQueue2,
-		float &lastTime,
-		float &maxTime
-		)
+SchedulerStats& BluePyOS::GetSchedulerStats( )
 {
 #if CCP_STACKLESS
-	mScheduler.GetStats(inQueue1, inQueue2, lastTime);
-	maxTime = mScheduler.GetMaxTime();
+	return mScheduler.GetStats();
 #endif
 }
 
@@ -1762,9 +1756,7 @@ void BluePyOS::LogCpuUsageAndOtherStats()
 		Synchro::Stat synchroStat;
 		mSynchro->GetLastStat(synchroStat);
 
-		float lastDuration;
-		int nr1, nr2;
-		mScheduler.GetStats(nr1, nr2, lastDuration);
+		SchedulerStats& schedulerStats = mScheduler.GetStats();
 		if (pymem) {
 			BlueCpuUsagePtr stats;
 			stats.CreateInstance();
@@ -1780,11 +1772,18 @@ void BluePyOS::LogCpuUsageAndOtherStats()
 			stats->pageFaultCount = memInfo.pageFaultCount;
 
 			stats->fps = BeOS->GetInfo()->mFps;
-			stats->taskletsProcessed = nr1 - nr2,
 			stats->taskletsYielding = synchroStat.mYielders;
 			stats->taskletsSleeping = synchroStat.mSleepers;
-			stats->taskletsSchedulerDuration = lastDuration,
-			stats->taskletsQueued = nr2;
+			stats->taskletsSchedulerDuration = schedulerStats.lastDurationMs,
+			stats->taskletsSchedulerMaxDuration = schedulerStats.maxTimeMs,
+			stats->taskletsSchedulerDurationOvershoot = schedulerStats.overshootMs;
+			stats->taskletsQueued = schedulerStats.numberOfTaskletsInQueuePostTick;
+			stats->taskletsActive = schedulerStats.numberOfActiveTaskets;
+			stats->scheduleManagersActive = schedulerStats.numberOfActiveScheduleManagers;
+			stats->channelsActive = schedulerStats.numberOfActiveChannels;
+			stats->taskletsProcessed = schedulerStats.numberOfTaskletsCompletedLastTick;
+			stats->taskletsSwitched = schedulerStats.numberOfTaskletsSwitchedLastTick;
+
 			mCpuUsage.Append(stats.Detach());
 		}
 

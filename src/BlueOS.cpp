@@ -1874,11 +1874,9 @@ void BlueOS::EvaluateTimeDilation()
 	}
 
 	// Track the last time we were overloaded and the last time we were underloaded
-	int taskletQueueTickStart, taskletQueueTickEnd;
-	float frameTime, maxFrameTime;
-	PyOS->GetSchedulerStats(taskletQueueTickStart, taskletQueueTickEnd, frameTime, maxFrameTime);
+	SchedulerStats& stats = PyOS->GetSchedulerStats( );
 
-	if( taskletQueueTickEnd > 0 )
+	if( stats.numberOfTaskletsInQueuePostTick > 0 )
 	{
 		// We had tasklets left ready to run at the end of the tick.  We're overloaded.
 		mLastOverloadedTime = mRealTime;
