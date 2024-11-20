@@ -30,11 +30,8 @@ def _noop(*args, **kwargs):
 class TaskletExt(scheduler.tasklet):
     _exception_handler = logger.exception
     __slots__ = [
-        "context", "localStorage", "storedContext", 'startTime',
-        "endTime", 'runTime', 'tasklet_id', 'origin_traceback', 'highlighted',
-        'method_name', 'module_name', 'file_name', 'line_number',
-        'parent_callsite',
-
+        "localStorage", "storedContext",
+         'tasklet_id', 'origin_traceback',
         # trace context slots
         'tracer',      # None, or a stackless_tracing.CloneableTracer
         'trace_id',    # OTEL trace context trace_id
@@ -46,66 +43,27 @@ class TaskletExt(scheduler.tasklet):
         'creation_datetime',  # datetime when tasklet was created
     ]
 
-    @staticmethod
-    def GetWrapper(method):
-        if not callable(method):
-            raise TypeError("TaskletExt::__new__ argument \"method\" must be callable.")
-
-        def CallWrapper(*args, **kwds):
-            current = scheduler.getcurrent()
-            current.startTime = blue.os.GetWallclockTimeNow()
-            oldtimer = blue.pyos.taskletTimer.EnterTasklet(current.context)
-            with _tasklet_trace(current):
-                # noinspection PyBroadException
-                try:
-                    # noinspection PyBroadException
-                    try:
-                        return method(*args, **kwds)
-                    except TaskletExit as e:
-                        pass
-                    except SystemExit as e:
-                        logger.info("system %s exiting with %r" % (scheduler.getcurrent(), e))
-                    except Exception:
-                        TaskletExt._exception_handler("Unhandled exception in %r" % scheduler.getcurrent())
-                    return None  # Don't allow uncaught exceptions upwards.
-                except Exception:
-                    # Problem in exception handling.  Use traceback module.
-                    traceback.print_exc()
-                finally:
-                    blue.pyos.taskletTimer.ReturnFromTasklet(oldtimer)
-                    current.endTime = blue.os.GetWallclockTimeNow()
-        return CallWrapper
-
-    @staticmethod
-    def SetExceptionHandler(callback):
-        """
-        Set the exception handler callback for when
-        an exception is raised within the tasklet.
-        The callback should accept one parameter
-        of type 'str'.
-
-        :params callback: The callback to call when an exception occurs.
-        :type callback: callable
-        """
-        if not callable(callback):
-            raise TypeError("Callback not callable")
-        TaskletExt._exception_handler = callback
-
     def __init__(self, context, method=None, stackless_tracing_enabled=True):
-        if method is not None:
-            super().__init__(TaskletExt.GetWrapper(method))
-        else:
-            super().__init__(method)
+        super().__init__()
+        self.bind(method)
+
+        c = scheduler.getcurrent()
+
+        self.storedContext = self.context = context
+
+        parent_module_name = getattr(c, "module_name", "unknown_parent_module")
+        parent_method_name = getattr(c, "method_name", "unknown_parent_method")
+        self.parent_callsite = "{}.{}".format(parent_module_name, parent_method_name)
+        self.runTime = 0.0
+        self.highlighted = False
+
 
     def __new__(cls, ctx, method=None, stackless_tracing_enabled=True):
         global tasklet_id
         tid = tasklet_id
         tasklet_id += 1
 
-        if method:
-            t = scheduler.tasklet.__new__(cls, cls.GetWrapper(method))
-        else:
-            t = scheduler.tasklet.__new__(cls)
+        t = scheduler.tasklet.__new__(cls)
 
         t.creation_datetime = datetime.datetime.now(datetime.UTC)
         # Inherit the localStorage from calling task.
@@ -116,26 +74,10 @@ class TaskletExt(scheduler.tasklet):
         else:
             t.localStorage = dict(ls) #copy it
 
-        t.storedContext = t.context = ctx
-
-        t.method_name = getattr(method, "__name__", "unknown_method")
-        t.module_name = getattr(method, "__module__", "unknown_module")
-        try:
-            t.file_name = method.__code__.co_filename
-            t.line_number = method.__code__.co_firstlineno
-        except AttributeError:
-            t.file_name = 'unknown_file'
-            t.line_number = 0
-        parent_module_name = getattr(c, "module_name", "unknown_parent_module")
-        parent_method_name = getattr(c, "method_name", "unknown_parent_method")
-        t.parent_callsite = "{}.{}".format(parent_module_name, parent_method_name),
-
         if stackless_tracing_enabled:
             cls._copy_tracer_and_state(c, t)
 
-        t.runTime = 0.0
         t.tasklet_id = tid
-        t.highlighted = False
         tasklets[t] = True  # Create a weakref to this tasklet.
         return t
 
@@ -159,7 +101,9 @@ class TaskletExt(scheduler.tasklet):
             setattr(new, 'tracer', tracer.clone())
 
     def bind(self, callableObject):
-        return scheduler.tasklet.bind(self, self.CallWrapper(callableObject))
+        self.dont_raise = True
+        self.context_manager_getter = _tasklet_trace
+        return scheduler.tasklet.bind(self, callableObject)
 
     def __repr__(self):
         abps = [getattr(self, attr) for attr in ["alive", "blocked", "paused", "scheduled"]]
@@ -188,31 +132,42 @@ class TaskletExt(scheduler.tasklet):
 
     def GetWallclockTime(self):
         """Return the wallclock time in seconds since this tasklet was started"""
-        try:
-            return (blue.os.GetWallclockTimeNow() - self.startTime) * 1e-7
-        except AttributeError:
+        if self.startTime == 0.0:
             return None
+        else:
+            return (blue.os.GetWallclockTimeNow() - self.startTime) * 1e-7
 
     def GetRunTime(self):
         """Return the accumulated run time in seconds of this tasklet"""
-        if hasattr(self, "startTime"):
-            return self.runTime + blue.pyos.GetTimeSinceSwitch()
-        return 0.0
+        if self.startTime == 0.0:
+            return 0.0
+        else:
+            return self.runTime  + blue.pyos.GetTimeSinceSwitch()
 
+class WrapperTaskletContextManager:
+    def __init__(self, tasklet, *args):
+        self.tasklet = tasklet
+        self.oldTime = None
+        self.managers = []
+        for c in args:
+            self.managers.append(c)
+
+    def __enter__(self):
+        self.oldTime = blue.pyos.taskletTimer.EnterTasklet(self.tasklet.context)
+        for manager in self.managers:
+            manager.__enter__()
+
+    def __exit__(self, *args):
+        blue.pyos.taskletTimer.ReturnFromTasklet(self.oldTime)
+        for manager in self.managers:
+            manager.__exit__(*args)
 
 def _tasklet_trace(t):
     tracer = getattr(t, 'tracer', None)
     if tracer is None:
-        return _no_tasklet_tracer()
+        return WrapperTaskletContextManager(t)
 
-    return tracer.get_tasklet_tracer(t)
-
-
-@contextlib.contextmanager
-def _no_tasklet_tracer():
-    yield
-    return
-
+    return WrapperTaskletContextManager(t, tracer.get_tasklet_tracer(t))
 
 def _tracing_enabled(**kwargs):
     if STACKLESS_TRACING_ENABLED_KEY not in list(kwargs.keys()):
