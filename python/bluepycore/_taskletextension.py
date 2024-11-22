@@ -82,6 +82,26 @@ class TaskletExt(scheduler.tasklet):
         return t
 
     @staticmethod
+    def HandleException(infoString):
+        if TaskletExt._exception_handler:
+            TaskletExt._exception_handler(infoString)
+
+    @staticmethod
+    def SetExceptionHandler(callback):
+        """
+        Set the exception handler callback for when
+        an exception is raised within the tasklet.
+        The callback should accept one parameter
+        of type 'str'.
+
+        :params callback: The callback to call when an exception occurs.
+        :type callback: callable
+        """
+        if not callable(callback):
+            raise TypeError("Callback not callable")
+        TaskletExt._exception_handler = callback
+
+    @staticmethod
     def _copy_tracer_and_state(old, new):
         trace_context_slots = [
             'trace_id',    # OTEL trace context trace_id
@@ -103,6 +123,7 @@ class TaskletExt(scheduler.tasklet):
     def bind(self, callableObject):
         self.dont_raise = True
         self.context_manager_getter = _tasklet_trace
+        self.exception_handler = TaskletExt.HandleException
         return scheduler.tasklet.bind(self, callableObject)
 
     def __repr__(self):
