@@ -282,7 +282,6 @@ if(APPLE)
     enable_language(OBJCXX)
     target_compile_definitions(Blue PRIVATE PORTING_TO_LINUX)
     target_link_libraries(Blue PRIVATE "-framework SystemConfiguration -framework Foundation -framework IOKit -framework AppKit")
-    target_link_options(Blue PRIVATE "-Wl,-mllvm,--opaque-pointers")
 endif()
 
 get_target_property(CARBONIO_INCLUDE_DIR carbonio INTERFACE_INCLUDE_DIRECTORIES)
