@@ -1,6 +1,8 @@
 find_package(GTest REQUIRED)
 find_package(Crashpad REQUIRED NO_CMAKE_PATH)
 find_package(libuv REQUIRED NO_CMAKE_PATH)
+find_package(Tracy CONFIG REQUIRED NO_CMAKE_PATH)
+
 add_executable(BlueCppUnitTests
     main.cpp
     TestPyMemory.cpp
@@ -39,12 +41,13 @@ endif()
 if(APPLE)
     add_custom_command(TARGET BlueCppUnitTests POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy ${Exefile_ROOT}/${CCP_VENDOR_BIN_PATH}${EXEFILE_NAME} $<TARGET_FILE_DIR:Blue>
-            COMMAND ${CMAKE_COMMAND} -E copy ${CcpCore_DIR}/${CCP_VENDOR_BIN_PATH}/$<TARGET_PROPERTY:CcpCore,NAME>.so $<TARGET_FILE_DIR:Blue>
+            COMMAND ${CMAKE_COMMAND} -E copy ${CcpCore_DIR}/${_VENDOR_PATH}/$<TARGET_PROPERTY:CcpCore,NAME>.so $<TARGET_FILE_DIR:Blue>
             COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_LINKER_FILE:ccp::log> $<TARGET_FILE_DIR:Blue>
             COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_LINKER_FILE:Python> $<TARGET_FILE_DIR:Blue>
             COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_LINKER_FILE:Python> $<TARGET_FILE_DIR:BlueCppUnitTests>
             COMMAND ${CMAKE_COMMAND} -E copy ${CRASHPAD_EXECUTABLE} $<TARGET_FILE_DIR:Blue>
             COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:libuv::uv> $<TARGET_FILE_DIR:Blue>/libuv.1.dylib  # Required to import _socket module.
+            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:Tracy::TracyClient> $<TARGET_FILE_DIR:Blue>/libTracyClient.0.11.1.dylib  # CcpCore runtime dependency.
             COMMAND_EXPAND_LISTS
             VERBATIM
     )
