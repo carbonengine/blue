@@ -771,8 +771,8 @@ tmTaskletZone::tmTaskletZone( uint32_t ctx, const char* name, const char* filena
 
 tmTaskletZone::tmTaskletZone( tmTaskletZone&& other ) : m_zone( other.m_zone )
 {
-	// mark this instance's zone as inactive in case the destructor runs
-	m_zone.active = 0;
+	// mark the other instance's zone as inactive in case the destructor runs
+	other.m_zone.active = 0;
 }
 
 tmTaskletZone::~tmTaskletZone()
