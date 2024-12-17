@@ -8,42 +8,16 @@
 
 #if BLUE_WITH_PYTHON
 
-extern bool g_carbonIoFastWakeup;
 static PyObject *PyCarbonIoFastWakeup( PyObject* self, PyObject* args)
 {
-	PyObject *arg;
-	if ( !PyArg_ParseTuple( args, "O", &arg ) )
-	{
-		return NULL;
-	}
-	int v = PyObject_IsTrue( arg );
-	if (v == -1)
-	{
-		return NULL;
-	}
-	PyObject *res = g_carbonIoFastWakeup ? Py_True : Py_False;
-	g_carbonIoFastWakeup = v != 0;
-	Py_INCREF( res );
-	return res;
+	PyErr_WarnEx( PyExc_DeprecationWarning, "fast wakeup has no more effect", 1 );
+	Py_RETURN_FALSE;
 }
 
-extern bool g_carbonIoManualWakeup;
 static PyObject *PyCarbonIoManualWakeup( PyObject* self, PyObject* args)
 {
-	PyObject *arg;
-	if ( !PyArg_ParseTuple( args, "O", &arg ) )
-	{
-		return NULL;
-	}
-	int v = PyObject_IsTrue( arg );
-	if (v == -1)
-	{
-		return NULL;
-	}
-	PyObject *res = g_carbonIoManualWakeup ? Py_True : Py_False;
-	g_carbonIoManualWakeup = v != 0;
-	Py_INCREF( res );
-	return res;
+	PyErr_WarnEx( PyExc_DeprecationWarning, "manual wakeup has no more effect", 1 );
+	Py_RETURN_FALSE;
 }
 
 void SetCrashKeyValues( const std::string& k, const std::string& v )
@@ -279,7 +253,12 @@ const Be::ClassInfo* BlueOS::ExposeToBlue()
 		)
 
 		// other stuff
-		MAP_ATTRIBUTE( "sleeptime",		mSleepTime,	"Sleep in ms. for pumping", Be::READWRITE | Be::PERSIST )
+		MAP_PROPERTY
+		(
+			"sleeptime",
+			GetSleepTime, SetSleepTime,
+			"Deprecated (Sleep in ms. for pumping.)\n"
+		)
 		MAP_ATTRIBUTE( "overridefg",		mOverrideFG, "Override foreground mode", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "debuglevel",		mDebugLevel, "Level of debug checks", Be::READWRITE )
 		MAP_ATTRIBUTE(
@@ -315,6 +294,15 @@ const Be::ClassInfo* BlueOS::ExposeToBlue()
 			"Time out value, in milliseconds, for frame time. If frame time exceeds the given\n"
 			"time out value the process is assumed to be hanging and will be treated as a crash.\n"
 			"Set this value to 0 to disable hang detection altogether."
+		)
+
+		MAP_PROPERTY
+		(
+			"desiredFrameTimeMilliseconds",
+			GetDesiredFrameTimeMilliseconds, SetDesiredFrameTimeMilliseconds,
+			"Set the value, in milliseconds, for the desired duration of one frame in milliseconds.\n"
+			"Any time left over at the end of a frame will be used for sleep.\n"
+			"If the value is set to 0 or 1, the process will yield each frame, but never sleep.\n"
 		)
 
 		MAP_METHOD_AS_METHOD

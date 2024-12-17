@@ -21,7 +21,7 @@
 }
 
 
-bool InitCryptoModule();
+bool InitCryptoModule( PyObject* blueModule );
 bool InitCrypto();
 
 Be::Result<std::string> SHA256( const void* buffer, size_t length, std::string& returnValue );
@@ -42,9 +42,16 @@ public:
 	~SymmetricCipher();
 
 	Be::Result<std::string> IsValid() const;
-	Be::Result<std::string> LoadKey( const std::string& key, const std::string& iv, bool& returnValue );
+
+	static PyObject *PyLoadKey( PyObject *self, PyObject *args );
+	void LoadKey( const std::string& key, const std::string& iv );
+
+	static PyObject *PyEncrypt( PyObject *self, PyObject *args );
 	Be::Result<std::string> Encrypt( const std::string& plainText, std::string& returnValue ) const;
+
+	static PyObject *PyDecrypt( PyObject *self, PyObject *args );
 	Be::Result<std::string> Decrypt( const std::string& encryptedText, std::string& returnValue ) const;
+
 
 private:
 	EVP_CIPHER_CTX_ptr m_encryptCtx{ nullptr, ::EVP_CIPHER_CTX_free };
@@ -81,9 +88,13 @@ public:
 	Be::Result<std::string> LoadPrivateKey( const std::string& key, const std::string& password, bool& returnValue );
 	Be::Result<std::string> GetPublicKey( std::string& returnValue ) const;
 	Be::Result<std::string> GetPrivateKey( const std::string& password, std::string& returnValue ) const;
+	static PyObject *PyEncrypt( PyObject *self, PyObject *args );
 	Be::Result<std::string> Encrypt( const std::string& plainText, std::string& returnValue ) const;
+	static PyObject *PyDecrypt( PyObject *self, PyObject *args );
 	Be::Result<std::string> Decrypt( const std::string& encryptedText, std::string& returnValue ) const;
+	static PyObject *PySign( PyObject *self, PyObject *args );
 	Be::Result<std::string> Sign( const std::string& text, std::string& returnValue ) const;
+	static PyObject *PyVerifySignature( PyObject *self, PyObject *args );
 	Be::Result<std::string> VerifySignature( const std::string& text, const std::string& signature, bool& returnValue ) const;
 
 private:

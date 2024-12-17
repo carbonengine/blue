@@ -69,6 +69,7 @@ protected:
 
 	// Helper functions for ReadAttribute - called via a lookup table
 	void HandlePropertyInt64( Be::Var* var, const Be::VarEntry* entry );
+	void HandlePropertyUInt64( Be::Var* var, const Be::VarEntry* entry );
 	void HandlePropertyWCString( Be::Var* var, const Be::VarEntry* entry );
 	void HandlePropertyStdWString( Be::Var* var, const Be::VarEntry* entry );
 	void HandlePropertyStdString( Be::Var* var, const Be::VarEntry* entry );
@@ -83,6 +84,7 @@ protected:
 	void HandlePropertyShort( Be::Var* var, const Be::VarEntry* entry );
 	void HandlePropertyByte( Be::Var* var, const Be::VarEntry* entry );
 	void HandlePropertyLong( Be::Var* var, const Be::VarEntry* entry );
+	void HandlePropertyULong( Be::Var* var, const Be::VarEntry* entry );
 	void HandlePropertyBinaryBlock( Be::Var* var, const Be::VarEntry* entry );
 	void HandlePropertySharedString( Be::Var* var, const Be::VarEntry* entry );
 	void HandlePropertySharedStringW( Be::Var* var, const Be::VarEntry* entry );
@@ -96,6 +98,7 @@ protected:
 
 protected:
 	virtual void ReadValue( int64_t& dst ) = 0;
+	virtual void ReadValue( uint64_t& dst ) = 0;
 	virtual void ReadValue( uint32_t& dst ) = 0;
 	virtual void ReadValue( int32_t& dst ) = 0;
 	virtual void ReadValue( uint16_t& dst ) = 0;

@@ -129,8 +129,8 @@ enum PYTYPES
     
     TY_TUPLE2 = 44,	//a two-tuple, surprisingly common
     TY_MARK = 45,	//a marker for dynamic lists and other dynamic forms
-    
-    TY_UTF8 = 46,	//unicode as utf-8
+
+    TY_UTF8_OBSOLETE = 46,	//unicode as utf-8 -- obsolete and unused as of Python 3 upgrade
     
     TY_LONG = 47,	//a proper long
     
@@ -228,9 +228,9 @@ public:
 
 	// published members
 	PYTHON_MEMBERS_BEGIN()
-		PYTHON_MEMBER("stringTable", T_OBJECT, mStrTable.o, RO)
-		PYTHON_MEMBER("stringTableRev", T_OBJECT, mStrTableRev.o, RO)
-		PYTHON_MEMBER("packetHadCrc", T_INT, mPacketHadCrc, RO)
+		PYTHON_MEMBER("stringTable", T_OBJECT, mStrTable.o, READONLY)
+		PYTHON_MEMBER("stringTableRev", T_OBJECT, mStrTableRev.o, READONLY)
+		PYTHON_MEMBER("packetHadCrc", T_INT, mPacketHadCrc, READONLY)
 		PYTHON_MEMBER("statStrings", T_OBJECT, mStatStrings.o, 0)
 		PYTHON_MEMBER("statGlobals", T_OBJECT, mStatGlobals.o, 0) //classes instantiated from globals		
 		PYTHON_MEMBER("globalsWhitelist", T_OBJECT, mGlobalsWhitelist.o, 0) //whitelist for globals
@@ -293,6 +293,7 @@ private:
 	
 	//Pickling support routines
 	bool WriteObjectGlobal(WriteStream *s, PyObject *obj);
+	bool WriteCallbackResult( WriteStream* stream, PyObject* o );
 	bool WriteObjectInstance(WriteStream *s, PyObject *obj);
 	bool WriteObjectReduce(bool &handled, WriteStream *s, PyObject *obj);
 	bool WriteMarker(WriteStream *s);
@@ -321,7 +322,6 @@ private:
 	PyObject * ReadObjectInt64( ReadStream * stream, bool isShared );
 	PyObject * ReadObjectNone( ReadStream* stream, bool isShared );
 	PyObject * ReadObjectTuple0( ReadStream * stream, bool isShared );
-	PyObject * ReadObjectUtf8( ReadStream * stream, bool isShared );
 	PyObject * ReadObjectUnicode1( ReadStream * stream, bool isShared );
 	PyObject * ReadObjectUnicode0( ReadStream * stream, bool isShared );
 	PyObject * ReadObjectUnicode( ReadStream * stream, bool isShared );
@@ -421,14 +421,17 @@ private:
 	//str() method
 	static PyObject *tp_str_method(PyObject *self);
 	static PyObject *tp_repr_method(PyObject *self);
+	static PyObject *tp_richcompare_method(PyObject *self, PyObject* other, int op);
 	
 	//buffer protocol.
-	static Py_ssize_t getreadbuffer(PyObject *self, Py_ssize_t segment, void **ptrptr);
-	static Py_ssize_t getsegcount(PyObject *self, Py_ssize_t *lenp);
+	static int getbuffer(PyObject* exporter, Py_buffer* view, int flags);
+//	static Py_ssize_t getreadbuffer(PyObject *self, Py_ssize_t segment, void **ptrptr);
+//	static Py_ssize_t getsegcount(PyObject *self, Py_ssize_t *lenp);
 	
 	//sequence protocol
 	static Py_ssize_t SequenceLength(PyObject *self);
 	static PyObject *SequenceGet(PyObject *self, Py_ssize_t i);
+	static PyObject *SequenceSubscript(PyObject *self, PyObject* key);
 	static PyObject *SequenceGetSlice(PyObject *self, Py_ssize_t ilow, Py_ssize_t ihigh);
 
 	//python picling support

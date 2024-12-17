@@ -35,6 +35,8 @@
 #include "IBluePython.h"
 #include "IBlueCallbackMan.h"
 
+#include <vector>
+
 // forward decls
 struct IBlueEvents;
 struct ICatchupTicks;
@@ -52,12 +54,6 @@ enum BLUEERROR
 	BEDEF		= -1,			// no particular error value, default value
 	BE32		= -2,			// will call GetLastError()
 	BEFLUSH     = -3,			// flushes the error log out to the logger, and clears it
-};
-
-enum ManifestVerification
-{
-	VERIFY_MANIFEST,
-	IGNORE_MANIFEST,
 };
 
 struct BeInfo
@@ -104,11 +100,10 @@ BLUE_INTERFACE(IBlueOS) : public IRoot
 	//--------------------------------------------------------------------
 	// Blue OS startup / shutdown
 	//--------------------------------------------------------------------
-	
+
 	// the startup
 	virtual bool Startup(
-		int pyOptimizeFlag,
-		ManifestVerification manifestVerification
+		int pyOptimizeFlag
 		) = 0;
 	
 	// the way to end things (we always shutdown with a terminate).  For more info
@@ -124,7 +119,6 @@ BLUE_INTERFACE(IBlueOS) : public IRoot
 	// handling; this method should therefore only be required for a few of our DLLs.
 	virtual void RegisterIndispensableTerminationStep( TerminationCallback* callback ) = 0;
 
-	virtual bool ShouldVerifyManifest() const = 0;
 
 	//--------------------------------------------------------------------
 	// Scheduling and such...
@@ -204,9 +198,7 @@ BLUE_INTERFACE(IBlueOS) : public IRoot
 	virtual Be::Time GetActualTime(
 		) = 0;
 
-	virtual void NextScheduledEvent(
-		int millisec
-		) = 0;
+	virtual bool IsPackaged() = 0;
 
 	// This returns the cached values of GetSmoothedTime
 	virtual Be::Time GetCurrentFrameTime( ) const = 0;
@@ -225,9 +217,13 @@ BLUE_INTERFACE(IBlueOS) : public IRoot
 	// Returns true if <arg> is in the list of command line arguments.
 	virtual bool HasStartupArg( const std::wstring& arg ) const = 0;
 
+	virtual void GetInitTab( std::vector<_inittab>& tabs ) const = 0;
+
 	// Returns the value associated with the command line argument.
 	// If /arg=value is on the command line, this method returns value.
 	virtual std::wstring GetStartupArgValue( const std::wstring& arg ) const = 0;
+	virtual void SetMarkupZonesInPython( bool markupZonesInPython ) = 0;
+	virtual bool ConstructPathListFromManifest( std::vector<std::wstring> & pathlist, bool verifyManifest ) = 0;
 };
 
 extern BLUEIMPORT IBlueOS* BeOS;

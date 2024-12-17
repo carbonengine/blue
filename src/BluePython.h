@@ -30,9 +30,7 @@
 #include "TaskletTimer.h"
 #include "PyScheduler.h"
 
-#ifdef STACKLESS
-#include <stackless_api.h>
-#endif
+#include <socketmodule.h>
 
 #include "manifest.h"
 
@@ -67,11 +65,18 @@ public:
 	//	size_t blueMemory;
 	// Scheduler
 	double fps{0.0};
-	uint64_t taskletsProcessed{0};
 	size_t taskletsYielding{0};
 	size_t taskletsSleeping{0};
-	float taskletsSchedulerDuration{0.f};
+	double taskletsSchedulerDuration{0.0};
+	double taskletsSchedulerMaxDuration{ 0.0 };
+	double taskletsSchedulerDurationOvershoot{ 0.0 };
 	uint64_t taskletsQueued{0};
+	uint64_t taskletsActive{ 0 };
+	uint64_t scheduleManagersActive{ 0 };
+	uint64_t channelsActive{ 0 };
+	uint64_t taskletsProcessed{ 0 };
+	uint64_t taskletsSwitched{ 0 };
+
 };
 BLUE_DECLARE_VECTOR( BlueCpuUsage );
 TYPEDEF_BLUECLASS( BlueCpuUsage );
@@ -118,7 +123,6 @@ public:
 
 	bool InitIncludePaths( std::wstring & path );
 
-	void BuildConcatenatedPathFromPathlist( const std::vector<std::wstring>& pathlist, std::wstring& path );
 
 	void LogCpuUsageAndOtherStats();
 
@@ -172,7 +176,6 @@ public:
 private:
 	double GetTimeSinceSwitch( bool update = false ); //time since last tasklet switch
 	bool UpdateTaskletRunTime( PyObject * tasklet, double elapsed );
-	PyFileObject* mDevNull = nullptr; // We redirect sys.stdout/sys.stderr here if no console.
 
 private:
 	PyObject* mBlueModule; //weak ref to us as a module;
@@ -196,6 +199,10 @@ private:
 	BluePy mrunTime_str;
 #endif
 
+	BluePy mMainScheduler;
+
+	PySocketModule_APIObject *mSocketAPI;
+
 public:
 	void OnTaskletSwitch( PyObject *from, PyObject *to ) override;
 
@@ -208,12 +215,14 @@ public:
 private:
 	void HandleException( const char* message );
 
+//	startup functions
+	static void EnsureAssertionsEnabled();
+
 public:
 	EXPOSE_TO_BLUE();
 
 	PyObject* PyAddExitProc( PyObject* args );
 	PyObject* PyGetArg( PyObject* args );
-	PyObject* PyGetEnv( PyObject* args );
 	PyObject* PyDumpState( PyObject* args );
 	PyObject* Py_EnableTrace( PyObject* args );
 	PyObject* Py_GetWrapperList( PyObject* args );
@@ -221,8 +230,8 @@ public:
 	PyObject* Pywrite( PyObject* args );
 	PyObject* PyGetThunkers( PyObject* args );
 	PyObject* PyCreateTasklet( PyObject* args );
-	PyObject* PyNextScheduledEvent( PyObject* args );
 	PyObject* PySetClipboardData( PyObject* args );
+	PyObject* PyNextScheduledEvent( PyObject* args );
 	PyObject* PyGetTimeSinceSwitch( PyObject* args );
 	PyObject* PyBeNice( PyObject* args );
 	PyObject* PyXUtil_Index( PyObject* args );
@@ -263,6 +272,9 @@ public:
 	int PumpPython(
 		bool quit ) override;
 
+	PyObject* BlueModule() override { return mBlueModule; }
+
+
 	//--------------------------------------------------------------------
 	// Convenience functions
 	//--------------------------------------------------------------------
@@ -284,6 +296,14 @@ public:
 	{
 		return mPackaged;
 	}
+	void SetPackaged( bool packaged ) override
+	{
+		mPackaged = packaged;
+	}
+	void SetMarkupZonesInPython(bool markupZonesInPython) override
+	{
+		mMarkupZonesInPython = markupZonesInPython;
+	}
 	bool IsInterpreterMode() override
 	{
 		return mInterpreterMode;
@@ -292,17 +312,13 @@ public:
 	bool CanYield() override;
 	bool Yield() override;
 
-	void GetSchedulerStats(
-		int& inQueue1,
-		int& inQueue2,
-		float& lastTime,
-		float& maxTime ) override;
+	SchedulerStats& GetSchedulerStats( ) override;
 
-	void DoStackTrace(
-		PyObject* frame = 0 ) override;
-
-	PyObject* GetStackTrace(
-		PyObject* frame = 0 ) override;
+//	void DoStackTrace(
+//		PyObject* frame = 0 ) override;
+//
+//	PyObject* GetStackTrace(
+//		PyObject* frame = 0 ) override;
 
 	ITaskletTimer* GetTaskletTimer() override; //Get the tasklet timer object
 
@@ -401,6 +417,7 @@ static void PureVirtualCall()
 }
 MAP_FUNCTION_AND_WRAP( "PureVirtualCall", PureVirtualCall, "Induces a C++ pure virtual call that is supposed to crash the process." );
 
+extern "C" BLUEIMPORT PyObject* BlueLoadPythonExtension( const char* name );
 
 PyObject* LoadPythonExtension( PyObject*, PyObject* args );
 MAP_FUNCTION(

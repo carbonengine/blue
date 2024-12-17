@@ -19,7 +19,7 @@ static PyObject* PyOpen( PyObject* self, PyObject* args )
 
 	PyObject* filename;
 	int readonly = 1;
-	if( !PyArg_ParseTuple( args, "O!|i:Open", &PyBaseString_Type, &filename, &readonly ) )
+	if( !PyArg_ParseTuple( args, "O!|i:Open", &PyUnicode_Type, &filename, &readonly ) )
 	{
 		return NULL;
 	}
@@ -30,7 +30,11 @@ static PyObject* PyOpen( PyObject* self, PyObject* args )
 		return NULL;
 	}
 
-	bool ok = pThis->OpenW( (const wchar_t*)PyUnicode_AsUnicode( filename ), readonly != 0);
+	wchar_t* fileNameWCString = PyUnicode_AsWideCharString( filename, NULL );
+
+	bool ok = pThis->OpenW( fileNameWCString, readonly != 0 );
+
+	PyMem_Free( fileNameWCString );
 
 	return PyBool_FromLong( ok );
 }
@@ -41,7 +45,7 @@ static PyObject* PyOpenAlways( PyObject* self, PyObject* args )
 
 	PyObject* filename;
 	int readonly = 1;
-	if( !PyArg_ParseTuple( args, "O!|i:Open", &PyBaseString_Type, &filename, &readonly ) )
+	if( !PyArg_ParseTuple( args, "O!|i:Open", &PyUnicode_Type, &filename, &readonly ) )
 	{
 		return NULL;
 	}
@@ -52,7 +56,11 @@ static PyObject* PyOpenAlways( PyObject* self, PyObject* args )
 		return NULL;
 	}
 
-	bool ok = pThis->OpenW( (const wchar_t*)PyUnicode_AsUnicode( filename ), readonly != 0);
+	wchar_t* fileNameWCString = PyUnicode_AsWideCharString( filename, NULL );
+
+	bool ok = pThis->OpenW( fileNameWCString, readonly != 0 );
+
+	PyMem_Free( fileNameWCString );
 
 	if( !ok )
 	{
@@ -69,7 +77,7 @@ static PyObject* PyCreate( PyObject* self, PyObject* args )
 
 	PyObject *filename;
 
-	if( !PyArg_ParseTuple( args, "O!|:Create", &PyBaseString_Type, &filename ) )
+	if( !PyArg_ParseTuple( args, "O!|:Create", &PyUnicode_Type, &filename ) )
 	{
 		return NULL;
 	}
@@ -80,9 +88,13 @@ static PyObject* PyCreate( PyObject* self, PyObject* args )
 		return NULL;
 	}
 
-	bool ok = pThis->CreateW( (const wchar_t*)PyUnicode_AsUnicode( filename ) );
+	wchar_t* fileNameWCString = PyUnicode_AsWideCharString( filename, NULL );
 
-	return PyInt_FromLong( ok );
+	bool ok = pThis->CreateW( fileNameWCString );
+
+	PyMem_Free( fileNameWCString );
+
+	return PyLong_FromLong( ok );
 }
 
 static PyObject* PyClose( PyObject* self, PyObject* args )
@@ -96,7 +108,7 @@ static PyObject* PyClose( PyObject* self, PyObject* args )
 
 	bool ok = pThis->Close();
 
-	return PyInt_FromLong( ok );
+	return PyLong_FromLong( ok );
 }
 
 static PyObject* PyRead( PyObject* self, PyObject* args )
@@ -121,7 +133,7 @@ static PyObject* PyRead( PyObject* self, PyObject* args )
 		return NULL;
 	}
 
-	PyObject* str = PyString_FromStringAndSize( 0, size );
+	PyObject* str = PyBytes_FromStringAndSize( 0, size );
 	if( !str )
 	{
 		return NULL;
@@ -134,7 +146,7 @@ static PyObject* PyRead( PyObject* self, PyObject* args )
 		return str;
 	}
 
-	ssize_t bytesRead = pThis->Read( PyString_AS_STRING( str ), size );
+	ssize_t bytesRead = pThis->Read( PyBytes_AS_STRING( str ), size );
 
 	if( bytesRead < 0 )
 	{
@@ -147,7 +159,7 @@ static PyObject* PyRead( PyObject* self, PyObject* args )
 	{
 		// We read something, but not the full amount requested. Resize
 		// the string to the amount read.
-		if( _PyString_Resize( &str, bytesRead ) != 0 )
+		if( _PyBytes_Resize( &str, bytesRead ) != 0 )
 		{
 			// Resize failed
 			return NULL;

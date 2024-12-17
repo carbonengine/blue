@@ -1,3 +1,4 @@
+import io
 import sys
 import unittest
 
@@ -12,15 +13,15 @@ class TestOutputStreams(unittest.TestCase):
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
 
-    def test_stdout_is_a_file(self):
+    def test_stdout_is_textiowrapper_instance(self):
         if sys.stdout is not None:
             # Just in case this gets run from a process that has no shell.
-            self.assertIsInstance(sys.stdout, file)
+            self.assertIsInstance(sys.stdout, io.TextIOWrapper)
 
-    def test_stderr_is_a_file(self):
+    def test_stderr_is_textiowrapper_instance(self):
         if sys.stderr is not None:
             # Just in case this gets run from a process that has no shell.
-            self.assertIsInstance(sys.stderr, file)
+            self.assertIsInstance(sys.stderr, io.TextIOWrapper)
 
     def test_stdout_can_be_set_to_none(self):
         sys.stdout = None

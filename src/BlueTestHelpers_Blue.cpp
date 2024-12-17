@@ -39,7 +39,15 @@ const Be::ClassInfo* BlueTestHelperAttributes::ExposeToBlue()
 		( 
 			"myInt", 
 			m_myInt, 
-			"int test", 
+			"int32_t test", 
+			Be::READWRITE | Be::PERSIST
+		)
+
+		MAP_ATTRIBUTE
+		(
+			"myUInt",
+			m_myUInt,
+			"uint32_t test",
 			Be::READWRITE | Be::PERSIST
 		)
 
@@ -64,6 +72,14 @@ const Be::ClassInfo* BlueTestHelperAttributes::ExposeToBlue()
 			"myInt64", 
 			m_myInt64, 
 			"int64_t test", 
+			Be::READWRITE | Be::PERSIST
+		)
+
+		MAP_ATTRIBUTE
+		(
+			"myUInt64",
+			m_myUInt64,
+			"uint64_t test",
 			Be::READWRITE | Be::PERSIST
 		)
 
@@ -145,6 +161,14 @@ const Be::ClassInfo* BlueTestHelperProperties::ExposeToBlue()
 		)
 
 		MAP_PROPERTY
+		(
+			"myUInt",
+			GetUInt,
+			SetUInt,
+			"uint test"
+		)
+
+		MAP_PROPERTY
 		( 
 			"myFloat", 
 			GetFloat, SetFloat, 
@@ -163,6 +187,14 @@ const Be::ClassInfo* BlueTestHelperProperties::ExposeToBlue()
 			"myInt64", 
 			GetInt64, SetInt64, 
 			"int64_t test"
+		)
+
+		MAP_PROPERTY
+		(
+			"myUInt64",
+			GetUInt64,
+			SetUInt64,
+			"uint64_t test"
 		)
 	EXPOSURE_END()
 }
@@ -228,4 +260,16 @@ const Be::ClassInfo* BlueTestStructureLists::ExposeToBlue()
 	EXPOSURE_END()
 }
 
+BLUE_DEFINE( BlueTestEvents );
+
+const Be::ClassInfo* BlueTestEvents::ExposeToBlue()
+{
+	EXPOSURE_BEGIN( BlueTestEvents, "" )
+
+		MAP_INTERFACE( BlueTestEvents )
+		MAP_METHOD_AS_METHOD( "SendEvent", PySendEvent, "Sends DoSendEvent via PyOS->SendEvent" );
+		MAP_METHOD_AS_METHOD( "PostEvent", PyPostEvent, "Sends OnPostEvent via PyOS->PostEvent" );
+
+	EXPOSURE_END()
+}
 #endif

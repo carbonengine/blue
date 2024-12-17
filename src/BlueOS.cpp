@@ -19,6 +19,7 @@
 #include "BlueResFile.h"
 #include "BlueSocketLogger.h"
 #include "crypto.h"
+#include "errormessage.h"
 
 #if BLUE_WITH_PYTHON
 #include "ITaskletTimer.h"
@@ -28,22 +29,19 @@
 #ifdef _WIN32
 #include "win32.h"
 #include <shellapi.h>
-#else
-#include <codecvt>
 #endif
 
 #if CCP_STACKLESS
 #include "BitPacker.h"
 #include "BlueNet.h"
-#include "BlueNetTypes.h"
 #include "BluePyCpp.h"
-#include <stacklessio_api.h>
 #endif
 
 #include <sstream> // for message creation
 #include <algorithm>
 #include <iomanip>
 #include "BlueTimeoutHandler.h"
+#include <Scheduler.h>
 
 static CcpLogChannel_t s_chOS = CCP_LOG_DEFINE_CHANNEL( "OS" );
 static CcpLogChannel_t s_chErr = CCP_LOG_DEFINE_CHANNEL( "ERR" );
@@ -60,11 +58,6 @@ CCP_STATS_DECLARE( logInfo,			"Blue/logInfo",			false,	CST_COUNTER_LOW, "Count o
 CCP_STATS_DECLARE( logNotice,		"Blue/logNotice",		false,	CST_COUNTER_LOW, "Count of notice logs" );
 CCP_STATS_DECLARE( logWarn,			"Blue/logWarn",			false,	CST_COUNTER_LOW, "Count of warning logs" );
 CCP_STATS_DECLARE( logErr,			"Blue/logErr",			false,	CST_COUNTER_LOW, "Count of error logs" );
-
-// CarbonIO wake up mode
-bool g_carbonIoFastWakeup = false;
-
-bool g_carbonIoManualWakeup = true;
 
 #if CCP_STACKLESS
 
@@ -194,146 +187,6 @@ BlueOsError::~BlueOsError()
 
 #endif
 
-#if CCP_STACKLESS
-
-//------------------------------------------------------------------------------
-static void OnIOTaskletScheduled( bool force )
-{
-#ifndef NO_CARBONIO
-	if( g_carbonIoFastWakeup )
-	{
-		SetEvent(gBreakCarbonIo);
-	}
-	else
-	{
-		unsigned int current = GetTickCount();
-		if( (current > sNextScheduledIOWakeup) || force )
-		{
-			sNextScheduledIOWakeup = current + BeNet->GetMinScheduledIOInterval();
-			sPendingWakeup = false;
-			SetEvent( gBreakSleep ); // tends to cause an immediate context-switch, do it last
-		}
-		else
-		{
-			sPendingWakeup = true;
-		}
-	}
-#endif
-}
-
-//------------------------------------------------------------------------------
-static void IOWakeupWatchdogThread( void *arg )
-{
-#ifndef NO_CARBONIO
-	// periodically wake up and check to see if a pending wakeup was
-	// issued but never serviced, this will happen only when IO is unbusy.
-	for(;;)
-	{
-        if ( sPendingWakeup )
-		{
-			unsigned int current = GetTickCount();
-			if ( current > sNextScheduledIOWakeup )
-			{
-				SetEvent( gBreakSleep );
-				sPendingWakeup = false;
-			}
-		}
-
-		Sleep( BeNet->GetWatchdogInterval() );
-	}
-#endif
-}
-
-
-//------------------------------------------------------------------------------
-int runPyMain( std::vector<std::wstring> &argv )
-{/*
-	This is so that we can have blue behave as a standard python interpreter.
- */
-    if (BeCrashes) {
-        // Signal to the crash reporting system that we're running in interpreter mode
-        BeCrashes->SetCrashKeyValue("interpreterMode", "true");
-        // And this allows us to filter for these kinds of crashes in sentry.io
-		// using snake_csae to be consistent with the other search able keys on sentry.
-        BeCrashes->SetCrashKeyValue("sentry", R"({"tags": {"interpreter_mode": "true"}})");
-    }
-
-	// We want vanilla python behaviour.
-	// Every argument after /py gets forwarded to Py_Main
-	unsigned int nPythonArgs;
-	unsigned int vanillaIndex = 0;
-	char** pythonArguments;
-	// PyMain actually fucks with the arguments
-	// so we need to backup the pointer to clean them up
-	char** backupPythonArguments;
-
-	// At what index is the vanilla marker
-	for( unsigned int i = 0; i < argv.size(); i++ )
-	{
-		const std::wstring &arg = argv[i];
-		if( arg == L"/py")
-		{
-			vanillaIndex = i;
-			break;
-		}
-	}
-
-	// Create the parameter list for the main python function
-	nPythonArgs = (unsigned int)argv.size() - vanillaIndex;
-
-	// Convert all the unicode strings to ascii
-	// We are going to be very careful about allocating memory and reporting
-	// anything that goes wrong.
-	pythonArguments = (char**)CCP_MALLOC("RunPyMain: Argument Array",  nPythonArgs*sizeof(char*) );
-	if( pythonArguments == NULL )
-	{
-		CCP_LOGERR( "runPyMain() -> Couldn't allocate memory for the python arguments" );
-		return 1;
-	}
-
-	backupPythonArguments = (char**)CCP_MALLOC("RunPyMain: Argument Array",  nPythonArgs*sizeof(char*) );
-	if( backupPythonArguments == NULL )
-	{
-		CCP_LOGERR( "runPyMain() -> Couldn't allocate memory for the backup python arguments" );
-		return 1;
-	}
-
-	unsigned int index = 0;
-	unsigned int counter = 0;
-	do
-	{
-		unsigned int slen = (unsigned int)argv[index].size() + 1; // Plus one for the null terminator
-		pythonArguments[counter] = (char*)CCP_MALLOC( "RunPyMain: Array Element",  slen*sizeof(char) );
-		if( pythonArguments[counter] == NULL )
-		{
-			CCP_LOGERR( "runPyMain() -> Couldn't allocate memory for one of the python parameters" );
-			return 1;
-		}
-		strncpy_s( pythonArguments[counter], slen, CW2A(argv[index].c_str()), _TRUNCATE );
-		++counter;
-		index = vanillaIndex + counter;
-	} while ( index < argv.size() );
-
-	// backup the pointers
-	for( unsigned int i = 0; i < nPythonArgs; i++ )
-	{
-		backupPythonArguments[i] = pythonArguments[i];
-	}
-
-	// Success,... now lets hope the arguments make sense
-	int result = Py_Main( nPythonArgs, pythonArguments );
-
-	// Cleanup
-	for( unsigned int i = 0; i < nPythonArgs; i++ )
-	{
-		CCP_FREE( backupPythonArguments[i] );
-	}
-	CCP_FREE( pythonArguments );
-	CCP_FREE( backupPythonArguments );
-	return result;
-}
-#endif
-
 #if BLUE_WITH_PYTHON
 struct TaskletSwitch
 {
@@ -432,18 +285,9 @@ BlueOS::BlueOS() :
 	mBuildno = -1;
 
 	// New order
-	mNextScheduledEvent = 0;
 	mInsidePump = false;
 
 	mMiniDump = false;
-
-#if CCP_STACKLESS && !defined(NO_CARBONIO)
-	gBreakSleep = CreateEvent(NULL, FALSE, FALSE, NULL);
-	gBreakCarbonIo = CreateEvent(NULL, FALSE, FALSE, NULL);
-
-	CioSetOnTaskletScheduledCallback( OnIOTaskletScheduled );
-	_beginthread( IOWakeupWatchdogThread, 0, 0 );
-#endif
 
 #if BLUE_WITH_PYTHON
 	mFrameClock = 0;
@@ -462,9 +306,6 @@ BlueOS::~BlueOS()
 {
 #if BLUE_WITH_PYTHON
 	Py_XDECREF(mFrameClock);
-#endif
-#ifndef NO_CARBONIO
-	CloseHandle(gBreakSleep);
 #endif
 }
 
@@ -500,7 +341,8 @@ void BlueOS::UnregisterForTicks( IBlueEvents *cb, void* cookie )
 	}
 }
 
-void Py_FatalError( char *msg )
+
+void _Py_FatalErrorFunc( const char* _func, const char* msg )
 {
 	CCP_LOGERR_CH( s_chOS, "Py_FatalError: %s", msg );
 	fprintf( stderr, "Fatal Python error: %s\n", msg );
@@ -508,102 +350,34 @@ void Py_FatalError( char *msg )
 	RaiseException( 0xE0000011, EXCEPTION_NONCONTINUABLE, 0, NULL );
 	TerminateProcess( GetCurrentProcess(), -3 ); // shouldn't get here
 #else
-    kill( getpid(), SIGKILL );
+	kill( getpid(), SIGKILL );
+	__builtin_unreachable();
 #endif
 }
 
 //--------------------------------------------------------------------
-// This function handles the intricacies of sleeping for a particular
-// time. In particular, it will resume an interrupted sleep if it finds
-// that there is, in fact, no IO to be done.
-void BlueOS::DoSleep()
+// Frame rate is capped at ~100 max frames per second (10ms per frame).
+// If there is time remaining in the frame, then sleep for the available
+// duration. Otherwise, yield to give other threads an opportunity to run
+// before continuing execution.
+void BlueOS::Sleep()
 {
-#if CCP_STACKLESS
-#ifdef NO_CARBONIO
-    if( mNextScheduledEvent <= 0 )
-    {
-        return;
-    }
-    CcpThreadSleep( mNextScheduledEvent );
-#else
-	if( mNextScheduledEvent <= 0 )
+	auto now = std::chrono::steady_clock::now();
+	// We don't want to sleep for less than 1 millisecond, since switching out of and back
+	// into a large thread can be quite heavy, so this could be a waste of resources.
+	if( now < mNextFrame )
 	{
-		// Quick return if there is no desire to sleep
-		ResetEvent( gBreakSleep );
-		return;
+		std::this_thread::sleep_until( mNextFrame );
 	}
-
-	// Mark this as an idle timer
-	SafeAutoTasklet _at2(PyOS->GetTaskletTimer(),TASKLETS[IDLETASKLET].mContext, true, IDLE);
-
-	HANDLE handles[3];
-	handles[0] = PyStacklessIoGetWakeupEventHandle();
-	handles[1] = gBreakSleep;
-	handles[2] = gBreakCarbonIo;
-	__int64 startTime, frequency=0;
-
-	int orgsleeptime = mNextScheduledEvent;
-	int sleeptime = orgsleeptime;
-	QueryPerformanceCounter((LARGE_INTEGER*)&startTime);
-	while( sleeptime > 0 )
+	else
 	{
-		DWORD result;
-		{
-			Ccp::PyAllowThreads _allow; //allow python threads during the sleep
-			result = MsgWaitForMultipleObjectsEx(
-				_countof(handles), handles,
-				sleeptime, QS_ALLEVENTS, MWMO_ALERTABLE);
-		}
-
-		// We appear to have been woken by stacklessIO.  But this may be an old state, and StackelssIO
-		// may have been serviced in the mean time.  therefore, we must check if servicing it is still
-		// necessary.
-		if( result == WAIT_OBJECT_0 )
-		{
-			PyStacklessIoStatus_t s;
-			s.struct_size = sizeof(s);
-			PyStacklessIoGetStatus(&s);
-			if( s.nNonRunnable || s.nRunnable )
-			{
-				break; //There is stuff to be done
-			}
-			else
-			{
-				//[yawn,] no need to panic.
-				__int64 nowTime;
-				QueryPerformanceCounter((LARGE_INTEGER*)&nowTime);
-				if( !frequency )
-				{
-					QueryPerformanceFrequency((LARGE_INTEGER*)&frequency);
-				}
-				double time_spent = (double)(nowTime-startTime)/(double)frequency;
-				sleeptime = orgsleeptime - (int)(time_spent*1000.0); //milliseconds
-			}
-		}
-		else if (result == WAIT_OBJECT_0 + 2)
-		{
-			//CarbonIo signal
-			// Depending on this flag, now have carbonIO wake up its tasklets.  Perhaps it
-			// didn't already do so (because it merely scheduled a pending call) so this forces
-			// the issue.
-			// This is the right thing to do, but it is switchable for testing purposes.
-			if( g_carbonIoManualWakeup )
-			{
-				CioWakeupTasklets();
-			}
-			if( PyStackless_GetRunCount() > 1 )
-			{
-				break; //stuff to be done
-			}
-		}
-		else
-		{
-			break; //interrupted or timed out
-		}
+		std::this_thread::yield();
 	}
-	ResetEvent( gBreakSleep );
-#endif
-#endif
+	// Set the next frame to 1 millisecond before the actual desired value.
+	// This is because on Windows, the granularity of timers used for sleep has been set to 1ms in exefile.
+	// It doesn't get any more precise than that on Windows, so we may well oversleep by up to 1ms,
+	// even if there is nothing else for the processor to do than run our thread.
+	mNextFrame = std::chrono::steady_clock::now() + std::chrono::milliseconds( m_desiredFrameTimeMilliseconds - 1 );
 }
 
 //------------------------------------------------------------------------------
@@ -910,21 +684,10 @@ void BlueOS::PumpOSInternal()
 #if CCP_STACKLESS
 
 	SafeAutoTasklet _at(PyOS->GetTaskletTimer(), TASKLETS[BLUETASKLET].mContext);
-
-	// Sleep until we need to wake up
 	{
-		//CCP_STATS_ZONE( "BlueOS/PumpOS/DoSleep" );
-		// Defining this directly to be able to mark this as an "idle" telemetry zone
-#if CCP_TELEMETRY_ENABLED
-		tmZone( TMCM_GENERAL, TMZF_IDLE, "BlueOS/PumpOS/DoSleep" );
-#endif
-		DoSleep();
-		mNextScheduledEvent = int( mSleepTime );
+		CCP_STATS_ZONE( "BlueOS/PumpOS/DoSleep" );
+		Sleep();
 	}
-#ifndef NO_CARBONIO
-	// alert the IO watchdog that events have been delivered recently
-	sNextScheduledIOWakeup = GetTickCount() + MIN_SCHEDULED_IO_INTERVAL;
-#endif
 
 	BeNet->DeliverCPackets(); // dispatch any waiting callbacks
 #endif
@@ -1018,10 +781,8 @@ void BlueOS::PumpOSInternal()
 //
 //////////////////////////////////////////////////////////////////////
 
-bool BlueOS::Startup( int pyOptimizeFlag, ManifestVerification manifestVerification )
+bool BlueOS::Startup( int pyOptimizeFlag )
 {
-	mManifestVerification = manifestVerification;
-
 	//start up crypto
 	if( !InitCrypto() )
 	{
@@ -1030,7 +791,7 @@ bool BlueOS::Startup( int pyOptimizeFlag, ManifestVerification manifestVerificat
 	}
 
 	// pump yielding
-	mSleepTime = 10000;
+	mSleepTime = 1;
 	mOverrideFG = 0;
 
 	// framerate counters
@@ -1042,12 +803,14 @@ bool BlueOS::Startup( int pyOptimizeFlag, ManifestVerification manifestVerificat
 	mLockFramerate = 0.0;  //TODO: not used, but would be
 
 #if BLUE_WITH_PYTHON
+	CCP_LOG( "Creating PyOS" );
 	BeClasses->CreateInstance(GetBluePyOSClsid(), GetIBluePyOSIID(), (void**)&PyOS);
 	if( !PyOS )
 	{
 		goto FAIL;
 	}
 
+	PyOS->SetPackaged( mPackaged );
 	PyOS->mOptimizeFlag = pyOptimizeFlag;
 	if( !PyOS->Startup() )
 	{
@@ -1056,7 +819,7 @@ bool BlueOS::Startup( int pyOptimizeFlag, ManifestVerification manifestVerificat
 
 	for (int i = 0; i < sizeof TASKLETS / sizeof TASKLETS[0]; i++)
 	{
-		TASKLETS[i].mContext = PyString_InternFromString(TASKLETS[i].mName);
+		TASKLETS[i].mContext = PyUnicode_InternFromString(TASKLETS[i].mName);
 	}
 #endif
 
@@ -1090,31 +853,28 @@ FAIL:
 bool BlueOS::RunStackless()
 {
 #if CCP_STACKLESS
-
-	// Now, enter stackless and continue running from there.  This allows stackless to initialize
-	// the main tasklet.
-	if( !PyOS->IsPackaged() && PyOS->IsInterpreterMode() )
-	{
-		std::vector<std::wstring> argv = GetStartupArgs();
-		int ret = runPyMain(argv);
-		// exit with the interpreter's failure exit code
-		Terminate(ret);
-	}
-
 	PyObject* me = BlueWrapObjectForPython( this );
 	if( me )
 	{
-		PyObject* ret = PyStackless_CallMethod_Main(me, (char*)"StacklessMain", NULL);
-		Py_DECREF(me);
-		if (!ret)
+		//Just call StacklessMain callable
+		PyObject* stacklessMainCallable = PyObject_GetAttrString( me, "StacklessMain" );
+
+		if( !PyCallable_Check( stacklessMainCallable ) )
 		{
 			PyOS->PyError();
 			return false;
 		}
-		else
+
+		// Call "StacklessMain" which contains main game loop, see BlueOS::PyStacklessMain
+		PyObject* ret = PyObject_Call( stacklessMainCallable, nullptr, nullptr );
+
+		if( !ret )
 		{
-			Py_DECREF(ret);
+			PyOS->PyError();
+			return false;
 		}
+
+		Py_DECREF( ret );
 	}
 	else
 	{
@@ -1139,7 +899,7 @@ PyObject* BlueOS::PyStacklessMain( PyObject* args )
 	{
 		std::wstring server = GetStartupArgValue( L"telemetryServer" );
 		std::string aServer( CW2A( server.c_str() ) );
-		// large number because some of our usage of stackless spawn thousands of tasklets (e.g. sol node and proxy)
+		// large number because some of our usage of scheduler spawn thousands of tasklets (e.g. sol node and proxy)
 		g_statistics->SetTelemetryMaxThreadCount( 32768 );
 		g_statistics->StartTelemetry( aServer );
 	}
@@ -1149,14 +909,6 @@ PyObject* BlueOS::PyStacklessMain( PyObject* args )
 	if( g_statistics )
 	{
 		g_statistics->Update();
-	}
-
-	// Set the main tasklet as block trapped.
-	{
-		BluePy current(PyStackless_GetCurrent());
-		if (!current)
-			return NULL;
-		PyTasklet_SetBlockTrap((PyTaskletObject*)(PyObject*)current, 1);
 	}
 
 	//autoexec can reside in a .zip lib
@@ -1290,11 +1042,6 @@ void BlueOS::Terminate( int retCode )
 #endif
 }
 
-bool BlueOS::ShouldVerifyManifest() const
-{
-	return mManifestVerification == VERIFY_MANIFEST;
-}
-
 bool BlueOS::IsOnMainTasklet()
 {
 	return BeResMan->IsOnMainThread();
@@ -1375,27 +1122,6 @@ Be::Time BlueOS::GetSmoothedTime()
 	}
 
 	return time;
-#endif
-}
-
-
-void BlueOS::NextScheduledEvent(int millisec)
-{
-	if ( millisec > 10 ) {
-		millisec = 10;
-	}
-#if CCP_STACKLESS
-	if( millisec <= 0 )
-	{
-#ifndef NO_CARBONIO
-		SetEvent(gBreakSleep); //If we are sleeping (this could be an async window message we're in, wake up!)
-#endif
-		mNextScheduledEvent = -1;
-	}
-	else if( millisec < mNextScheduledEvent )
-	{
-		mNextScheduledEvent = millisec;
-	}
 #endif
 }
 
@@ -1710,7 +1436,7 @@ PyObject* BlueOS::PyTimeDiffInMs(PyObject* args)
 		return PyLong_FromLongLong( diff );
 	}
 
-	return PyInt_FromLong((long)diff);
+	return PyLong_FromLong((long)diff);
 }
 
 
@@ -1746,7 +1472,7 @@ PyObject* BlueOS::PyTimeDiffInUs(PyObject* args)
 		return PyLong_FromLongLong( diff );
 	}
 
-	return PyInt_FromLong((long)diff);
+	return PyLong_FromLong((long)diff);
 }
 
 
@@ -1826,14 +1552,14 @@ PyObject* BlueOS::PyGetTimeParts(PyObject* args)
 		return nullptr;
 	}
 
-	PyList_SET_ITEM(list, 0, PyInt_FromLong(st.year));
-	PyList_SET_ITEM(list, 1, PyInt_FromLong(st.month));
-	PyList_SET_ITEM(list, 2, PyInt_FromLong(st.dayOfWeek));
-	PyList_SET_ITEM(list, 3, PyInt_FromLong(st.day));
-	PyList_SET_ITEM(list, 4, PyInt_FromLong(st.hour));
-	PyList_SET_ITEM(list, 5, PyInt_FromLong(st.minute));
-	PyList_SET_ITEM(list, 6, PyInt_FromLong(st.second));
-	PyList_SET_ITEM(list, 7, PyInt_FromLong(st.milliseconds));
+	PyList_SET_ITEM(list, 0, PyLong_FromLong(st.year));
+	PyList_SET_ITEM(list, 1, PyLong_FromLong(st.month));
+	PyList_SET_ITEM(list, 2, PyLong_FromLong(st.dayOfWeek));
+	PyList_SET_ITEM(list, 3, PyLong_FromLong(st.day));
+	PyList_SET_ITEM(list, 4, PyLong_FromLong(st.hour));
+	PyList_SET_ITEM(list, 5, PyLong_FromLong(st.minute));
+	PyList_SET_ITEM(list, 6, PyLong_FromLong(st.second));
+	PyList_SET_ITEM(list, 7, PyLong_FromLong(st.milliseconds));
 
 	return list;
 }
@@ -2148,11 +1874,9 @@ void BlueOS::EvaluateTimeDilation()
 	}
 
 	// Track the last time we were overloaded and the last time we were underloaded
-	int taskletQueueTickStart, taskletQueueTickEnd;
-	float frameTime, maxFrameTime;
-	PyOS->GetSchedulerStats(taskletQueueTickStart, taskletQueueTickEnd, frameTime, maxFrameTime);
+	SchedulerStats& stats = PyOS->GetSchedulerStats( );
 
-	if( taskletQueueTickEnd > 0 )
+	if( stats.numberOfTaskletsInQueuePostTick > 0 )
 	{
 		// We had tasklets left ready to run at the end of the tick.  We're overloaded.
 		mLastOverloadedTime = mRealTime;
@@ -2253,7 +1977,7 @@ PyObject* BlueOS::PySetAppTitle(PyObject* args)
 PyObject* BlueOS::PyShellExecute(PyObject* args)
 {
 	PyObject *fn, *params=0;
-	if( !PyArg_ParseTuple(args, "O!|O!", &PyBaseString_Type, &fn, &PyBaseString_Type, &params) )
+	if( !PyArg_ParseTuple(args, "O!|O!", &PyUnicode_Type, &fn, &PyUnicode_Type, &params) )
 	{
 		return NULL;
 	}
@@ -2271,8 +1995,9 @@ PyObject* BlueOS::PyShellExecute(PyObject* args)
 			return 0;
 		}
 	}
-
-	std::wstring file( reinterpret_cast<const wchar_t*>( PyUnicode_AsUnicode( fn ) ) );
+	auto param = PyUnicode_AsWideCharString( fn, NULL );
+	std::wstring file( param );
+	PyMem_Free( param );
 	Py_DECREF(fn);
 	bool http = file.find(L"http://") == 0 || file.find(L"https://") == 0;
 
@@ -2290,12 +2015,14 @@ PyObject* BlueOS::PyShellExecute(PyObject* args)
 	memset(&ei, 0, sizeof(ei));
 	ei.cbSize = sizeof(ei);
 	std::wstring tmp;
+	wchar_t* wcharParams = nullptr;
 	if( !http )
 	{
 		ei.lpFile = file.c_str();
 		if( params )
 		{
-			ei.lpParameters = PyUnicode_AsUnicode(params);
+			wcharParams = PyUnicode_AsWideCharString( params, NULL );
+			ei.lpParameters = wcharParams;
 		}
 	}
 	else
@@ -2308,6 +2035,7 @@ PyObject* BlueOS::PyShellExecute(PyObject* args)
 	}
 	ei.nShow = SW_SHOWNORMAL;
 	BOOL OK = ShellExecuteExW(&ei);
+	PyMem_Free( wcharParams );
 
 	if( !OK )
 	{
@@ -2315,8 +2043,8 @@ PyObject* BlueOS::PyShellExecute(PyObject* args)
 		return PyErr_SetFromWindowsErrWithFilename(GetLastError(), (char*)filename);
 	}
 #else
-    std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
-    std::string command = "open " + conv.to_bytes( file );
+	std::string file_utf8{WideToUTF8( file )};
+    std::string command = "open " + file_utf8;
     system( command.c_str() );
 #endif
 	Py_INCREF(Py_None);
@@ -2407,6 +2135,29 @@ void BlueOS::SetFrameTimeTimeout( uint32_t val )
 	m_frameTimeWatchdog.Start( m_frameTimeTimeout, &s_timeoutHandler );
 }
 
+uint32_t BlueOS::GetDesiredFrameTimeMilliseconds() const
+{
+	return m_desiredFrameTimeMilliseconds;
+}
+
+void BlueOS::SetDesiredFrameTimeMilliseconds( uint32_t val )
+{
+	m_desiredFrameTimeMilliseconds = val;
+}
+
+int32_t BlueOS::GetSleepTime() const
+{
+	PyErr_WarnEx( PyExc_DeprecationWarning, "blue.os.sleeptime no longer serves any purpose" , 1 );
+	return mSleepTime;
+}
+
+void BlueOS::SetSleepTime( int32_t val )
+{
+	PyErr_WarnEx( PyExc_DeprecationWarning, "blue.os.sleeptime no longer serves any purpose" , 1 );
+	mSleepTime = val;
+}
+
+
 void BlueOS::TickTickers()
 {
 	// Copy tickers, which can get mutated during ticks
@@ -2469,6 +2220,91 @@ void BlueOS::ShowErrorMessageBox( const wchar_t* title, const wchar_t* message )
 	CFRelease( messageRef );
 #endif
 }
+
+void BlueOS::SetMarkupZonesInPython(bool markupZonesInPython)
+{
+	PyOS->SetMarkupZonesInPython( markupZonesInPython );
+}
+
+void BlueOS::ShowMessageBoxForVerificationFailure( const std::string& errmsg )
+{
+	std::string msg = TranslateErrorMessage( "Your EVE client installation may have modified, damaged or corrupt files.", IDS_VERIFYFAIL_M );
+	std::string caption = TranslateErrorMessage( "Verification Failure", IDS_VERIFYFAIL_C );
+
+	msg += "\n\n" + errmsg;
+	DisplayErrorMessageBox( caption.c_str(), msg.c_str() );
+}
+
+bool BlueOS::VerifyManifestAndGatherDirectives( directives_t& directives )
+{
+	//We always read our manifest.  We have a null manifest that we try first for kicks.
+	if( !BeIsSuccess( VerifyManifestFile( "root:/manifest.dat", directives ) ) )
+	{
+		// Try again with a different path.
+		Be::Result<std::string> result = VerifyManifestFile( "bin:/manifest.dat", directives );
+		if( !BeIsSuccess( result ) )
+		{
+			BeOS->SetError( BEFLUSH );
+			ShowMessageBoxForVerificationFailure( result.value );
+			return false;
+		}
+	}
+
+	return true;
+}
+
+void BlueOS::ProcessLibDirectives( const directives_t& directives, std::vector<std::wstring>& zips )
+{
+
+	mPackaged = false;
+
+	//process lib directives from the file
+	for( const std::string& directive : directives )
+	{
+		if( directive.find( "lib:" ) == 0 )
+		{
+			mPackaged = true;
+			CCP_LOG_CH( s_chOS, "Directive %s", directive.c_str() );
+			zips.push_back( BePaths->ResolvePathW( std::wstring( std::begin( directive ) + 4, std::end( directive ) ) ) );
+		}
+	}
+}
+
+bool BlueOS::ConstructPathListFromManifest(std::vector<std::wstring>& pathlist,  bool verifyManifest)
+{
+	//build pathlist
+	if( verifyManifest )
+	{
+		directives_t directives;
+
+		if( !VerifyManifestAndGatherDirectives( directives ) )
+		{
+			return false;
+		}
+
+		ProcessLibDirectives( directives, pathlist );
+	}
+
+	//add other paths
+	if( !pathlist.size() )
+	{
+		BePaths->GetExpandedSearchPaths( "lib", pathlist );
+	}
+
+	// BIN path is required.
+	BePaths->GetExpandedSearchPaths( "bin", pathlist );
+
+	return true;
+}
+
+extern "C" PyObject* CCP_CONCATENATE( PyInit_blue, CCP_BUILD_FLAVOR )( void );
+
+void BlueOS::GetInitTab( std::vector<_inittab>& tabs ) const
+{
+	tabs.push_back( { g_moduleName, CCP_CONCATENATE( PyInit_blue, CCP_BUILD_FLAVOR ) } );
+	tabs.push_back( { nullptr, nullptr } );
+}
+
 
 #ifdef OptimizeOff
 #pragma optimize("", on)

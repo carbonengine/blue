@@ -51,7 +51,8 @@ PyObject *BluePyOS::PyXUtil_Filter(PyObject *args)
 	//Get initial dude.  We assume all of them are the same, so we use this for info on how to index the data
     PyObject *first;
     Py_ssize_t setpos = 0;
-    _PySet_Next(rows, &setpos, &first);
+	Py_hash_t hash;
+    _PySet_NextEntry(rows, &setpos, &first, &hash);
     if (!PyObject_IsInstance(first, (PyObject*)DBRow::GetType()))
 		return PyErr_Format(PyExc_RuntimeError, "XUtil_Filter: Row in rowset must be of type DBRow");
 
@@ -68,7 +69,7 @@ PyObject *BluePyOS::PyXUtil_Filter(PyObject *args)
 		if (numConds >= sizeof(myvec) / sizeof(myvec[0]))
 			 return PyErr_SetString(PyExc_RuntimeError, "XUtil_Filter: Too many conditions to Filter on."), nullptr;
 		
-        int idx = int( PyInt_AS_LONG(idxO) );
+        int idx = int( PyLong_AS_LONG(idxO) );
         Py_ssize_t nullOffset; //throwaway
 		myvec[numConds].dataIdx = static_cast<DBRow*>( first )->GetDataOffset(idx, myvec[numConds].type, nullOffset);
 		if (myvec[numConds].dataIdx<0)
@@ -82,7 +83,7 @@ PyObject *BluePyOS::PyXUtil_Filter(PyObject *args)
      // go through the whole set and check each condition, continuing on any failure
     setpos = 0;
     PyObject* row;
-    while (_PySet_Next(rows, &setpos, &row))
+    while (_PySet_NextEntry(rows, &setpos, &row, &hash))
     {
         //  Error out if passed non-DBRows
         if (!PyObject_IsInstance(row, (PyObject*)DBRow::GetType()))
@@ -148,7 +149,7 @@ PyObject *BluePyOS::PyXUtil_Index(PyObject *args)
 	PyObject* keyName;
 	PyObject* dict;
 
-	if (!PyArg_ParseTuple(args, "O!O!O!:XUtil_Index", &PyList_Type, &rows, &PyString_Type, &keyName, &PyDict_Type, &dict))
+	if (!PyArg_ParseTuple(args, "O!O!O!:XUtil_Index", &PyList_Type, &rows, &PyUnicode_Type, &keyName, &PyDict_Type, &dict))
 		return NULL;
 
 	// To get the offset of the key column, we need at least one row in the rowset.
@@ -170,7 +171,7 @@ PyObject *BluePyOS::PyXUtil_Index(PyObject *args)
 	Py_ssize_t keyColumn = PySequence_Index(keys, keyName);
 	Py_DECREF(keys);
 	if (keyColumn == -1)
-		return PyErr_Format(PyExc_RuntimeError, "XUtil_Index: Invalid column name '%s'.", PyString_AS_STRING(keyName));
+		return PyErr_Format(PyExc_RuntimeError, "XUtil_Index: Invalid column name '%s'.", PyUnicode_AsUTF8(keyName));
 
 	// See if we can yield
 	float timeSlice = 0.001f * mBeNiceSlice;
@@ -199,7 +200,6 @@ PyObject *BluePyOS::PyXUtil_Index(PyObject *args)
 			float elapsed = GetTaskletTimer()->GetElapsed();
 			if (elapsed >= timeSlice) 
 			{
-				BeOS->NextScheduledEvent(0); //make wakeup fast!
 				if( !Yield() )
 				{
 					return 0;

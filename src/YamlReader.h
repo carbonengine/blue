@@ -12,10 +12,9 @@
 #include <yaml.h>
 #include <cstdint>
 
-#if CCP_STACKLESS
-	struct _tasklet;
-	typedef _tasklet PyTaskletObject;
-#endif
+// Forward declare type from the <Scheduler.h> header, include will be in .cpp file
+struct PyTaskletObject;
+
 
 struct PoolAllocatedYamlEvent : public yaml_event_t
 {
@@ -112,6 +111,7 @@ protected:
 
 protected:
 	// Virtual functions required by base:
+	void ReadValue( uint64_t & dst ) override;
 	void ReadValue( int64_t& dst ) override;
 	void ReadValue( uint32_t& dst ) override;
 	void ReadValue( int32_t& dst ) override;

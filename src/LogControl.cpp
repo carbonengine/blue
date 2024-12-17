@@ -41,7 +41,10 @@ const Be::ClassInfo* LogControl::ExposeToBlue()
 
 PyObject *LogControl::Get_LogtypeInfoIsPrivilegedOnly()
 {
-	if (CCP::g_logtypeInfoIsPrivilegedOnly)
+	auto old = CCP::SetLogtypeInfoIsPrivileged(false);
+	CCP::SetLogtypeInfoIsPrivileged(old);
+
+	if (old)
 		Py_RETURN_TRUE;
 
 	Py_RETURN_FALSE;
@@ -52,14 +55,17 @@ bool LogControl::Set_LogtypeInfoIsPrivilegedOnly(PyObject *v)
 	if (!PyBool_Check(v))
 		return PyErr_SetString(PyExc_ValueError, "bool required"), false;
 
-	CCP::g_logtypeInfoIsPrivilegedOnly = v == Py_True;
+	CCP::SetLogtypeInfoIsPrivileged( v == Py_True );
 
 	return true;
 }
 
 PyObject *LogControl::Get_LogtypeNoticeIsPrivilegedOnly()
 {
-	if (CCP::g_logtypeNoticeIsPrivilegedOnly)
+	auto old = CCP::SetLogtypeNoticeIsPrivileged(false);
+	CCP::SetLogtypeNoticeIsPrivileged(old);
+
+	if (old)
 		Py_RETURN_TRUE;
 
 	Py_RETURN_FALSE;
@@ -70,14 +76,17 @@ bool LogControl::Set_LogtypeNoticeIsPrivilegedOnly(PyObject *v)
 	if (!PyBool_Check(v))
 		return PyErr_SetString(PyExc_ValueError, "bool required"), false;
 
-	CCP::g_logtypeNoticeIsPrivilegedOnly = v == Py_True;
+	CCP::SetLogtypeNoticeIsPrivileged( v == Py_True );
 
 	return true;
 }
 
 PyObject *LogControl::Get_LogtypeWarnIsPrivilegedOnly()
 {
-	if (CCP::g_logtypeWarnIsPrivilegedOnly)
+	auto old = CCP::SetLogtypeWarnIsPrivileged(false);
+	CCP::SetLogtypeWarnIsPrivileged(old);
+
+	if (old)
 		Py_RETURN_TRUE;
 
 	Py_RETURN_FALSE;
@@ -88,14 +97,17 @@ bool LogControl::Set_LogtypeWarnIsPrivilegedOnly(PyObject *v)
 	if (!PyBool_Check(v))
 		return PyErr_SetString(PyExc_ValueError, "bool required"), false;
 
-	CCP::g_logtypeWarnIsPrivilegedOnly = v == Py_True;
+	CCP::SetLogtypeWarnIsPrivileged( v == Py_True );
 
 	return true;
 }
 
 PyObject *LogControl::Get_LogtypeErrIsPrivilegedOnly()
 {
-	if (CCP::g_logtypeErrIsPrivilegedOnly)
+	auto old = CCP::SetLogtypeErrIsPrivileged(false);
+	CCP::SetLogtypeErrIsPrivileged(old);
+
+	if (old)
 		Py_RETURN_TRUE;
 
 	Py_RETURN_FALSE;
@@ -106,7 +118,7 @@ bool LogControl::Set_LogtypeErrIsPrivilegedOnly(PyObject *v)
 	if (!PyBool_Check(v))
 		return PyErr_SetString(PyExc_ValueError, "bool required"), false;
 
-	CCP::g_logtypeErrIsPrivilegedOnly = v == Py_True;
+	CCP::SetLogtypeErrIsPrivileged( v == Py_True );
 
 	return true;
 }

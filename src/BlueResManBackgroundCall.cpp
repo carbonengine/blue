@@ -6,10 +6,8 @@
 #include "IBlueResMan.h"
 #include "IBluePython.h"
 #include "BlueStatistics.h"
+#include <Scheduler.h>
 
-#if CCP_STACKLESS
-#include "stackless_api.h"
-#endif
 
 static CcpLogChannel_t s_ch = CCP_LOG_DEFINE_CHANNEL( "ResMan" );
 
@@ -23,7 +21,7 @@ BlueResManBackgroundCall::BlueResManBackgroundCall( IBlueResManBackgroundCall* t
 	m_backgroundCall( theCall )
 {
 #if CCP_STACKLESS
-	m_channel = PyChannel_New( NULL );
+	m_channel = SchedulerAPI()->PyChannel_New( NULL );
 #endif
 }
 
@@ -56,9 +54,7 @@ bool BlueResManBackgroundCall::Wait()
 		return true;
 	}
 
-	// Go to sleep and wake up! *(the sender releases the channel)
-	BeOS->NextScheduledEvent(0);
-	PyObject *ret = PyChannel_Receive( m_channel );
+	PyObject *ret = SchedulerAPI()->PyChannel_Receive( m_channel );
 
 	// We don't want to run in the context of the resman update. MarkAsDone below
 	// sends on the channel, switching execution to this tasklet. We'd rather want
@@ -114,9 +110,8 @@ void BlueResManBackgroundCall::MarkAsDone( void* pContext )
 
 #if CCP_STACKLESS
 	BlueResManBackgroundCall* args = static_cast<BlueResManBackgroundCall*>( pContext );
-
-	BeOS->NextScheduledEvent(0);
-	PyChannel_Send( args->m_channel, Py_None );
+	
+	SchedulerAPI()->PyChannel_Send( args->m_channel, Py_None );
 #endif
 }
 

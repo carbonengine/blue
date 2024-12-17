@@ -2,50 +2,199 @@
 
 #if CCP_STACKLESS
 
-#pragma init_seg(user)
-
-//
-// This file sets up the memory allocator for Python using a static initializer.
-// The #pragma init_seg(user) above ensures that static initializers from this file
-// are executed ahead of regular static initializers in this project. This is
-// necessary to ensure that the Python allocator is set up before any static
-// initializers that may call on the Python C API are exectured.
-
 //
 // Custom memory allocators for Python
 //
-void* PyCCP_Malloc( size_t size, void *arg, const char *file, int line, const char *msg )
-{
-	return CCPMallocWithTracking( size, msg ? msg : "Python", file, line );
-}
+// These are primarily used to track statistics about memory allocated by Python.
+//
 
-void* PyCCP_Realloc( void *ptr, size_t size, void *arg, const char *file, int line, const char *msg )
-{
-	return CCPReallocWithTracking( ptr, size, msg ? msg : "Python", file, line );
-}
+CCP_STATS_DECLARE(pyMemory, "Blue/Memory/Python", false, CST_MEMORY, "The amount of memory allocated for Python");
 
-void PyCCP_Free( void *ptr, void *arg, const char *file, int line, const char *msg )
-{
-	CCPFreeWithTracking( ptr );
-}
-
-size_t PyCCP_Msize( void* ptr, void* arg )
-{
-	return CCPMSizeWithTracking( ptr );
-}
-
-PyCCP_CustomAllocator_t s_pyAllocator = { PyCCP_Malloc, PyCCP_Realloc, PyCCP_Free, PyCCP_Msize, NULL };
-
-class PyMemoryInitializer
-{
+class RawAllocator {
 public:
-	PyMemoryInitializer()
-	{
-		PyCCP_SetAllocator( 0, &s_pyAllocator );
-		PyCCP_SetAllocator( 1, &s_pyAllocator );
-	}
+    RawAllocator() : mStats{g_ccpStatistics_pyMemory} {}
+
+    void *malloc(size_t size) {
+        if (size == 0) {
+            size = 1;
+        }
+        auto ret = CCP_MALLOC("PyRawMalloc", size);
+        if (ret) {
+			int64_t tmp = CCP_MSIZE( ret );
+            mStats.Add( tmp );
+        } else {
+            CcpCrashOnPurpose();
+        }
+        return ret;
+    }
+
+    void *calloc(size_t nelem, size_t size) {
+        if (nelem == 0 || size == 0) {
+            nelem = 1;
+            size = 1;
+        }
+
+        auto ret = CCP_CALLOC("PyRawCalloc", nelem, size);
+		if ( ret )
+		{
+			int64_t tmp = CCP_MSIZE( ret );
+			mStats.Add( tmp );
+		}
+
+        return ret;
+    }
+
+    void *realloc(void *ptr, size_t newSize) {
+        if (newSize == 0) {
+            newSize = 1;
+        }
+        if (ptr != nullptr) {
+            int64_t oldSize(CCP_MSIZE(ptr));
+			if ( oldSize >= 0 ) {
+				mStats.Add(-oldSize);
+			}
+        }
+        auto ret = CCP_REALLOC("Ccp_PyRawRealloc", ptr, newSize);
+        if (ret != nullptr) {
+			int64_t tmp = CCP_MSIZE( ret );
+            mStats.Add( tmp );
+        } else {
+            CcpCrashOnPurpose();
+        }
+        return ret;
+    }
+
+    void free(void *ptr) {
+        if (ptr != nullptr) {
+			int64_t tmp = CCP_MSIZE( ptr );
+			if ( tmp >= 0 ) {
+				mStats.Add( -tmp );
+			}
+        }
+        CCP_FREE(ptr);
+    }
+
+private:
+    CcpStaticStatisticsEntry &mStats;
 };
 
-PyMemoryInitializer initPythonMemoryAllocator;
+namespace Ccp {
+    void *PyRawMalloc(void *ctx, size_t size) {
+        auto _this = reinterpret_cast<RawAllocator *>( ctx );
+        return _this->malloc(size);
+    }
+
+    void *PyRawCalloc(void *ctx, size_t nelem, size_t size) {
+        auto _this = reinterpret_cast<RawAllocator *>( ctx );
+        return _this->calloc(nelem, size);
+    }
+
+    void *PyRawRealloc(void *ctx, void *ptr, size_t newSize) {
+        auto _this = reinterpret_cast<RawAllocator *>( ctx );
+        return _this->realloc(ptr, newSize);
+    }
+
+    void PyRawFree(void *ctx, void *ptr) {
+        auto _this = reinterpret_cast<RawAllocator *>( ctx );
+        _this->free(ptr);
+    }
+
+    void *PyMallocWithGIL(void *ctx, size_t size) {
+        PyGILState_STATE gil = PyGILState_UNLOCKED;
+        bool ensure_release = ( PyGILState_Check() == 0 && !_Py_IsFinalizing() );
+        if (ensure_release) {
+            gil = PyGILState_Ensure();
+        }
+        auto ret = Ccp::PyRawMalloc(ctx, size);
+        if (ensure_release) {
+            PyGILState_Release(gil);
+        }
+        return ret;
+    }
+
+    void *PyCallocWithGIL(void *ctx, size_t nelem, size_t size) {
+        PyGILState_STATE gil = PyGILState_UNLOCKED;
+        bool ensure_release = ( PyGILState_Check() == 0 && !_Py_IsFinalizing() );
+        if (ensure_release) {
+            gil = PyGILState_Ensure();
+        }
+        auto ret = Ccp::PyRawCalloc(ctx, nelem, size);
+        if (ensure_release) {
+            PyGILState_Release(gil);
+        }
+        return ret;
+    }
+
+    void *PyReallocWithGIL(void *ctx, void *ptr, size_t size) {
+        PyGILState_STATE gil = PyGILState_UNLOCKED;
+        bool ensure_release = ( PyGILState_Check() == 0 && !_Py_IsFinalizing() );
+        if (ensure_release) {
+            gil = PyGILState_Ensure();
+        }
+        auto ret = Ccp::PyRawRealloc(ctx, ptr, size);
+        if (ensure_release) {
+            PyGILState_Release(gil);
+        }
+        return ret;
+    }
+
+    void PyFreeWithGIL(void *ctx, void *ptr) {
+        PyGILState_STATE gil = PyGILState_UNLOCKED;
+        bool ensure_release = ( PyGILState_Check() == 0 && !_Py_IsFinalizing() );
+        if (ensure_release) {
+            gil = PyGILState_Ensure();
+        }
+        Ccp::PyRawFree(ctx, ptr);
+        if (ensure_release) {
+            PyGILState_Release(gil);
+        }
+    }
+}
+
+extern "C" BLUEIMPORT void BlueInstallPythonMemoryHooks()
+{
+    static RawAllocator rawAllocator;
+
+    static PyMemAllocatorEx rawAllocatorEx = {
+            /* .ctx = */ &rawAllocator,
+            /* .malloc = */ Ccp::PyRawMalloc,
+            /* .calloc = */ Ccp::PyRawCalloc,
+            /* .realloc = */ Ccp::PyRawRealloc,
+            /* .free = */ Ccp::PyRawFree,
+    };
+	PyMemAllocatorEx alloc;
+
+	PyMem_GetAllocator(PYMEM_DOMAIN_RAW, &alloc);
+	if ( alloc.ctx != &rawAllocator ) {
+		PyMem_SetAllocator(PYMEM_DOMAIN_RAW, &rawAllocatorEx);
+	}
+
+    static PyMemAllocatorEx objAllocatorEx = {
+            /* .ctx = */ &rawAllocator,
+            /* .malloc = */ Ccp::PyMallocWithGIL,
+            /* .calloc = */ Ccp::PyCallocWithGIL,
+            /* .realloc = */ Ccp::PyReallocWithGIL,
+            /* .free = */ Ccp::PyFreeWithGIL,
+    };
+
+	PyMem_GetAllocator(PYMEM_DOMAIN_OBJ, &alloc);
+	if ( alloc.ctx != &rawAllocator ) {
+		PyMem_SetAllocator(PYMEM_DOMAIN_OBJ, &objAllocatorEx);
+	}
+
+    static PyMemAllocatorEx memAllocatorEx = {
+            /* .ctx = */ &rawAllocator,
+            /* .malloc = */ Ccp::PyMallocWithGIL,
+            /* .calloc = */ Ccp::PyCallocWithGIL,
+            /* .realloc = */ Ccp::PyReallocWithGIL,
+            /* .free = */ Ccp::PyFreeWithGIL,
+    };
+
+	PyMem_GetAllocator(PYMEM_DOMAIN_MEM, &alloc);
+	if ( alloc.ctx != &rawAllocator ) {
+		PyMem_SetAllocator(PYMEM_DOMAIN_MEM, &memAllocatorEx);
+	}
+
+}
 
 #endif

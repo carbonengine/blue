@@ -3,7 +3,7 @@
 
 	MotherLode.cpp
 
-	Author:    Kristján Valur Jónsson
+	Author:    Kristjï¿½n Valur Jï¿½nsson
 	Created:   Dec 2008
 	OS:        Win32
 	Project:   Yep
@@ -32,7 +32,8 @@
 #include "BluePythonWeakRef.h"
 #endif
 
-IMotherLode* BeMotherLode = nullptr;
+static CMotherLode s_beMotherLode;
+IMotherLode* BeMotherLode = &s_beMotherLode;
 BLUE_REGISTER_GLOBAL_AS_MODULE_OBJECT( "motherLode", BeMotherLode );
 
 CcpLogChannel_t s_ml = CCP_LOG_DEFINE_CHANNEL( "MotherLode" );
@@ -308,11 +309,13 @@ void MotherLode::Startup()
 
 void MotherLode::Shutdown()
 {
-	CCP_ASSERT(mActive);
-	mActive = false;
-	Clear();
-	if (BeOS)
-		BeOS->UnregisterForTicks(this, cookie);
+	if (mActive)
+	{
+		mActive = false;
+		Clear();
+		if (BeOS)
+			BeOS->UnregisterForTicks(this, cookie);
+	}
 }
 
 
@@ -464,7 +467,7 @@ PyObject *MotherLode::Pyitems(PyObject *args)
 	map_t::iterator it;
 	for(i=0, it=mMap.begin(); it!=mMap.end(); ++i, ++it) {
 		PyObject *v = Py_BuildValue("NN",
-			PyUnicode_FromUnicode((Py_UNICODE*)it->first.c_str(), it->first.size()),
+			PyUnicode_FromWideChar(it->first.c_str(), it->first.size()),
 			BlueWrapObjectForPython(it->second->mWeak)
 			);
 		if (!v)
@@ -479,7 +482,7 @@ PyObject *MotherLode::PynWeak(PyObject *args)
 {
 	if (!PyArg_ParseTuple(args, ":nWeak"))
 		return 0;
-	return PyInt_FromSize_t(mMap.size() - mLRU.size() - mPending.size());
+	return PyLong_FromSize_t(mMap.size() - mLRU.size() - mPending.size());
 }
 
 
@@ -498,7 +501,10 @@ PyObject* MotherLode::PyLookupAsWeakRef(PyObject *args)
 		return nullptr;
 	}
 
-	std::wstring key = (const wchar_t*)PyUnicode_AS_UNICODE(keyU.o);
+	wchar_t* keyStrBuffer = PyUnicode_AsWideCharString( keyU.o, NULL );
+	std::wstring key( keyStrBuffer );
+	PyMem_Free( keyStrBuffer );
+
 	map_t::iterator it = mMap.find( key );
 	if( it == mMap.end() )
 	{
@@ -529,7 +535,7 @@ PyObject *MotherLode::PyGetCachedKeys(PyObject *args)
 	size_t i;
 	list_t::iterator it;
 	for(i=0, it=mLRU.begin(); it!=mLRU.end(); ++i, ++it) {
-		PyObject *v = PyUnicode_FromUnicode((Py_UNICODE*)it->c_str(), it->size());
+		PyObject *v = PyUnicode_FromWideChar(it->c_str(), it->size());
 		PyList_SET_ITEM(r.o, i, v);
 	}
 	return r.Detach();
@@ -552,7 +558,7 @@ PyObject *MotherLode::PyGetNonCachedKeys(PyObject *args)
 		{
 			// We want values that don't have a strong reference. Remember,
 			// strong reference implies it cached (we're keeping it alive).
-			PyObject *k = PyUnicode_FromUnicode((Py_UNICODE*)it->first.c_str(), it->first.size());
+			PyObject *k = PyUnicode_FromWideChar(it->first.c_str(), it->first.size());
 			if (!k)
 			{
 				PyErr_SetString( PyExc_AssertionError, "Key should be Unicode" );

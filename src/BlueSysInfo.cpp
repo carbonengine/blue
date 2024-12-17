@@ -81,7 +81,8 @@ std::vector<BlueSysInfoNetworkAdapterPtr> BlueSysInfo::GetNetworkAdapters() cons
 		ptr.CreateInstance();
 		ptr->m_name = UTF8ToWide( adapter.name );
 		const auto& mac = adapter.macAddress;
-		ptr->m_macAddress = std::string( mac.begin(), mac.end() );
+		auto macAddressByteString = std::string( mac.begin(), mac.end() );
+		ptr->m_macAddress = PyBytes_FromStringAndSize( macAddressByteString.c_str(), macAddressByteString.size() );
 		ptr->m_macAddressString = adapter.macAddressString;
 		ptr->m_uuid = adapter.uuidString;
 

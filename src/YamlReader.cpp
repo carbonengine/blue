@@ -8,6 +8,7 @@
 #include "BlueMemStream.h"
 #include "IBluePaths.h"
 #include "IBlueObjectMetadata.h"
+#include <Scheduler.h>
 #ifndef _WIN32
 #include <locale>
 #include <codecvt>
@@ -237,7 +238,7 @@ IRoot* YamlReader::CreateObjectHelper( unsigned int objectMarker, IRoot* calling
 
 #if CCP_STACKLESS
 
-	PyTaskletObject* current = reinterpret_cast<PyTaskletObject*>( PyStackless_GetCurrent() );
+	PyTaskletObject* current = reinterpret_cast<PyTaskletObject*>( SchedulerAPI()->PyScheduler_GetCurrent() );
 	Py_DECREF( current );
 
 	bool taskletCantYield = !PyOS->CanYield();
@@ -405,9 +406,6 @@ void YamlReader::GetNextEvent()
 #if CCP_STACKLESS
 	if( m_allowYield && ( m_timeSinceYield.GetSeconds() > m_timeSlice ) )
 	{
-		//This is a benice thing.  We want to wake up immediately, not just at leisure.
-		//Sleep(0)
-		BeOS->NextScheduledEvent( 0 );
 		if( !PyOS->Yield() )
 		{
 			throw TaskletKilledException();
@@ -490,7 +488,19 @@ void YamlReader::ReadValue( int32_t& dst )
 
 void YamlReader::ReadValue( uint32_t& dst )
 {
-	ReadValueImpl( dst );
+	GetNextEvent();
+
+	dst = 0;
+	if( VerifyEvent( YAML_SCALAR_EVENT ) )
+	{
+		const char* start = (const char*)m_event->data.scalar.value;
+		char* end = nullptr;
+#ifdef _WIN32
+		dst = _strtoul_l( start, &end, 10, m_locale );
+#else
+		dst = strtoul( start, &end, 10 );
+#endif
+	}
 }
 
 void YamlReader::ReadValue( uint16_t& dst )
@@ -530,6 +540,25 @@ void YamlReader::ReadBinaryBlock( ICustomPersist* customPersist, const char* pro
 	}
 }
 
+void YamlReader::ReadValue( uint64_t& dst )
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+	GetNextEvent();
+
+	dst = 0;
+	if( VerifyEvent( YAML_SCALAR_EVENT ) )
+	{
+		const char* start = (const char*)m_event->data.scalar.value;
+		char* end = nullptr;
+#ifdef _WIN32
+		dst = _strtoull_l( start, &end, 10 , m_locale);
+#else
+		dst = strtoull( start, &end, 10 );
+#endif
+	}
+}
+
 void YamlReader::ReadValue( int64_t& dst )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
@@ -544,7 +573,7 @@ void YamlReader::ReadValue( int64_t& dst )
 		dst = _atoi64_l( start, m_locale );
 #else
 		char* end = nullptr;
-		dst = strtoull( start, &end, 10 );
+		dst = strtoll( start, &end, 10 );
 #endif
 	}
 }
@@ -775,8 +804,7 @@ const wchar_t* YamlReader::ReadWString()
 	wchar_t* ret = (wchar_t*)CCP_MALLOC( (const char*)m_event->data.scalar.tag, sizeReq * sizeof( wchar_t ) );
 	MultiByteToWideChar( CP_UTF8, 0, asString, -1, ret, sizeReq );
 #else
-	std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
-	auto str = conv.from_bytes( (const char*)m_event->data.scalar.value );
+	auto str = UTF8ToWide( (const char*)m_event->data.scalar.value ) ;
 
 	wchar_t* ret = (wchar_t*)CCP_MALLOC( (const char*)m_event->data.scalar.tag, ( str.length() + 1 ) * sizeof( wchar_t ) );
 	std::copy( begin( str ), end( str ), ret );

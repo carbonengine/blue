@@ -4,6 +4,10 @@ import tempfile
 import shutil
 import os
 
+MAX_INT32   = 2147483647
+MAX_UINT32  = 4294967295
+MAX_INT64   = 9223372036854775807
+MAX_UINT64  = 18446744073709551615
 
 class TestBlackWriterAndReader(unittest.TestCase):
     def setUp(self):
@@ -16,11 +20,9 @@ class TestBlackWriterAndReader(unittest.TestCase):
         blue.paths.SetSearchPath("cache", self.cachePath)
 
 
-    def testWriteToMemStreamAndReadBack(self):
+    def _testWriteToMemStreamAndReadBack(self, testValue, testAttributeName):
         x = blue.BlueTestHelperAttributes()
-
-        x.myString = "Test String"
-        x.sharedString = "Test shared string"
+        setattr(x,testAttributeName,testValue)
 
         writer = blue.BlackWriter()
         reader = blue.BlackReader()
@@ -36,31 +38,68 @@ class TestBlackWriterAndReader(unittest.TestCase):
         self.assertEqual(x.myString, y.myString)
         self.assertEqual(x.sharedString, y.sharedString)
 
+        #TODO: Test references
+        #TODO: Test circular references
+        #TODO: Test all base types and container types
 
-    def testWriteToFileAndReadBack(self):
+    def testWriteStringToMemStreamAndReadBack(self):
+        self._testWriteToMemStreamAndReadBack("Test String","myString")
+
+    def testWriteStringToMemStreamAndReadBack(self):
+        self._testWriteToMemStreamAndReadBack("Test String","sharedString")
+
+    def testWriteInt32ToMemStreamAndReadBack(self):
+        self._testWriteToMemStreamAndReadBack(MAX_INT32,"myInt")
+        self._testWriteToMemStreamAndReadBack(-MAX_INT32-1,"myInt")
+
+    def testWriteUInt32ToMemStreamAndReadBack(self):
+        self._testWriteToMemStreamAndReadBack(MAX_UINT32,"myUInt")
+
+    def testWriteInt64ToMemStreamAndReadBack(self):
+        self._testWriteToMemStreamAndReadBack(MAX_INT64,"myInt64")
+        self._testWriteToMemStreamAndReadBack(-MAX_INT64-1,"myInt64")
+
+    def testWriteUInt64ToMemStreamAndReadBack(self):
+        self._testWriteToMemStreamAndReadBack(MAX_UINT64,"myUInt64")
+
+    def _testWriteToFileAndReadBack(self, testValue, testAttributeName):
+        
         x = blue.BlueTestHelperAttributes()
-
-        x.myString = "Test String"
+        setattr(x,testAttributeName,testValue)
 
         writer = blue.BlackWriter()
         writer.WriteObjectToFile(x, "cache:/test.black")
 
         pathOnDisk = blue.paths.ResolvePath("cache:/test.black")
         self.assertTrue(os.path.exists(pathOnDisk))
-        self.assertEqual(os.path.getsize(pathOnDisk), 80)
 
         reader = blue.BlackReader()
         z = reader.CreateObjectFromFile("cache:/test.black")
 
         self.assertEqual(type(x), type(z))
-        self.assertEqual(x.myString, z.myString)
-
-
+        self.assertEqual(getattr(x,testAttributeName), getattr(z,testAttributeName))
 
         #TODO: Test references
         #TODO: Test circular references
         #TODO: Test all base types and container types
 
+
+    def testWriteStringToFileAndReadBack(self):
+        self._testWriteToFileAndReadBack("Test String","myString")
+
+    def testWriteInt32ToFileAndReadBack(self):
+        self._testWriteToFileAndReadBack(MAX_INT32,"myInt")
+        self._testWriteToFileAndReadBack(-MAX_INT32-1,"myInt")
+
+    def testWriteUInt32ToFileAndReadBack(self):
+        self._testWriteToFileAndReadBack(MAX_UINT32,"myUInt")
+
+    def testWriteInt64ToFileAndReadBack(self):
+        self._testWriteToFileAndReadBack(MAX_INT64,"myInt64")
+        self._testWriteToFileAndReadBack(-MAX_INT64-1,"myInt64")
+
+    def testWriteUInt64ToFileAndReadBack(self):
+        self._testWriteToFileAndReadBack(MAX_UINT64,"myUInt64")
 
     def _createTestObject(self):
         """

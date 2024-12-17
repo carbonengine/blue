@@ -176,7 +176,7 @@ bool BlueNetworkStream::UnlockData()
 	return false;
 }
 
-BlueStdResult BlueNetworkStream::ReadData( Be::Optional<size_t> size, std::string& contents )
+BlueStdResult BlueNetworkStream::ReadData( Be::Optional<size_t> size, PyObject*& contents )
 {
 	if( m_state == UNINITIALIZED )
 	{
@@ -186,7 +186,7 @@ BlueStdResult BlueNetworkStream::ReadData( Be::Optional<size_t> size, std::strin
 	{
 		if( size == 0 )
 		{
-			contents.clear();
+			contents = PyBytes_FromString("");
 			return BlueStdResult( BLUE_STD_RESULT_OK );
 		}
 		CcpMallocBuffer data( "BlueHttpStream::ReadData", size );
@@ -195,17 +195,20 @@ BlueStdResult BlueNetworkStream::ReadData( Be::Optional<size_t> size, std::strin
 		{
 			return BlueStdResult( BLUE_STD_RESULT_IO_ERROR );
 		}
-		contents.assign( data.get(), readSize );
+		contents = PyBytes_FromStringAndSize( data.get(), readSize );
 		return BlueStdResult( BLUE_STD_RESULT_OK );
 	}
 	else
 	{
-		contents.clear();
+		contents = PyBytes_FromString("");
 		while( true )
 		{
-			char buffer[1024];
-			auto read = Read( buffer, 1024 );
-			contents.append( buffer, read );
+			CcpMallocBuffer data( "BlueHttpStream::ReadData", 1024 );
+			auto read = Read( data.get(), ptrdiff_t( data.size() ) );
+			PyBytes_ConcatAndDel( &contents, PyBytes_FromStringAndSize( data.get(), read ) );
+			if ( !contents ) {
+				return BlueStdResult( BLUE_STD_RESULT_RUNTIME_ERROR );
+			}
 			if( read != 1024 )
 			{
 				break;

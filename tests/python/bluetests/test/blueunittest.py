@@ -7,11 +7,10 @@ class TestCase(unittest.TestCase):
         """
         Assert that two Blue objects are equal. 
         """
-
         self.assertEqual(type(obj1), type(obj2))
 
         if isinstance(obj1, blue.BlueWrapper):
-            for attributeName in obj1.__members__:
+            for attributeName in obj1.__dict__:
                 attr1 = getattr(obj1, attributeName)
                 attr2 = getattr(obj2, attributeName)
 
@@ -23,3 +22,5 @@ class TestCase(unittest.TestCase):
                 else:
                     if attributeName != "__iroot__":
                         self.assertEqual(attr1, attr2)
+        else:
+            self.assertEqual(obj1, obj2)

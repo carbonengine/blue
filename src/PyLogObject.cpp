@@ -57,13 +57,13 @@ struct LogChannel :
 		channel = 0;
 		source = 0;
 		oktocall = false;
-		if (!PyArg_ParseTuple(args, "O!O!", &PyString_Type, &mFacilityStr, &PyString_Type, &mObjectStr))
+		if (!PyArg_ParseTuple(args, "O!O!", &PyUnicode_Type, &mFacilityStr, &PyUnicode_Type, &mObjectStr))
 			return;
 
 		Py_INCREF(mFacilityStr);
 		Py_INCREF(mObjectStr);
-		facility = PyString_AsString(mFacilityStr);
-		object = PyString_AsString(mObjectStr);
+		facility = PyUnicode_AsUTF8(mFacilityStr);
+		object = PyUnicode_AsUTF8(mObjectStr);
 		oktocall = true;
 	}
 
@@ -93,7 +93,7 @@ struct LogChannel :
 	
 	PyObject* Repr()
 	{
-		return PyString_FromFormat("log.Channel(\"%s\",\"%s\")", facility, object);
+		return PyUnicode_FromFormat("log.Channel(\"%s\",\"%s\")", facility, object);
 	}
 
 	PyObject* Log(PyObject* args)
@@ -103,7 +103,7 @@ struct LogChannel :
 		int backstack = 0;
 		if (!PyArg_ParseTuple(args, "O|ii", &textO, &flag, &backstack))
 			return nullptr;
-		if (!PyString_Check(textO) && !PyUnicode_Check(textO))
+		if (!PyUnicode_Check(textO))
 		{
 			PyErr_SetString(PyExc_TypeError, "expected string or unicode object");
 			return nullptr;
@@ -112,18 +112,7 @@ struct LogChannel :
 		CCP::LogType logType = TLOGFLAGToLogType( flag );
 
 		if (CCP::IsLogging( logType ) && oktocall) {
-			PyObject *string = 0;
-			char *text;
-			if (PyUnicode_Check(textO)) {
-				//output an utf8 formatted dude.
-				string = PyUnicode_AsUTF8String(textO);
-				if (!string)
-					return nullptr;
-				text = PyString_AS_STRING(string);
-			} else
-				text = PyString_AS_STRING(textO);
-			CCP::LogFuncChannel(*this, logType, flag, "%s", text);
-			Py_XDECREF(string);
+			CCP::LogFuncChannel(*this, logType, flag, "%s", PyUnicode_AsUTF8(textO));
 		}
 
 		Py_INCREF(Py_None);
@@ -136,7 +125,7 @@ struct LogChannel :
 		PyObject *text;
 		if (!PyArg_ParseTuple(args, "O", &text))
 			return nullptr;
-		if (!PyString_Check(text) && !PyUnicode_Check(text))
+		if (!PyUnicode_Check(text))
 		{
 			PyErr_SetString(PyExc_TypeError, "expected string or unicode");
 			return nullptr;
@@ -150,7 +139,7 @@ struct LogChannel :
 		int flags = -1;
 		if (!PyArg_ParseTuple(args, "|i", &flags))
 			return NULL;
-		return PyInt_FromLong(CCP::IsLogging( TLOGFLAGToLogType( TLOGFLAG(flags) ) ) && oktocall);
+		return PyLong_FromLong(CCP::IsLogging( TLOGFLAGToLogType( TLOGFLAG(flags) ) ) && oktocall);
 	}
 
 
@@ -158,9 +147,9 @@ struct LogChannel :
 	{
 		static PyMemberDef members[] = 
 		{
-			{const_cast<char*>("facility"), T_OBJECT_EX, BLUE_MEMBEROFFSET(LogChannel, mFacilityStr), RO},
-			{const_cast<char*>("object"), T_OBJECT_EX, BLUE_MEMBEROFFSET(LogChannel, mObjectStr), RO},
-			{const_cast<char*>("channelOpen"), T_INT, BLUE_MEMBEROFFSET(LogChannel, oktocall), RO},			
+			{const_cast<char*>("facility"), T_OBJECT_EX, BLUE_MEMBEROFFSET(LogChannel, mFacilityStr), READONLY},
+			{const_cast<char*>("object"), T_OBJECT_EX, BLUE_MEMBEROFFSET(LogChannel, mObjectStr), READONLY},
+			{const_cast<char*>("channelOpen"), T_INT, BLUE_MEMBEROFFSET(LogChannel, oktocall), READONLY},
 			{NULL}
 		};
 		return members;
@@ -182,10 +171,10 @@ struct LogChannel :
 	static PyObject *GetAttribs()
 	{
 		PyObject *i, *dict = PyDict_New();
-		PyDict_SetItemString(dict, "INFO", i = PyInt_FromLong(LGINFO)); Py_DECREF(i);
-		PyDict_SetItemString(dict, "NOTICE", i = PyInt_FromLong(LGPERF)); Py_DECREF(i);
-		PyDict_SetItemString(dict, "WARN", i = PyInt_FromLong(LGWARN)); Py_DECREF(i);
-		PyDict_SetItemString(dict, "ERR", i = PyInt_FromLong(LGERR)); Py_DECREF(i);
+		PyDict_SetItemString(dict, "INFO", i = PyLong_FromLong(LGINFO)); Py_DECREF(i);
+		PyDict_SetItemString(dict, "NOTICE", i = PyLong_FromLong(LGPERF)); Py_DECREF(i);
+		PyDict_SetItemString(dict, "WARN", i = PyLong_FromLong(LGWARN)); Py_DECREF(i);
+		PyDict_SetItemString(dict, "ERR", i = PyLong_FromLong(LGERR)); Py_DECREF(i);
 		return dict;
 	}
 

@@ -322,9 +322,22 @@ PyObject *PyHeapCheck(PyObject *self, PyObject *args)
 
 }
 
-void InitHeapq()
+PyMODINIT_FUNC InitHeapq(void)
 {
-	Py_InitModule( "blue.heapq", heapqmethods );
+    static struct PyModuleDef moduleDef = {
+        PyModuleDef_HEAD_INIT,
+        "blue.heapq",
+        "",
+        -1,
+        heapqmethods,
+    };
+    auto module = PyModule_Create(&moduleDef);
+    if ( ! module ) {
+        CCP_LOGERR("Failed to create blue.heapq module");
+		return nullptr;
+    }
+
+	return module;
 }
 
 #endif

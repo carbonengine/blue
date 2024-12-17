@@ -35,11 +35,18 @@ namespace PyErr
 	PyObject* SetErr32(int err, const char* format, ...);
 };
 
+/// <summary>
+/// this is a replacement for:
+/// `typedef PyObject* ( *PyNoArgsFunction )( PyObject* )`
+/// which was removed from the CPython API in Python3.9
+/// </summary>
+/// 
+using BlueNoArgsFunction = std::add_pointer<PyObject*(PyObject*)>::type;
 
 // -------------------------------------------------------------
 // Macro which declares METH_NOARGS python method definition
 #define METHOD_NOARGS(_fn, _doc) \
-	{#_fn, (PyCFunction)(PyNoArgsFunction)PyCFuncNoArgs<&_ClassType::_fn>, METH_NOARGS, _doc},
+	{ #_fn, (PyCFunction)(BlueNoArgsFunction)PyCFuncNoArgs<&_ClassType::_fn>, METH_NOARGS, _doc },
 
 // -------------------------------------------------------------
 // Macro which declares METH_O python method definition
@@ -67,7 +74,7 @@ namespace PyErr
 		{
 
 #define PYTHON_METHODS_END() \
-			{NULL, NULL} \
+			{0, 0} \
 		}; \
 		return defs;\
 	}
@@ -263,8 +270,7 @@ struct PyXObject : public PyObject, public PyXThunker<T>
 	{
 		static PyTypeObject type =
 		{
-			PyObject_HEAD_INIT(&PyType_Type)
-			0,
+			PyVarObject_HEAD_INIT(&PyType_Type, 0)
 			T::_ClassName(),
 			0,
 			0,
@@ -302,7 +308,7 @@ struct PyXObject : public PyObject, public PyXThunker<T>
 			0,                  /* tp_init */
 			0,                  /* tp_alloc */
 			0,					/* tp_new */
-			_PyObject_Del,                  /* tp_free */
+			nullptr,                  /* tp_free */
 		};
 
 		static bool postInitialized = false;

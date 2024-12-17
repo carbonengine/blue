@@ -10,6 +10,9 @@
 #ifndef BlueResManBackgroundCall_h
 #define BlueResManBackgroundCall_h
 
+// Forward declare type from the <Scheduler.h> header, include will be in .cpp file
+struct PyChannelObject;
+
 class IBlueResManBackgroundCall
 {
 public:

@@ -22,15 +22,8 @@
 
 // include all python stuff
 #if BLUE_WITH_PYTHON
+#define PY_SSIZE_T_CLEAN
 #include <Python.h>
-
-#if CCP_STACKLESS
-#include <stackless_api.h>
-#else
-#define CCP_NO_STACKLESS
-#endif
-
-#include <eval.h>  //for PyEval_EvalCode()
 
 // this for pylogobject
 #include <structmember.h>

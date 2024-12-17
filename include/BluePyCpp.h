@@ -8,9 +8,6 @@
 #include "BluePlatform.h"
 
 #include <Python.h>
-#ifdef STACKLESS
-#include <stackless_api.h>
-#endif
 
 
 #include <stddef.h> //size_t et al
@@ -68,8 +65,7 @@ namespace Ccp
 
 //An inline to see if we have the thread lock
 inline bool PyGilHave() {
-    PyThreadState *ts = _PyThreadState_Current; // PyThreadState_Get() will assert on NULL;
-    return ts && (ts == PyGILState_GetThisThreadState());
+    return PyGILState_Check() == 1;
 }
 
 inline void PyGilAssert() {
@@ -284,7 +280,7 @@ public:
                     PyObjectPtr lst(PyObject_CallMethod(m, (char*)"format_exception_only", (char*)"OO", mExc.get(), mVal.get()));
                     if (lst && PyList_Size(lst)>0) {
                         try {
-                            What = PyString_AsString(PyList_GetItem(lst, 0));
+                            What = PyUnicode_AsUTF8(PyList_GetItem(lst, 0));
                         } catch (...) {}
                     }
                 }
@@ -385,21 +381,20 @@ inline PyObject *PyErrFromException(const std::exception &e) throw() {
 class PyGilEnsure
 {
 public:
-    PyGilEnsure(bool block=true) : mReleased(false) {
-#ifdef STACKLESS
-		mState = PyGILState_EnsureEx(block?1:0);
-#else
-		mState = PyGILState_Ensure();
-#endif
+    PyGilEnsure(bool block=true) : mReleased(false), mState(PyGILState_Ensure())
+    {
     }
-    ~PyGilEnsure() throw() {
+
+    ~PyGilEnsure() throw()
+    {
         Release();
     }
-#ifdef STACKLESS
-	bool Locked() const throw() {
-		return mState != PyGILState_FAILED;
-	}
-#endif
+
+    bool Locked() const throw()
+    {
+        return mState == PyGILState_LOCKED;
+    }
+
     void Release()
     {
         if (!mReleased) {
@@ -425,7 +420,7 @@ private:
 class PyAllowThreads
 {
 public:
-    PyAllowThreads(bool safe = false) : mState(0), mReleased(false) {
+    PyAllowThreads(bool safe = false) : mState(nullptr), mReleased(false) {
         if (!safe) {
             //will check that we are in a python context
             PyGilAssert();

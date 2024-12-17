@@ -3,7 +3,6 @@ import unittest
 import blue
 import tempfile
 import shutil
-from . import run_in_tasklet
 
 class TestResMan(unittest.TestCase):
     """
@@ -19,7 +18,6 @@ class TestResMan(unittest.TestCase):
         blue.paths.SetSearchPath("res", self.tmpDir)
 
     def tearDown(self):
-        import stackless
         blue.paths.SetSearchPath("cache", self.cacheSearchPath)
         blue.paths.SetSearchPath("res", self.resSearchPath)
         def retry_handler(func, path, _):
@@ -52,15 +50,14 @@ class TestResMan(unittest.TestCase):
         self.assertTrue(blue.motherLode)
         self.assertTrue(blue.motherLode.size() == 0)
 
-    @run_in_tasklet
-    def doTestGetResource(self):
+    def testGetResource(self):
         # Get a resource. BlueTestAsyncRes doesn't really load anything
         # but simulates a load by sleeping when it should be loading
         # from disk and preparing the resource. This allows us to test
         # the mechanics of the resource manager.
         res1 = blue.resMan.GetResource("ss_001.blueasync")
         self.assertEqual(type(res1), blue.BlueTestAsyncRes)
-
+        
         self.assertTrue(res1.isLoading)
 
         blue.resMan.Wait()
@@ -69,35 +66,10 @@ class TestResMan(unittest.TestCase):
         self.assertTrue(res1.isGood)
         self.assertEqual(blue.motherLode.size(), 1)
 
-    def testGetResource(self):
-        self.doTestGetResource()
-
-    @run_in_tasklet
-    def doTestGetResource_UnicodeName(self):
+    def testGetResource_UnicodeName(self):
         res1 = blue.resMan.GetResource(u"ss_001.blueasync")
         self.assertEqual(type(res1), blue.BlueTestAsyncRes)
-
-        self.assertTrue(res1.isLoading)
-
-        blue.resMan.Wait()
-
-        self.assertFalse(res1.isLoading)
-        self.assertTrue(res1.isGood)
-        self.assertTrue(blue.motherLode.size() == 1)
-
-    def testGetResource_UnicodeName(self):
-        self.doTestGetResource_UnicodeName()
-
-    @run_in_tasklet
-    def doTestGetResource_WithEx(self):
-        # Get a resource. BlueTestAsyncRes doesn't really load anything
-        # but simulates a load by sleeping when it should be loading
-        # from disk and preparing the resource. This allows us to test
-        # the mechanics of the resource manager.
-        res1 = blue.resMan.GetResource("ss_001.blueasync", "ex")
-        self.assertEqual(type(res1), blue.BlueTestAsyncRes)
-        self.assertTrue(res1.ex)
-
+        
         self.assertTrue(res1.isLoading)
 
         blue.resMan.Wait()
@@ -107,13 +79,26 @@ class TestResMan(unittest.TestCase):
         self.assertTrue(blue.motherLode.size() == 1)
 
     def testGetResource_WithEx(self):
-        self.doTestGetResource_WithEx()
+        # Get a resource. BlueTestAsyncRes doesn't really load anything
+        # but simulates a load by sleeping when it should be loading
+        # from disk and preparing the resource. This allows us to test
+        # the mechanics of the resource manager.
+        res1 = blue.resMan.GetResource("ss_001.blueasync", "ex")
+        self.assertEqual(type(res1), blue.BlueTestAsyncRes)
+        self.assertTrue(res1.ex)
+       
+        self.assertTrue(res1.isLoading)
+
+        blue.resMan.Wait()
+
+        self.assertFalse(res1.isLoading)
+        self.assertTrue(res1.isGood)
+        self.assertTrue(blue.motherLode.size() == 1)
 
     def testGetResource_UnknownResourceType(self):
         self.assertRaises( RuntimeError, blue.resMan.GetResource, "ss_001.bogus_type")
 
-    @run_in_tasklet
-    def doTestGetResource_SecondGetShouldBeShared(self):
+    def testGetResource_SecondGetShouldBeShared(self):
         res1 = blue.resMan.GetResource("ss_001.blueasync")
         blue.resMan.Wait()
         res2 = blue.resMan.GetResource("ss_001.blueasync")
@@ -121,11 +106,7 @@ class TestResMan(unittest.TestCase):
 
         self.assertTrue(res1 == res2)
 
-    def testGetResource_SecondGetShouldBeShared(self):
-        self.doTestGetResource_SecondGetShouldBeShared()
-
-    @run_in_tasklet
-    def doTestGetResource_Caching(self):
+    def testGetResource_Caching(self):
         res1 = blue.resMan.GetResource("ss_001.blueasync")
         blue.resMan.Wait()
         del res1
@@ -133,9 +114,6 @@ class TestResMan(unittest.TestCase):
 
         self.assertTrue(res2.isGood)
         self.assertFalse(res2.isLoading)
-
-    def testGetResource_Caching(self):
-        self.doTestGetResource_Caching()
 
     def CreateLanguageFiles(self):
         filePath = os.path.join(self.tmpDir, "test.txt")
@@ -145,38 +123,24 @@ class TestResMan(unittest.TestCase):
         zhContents = "Chinese file"
         self._createFile(zhFilePath, zhContents)
 
-
-    @run_in_tasklet
-    def doTest_OpenLanguageSpecificFile_NoLanguageSet(self):
+    def test_OpenLanguageSpecificFile_NoLanguageSet(self):
         self.CreateLanguageFiles()
 
         res = blue.resMan.GetResource("res:/test.txt")
         blue.resMan.Wait()
         self.assertEqual(res.text, "Default file")
 
-    def test_OpenLanguageSpecificFile_NoLanguageSet(self):
-        self.doTest_OpenLanguageSpecificFile_NoLanguageSet()
-
-
-    @run_in_tasklet
-    def doTest_OpenLanguageSpecificFile_ChineseLanguageSet(self):
+    def test_OpenLanguageSpecificFile_ChineseLanguageSet(self):
         self.CreateLanguageFiles()
         blue.os.languageID = "ZH"
         res = blue.resMan.GetResource("res:/test.txt")
         blue.resMan.Wait()
         self.assertEqual(res.text, "Chinese file")
 
-    def test_OpenLanguageSpecificFile_ChineseLanguageSet(self):
-        self.doTest_OpenLanguageSpecificFile_ChineseLanguageSet()
-
-    @run_in_tasklet
-    def doTest_OpenLanguageSpecificFile_EnglishLanguageSet(self):
+    def test_OpenLanguageSpecificFile_EnglishLanguageSet(self):
         self.CreateLanguageFiles()
         blue.os.languageID = "EN"
 
         res = blue.resMan.GetResource("res:/test.txt")
         blue.resMan.Wait()
         self.assertEqual(res.text, "Default file")
-
-    def test_OpenLanguageSpecificFile_EnglishLanguageSet(self):
-        self.doTest_OpenLanguageSpecificFile_EnglishLanguageSet()

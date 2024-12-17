@@ -82,7 +82,6 @@
 #include <BluePlatform.h>
 
 #include <Python.h>
-#include <stackless_api.h>
 
 #include <deque>
 #include <vector>
@@ -461,6 +460,10 @@ private:
 	bool mUseOptionalThreadDispatch;
 };
 
+// Forward declare it from <Scheduler.h> which will be included in the .cpp file.
+// This is only temporary, as stacklessio.h is about to be replaced with
+// carbon-io (and carbon-scheduler), making it redundant (soon).
+struct PyChannelObject;
 
 // Define the ChannelObject pointer
 typedef Ccp::PyGenericObjectPtr<PyChannelObject> PyChannelObjectPtr;

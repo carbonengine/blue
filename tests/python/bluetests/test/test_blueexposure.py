@@ -1,3 +1,4 @@
+import sys
 import unittest
 import blue
 
@@ -65,9 +66,9 @@ class TestBlueExposure(unittest.TestCase):
             self.assertEqual(x.myInt, each, "Failed to assign %d" % each)
 
         def AssignLong_ErrorExpected():
-            x.myInt = long(MAX_INT32)+1
+            x.myInt = sys.maxsize + 1
         
-        self.assertRaises(TypeError, AssignLong_ErrorExpected)
+        self.assertRaises(OverflowError, AssignLong_ErrorExpected)
 
         def AssignFloat_ErrorExpected():
             x.myInt = 3.14

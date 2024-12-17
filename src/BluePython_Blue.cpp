@@ -26,11 +26,17 @@ const Be::ClassInfo* BlueCpuUsage::ExposeToBlue()
 		MAP_ATTRIBUTE("workingSetSize", workingSetSize, "", Be::READ)
 		MAP_ATTRIBUTE("pageFaultCount", pageFaultCount, "Number of page faults", Be::READ)
 		MAP_ATTRIBUTE("fps", fps, "Frames per second", Be::READ)
-		MAP_ATTRIBUTE("taskletsProcessed", taskletsProcessed, "Number of tasklets processed this frame", Be::READ)
 		MAP_ATTRIBUTE("taskletsYielding", taskletsYielding, "Number of tasklets that yielded this frame", Be::READ)
 		MAP_ATTRIBUTE("taskletsSleeping", taskletsSleeping, "Number of tasklets that slept this frame", Be::READ)
-		MAP_ATTRIBUTE("taskletsSchedulerDuration", taskletsSchedulerDuration, "Time spent processing tasklets this frame", Be::READ)
+		MAP_ATTRIBUTE("taskletsSchedulerDuration", taskletsSchedulerDuration, "Time spent processing tasklets this frame in ms", Be::READ)
+		MAP_ATTRIBUTE("taskletsSchedulerMaxDuration", taskletsSchedulerMaxDuration, "Desired max time for processing tasklets per frame in ms", Be::READ)
+		MAP_ATTRIBUTE("taskletsSchedulerDurationOvershoot", taskletsSchedulerDurationOvershoot, "Overshoot of max time this frame in ms", Be::READ)
 		MAP_ATTRIBUTE("taskletsQueued", taskletsQueued, "Number of tasklets queued for execution", Be::READ)
+		MAP_ATTRIBUTE( "taskletsActive", taskletsActive, "Number of active Tasklets", Be::READ )
+		MAP_ATTRIBUTE( "scheduleManagersActive", scheduleManagersActive, "Number of active ScheduleManagers", Be::READ )
+		MAP_ATTRIBUTE( "channelsActive", channelsActive, "Number of active Channels", Be::READ )
+		MAP_ATTRIBUTE( "taskletsProcessed", taskletsProcessed, "Number of Tasklets completed last tick", Be::READ )
+		MAP_ATTRIBUTE( "taskletsSwitched", taskletsSwitched, "Number of Tasklets switched last tick", Be::READ )
 	EXPOSURE_END()
 }
 
@@ -114,15 +120,6 @@ const Be::ClassInfo* BluePyOS::ExposeToBlue()
 		)
 		MAP_METHOD_AS_METHOD
 		(
-			"GetEnv",
-			PyGetEnv, 
-			"Returns dictionary of environment variables.\n" 
-			":param name: optional environment variable name; if passed the function returns its value, otherwise returns all variables\n"
-			":type name: basestring\n"
-			":rtype: unicode | dict[basestring, basestring]"
-		)
-		MAP_METHOD_AS_METHOD
-		(
 			"DumpState",
 			PyDumpState, 
 			"Dumps state, or something.\n" 
@@ -148,12 +145,12 @@ const Be::ClassInfo* BluePyOS::ExposeToBlue()
 			":type args: tuple\n"
 			":param kwargs: function keyword arguments\n"
 			":type kwargs: dict\n"
-			":rtype: stackless.tasklet"
+			":rtype: scheduler.tasklet"
 		)
 		MAP_METHOD_AS_METHOD
 		(
 			"NextScheduledEvent",
-			PyNextScheduledEvent,	
+			PyNextScheduledEvent,
 			"NextScheduledEvent\n" 
 			":param ms: milliseconds\n"
 			":type ms: int\n"

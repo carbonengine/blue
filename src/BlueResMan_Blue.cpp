@@ -20,17 +20,21 @@ static PyObject* PySaveObject( PyObject* self, PyObject* args )
 	{
 		return 0;
 	}
-	const wchar_t *name = (const wchar_t*)PyUnicode_AS_UNICODE(u.o);
+	wchar_t *name = PyUnicode_AsWideCharString(u.o, NULL);
 
 	IRootPtr obj( BlueUnwrapObjectFromPython(pyObj) );
 
 	if( !obj )
 	{
 		PyErr_SetString( PyExc_TypeError, "The first argument is not an object");
+		PyMem_Free( name );
 		return NULL;
 	}
 
-	if( BeResMan->SaveObjectW( obj, name ) )
+	bool saved = BeResMan->SaveObjectW( obj, name );
+	PyMem_Free( name );
+
+	if( saved )
 	{
 		Py_INCREF( Py_True );
 		return Py_True;
@@ -65,13 +69,9 @@ static PyObject* PySaveObjectToYamlString( PyObject* self, PyObject* args )
 	writer.WriteObjectToStream( obj, &ms );
 
 	ssize_t size = ms.GetSize();
-	PyObject* returnValue = PyString_FromStringAndSize( nullptr, size );
-
-	void* data;
-	ms.LockData( &data, size );
-
-	char* dst = PyString_AsString( returnValue );
-	memcpy( dst, data, size );
+    void* data;
+    ms.LockData( &data, size );
+	PyObject* returnValue = PyUnicode_FromStringAndSize( reinterpret_cast<const char*>(data), size );
 
 	ms.UnlockData();
 

@@ -16,6 +16,7 @@
 #include "BlueFileUtil.h"
 #include "IBlueObjectBuilder.h"
 #include "IBluePaths.h"
+#include <Scheduler.h>
 
 #include <cctype>
 #include <cwctype>
@@ -643,7 +644,7 @@ IRootPtr BlueResMan::LoadObject(const wchar_t* unnormalizedName, Be::LOADOBJECT_
 	// per tasklet, otherwise the preloading of files we do below, which yields to other
 	// tasklets that my in turn start loading objects can look like very deep recursion.
 	// See: PyOS->Yield()
-	PyObject* myTasklet = PyStackless_GetCurrent();
+	PyObject* myTasklet = SchedulerAPI()->PyScheduler_GetCurrent();
 
 	// Release the reference right away. We use it as a key for the map, but we don't
 	// need to hold a strong reference. Using it as a key without affecting the reference
@@ -749,7 +750,7 @@ IRootPtr BlueResMan::LoadObject(const wchar_t* unnormalizedName, Be::LOADOBJECT_
 
 	CCP_LOG_CH( s_ch, "Creating object from %S", filename.c_str() );
 	IRootPtr obj;
-	obj.Attach( builder->CreateObjectWithYield( NULL, NULL ) );
+	obj.Attach( builder->CreateObjectWithYield( 0, nullptr ) );
 
 	if( !obj )
 	{
@@ -819,7 +820,7 @@ PyObject* BlueResMan::PyLoadObjectFromYamlString( PyObject* self, PyObject* args
 		return NULL;
 	}
 
-	if (!PyString_Check(pyCharStream))
+	if (!PyUnicode_Check(pyCharStream))
 	{
 		PyErr_SetString(PyExc_TypeError, "LoadObjectFromYamlString expected a non-unicode string.");
 		return NULL;
@@ -829,7 +830,7 @@ PyObject* BlueResMan::PyLoadObjectFromYamlString( PyObject* self, PyObject* args
 	newStream.CreateInstance(GetMemStreamClsid());
 	if (newStream)
 	{
-		char* charString = PyString_AsString(pyCharStream);
+		const char* charString = PyUnicode_AsUTF8(pyCharStream);
 		ssize_t len = strlen(charString);
 
 		MemStream *memStream = static_cast<MemStream*>( static_cast<IBlueStream*>( newStream ) );

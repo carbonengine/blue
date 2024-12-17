@@ -29,6 +29,7 @@
 #include "IBluePython.h"
 #include "BlueTime.h"
 #include "WatchdogThread.h"
+#include "manifest.h"
 
 #include <vector>
 #include <list>
@@ -59,13 +60,10 @@ public:
 #endif
 
 	Be::Time GetSmoothedTime();
-	void NextScheduledEvent(int millisec) override;
 	
 	typedef TrackableStdVector<TerminationCallback*> TerminationCallbacks;
 	TerminationCallbacks mIndispensableTerminationSteps;
 	void RegisterIndispensableTerminationStep( TerminationCallback* callback ) override;
-
-	ManifestVerification mManifestVerification;
 
 	// error stuff
 	typedef TrackableStdVector<IBlueOS::Error> ErrorLog;
@@ -84,7 +82,6 @@ public:
 	// scheduling and event notifications
 	BeTimer mTimer;
 	bool mUseRDTSC; //if true, use the RDTSC instruction for performance counting
-	int mNextScheduledEvent; //for the sleep loop
 
 	// Pumping
 	bool mInsidePump;
@@ -137,9 +134,16 @@ public:
 	Be::Time mExitTime, mExternalTime;
 	
 	CcpProcessId_t mPID; // Process ID
+
+	bool IsPackaged() override
+	{
+		return mPackaged;
+	}
 	
 	// class registration stuff
 private:
+
+	bool mPackaged = false;
 
 	uint64_t m_startupTime;
 	
@@ -191,9 +195,16 @@ private:
 
 	WatchdogThread m_frameTimeWatchdog;
 	uint32_t m_frameTimeTimeout;
+	int32_t m_desiredFrameTimeMilliseconds{10};
 	
 	uint32_t GetFrameTimeTimeout() const;
 	void SetFrameTimeTimeout( uint32_t val );
+
+	uint32_t GetDesiredFrameTimeMilliseconds() const;
+	void SetDesiredFrameTimeMilliseconds( uint32_t val );
+
+	int32_t GetSleepTime() const;
+	void SetSleepTime( int32_t val );
 
 	// If true (the default) then Pump will advance the time. This can be set to false to disable
 	// time advancement - used by butter smooth rendering where fixed time steps are used and time
@@ -246,19 +257,15 @@ public:
 	/////////////////////////////////////////
 	// IBlueOS interface
 
-
 	// Blue OS startup / termination
 	bool Startup(
-		int pyOptimizeVersion,
-		ManifestVerification manifestVerification
+		int pyOptimizeVersion
 		) override;
 
 	bool RunStackless() override;
 
 	void Terminate( int retCode ) override;
 	
-	bool ShouldVerifyManifest() const override;
-
 	// Scheduling and such...
 	void RegisterForTicks(
 		IBlueEvents *cb,
@@ -318,13 +325,21 @@ public:
     
     void ShowErrorMessageBox( const wchar_t* title, const wchar_t* message );
 
+	bool ConstructPathListFromManifest( std::vector<std::wstring>& pathlist, bool verifyManifest ) override;
+	void SetMarkupZonesInPython( bool markupZonesInPython ) override;
+	void GetInitTab( std::vector<_inittab>& tabs ) const override;
+
 private:
     void PumpOSInternal();
     
-	void DoSleep();
+	void Sleep();
 	void TickTickers();
 	void CaptureLogCountsToStats();
 
+	bool VerifyManifestAndGatherDirectives( directives_t& directives );
+	void ShowMessageBoxForVerificationFailure( const std::string& errmsg );
+	void ProcessLibDirectives( const directives_t& directives, std::vector<std::wstring>& zips );
+	std::chrono::time_point<std::chrono::steady_clock> mNextFrame;
 };
 
 

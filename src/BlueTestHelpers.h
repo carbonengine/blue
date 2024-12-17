@@ -50,9 +50,11 @@ private:
 	std::wstring m_myUnicode;
 	bool m_myBool;
 	int32_t m_myInt;
+	uint32_t m_myUInt;
 	float m_myFloat;
 	double m_myDouble;
 	int64_t m_myInt64;
+	uint64_t m_myUInt64;
 	BlueSharedString m_sharedString;
 	BlueSharedStringW m_sharedStringW;
 
@@ -87,6 +89,9 @@ public:
 	int32_t GetInt() const;
 	void SetInt( int32_t val );
 
+	uint32_t GetUInt() const;
+	void SetUInt( uint32_t val );
+
 	float GetFloat() const;
 	void SetFloat( float val );
 
@@ -96,14 +101,19 @@ public:
 	int64_t GetInt64() const;
 	void SetInt64( int64_t val );
 
+	uint64_t GetUInt64() const;
+	void SetUInt64( uint64_t val );
+
 private:
 	std::string m_myString;
 	std::wstring m_myUnicode;
 	bool m_myBool;
-	int m_myInt;
+	int32_t m_myInt;
+	uint32_t m_myUInt;
 	float m_myFloat;
 	double m_myDouble;
 	int64_t m_myInt64;
+	uint64_t m_myUInt64;
 };
 
 TYPEDEF_BLUECLASS( BlueTestHelperProperties );
@@ -198,6 +208,17 @@ private:
 };
 
 TYPEDEF_BLUECLASS( BlueTestStructureLists );
+
+BLUE_CLASS( BlueTestEvents ) : public IRoot
+{
+	public:
+		EXPOSE_TO_BLUE();
+	private:
+		PyObject* PyPostEvent( PyObject* args );
+		PyObject* PySendEvent( PyObject * args );
+};
+
+TYPEDEF_BLUECLASS( BlueTestEvents );
 
 #endif
 

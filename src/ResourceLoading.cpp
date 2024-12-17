@@ -20,16 +20,17 @@
 #include "curl/curl.h"
 
 static CRemoteFileCache s_remoteFileCache;
-RemoteFileCache* BeRemoteFileCache = nullptr;
+RemoteFileCache* BeRemoteFileCache = &s_remoteFileCache;
 BLUE_REGISTER_GLOBAL_AS_MODULE_OBJECT( "remoteFileCache", BeRemoteFileCache );
 
 static CBlueResMan s_resourceManagerInstance;
 static CBlueThreadMonitor s_threadMonitorInstance;
 
 IBlueCallbackMan* BeCallbackMan = nullptr;
-IBlueResMan* BeResMan = nullptr;
-IBlueObjectRecycler* BeRecycler = nullptr;
-IBlueThreadMonitor* BeThreadMonitor = nullptr;
+IBlueResMan* BeResMan = &s_resourceManagerInstance;
+static CBlueObjectRecycler s_blueObjectRecyclerInstance;
+IBlueObjectRecycler* BeRecycler = &s_blueObjectRecyclerInstance;
+IBlueThreadMonitor* BeThreadMonitor = &s_threadMonitorInstance;
 
 BLUE_REGISTER_GLOBAL_AS_MODULE_OBJECT( "resMan", BeResMan );
 BLUE_REGISTER_GLOBAL_AS_MODULE_OBJECT( "recycler", BeRecycler );
@@ -69,8 +70,6 @@ unsigned int GetDefaultThreadCount()
 
 BLUEIMPORT bool BlueInitializeResourceLoading()
 {
-	BeThreadMonitor = &s_threadMonitorInstance;
-
 	unsigned int threadCount = GetStartupArgAsInt( L"resManThreadCount" );
 
 	if( threadCount == 0 )
@@ -96,22 +95,10 @@ BLUEIMPORT bool BlueInitializeResourceLoading()
 	BeCallbackMan->SetName( "BeCallbackMan" );
 	BeCallbackMan->Run();
 
-	//create the MotherLode singleton
-	if( !BeClasses->CreateInstance(GetMotherLodeClsid(), GetIMotherLodeIID(), (void**)&BeMotherLode) )
-	{
-		return false;
-	}
 	BeMotherLode->Startup();
-
-	BeClasses->CreateInstance( GetBlueObjectRecyclerClsid(), GetBlueObjectRecyclerIID(), (void**)&BeRecycler );
-
-	BeClasses->CreateInstance( GetBlueObjectMetadataClsid(), GetBlueObjectMetadataIID(), (void**)&BeObjectMetadata );
 
 	// Initialize the resource manager
 	s_resourceManagerInstance.Initialize();
-	BeResMan = &s_resourceManagerInstance;
-
-	BeRemoteFileCache = &s_remoteFileCache;
 
 	return true;
 }

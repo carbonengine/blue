@@ -11,9 +11,8 @@
 
 #include <CcpMacros.h>
 
-// Forward declaration
-struct _tasklet;
-typedef _tasklet PyTaskletObject;
+// Forward declare type from the <Scheduler.h> header, include will be in .cpp file
+struct PyTaskletObject;
 
 // Description:
 //   ScopedBlockTrap provides a way to set and restore blocktrap state around

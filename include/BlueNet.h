@@ -11,7 +11,6 @@
 
 #pragma warning (disable : 4996) // remove Windows nagging about using _strincmp() etc
 
-#include <CarbonIO/dll_exports.h>
 #include <LinkHash.h>
 #include <RWSpinLock.h>
 #include <ScopedLocks.h>
@@ -48,11 +47,19 @@
 #define BN_BATCH(a) //a
 #define BN_PACKSTRING(a) //a
 
-// how small the data can be thatwill fit into a static job allocation,
+// how small the data can be that will fit into a static job allocation,
 // larger than this will require a new/delete
 const int BLUE_NET_SMALL_BUFFER_SIZE = 4096;
 const int DEFAULT_PING_FREQUENCY = 30;
 const unsigned int MIN_SCHEDULED_IO_INTERVAL = 15;
+
+// Keep this in sync with the identically named constants in carbon/common/lib/const.py
+enum AddressType {
+	ADDRESS_TYPE_NODE = 1,
+	ADDRESS_TYPE_CLIENT = 2,
+	ADDRESS_TYPE_BROADCAST = 4,
+	ADDRESS_TYPE_ANY = 8
+};
 
 // the amount of data that can accumulate on a transport before
 // transmission is forced
@@ -71,7 +78,7 @@ class Marshal;
 class BlueNet
 {
 public:
-	static void Init();
+	static bool Init( PyObject* blueModule, PySocketModule_APIObject* socketAPI );
 
 	//---------------------------------------
 	struct PacketInfo
@@ -100,8 +107,8 @@ public:
 	//         any thread
 	// Sync - Issue callbacks serially from the single thread that
 	//        calls DeliverCPackets();
-	// FromPython - Issue callbacks from a valid Python/Stackless
-	//              context using Py_AddPendingCall(...)
+	// FromPython - Issue callbacks from a valid Python context
+	//              using Py_AddPendingCall(...)
 	void RegisterCallbackAsync( DataCallback callback, const int blueNetKey );
 	void RegisterCallbackSync( DataCallback callback, const int blueNetKey );
 	void RegisterCallbackFromPython( DataCallback callback, const int blueNetKey );
@@ -165,15 +172,6 @@ public:
 	unsigned int FlushToClientList( const unsigned long long* clientList, const int listLen );
 	unsigned int FlushToCharList( const unsigned long long* charList, const int listLen );
 
-	// kick off the ping/pong buffer batch transmit thread
-#if _WIN32
-	void TransmitBatch() { SetEvent( m_singleton.m_batchReadyEvent ); }
-#elif __APPLE__
-	void TransmitBatch() { dispatch_semaphore_signal( m_singleton.m_batchReadyEvent ); }
-#else
-#error "Missing implementation"
-#endif
-
 	//---------------------
 	enum Mode
 	{
@@ -215,7 +213,6 @@ public:
 private:
 
 	BlueNet();
-	~BlueNet();
 
 	// python interface
 	static PyObject* PySetMyNodeID( PyObject *self, PyObject *args );
@@ -225,7 +222,6 @@ private:
 	static PyObject* PySetMinScheduledIOInterval( PyObject *self, PyObject *args ); // Minimum time the communications engine will wake up Blue with a packet event <default 15ms>
 	static PyObject* PySetWatchdogInterval( PyObject *self, PyObject *args ); //SetWatchdogInterval(ms)\n\nInterval the watchdog wakes up to check for unserviced packets <default 23ms>
 	static PyObject* PySetWakeupMethod( PyObject *self, PyObject *unused ); // control how CarbonIO wakes stuff up
-	static PyObject* PyInstallLoggingCallbacks( PyObject *self, PyObject *args ); // allow underlying CarbonIO to emit CCP log messages
 	static PyObject* PyEnumerateTransport( PyObject *self, PyObject *args ); // expose routing table
 	static PyObject* PyPurgeTransport( PyObject *self, PyObject *args ); // only internal cleanup, remove it
 	static PyObject* PySendBlueNetPacket( PyObject *self, PyObject *args ); // given a message create a bitpacked header
@@ -255,19 +251,15 @@ private:
 	//---------------------
 	enum CallbackStyle
 	{
-		CALLBACK_SYNC, // make the callback in C outside the normal Python tick, but sychronous with the main thread
-		CALLBACK_PYTHON, // sychrnous, but deliver in a valid Stackless context from within Python
+		CALLBACK_SYNC, // make the callback in C outside the normal Python tick, but synchronous with the main thread
+		CALLBACK_PYTHON, // synchronous, but deliver in a valid Python context
 		CALLBACK_ASYNC, // you get it when we get it, on whatever thread it arrived on (here there be dragons)
 	};
 	void RegisterCallback( DataCallback callback, const int blueNetKey, int style =CALLBACK_SYNC );
 	void RegisterCallback( ExtendedDataCallback callback, const int blueNetKey, int style =CALLBACK_SYNC );
 
-	// imported from the "const" module at startup
-	static long m_constAddressTypeNode;
-	static long m_constAddressTypeClient;
-
 	// check for sub-macho delivery
-	static bool OnPostDecompress( long long descriptor, const char* data, const int len, const char* OobData, const int OobLen );
+	static int OnPostDecompress( long long descriptor, const char* data, const int len, const char* OobData, const int OobLen );
 
 	bool ParseHeader( const char* data, const int len, BlueNetHeader *header );
 	void PurgeTransport( long long transportID );
@@ -278,8 +270,6 @@ private:
 	static int m_constPongKey;
 	static int m_constMinPingFrequency;
 	time_t m_fastTime; // updated once per frame rather than for every packet
-
-	unsigned int m_aggregateSendIntervalMilliseconds; // the maximum time all blue-aggregate transports must be visited
 
 	// Using Ccp::LinkHash instead of STL HashSet because we need the speed here
 	Ccp::LinkHash<TransportRepr*> m_transportsBySocket;
@@ -355,20 +345,7 @@ private:
 
 	static void BlueNetCallback( const BlueNet::PacketInfo* info, const char* data, const int len );
 
-	BlueNetPacketBatch *m_batchPing;
-	BlueNetPacketBatch *m_batchPong;
-	CcpMutex m_batchLock;
-#if _WIN32
-	HANDLE m_batchReadyEvent;
-#elif __APPLE__
-	dispatch_semaphore_t m_batchReadyEvent;
-#else
-#error "Missing implementation!"
-#endif
-	static uint32_t BatchThread( void *arg );
-
 	int m_blueNetHandlerPacketKey;
-	bool m_batchingEnabled;
 
 	void PackString( const char* string, const unsigned int len, BitPackerManaged& packer );
 	bool UnpackString( char** string, unsigned int* len, BitPacker& packer );
@@ -400,6 +377,8 @@ private:
 
 	static void LogStatus( const char* msg );
 	static void LogError( const char* msg );
+
+	PySocketModule_APIObject *m_socketAPI;
 };
 
 extern BLUEIMPORT BlueNet* BeNet; // for external access to the singleton

@@ -6,14 +6,17 @@
 #include "Blue.h"
 #include "BluePaths.h"
 #include "BlueOS.h"
-#include "Logger/Logger.h"
 #include "ResourceLoading.h"
 #include "BlueSocketLogger.h"
 #if BLUE_WITH_PYTHON
 #include "BluePyCpp.h"
+#include <Scheduler.h>
 #include <Find.h>
 #include "version.h"
+#include "BluePython.h"
 #endif
+
+ICrashReporter* BeCrashes{nullptr};
 
 const char* g_moduleName = "blue";
 std::wstring s_logDeviceName( L"EVE" );
@@ -24,20 +27,6 @@ static HINSTANCE s_instance = NULL;
 #elif defined(__APPLE__)
 #include <fcntl.h>
 #endif
-
-// CCP Stackless Python has shenaniganistic support for loading jumbled, or
-// rather "obfuscated" bytecode (see get_code_from_data in zipimport.c).
-//
-// During initialization (BluePyOS::Startup) we initalize Python. That
-// initalization will attempt to import blue.crypto to decode obfuscated
-// bytecode if one is encountered.
-//
-// That import of blue.crypto causes a recursive initialization of blue,
-// via initblue.
-//
-// We guard against this by enabling this boolean during initalization of
-// Python, and no-op initblue if set.
-bool gNoRecursiveInitBlue = false;
 
 // The templated container classes need special treatment here. Generally
 // each exposed class gets its own Python type object, but the templated
@@ -80,12 +69,12 @@ MAP_FUNCTION_AND_WRAP( "AttachToLogServer", AttachToLogServer, "Attaches to the 
 
 PyObject* PyGetVersionChangelist(PyObject *self, PyObject* args)
 {
-	return PyString_FromString(EVECHANGELIST);
+	return PyUnicode_FromString(EVECHANGELIST);
 }
 
 PyObject* PyGetVersionBranch(PyObject *self, PyObject* args)
 {
-	return PyString_FromString(EVEBRANCH);
+	return PyUnicode_FromString(EVEBRANCH);
 }
 
 MAP_FUNCTION("GetChangelist", PyGetVersionChangelist, "Reports the changelist of the blue library");
@@ -102,21 +91,22 @@ namespace
 PyObject* PyAtomicFileRead(PyObject *self, PyObject* args)
 {
 	PyObject *filename;
-	if (!PyArg_ParseTuple(args, "O!", &PyBaseString_Type, &filename))
+	if (!PyArg_ParseTuple(args, "U", &filename))
 		return NULL;
-	
-	
+
+
 	BluePy ufn(PyUnicode_FromObject(filename));
 	if (!ufn) return 0;
-#ifdef _WIN32	
+#ifdef _WIN32
 	HANDLE h = INVALID_HANDLE_VALUE;
 	DWORD fileSize;
 	BY_HANDLE_FILE_INFORMATION info;
 	{
+		wchar_t* fileName = PyUnicode_AsWideCharString( ufn.o, NULL );
 		Ccp::PyAllowThreads _allow;
 		for(int i = 0; i<10; i++) {
-			h = CreateFileW(PyUnicode_AS_UNICODE(ufn.o),
-							GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, 0);
+            h = CreateFileW(fileName,
+                            GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, 0);
 			if (h==INVALID_HANDLE_VALUE) {
 				DWORD code = GetLastError();
 				if (code == ERROR_SHARING_VIOLATION) {
@@ -126,37 +116,42 @@ PyObject* PyAtomicFileRead(PyObject *self, PyObject* args)
 			}
 			break;
 		}
+		PyMem_Free( fileName );
 		if (h==INVALID_HANDLE_VALUE)
 			goto HERR;
 
 		fileSize = GetFileSize(h, 0);
 		if (fileSize == INVALID_FILE_SIZE)
 			goto HERR;
-		
+
 		BOOL success = GetFileInformationByHandle(h, &info);
 		if (!success)
 			goto HERR;
 	}
 
 	{
-		BluePy r(PyString_FromStringAndSize(0, fileSize));
+		BluePy r(PyBytes_FromStringAndSize(0, fileSize));
 		if (!r) {
 			CloseHandle(h);
 			return 0;
 		}
 		DWORD read;
 		{
+            char *buffer = PyBytes_AsString(r);
 			Ccp::PyAllowThreads _allow;
-			BOOL success = ReadFile(h, PyString_AsString(r), fileSize, &read, 0);
+            BOOL success = ReadFile(h, buffer, fileSize, &read, 0);
 			if (!success)
 				goto HERR;
-				
+
 			CloseHandle(h);
 			h = INVALID_HANDLE_VALUE;
 		}
 		if (read != fileSize)
-			return PyErr_SetString(PyExc_RuntimeError, "Read short file"), 0;
-		
+		{
+			PyErr_SetString( PyExc_RuntimeError, "Read short file" );
+			return nullptr;
+		}
+
 		return r.Detach();
 	}
 
@@ -168,7 +163,7 @@ HERR:
 
 #elif defined(__APPLE__)
 
-	CW2A filenameStr( reinterpret_cast<const wchar_t*>( PyUnicode_AS_UNICODE( ufn.o ) ) );
+	CW2A filenameStr( reinterpret_cast<const wchar_t*>( PyUnicode_AsWideCharString( ufn.o, nullptr ) ) );
 	int f;
 	long fileSize;
 	{
@@ -185,7 +180,7 @@ HERR:
         return PyErr_SetFromErrnoWithFilename( PyExc_OSError, filenameStr );
     }
 
-	BluePy r( PyString_FromStringAndSize( nullptr, Py_ssize_t( fileSize ) ) );
+	BluePy r( PyBytes_FromStringAndSize( nullptr, Py_ssize_t( fileSize ) ) );
 	if( !r )
 	{
 		close( f );
@@ -194,7 +189,7 @@ HERR:
 	ssize_t bytes;
 	{
 		Ccp::PyAllowThreads _allow;
-		bytes = read( f, PyString_AsString(r), fileSize );
+		bytes = read( f, PyBytes_AsString(r), fileSize );
 		close( f );
 	}
 	if( long( bytes ) < fileSize )
@@ -212,25 +207,26 @@ HERR:
 //Again, atomicity is guaranteed by the os locking ops
 PyObject* PyAtomicFileWrite(PyObject *self, PyObject* args)
 {
-	PyObject *filename;
-	PyObject *dataO;
-	if (!PyArg_ParseTuple(args, "O!O", &PyBaseString_Type, &filename, &dataO))
+	PyObject* ufn;
+	Py_buffer buffer;
+	if (!PyArg_ParseTuple(args, "Uy*", &ufn, &buffer))
 		return NULL;
-	BluePy ufn(PyUnicode_FromObject(filename));
-	if (!ufn) return 0;
-	PyBufferProcs *buffer = dataO->ob_type->tp_as_buffer;
-	if (!buffer || !buffer->bf_getreadbuffer)
-		return PyErr_SetString(PyExc_TypeError, "expected a buffer object"), nullptr;
-	
+
+	if ( ! PyBuffer_IsContiguous( &buffer, 'A' ) ) {
+		PyErr_SetString( PyExc_NotImplementedError, "AtomicFileWrite is not implemented for non-contiguous buffers" );
+		return nullptr;
+	}
+
 #ifdef _WIN32
 
-	Py_ssize_t segcount;
+//	Py_ssize_t segcount;
 	HANDLE h;
 	{
-		Ccp::PyAllowThreads _allow;		
+		wchar_t* fileName = PyUnicode_AsWideCharString( ufn, NULL );
+		Ccp::PyAllowThreads _allow;
 		for(int i = 0; i<10; i++) {
-			h = CreateFileW(PyUnicode_AS_UNICODE(ufn.o),
-							GENERIC_WRITE, 0, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, 0);
+            h = CreateFileW(fileName,
+                            GENERIC_WRITE, 0, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, 0);
 			if (h==INVALID_HANDLE_VALUE) {
 				DWORD code = GetLastError();
 				if (code == ERROR_SHARING_VIOLATION) {
@@ -240,41 +236,26 @@ PyObject* PyAtomicFileWrite(PyObject *self, PyObject* args)
 			}
 			break;
 		}
+		PyMem_Free( fileName );
 		if (h==INVALID_HANDLE_VALUE)
 			goto HERR;
 	}
 
-	segcount = buffer->bf_getsegcount(dataO, 0);
-	for(Py_ssize_t i = 0; i<segcount; i++){
-		void *data;
-		Py_ssize_t datalen = buffer->bf_getreadbuffer(dataO, i, &data);
-		if (datalen<0) {
-			CloseHandle(h);
-			return 0;
-		}
+
 		//support only DWORD sizes yet
 		DWORD written;
 		BOOL success;
 		{
-			Ccp::PyAllowThreads _allow;		
-			success = WriteFile(h, data, (DWORD)datalen, &written, 0);
+			Ccp::PyAllowThreads _allow;
+			success = WriteFile(h, buffer.buf, (DWORD)buffer.len, &written, 0);
 			if (!success)
 				goto HERR;
-			if (i+1 == segcount) {
-				CloseHandle(h);
-				h = INVALID_HANDLE_VALUE;
-			}
 		}
-		if (written != datalen) {
+		if (written != buffer.len) {
 			if (h != INVALID_HANDLE_VALUE) CloseHandle(h);
-			return PyErr_SetString(PyExc_IOError, "Wrote short file"), 0;
+			PyErr_SetString(PyExc_IOError, "Wrote short file");
+			return nullptr;
 		}
-		if (i+1 < segcount) {
-			DWORD moved = SetFilePointer(h, (DWORD)datalen, 0, FILE_CURRENT);
-			if (moved == INVALID_SET_FILE_POINTER)
-				goto HERR;
-		}
-	}	
 	if (h != INVALID_HANDLE_VALUE)
 		CloseHandle(h);
 	Py_INCREF(Py_None);
@@ -288,7 +269,8 @@ HERR:
 
 #elif defined(__APPLE__)
 
-	CW2A filenameStr( reinterpret_cast<const wchar_t*>( PyUnicode_AS_UNICODE( ufn.o ) ) );
+	Py_UNICODE *fileName = PyUnicode_AsWideCharString(ufn, nullptr);
+	CW2A filenameStr( reinterpret_cast<const wchar_t*>( fileName ) );
 	int f;
 	{
 		Ccp::PyAllowThreads _allow;
@@ -299,25 +281,15 @@ HERR:
         return PyErr_SetFromErrnoWithFilename( PyExc_OSError, filenameStr );
     }
 	ON_BLOCK_EXIT( [&] { close( f ); } );
-	Py_ssize_t segcount = buffer->bf_getsegcount( dataO, 0 );
-	for( Py_ssize_t i = 0; i < segcount; i++ )
+	ssize_t written;
 	{
-		void *data;
-		Py_ssize_t datalen = buffer->bf_getreadbuffer( dataO, i, &data );
-		if( datalen < 0 ) 
-		{
-			return PyErr_SetString( PyExc_ValueError, "Unexpected end of buffer" ), nullptr;
-		}
-		ssize_t written;
-		{
-			Ccp::PyAllowThreads _allow;
-			written = write( f, data, datalen );
-		}
-		if( written != datalen ) 
-		{
-			return PyErr_SetString( PyExc_IOError, "Wrote short file" ), nullptr;
-		}
-	}	
+		 Ccp::PyAllowThreads _allow;
+		 written = write( f, buffer.buf, buffer.len );
+	}
+	if( written != buffer.len )
+	{
+		 return PyErr_SetString( PyExc_IOError, "Wrote short file" ), nullptr;
+	}
 	Py_RETURN_NONE;
 
 #else
@@ -327,7 +299,7 @@ HERR:
 
 }
 
-MAP_FUNCTION( 
+MAP_FUNCTION(
 	"AtomicFileRead",
 	PyAtomicFileRead,
 	"Reads an entire file atomically. Returns the contents of the file as a string.\n"
@@ -336,7 +308,7 @@ MAP_FUNCTION(
 	":type filename: basestring\n"
 	":rtype: str" );
 
-MAP_FUNCTION( 
+MAP_FUNCTION(
 	"AtomicFileWrite",
 	PyAtomicFileWrite,
 	"Writes an entire file atomically. Raises OSError, IOError.\n"
@@ -347,9 +319,9 @@ MAP_FUNCTION(
 	":rtype: None" );
 
 
-MAP_FUNCTION_AND_WRAP( 
-	"FindRoute", 
-	FindRoute, 
+MAP_FUNCTION_AND_WRAP(
+	"FindRoute",
+	FindRoute,
 	"Searches for all routes from one object to another. A route is a sequence of getattr or index operations.\n"
 	"This function is relatively heavy and should not be used in production code, but rather is indended for\n"
 	"in-house tools.\n"
@@ -431,9 +403,9 @@ PyObject* PyEnableDebuggerLogging( PyObject* self, PyObject* args )
 	Py_RETURN_NONE;
 }
 
-MAP_FUNCTION( 
-	"EnableDebuggerLogging", 
-	PyEnableDebuggerLogging, 
+MAP_FUNCTION(
+	"EnableDebuggerLogging",
+	PyEnableDebuggerLogging,
 	"Enables echoing of log to debugger output window\n"
 	":param threshold: minimum severity level required for the message to be output\n"
 	":type threshold: Optional[int]\n"
@@ -444,7 +416,7 @@ MAP_FUNCTION(
 void BlueInitializeSocketLogger()
 {
     CCP_LOG( "Connecting to socket logger" );
-    
+
 	if( StartSocketLogger() )
 	{
 		CCP::RegisterLogEcho( &LogToSocketLogger, CCP::LOGTYPE_INFO, true, CCP::LOG_ECHO_REQUIRES_PRIVILEGE_CHECK );
@@ -456,9 +428,26 @@ void BlueInitializeSocketLogger()
 	}
 }
 
+void BlueShutdownSocketLogger()
+{
+	CCP_LOG( "Shutting down socket logger" );
+	FlushSocketLogger();
+	StopSocketLogger();
+}
+
+void LogToCrashReporter( CcpLogChannel_t& logObject, CCP::LogType type, unsigned long userData, const char* message )
+{
+	static char buf[256]{};
+	// Copy up to one byte less than the buffer to ensure the buffer is null terminated
+	strncpy_s( buf, std::extent_v<decltype(buf)>, message, std::extent_v<decltype(buf)> - 1 );
+
+	BeCrashes->SetCrashKeyValue( "lastLoggedError", buf );
+}
+
 void BlueSetCrashReporter( ICrashReporter* crashReporter )
 {
 	BeCrashes = crashReporter;
+	CCP::RegisterLogEcho(LogToCrashReporter, CCP::LOGTYPE_ERR, true);
 }
 
 void BlueLogFuncChannel( CcpLogChannel_t& logObject, CCP::LogType type, unsigned long userData, const char* format, va_list args )
@@ -466,19 +455,99 @@ void BlueLogFuncChannel( CcpLogChannel_t& logObject, CCP::LogType type, unsigned
 	LogFuncChannel_v( logObject, type, userData, format, args );
 }
 
+void BlueShowError()
+{
+	if ( ! BeOS )
+	{
+		fprintf( stderr, "Cannot show blue errors before blue was initialized" );
+		return;
+	}
+
+	if( BeOS->GetError( 0 ) )
+	{
+		char* err{nullptr};
+		BeOS->FormatError( &err );
+		BeOS->SetError( BEFLUSH ); //output to logger
+		BeOS->SetError( BECLEAR ); //clear it
+	}
+}
+
+bool BlueSetSearchPaths( const std::vector<std::wstring>& searchPaths )
+{
+	for( const std::wstring& s : searchPaths )
+	{
+		size_t pos = s.find_first_of( L'=' );
+		if( pos == std::wstring::npos )
+		{
+			CCP_LOGWARN( "Invalid path specification: %S", s.c_str() );
+			continue;
+		}
+
+		std::wstring keyW = s.substr( 0, pos );
+		std::wstring valueW = s.substr( pos + 1 );
+
+		if( !BeIsSuccess( BePaths->SetSearchPathW( CW2A( keyW.c_str() ), valueW.c_str() ) ) )
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
+void BlueSetStartupArgs( const std::vector<std::wstring>& args )
+{
+	BeOS->SetStartupArgs( args );
+}
+
+bool BlueHasStartupArg( const std::wstring& name )
+{
+	return BeOS->HasStartupArg( name );
+}
+
+bool BlueRunStackless()
+{
+	return BeOS->RunStackless();
+}
+
+void BlueTerminate( int exitCode )
+{
+	BeOS->Terminate( exitCode );
+}
+
+bool BlueIsPackaged()
+{
+	return BeOS->IsPackaged();
+}
+
+void BlueGetInitTab( std::vector<_inittab>& inittab )
+{
+	BeOS->GetInitTab( inittab );
+}
+
+bool BlueConstructPathListFromManifest( std::vector<std::wstring>& pathList, bool verifyManifest )
+{
+	return BeOS->ConstructPathListFromManifest( pathList, verifyManifest );
+}
+
+void BlueResolvePathForWritingW( const std::wstring& path, std::wstring& resolved )
+{
+	resolved = BePaths->ResolvePathForWritingW( path );
+}
+
 void BlueModuleStartup()
 {
     // Inform the logging system of the main thread
     CCP::SetLogMainThreadId();
-    
+
     unsigned int memoryLoad = 0;
-    
+
     // This is duplicating work from ExeFile but I don't see a good
     // way around that. If I have ExeFile call functions in BeOS or
     // something I can't get data from arguments until after all
     // the initialization process is done.
     std::vector<std::wstring> argv = GetSplitCommandLine();
-    
+
     for( size_t i = 1; i < argv.size(); ++i )
     {
         const std::wstring &arg = argv[i];
@@ -506,7 +575,7 @@ void BlueModuleStartup()
     }
 
     CCP_LOG( "Blue module starting" );
-    
+
 #ifdef _WIN32
 		OSVERSIONINFOEX ver = {0};
 		ver.dwOSVersionInfoSize = sizeof(ver);
@@ -516,11 +585,11 @@ void BlueModuleStartup()
 			ver.dwMinorVersion,
 			ver.dwBuildNumber,
 			ver.szCSDVersion,
-			ver.dwPlatformId, 
-			ver.wServicePackMajor, ver.wServicePackMinor, 
+			ver.dwPlatformId,
+			ver.wServicePackMajor, ver.wServicePackMinor,
 			ver.wSuiteMask, ver.wProductType);
 #endif
-    
+
     if( memoryLoad )
     {
         unsigned int memSize = memoryLoad * 1024*1024;
@@ -551,7 +620,8 @@ void BlueModuleStartup()
         }
     }
 
-    BeClasses->RegisterClasses( BlueRegistration::GetClassRegs() );
+	// We need to call RegisterClasses early so that BluePaths can be correctly constructed.
+	BeClasses->RegisterClasses( BlueRegistration::GetClassRegs() );
 }
 
 #if BLUE_WITH_PYTHON
@@ -572,9 +642,9 @@ void ExtractReturnCode( PyObject* code )
 		{
 			s_exitCode = 0;
 		}
-		else if( PyInt_Check( code ) )
+		else if( PyLong_Check( code ) )
 		{
-			s_exitCode = int( PyInt_AsLong( code ) );
+			s_exitCode = int( PyLong_AsLong( code ) );
 		}
 		else
 		{
@@ -636,22 +706,23 @@ void PatchPythonExit()
 
 }
 
-PyMODINIT_FUNC
-	CCP_CONCATENATE( initblue, CCP_BUILD_FLAVOR ) (void)
+PyMODINIT_FUNC BLUE_EXPORTED_INIT
+	CCP_CONCATENATE( PyInit_blue, CCP_BUILD_FLAVOR ) (void)
 {
-	if (gNoRecursiveInitBlue)
-		return;
-
-    BlueModuleStartup();
-
-	BlueInitializeSocketLogger();
-
-	BlueInitializePaths(L"");
+	CCP_LOG( "Initializing Resource Loading" );
 	BlueInitializeResourceLoading();
 
-	BeOS->Startup(0, IGNORE_MANIFEST);
+	CCP_LOG( "BeOS Startup" );
+	if ( ! BeOS->Startup(0) )
+	{
+			return nullptr;
+	}
 
 	PatchPythonExit();
+
+	auto blueModule = PyOS->BlueModule();
+	return blueModule;
 }
+
 
 #endif

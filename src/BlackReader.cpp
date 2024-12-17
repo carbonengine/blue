@@ -12,6 +12,7 @@
 #include "IBlueObjectProxy.h"
 #include "IBluePaths.h"
 #include "IBlueOS.h"
+#include <Scheduler.h>
 
 namespace
 {
@@ -158,6 +159,11 @@ void BlackReader::ReadValue( int64_t& dst )
 	ReadValueImpl( dst );
 }
 
+void BlackReader::ReadValue( uint64_t& dst )
+{
+	ReadValueImpl( dst );
+}
+
 void BlackReader::ReadValue( int32_t& dst )
 {
 	ReadValueImpl( dst );
@@ -212,7 +218,7 @@ IRoot* BlackReader::CreateObjectHelper( unsigned int objectMarker, IRoot * calli
 	m_errorMessage = "";
 
 #if CCP_STACKLESS
-	PyTaskletObject* current = (PyTaskletObject*)PyStackless_GetCurrent();
+	PyTaskletObject* current = (PyTaskletObject*)SchedulerAPI()->PyScheduler_GetCurrent();
 	Py_DECREF(current);
 
 	bool taskletCanYield;
@@ -419,8 +425,6 @@ void BlackReader::ReadMembers( IRoot* instance, uint8_t* streamEnd )
 #if CCP_STACKLESS
 		if( m_allowYield && ( m_timeSinceYield.GetSeconds() > m_timeSlice ) )
 		{
-			//This is a benice thing.  We want to wake up immediately, not just at leisure.
-			BeOS->NextScheduledEvent(0);
 			if( !PyOS->Yield() )
 			{
 				throw TaskletKilledException();

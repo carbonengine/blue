@@ -14,9 +14,9 @@
 
 #if CCP_STACKLESS
 #include "BluePyCpp.h"
-#define STACKLESS_ALLOWTHREADS() Ccp::PyAllowThreads allowThreads( true )
+#define PY_ALLOWTHREADS() Ccp::PyAllowThreads allowThreads( true )
 #else
-#define STACKLESS_ALLOWTHREADS()
+#define PY_ALLOWTHREADS()
 #endif
 #include "IBlueThreadMonitor.h"
 
@@ -83,7 +83,7 @@ BlueFileStream::~BlueFileStream()
 
 bool BlueFileStream::Open( const wchar_t* filename, CcpOpenMode mode, CcpShareMode shareMode )
 {
-	STACKLESS_ALLOWTHREADS();
+	PY_ALLOWTHREADS();
 
 	ScopedThreadStatus threadStatus( IBlueThreadMonitor::BTS_LOADING );
 
@@ -99,7 +99,7 @@ bool BlueFileStream::Open( const wchar_t* filename, CcpOpenMode mode, CcpShareMo
 
 bool BlueFileStream::Create( const wchar_t* filename )
 {
-	STACKLESS_ALLOWTHREADS();
+	PY_ALLOWTHREADS();
 
 	m_fileDescriptor = CcpCreateFile( filename, CCP_SM_NOSHARING );
 
@@ -126,7 +126,7 @@ ptrdiff_t BlueFileStream::Read( void* dest, ptrdiff_t count )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	STACKLESS_ALLOWTHREADS();
+	PY_ALLOWTHREADS();
 
 	ScopedThreadStatus threadStatus( IBlueThreadMonitor::BTS_LOADING );
 
@@ -160,7 +160,7 @@ ptrdiff_t BlueFileStream::Write( const void* source, size_t count )
 		return -1;
 	}
 
-	STACKLESS_ALLOWTHREADS();
+	PY_ALLOWTHREADS();
 
 	ssize_t wrote;
 	wrote = CcpWriteToFile( m_fileDescriptor, source, count );
@@ -276,7 +276,7 @@ Be::Result<std::string> BlueFileStream::ReadEntireFile( const wchar_t* filename,
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	STACKLESS_ALLOWTHREADS();
+	PY_ALLOWTHREADS();
 
 	m_fileDescriptor = CcpOpenFile( filename, CCP_OM_READONLY, CCP_SM_RWSHARING );
 

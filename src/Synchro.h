@@ -29,6 +29,10 @@
 #include <set>
 #include <vector>
 
+// Forward declare types from the <Scheduler.h> header, include will be in .cpp file
+struct PyTaskletObject;
+struct PyChannelObject;
+
 #undef Yield
 
 //--------------------------------------------------------------------
@@ -113,8 +117,7 @@ private:
 
 	PyObject *SleepWallclock(int ms, const int64_t &due);
 	PyObject *SleepSim(int ms, const int64_t &due);
-	
-	void ScheduleTick();
+
 	bool FindTasklet(PyObject *tasklet, Heap<Sleeper> &sleeperHeap, SleeperIt &outSleeper);
 	
 	// Python blurb	

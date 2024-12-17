@@ -11,7 +11,7 @@
 	Description:
 
 		IBluePyOS is the interface on a static object which handles most Python
-		related activity in Blue, like the stackless thread support.  It also
+		related activity in Blue, like the scheduler thread support.  It also
 		wraps Blue object instances into Python objects.  'PyOS' is a global
 		variable which always points to the static instance of IBluePyOS.
 
@@ -43,6 +43,7 @@
 struct BluePythonObject;
 struct IList;
 struct ITaskletTimer;
+struct SchedulerStats;
 
 #undef Yield
 
@@ -96,10 +97,10 @@ BLUE_INTERFACE(IBluePyOS) : public IRoot
 		PyObject* exception = NULL
 		) = 0;
 
-	// Do a stack trace to the logger
-	virtual void DoStackTrace(
-		PyObject *frame = 0
-		) = 0;
+//	// Do a stack trace to the logger
+//	virtual void DoStackTrace(
+//		PyObject *frame = 0
+//		) = 0;
 
 	virtual PyObject* CreateTasklet(
 		PyObject* meth,
@@ -180,10 +181,10 @@ BLUE_INTERFACE(IBluePyOS) : public IRoot
 		...
 		) = 0;
 
-	// Get a string containing the stack trace
-	virtual PyObject *GetStackTrace(
-		PyObject *frame =0
-		) = 0;
+//	// Get a string containing the stack trace
+//	virtual PyObject *GetStackTrace(
+//		PyObject *frame =0
+//		) = 0;
 
 	//Turn a python exception into a BlueStr
 	virtual void FormatException(char **result) = 0;
@@ -209,6 +210,8 @@ BLUE_INTERFACE(IBluePyOS) : public IRoot
 	virtual bool PythonEvent(const char *event, PyObject * arg) = 0;
 
 	virtual bool IsPackaged() = 0;
+	virtual void SetPackaged( bool packaged ) = 0;
+	virtual void SetMarkupZonesInPython( bool markupZonesInPython ) = 0;
 
 	virtual bool IsInterpreterMode() = 0;
 		
@@ -220,16 +223,16 @@ BLUE_INTERFACE(IBluePyOS) : public IRoot
 	// been killed.
 	virtual bool Yield() = 0;
 
-	virtual void GetSchedulerStats(
-		int &inQueue1,
-		int &inQueue2,
-		float &lastTime,
-		float &maxTime
-		) = 0;
+	virtual SchedulerStats& GetSchedulerStats( ) = 0;
 
 	//Turns a Blue error into a python error.  There must be a pending blue error.
 	//always returns 0.
 	virtual PyObject * PyErr_BlueError() = 0;
+
+	// return a borrowed ref to mBlueModule, which might be a nullptr
+	// this is a somewhat dirty hack in order to not have to rewrite a bunch of our start up sequence
+	// (even though we probably should do that at one point)
+	virtual PyObject* BlueModule() = 0;
 
 	virtual void RebaseSimClock(Be::Time oldTime, Be::Time newTime) = 0;
 };

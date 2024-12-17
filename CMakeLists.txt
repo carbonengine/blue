@@ -19,11 +19,14 @@ include(CcpGlobalSettings)
 include(CcpPackageConfigHelpers)
 
 find_package(BlueExposure REQUIRED NO_CMAKE_PATH)
+find_package(CarbonIO REQUIRED NO_CMAKE_PATH)
+find_package(CcpLog REQUIRED NO_CMAKE_PATH)
 find_package(CURL REQUIRED NO_CMAKE_PATH)
 find_package(OpenSSL REQUIRED NO_CMAKE_PATH)
 find_package(PDM REQUIRED NO_CMAKE_PATH)
 find_package(YAML REQUIRED NO_CMAKE_PATH)
 find_package(ZLIB REQUIRED NO_CMAKE_PATH)
+find_package(Scheduler REQUIRED NO_CMAKE_PATH)
 
 
 set(PUBLIC_HEADER_FILES_INCLUDE
@@ -65,8 +68,6 @@ set(PUBLIC_HEADER_FILES_INCLUDE
 
 ccp_add_library(Blue SHARED
     src/Logger/Logger.cpp
-    src/CarbonIO/dll_exports.h
-    src/CarbonIO/protocol.h
     src/BlueSysInfo.mm
     src/Accumulator/PercentileAccumulator.cpp
     src/Accumulator/PercentileAccumulator_Blue.cpp
@@ -188,8 +189,6 @@ ccp_add_library(Blue SHARED
     src/IBlueObjectBuilder_Blue.cpp
     src/IBluePlacementObserver_Blue.cpp
     src/InterfaceDefinitions.cpp
-    src/IOLoop.cpp
-    src/IOLoop.h
     src/IRootReader.cpp
     src/IRootReader.h
     src/IRootWriter.cpp
@@ -251,40 +250,10 @@ ccp_add_library(Blue SHARED
     src/md5.h
     src/RWSpinLock.h
     src/ScopedLocks.h
-    src/slsocketmodule.c
-    src/slsocketmodule.h
-    src/slselectmodule.c
-    src/slsocket.h
-    src/stacklessio.cpp
-    src/stacklessio_api.h
     src/version.h
     src/win32.cpp
     src/win32.h
 )
-
-if (APPLE)
-    target_sources(Blue PRIVATE src/slsocket_posix.cpp)
-elseif (WIN32)
-    target_sources(Blue PRIVATE
-        src/CarbonIO/api.cpp
-        src/CarbonIO/api.h
-        src/CarbonIO/CarbonIO.cpp
-        src/CarbonIO/CarbonIO.h
-        src/CarbonIO/dll_exports.cpp
-        src/CarbonIO/ssl_pipe.cpp
-        src/CarbonIO/ssl_pipe.h
-        src/CarbonIO/stats.cpp
-        src/CarbonIO/stats.h
-        src/slsocket.cpp
-    )
-endif()
-
-# These files don't play nicely with PCH, partially because they are C and not C++, so let's exclude them from
-# using PCH until such a time that they are converted to C++
-set_source_files_properties(
-    src/slsocketmodule.c
-    src/slselectmodule.c
-    PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
 
 target_sources(Blue PRIVATE
     include/Base64.h
@@ -293,7 +262,6 @@ target_sources(Blue PRIVATE
     include/BlueFileUtil.h
     include/BlueMain.h
     include/BlueNet.h
-    include/BlueNetTypes.h
     include/DataStructs.h
     include/IBlueObjectRecycler.h
     include/IBlueResFileSystem.h
@@ -316,6 +284,9 @@ if(APPLE)
     target_link_libraries(Blue PRIVATE "-framework SystemConfiguration -framework Foundation -framework IOKit -framework AppKit")
 endif()
 
+get_target_property(CARBONIO_INCLUDE_DIR carbonio INTERFACE_INCLUDE_DIRECTORIES)
+target_include_directories(Blue PRIVATE ${CARBONIO_INCLUDE_DIR})
+
 target_link_libraries(Blue
     PUBLIC
         BlueExposure
@@ -330,6 +301,7 @@ target_link_libraries(Blue
 )
 
 if(WIN32)
+    set_target_properties(Blue PROPERTIES SUFFIX ".pyd")
     target_link_libraries(Blue
         PRIVATE
             crypt32
@@ -341,28 +313,41 @@ if(WIN32)
 )
 endif()
 
+get_target_property(SCHEDULER_INCLUDE_DIR Scheduler INTERFACE_INCLUDE_DIRECTORIES)
 target_include_directories(Blue
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
     PRIVATE
+        ${SCHEDULER_INCLUDE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 set_target_properties(Blue PROPERTIES CXX_VISIBILITY_PRESET hidden)
 set_target_properties(Blue PROPERTIES OUTPUT_NAME "blue")
 
-# Provide an install target iff this is the top level project only
+# Provide tests and an install target iff this is the top level project only
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+    # Running tests happen through exefile in interpreter mode. For that we need to determine the correct name of Exefile,
+    # which differs by platform. Additionally, we kind of guess it here because there's no CMake target which could be
+    # queried for the property instead.
+    set(EXEFILE_NAME Exefile)
+    if(WIN32)
+        set(EXEFILE_NAME ${EXEFILE_NAME}.exe)
+    endif()
     # tests
+    option(BUILD_TESTING "Build tests. Enabled by default." ON)
     include(CTest)
+    if(BUILD_TESTING)
+        add_subdirectory(tests)
+    endif()
     # discover python tests ... this may be a little bit brittle since we're working around the missing `_blueexposuretest`
     # binary. As in, test discovery happens during the configure stage at which the binary does not exist yet.
     if(WIN32)
-        set(ENV{PYTHONPATH} ${BRANCH_ROOT_DIR}/carbon/common/stdlib\;${BRANCH_ROOT_DIR}/vendor/python/2.7.1+ccp-stackless/${CCP_VENDOR_BIN_PATH}\;${BRANCH_ROOT_DIR}/packages)
+        set(ENV{PYTHONPATH} ${BRANCH_ROOT_DIR}/carbon/common/stdlib\;${Python_ROOT}/${CCP_VENDOR_BIN_PATH}\;${CMAKE_CURRENT_SOURCE_DIR}/python\;${Scheduler_ROOT}/${CCP_VENDOR_BIN_PATH}\;${Greenlet_ROOT}/${CCP_VENDOR_BIN_PATH}\;${Greenlet_ROOT}/python)
     elseif(APPLE)
-        set(ENV{PYTHONPATH} ${BRANCH_ROOT_DIR}/carbon/common/stdlib:${BRANCH_ROOT_DIR}/vendor/python/2.7.1+ccp-stackless/${CCP_VENDOR_BIN_PATH}:${BRANCH_ROOT_DIR}/packages)
-    else()
-        message(FATAL_ERROR "Unsupported platform: " ${CMAKE_SYSTEM_NAME})
+        set(ENV{PYTHONPATH} ${BRANCH_ROOT_DIR}/carbon/common/stdlib:${Python_ROOT}/${CCP_VENDOR_BIN_PATH}:${CMAKE_CURRENT_SOURCE_DIR}/python:${Scheduler_ROOT}/${CCP_VENDOR_LIB_PATH}:${Greenlet_ROOT}/${CCP_VENDOR_BIN_PATH}\:${Greenlet_ROOT}/python)
     endif()
+    # Discovery works with the standard python interpreter because it isn't running anything, it just needs to find all
+    # the defined test cases. Therefore, just use that one, even though it cannot run the discovered test cases.
     execute_process(COMMAND ${PYTHON_EXECUTABLE} discover.py
         OUTPUT_VARIABLE PYTHON_TESTS_STR
         OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -378,16 +363,16 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     foreach(PYTHON_TEST ${PYTHON_TESTS})
         message(STATUS "Found test ${PYTHON_TEST}")
         add_test(NAME ${PYTHON_TEST}
-            COMMAND ${PYTHON_EXECUTABLE} -m unittest -v ${PYTHON_TEST}
+            COMMAND $<TARGET_FILE_DIR:Blue>/${EXEFILE_NAME} /inherit /buildflavor=$<LOWER_CASE:$<CONFIG>> /py -m bluetests -v ${PYTHON_TEST}
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests/python
         )
         if(WIN32)
-            set_tests_properties(${PYTHON_TEST} PROPERTIES ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:Blue>\;${BRANCH_ROOT_DIR}/carbon/common/stdlib\;${BRANCH_ROOT_DIR}/vendor/python/2.7.1+ccp-stackless/${CCP_VENDOR_BIN_PATH}\;${BRANCH_ROOT_DIR}/packages;BUILDFLAVOR=$<LOWER_CASE:$<CONFIG>>")
-        elseif(APPLE)
-            set_tests_properties(${PYTHON_TEST} PROPERTIES ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:Blue>:${BRANCH_ROOT_DIR}/carbon/common/stdlib:${BRANCH_ROOT_DIR}/vendor/python/2.7.1+ccp-stackless/${CCP_VENDOR_BIN_PATH}:${BRANCH_ROOT_DIR}/packages;BUILDFLAVOR=$<LOWER_CASE:$<CONFIG>>")
+            set_tests_properties(${PYTHON_TEST} PROPERTIES ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:Blue>\;${BRANCH_ROOT_DIR}/carbon/common/stdlib\;${Python_ROOT}/${CCP_VENDOR_BIN_PATH}\;${Scheduler_ROOT}/${CCP_VENDOR_BIN_PATH}\;${Scheduler_ROOT}/python\;${CarbonIO_DIR}/${CCP_VENDOR_BIN_PATH}\;${Greenlet_ROOT}/${CCP_VENDOR_BIN_PATH}\;${Greenlet_ROOT}/python\;${CMAKE_CURRENT_SOURCE_DIR}/python;BUILDFLAVOR=$<LOWER_CASE:$<CONFIG>>")
+        elseif (APPLE)
+            set_tests_properties(${PYTHON_TEST} PROPERTIES ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:Blue>:${BRANCH_ROOT_DIR}/carbon/common/stdlib:${Python_ROOT}/${CCP_VENDOR_BIN_PATH}:${Scheduler_ROOT}/${CCP_VENDOR_LIB_PATH}:${Scheduler_ROOT}/python:${CarbonIO_DIR}/${CCP_VENDOR_LIB_PATH}:${Greenlet_ROOT}/${CCP_VENDOR_BIN_PATH}:${Greenlet_ROOT}/python:${CMAKE_CURRENT_SOURCE_DIR}/python;BUILDFLAVOR=$<LOWER_CASE:$<CONFIG>>")
         else()
             message(FATAL_ERROR "Unsupported platform")
-        endif()
+        endif ()
     endforeach()
 
     # Install rule to ensure that our runtime and linker files are in the expected, platform-specific folders
@@ -400,7 +385,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
         RUNTIME DESTINATION bin/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
     )
     # Install rule for available public headers
-    install(FILES ${PUBLIC_HEADER_FILES_INCLUDE} DESTINATION include)
+    install(DIRECTORY include DESTINATION . FILES_MATCHING PATTERN "*.h")
 
     configure_ccp_vendor_config_file(
         TARGET Blue
@@ -408,4 +393,10 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
         DEPENDENCIES "BlueExposure;CURL;OpenSSL;PDM;YAML;ZLIB"
     )
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/BlueConfig.cmake DESTINATION .)
+
+    # Install python package
+    install(DIRECTORY python/ DESTINATION python
+            FILES_MATCHING
+            PATTERN "*.py"
+    )
 endif()

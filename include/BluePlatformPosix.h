@@ -75,7 +75,7 @@ namespace Ccp
         static int GetErrno() throw() { return errno; }
         void set_message() {
             char tmp[16];
-            sprintf(tmp, "(%d)", errorcode);
+            snprintf(tmp, sizeof(tmp)/sizeof(tmp[0]), "(%d)", errorcode);
             message = std::string("CCP:SystemError: ");
             const char *msg = runtime_error::what();
             if (strlen(msg))

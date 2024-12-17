@@ -2,6 +2,6 @@
 #ifndef BlueHeapq_H
 #define BlueHeapq_H
 
-void InitHeapq();
+PyMODINIT_FUNC InitHeapq(void);
 
 #endif

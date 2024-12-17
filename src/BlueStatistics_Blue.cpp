@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "Blue.h"
 #include "IBlueOS.h"
+#include "BlueStatistics.h"
 
 #if BLUE_WITH_PYTHON
 extern const char *Immortalize( PyObject *s );
@@ -108,8 +109,8 @@ PyObject* BlueStatistics::PyGetDescriptions( PyObject* self, PyObject* args )
 
 		CcpStaticStatisticsEntry* entry = *it;
 
-		PyTuple_SetItem( pyEntry, 0, PyString_FromString( entry->GetDescription().c_str() ) );
-		PyTuple_SetItem( pyEntry, 1, PyString_FromString( typeNames[entry->GetType()] ) );
+		PyTuple_SetItem( pyEntry, 0, PyUnicode_FromString( entry->GetDescription().c_str() ) );
+		PyTuple_SetItem( pyEntry, 1, PyUnicode_FromString( typeNames[entry->GetType()] ) );
 
 		PyDict_SetItemString( statsDict, entry->GetName().c_str(), pyEntry );
 	}
@@ -121,8 +122,8 @@ PyObject* BlueStatistics::PyGetDescriptions( PyObject* self, PyObject* args )
 
 		auto entry = *it;
 
-		PyTuple_SetItem( pyEntry, 0, PyString_FromString( entry->GetDescription().c_str() ) );
-		PyTuple_SetItem( pyEntry, 1, PyString_FromString( typeNames[entry->GetType()] ) );
+		PyTuple_SetItem( pyEntry, 0, PyUnicode_FromString( entry->GetDescription().c_str() ) );
+		PyTuple_SetItem( pyEntry, 1, PyUnicode_FromString( typeNames[entry->GetType()] ) );
 
 		PyDict_SetItemString( statsDict, entry->GetName().c_str(), pyEntry );
 	}
@@ -142,7 +143,7 @@ PyObject* BlueStatistics::PyGetStats( PyObject* self, PyObject* args )
 
 		CcpStaticStatisticsEntry* entry = *it;
 
-		PyTuple_SetItem( pyEntry, 0, PyString_FromString( entry->GetName().c_str() ) );
+		PyTuple_SetItem( pyEntry, 0, PyUnicode_FromString( entry->GetName().c_str() ) );
 		PyTuple_SetItem( pyEntry, 1, PyFloat_FromDouble( entry->GetValue() ) );
 		PyTuple_SetItem( pyEntry, 2, PyFloat_FromDouble( entry->GetPeak() ) );
 
@@ -158,7 +159,7 @@ PyObject* BlueStatistics::PyGetStats( PyObject* self, PyObject* args )
 
 		auto entry = *it;
 
-		PyTuple_SetItem( pyEntry, 0, PyString_FromString( entry->GetName().c_str() ) );
+		PyTuple_SetItem( pyEntry, 0, PyUnicode_FromString( entry->GetName().c_str() ) );
 		PyTuple_SetItem( pyEntry, 1, PyFloat_FromDouble( entry->GetValue() ) );
 		PyTuple_SetItem( pyEntry, 2, PyFloat_FromDouble( entry->GetPeak() ) );
 
@@ -293,7 +294,7 @@ PyObject* PyEnterZone( PyObject* self, PyObject* args )
 		return nullptr;
 	}
 
-	tmTaskletEnter( TMCM_GENERAL, zone );
+	TracyEnterZone( self, zone, "", 0 );
 #endif
 	Py_RETURN_NONE;
 }
@@ -301,7 +302,7 @@ PyObject* PyEnterZone( PyObject* self, PyObject* args )
 PyObject* PyLeaveZone( PyObject* self, PyObject* args )
 {
 #if CCP_TELEMETRY_ENABLED
-	tmTaskletLeave( TMCM_GENERAL );
+	TracyLeaveZone( self );
 #endif
 	Py_RETURN_NONE;
 }
@@ -322,13 +323,13 @@ PyObject* PyAppendToZone( PyObject* self, PyObject* args )
 		return nullptr;
 	}
 
-	tmTaskletAppendText( TMCM_GENERAL, appendText );
+	TracyZoneAddText( self, appendText );
 #endif
 	Py_RETURN_NONE;
 }
 
 #if CCP_TELEMETRY_ENABLED
-static TmU64 s_timespanId = 0xf00000000;
+static uint64_t s_timespanId = 0xf00000000;
 #endif
     
 PyObject* PyBeginTimeSpan( PyObject* self, PyObject* args )
@@ -348,7 +349,7 @@ PyObject* PyBeginTimeSpan( PyObject* self, PyObject* args )
 	}
 
 	++s_timespanId;
-	tmBeginTimeSpan( TMCM_GENERAL, s_timespanId, TMTSF_NONE, label );
+//	tmBeginTimeSpan( TMCM_GENERAL, s_timespanId, TMTSF_NONE, label );
 
 	return PyLong_FromLongLong( s_timespanId );
 #else
@@ -359,7 +360,7 @@ PyObject* PyBeginTimeSpan( PyObject* self, PyObject* args )
 PyObject* PyEndTimeSpan( PyObject* self, PyObject* args )
 {
 #if CCP_TELEMETRY_ENABLED
-	TmU64 id = 0;
+	uint64_t id = 0;
 	PyObject* labelO;
 
 	if( !PyArg_ParseTuple( args, "LO", &id, &labelO ) )
@@ -372,8 +373,6 @@ PyObject* PyEndTimeSpan( PyObject* self, PyObject* args )
 	{
 		return nullptr;
 	}
-
-	tmEndTimeSpan( TMCM_GENERAL, id, TMTSF_NONE, label );
 #endif
 	Py_RETURN_NONE;
 }
@@ -625,14 +624,6 @@ const Be::ClassInfo* BlueStatistics::ExposeToBlue()
 
 		MAP_METHOD_AND_WRAP
 		(
-			"PrimeTelemetry",
-			PrimeTelemetry,
-			"Prepares Telemetry for use, loading in DLLs so there is less chance of a stall\n"
-			"when starting a telemetry session."
-		)
-		
-		MAP_METHOD_AND_WRAP
-		(
 			"StartTelemetry", 
 			StartTelemetry, 
 			"Connects to a Telemetry server and starts gathering data.\n"
@@ -825,4 +816,3 @@ const Be::ClassInfo* BlueStatistics::ExposeToBlue()
 
 	EXPOSURE_END()
 }
-

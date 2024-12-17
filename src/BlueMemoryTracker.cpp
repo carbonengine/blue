@@ -10,14 +10,12 @@
 #include "BlueMemoryTracker.h"
 
 
-extern bool g_isCallstackCaptureEnabled;
-
 CCP_STATS_DECLARE( beMemory,					"Blue/Memory/Malloc", false, CST_MEMORY, "The amount of memory allocated via CCP_MALLOC" );
 CCP_STATS_DECLARE( trackedAllocationsCount,		"Blue/Memory/trackedAllocationsCount", false, CST_COUNTER_HIGH, "Number of tracked allocations live in the system" );
 CCP_STATS_DECLARE( trackedAllocationsSize,		"Blue/Memory/trackedAllocationsSize", false, CST_MEMORY, "Combined size of tracked allocations live in the system" );
 
 #if CCP_STACKLESS
-CCP_STATS_DECLARE( pyMemory,					"Blue/Memory/Python", false, CST_MEMORY, "The amount of memory allocated for Python" );
+CCP_STATS_DECLARED_ELSEWHERE( pyMemory );
 #endif
 
 CCP_STATS_DECLARE( workingSetSize,				"Blue/Memory/WorkingSet", false, CST_MEMORY, "The working set size as reported by the OS" );
@@ -70,8 +68,7 @@ void MemoryTracker::Update()
 	CCP_STATS_SET( pageFileUsage, info.pageFileUsage );
 
 #if CCP_STACKLESS
-	auto pythonMemory = PySys_GetPyMalloced();
-	CCP_STATS_SET( pyMemory, pythonMemory );
+	auto pythonMemory = static_cast<int64_t>( CCP_STATS_GET( pyMemory ) );
 
 	bool logMemory = false;
 
@@ -129,7 +126,7 @@ void MemoryTracker::SummaryReport( const char* filename )
 	fprintf( file, "Memory statistics\n" );
 	fprintf( file, "-----------------------------------------------------------------------------\n" );
 #if CCP_STACKLESS
-	PrintFieldToFile( file, "Python reported memory", PySys_GetPyMalloced() );
+	PrintFieldToFile( file, "Python reported memory", static_cast<int64_t>( CCP_STATS_GET( pyMemory ) ) );
 #endif
 	PrintFieldToFile( file, "CCP Malloc usage", CCPMallocUsage() );
 
@@ -141,7 +138,7 @@ void MemoryTracker::SummaryReport( const char* filename )
     }
     
 #ifdef _WIN32
-	if( g_isMemoryTrackingEnabled )
+	if( IsMemoryTrackingEnabled() )
 	{
 		size_t processHeapSize = 0;
 		size_t crtHeapSize = 0;
@@ -229,12 +226,12 @@ size_t MemoryTracker::GetSize()
 
 void MemoryTracker::CallstackCaptureEnable( bool enable )
 {
-	g_isCallstackCaptureEnabled = enable;
+	SetCallStackCaptureEnabled( enable );
 }
 
 void MemoryTracker::UpdateDetailedTracking()
 {
-	if( g_isMemoryTrackingEnabled )
+	if( IsMemoryTrackingEnabled() )
 	{
 #ifdef _WIN32
 		size_t processHeapSize = 0;

@@ -2,6 +2,10 @@
 
 #include "BlueTestHelpers.h"
 
+#if BLUE_WITH_PYTHON
+#include "BluePython.h"
+#endif
+
 CcpLogChannel_t s_myChannel = CCP_LOG_DEFINE_CHANNEL( "myChannel" );
 
 static BlueStructureDefinition BlueTestStructureDef[] =
@@ -15,9 +19,11 @@ static BlueStructureDefinition BlueTestStructureDef[] =
 BlueTestHelperAttributes::BlueTestHelperAttributes( IRoot* lockobj ) :
 	m_myBool( false ),
 	m_myInt( 0 ),
+	m_myUInt( 0 ),
 	m_myFloat( 0 ),
 	m_myDouble( 0 ),
 	m_myInt64( 0 ),
+	m_myUInt64( 0 ),
 	PARENTLOCK( m_myVector ),
 	PARENTLOCK( m_myDict )
 #if BLUE_WITH_PYTHON
@@ -57,14 +63,24 @@ void BlueTestHelperProperties::SetBool( bool val )
 	m_myBool = val;
 }
 
-int BlueTestHelperProperties::GetInt() const
+int32_t BlueTestHelperProperties::GetInt() const
 {
 	return m_myInt;
 }
 
-void BlueTestHelperProperties::SetInt( int val )
+void BlueTestHelperProperties::SetInt( int32_t val )
 {
 	m_myInt = val;
+}
+
+uint32_t BlueTestHelperProperties::GetUInt() const
+{
+	return m_myUInt;
+}
+
+void BlueTestHelperProperties::SetUInt( uint32_t val )
+{
+	m_myUInt = val;
 }
 
 float BlueTestHelperProperties::GetFloat() const
@@ -95,6 +111,16 @@ int64_t BlueTestHelperProperties::GetInt64() const
 void BlueTestHelperProperties::SetInt64( int64_t val )
 {
 	m_myInt64 = val;
+}
+
+uint64_t BlueTestHelperProperties::GetUInt64() const
+{
+	return m_myUInt64;
+}
+
+void BlueTestHelperProperties::SetUInt64( uint64_t val )
+{
+	m_myUInt64 = val;
 }
 
 std::string BlueTestHelperProperties::GetString() const
@@ -347,6 +373,53 @@ BlueTestStructureLists::BlueTestStructureLists( IRoot* lockobj )
 	m_matrix.SetStructureDefinition( MatrixDef );
 	m_bool.SetStructureDefinition( BoolDef );
 	m_enum.SetStructureDefinition( EnumDef );
+}
+
+PyObject* BlueTestEvents::PyPostEvent( PyObject* args )
+{
+	int first;
+	double second;
+
+	if( !PyArg_ParseTuple( args, "id", &first, &second ) )
+		return nullptr;
+
+	bool success = PyOS->PostEvent(
+		GetRawRoot(),
+		"BlueTestEvents::OnPostEvent",
+		"OnPostEvent",
+		"id",
+		first,
+		second);
+
+	if( !success )
+	{
+		Py_RETURN_FALSE;
+	}
+	Py_RETURN_TRUE;
+}
+
+PyObject* BlueTestEvents::PySendEvent( PyObject* args )
+{
+	int first;
+	double second;
+
+	if( !PyArg_ParseTuple( args, "id", &first, &second ) )
+		return nullptr;
+
+	bool success = PyOS->SendEvent(
+		GetRawRoot(),
+		"BlueTestEvents::DoSendEvent",
+		"DoSendEvent",
+		nullptr,
+		"id",
+		first,
+		second );
+
+	if( !success )
+	{
+		Py_RETURN_FALSE;
+	}
+	Py_RETURN_TRUE;
 }
 
 #endif

@@ -26,8 +26,8 @@ from test_yamlpersistence import *
 
 
 if __name__ == "__main__":
-    import stackless
+    import scheduler
     import blue
-    tasklet = stackless.tasklet(unittest.main)
+    tasklet = scheduler.tasklet(unittest.main)
     while tasklet.alive:
         blue.os.Pump()
