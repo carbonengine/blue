@@ -10,9 +10,6 @@
 #include "IBlueOS.h"
 #include "BlueMemoryTracker.h"
 
-
-extern bool g_isCallstackCaptureEnabled;
-
 BLUE_DEFINE( MemoryTracker );
 
 // Create an instance of the memory tracker
