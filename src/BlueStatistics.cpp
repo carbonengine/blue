@@ -68,13 +68,19 @@ const TaskletInfo s_fallbackInfo = { "Tasklet?", "", 0 };
 TaskletInfo s_lastTasklet = s_fallbackInfo;  // need to remember last activated tasklet for tmEnd
 
 std::unordered_map<PyTypeObject*, freefunc> s_taskletFree; // original tp_free functions for tasklet types
-tm_uint32 s_taskletTrackID = 0;  // telemetry track ID for tasklet time spans
+uint32_t s_taskletTrackID = 0;  // telemetry track ID for tasklet time spans
+
+thread_local PyTaskletObject* g_activeFiber{nullptr};
+typedef std::unordered_map<PyTaskletObject *, std::string> FiberNameStore;
+thread_local FiberNameStore g_fiberNameStore;
+
+typedef std::unordered_map<void*, TracyZone> TasketZoneStore;
+thread_local TasketZoneStore g_taskletZoneStore;
 
 // Overriden tp_free function for tasklets: notify telemetry and call original tp_free
 void OnTaskletFree( void* tasklet )
 {
-	tmEndFiber( 0, reinterpret_cast<uintptr_t>( tasklet ) );
-
+	g_fiberNameStore.erase( (PyTaskletObject*) tasklet );
 	auto found = s_taskletFree.find( Py_TYPE( tasklet ) );
 	if( found != end( s_taskletFree ) )
 	{
@@ -148,13 +154,16 @@ int PythonProfiler( PyObject* obj, PyFrameObject* frame, int what, PyObject* arg
 {
 	switch( what )
 	{
-	case PyTrace_CALL:
-		tmEnterEx( 0, nullptr, 0, 0, PyString_AsString( frame->f_code->co_filename ), PyFrame_GetLineNumber( frame ), TMZF_NONE, "%s", PyString_AsString( frame->f_code->co_name ) );
-		tmZoneColor( 0, 94.f / 255.f, 32.f / 255.f );
-		break;
+	case PyTrace_CALL: {
+		auto zoneName = Immortalize( frame->f_code->co_name );
+		auto fileName = Immortalize( frame->f_code->co_filename );
+		if( zoneName && fileName )
+			TracyEnterZone( frame, zoneName, fileName, PyFrame_GetLineNumber( frame ) );
+	}
+	break;
 	case PyTrace_EXCEPTION:
 	case PyTrace_RETURN:
-		tmLeave( 0 );
+		TracyLeaveZone( frame );
 		break;
 	default:
 		break;
@@ -200,7 +209,6 @@ void BlueStatistics::StartTimedTelemetry( const std::string& server, float sampl
 	}
 
 	s_telemetryServerOrFileSystemDumpPath = server;
-	s_telemetryConnectionType = TMCT_TCP;
 	s_telemetrySamplePeriod = (float)samplePeriod;
 	s_isTelemetryConnectionRequested = true;
 #else
@@ -215,7 +223,6 @@ void BlueStatistics::StartTelemetryDump( const std::string& dumpFolder, float sa
 		CCP_LOGERR( "Telemetry is already running!" );
 		return;
 	}
-	s_telemetryConnectionType = TMCT_FILE;
 	s_telemetryServerOrFileSystemDumpPath = dumpFolder;
 	s_telemetrySamplePeriod = (float)samplePeriod;
 	s_isTelemetryConnectionRequested = true;
@@ -226,7 +233,6 @@ void BlueStatistics::StartTelemetryDump( const std::string& dumpFolder, float sa
 void BlueStatistics::PauseTelemetry()
 {
 #if CCP_TELEMETRY_ENABLED
-	tmPause( TMCM_GENERAL, 1 );
 	s_isTelemetryPaused = true;
 #endif
 }
@@ -234,7 +240,6 @@ void BlueStatistics::PauseTelemetry()
 void BlueStatistics::ResumeTelemetry()
 {
 #if CCP_TELEMETRY_ENABLED
-	tmPause( TMCM_GENERAL, 0 );
 	s_isTelemetryPaused = false;
 #endif
 }
@@ -250,8 +255,6 @@ void BlueStatistics::StopTelemetry()
 	{
 		s_isTelemetryConnected = false;
 		s_isTelemetryShuttingDown = true;
-
-		tmPause( TMCM_GENERAL, 1 );
 	}
 #endif
 }
@@ -290,13 +293,6 @@ void BlueStatistics::UpdateTelemetry()
 			{
 				// There doesn't seem to be an easy way to back up the previous profiler function, so it gets lost
 				PyEval_SetProfile( &PythonProfiler, nullptr );
-			}
-
-			if( s_isTelemetryTaskletCaptureEnabled )
-			{
-				s_taskletTrackID = tmNewTimeSpanTrackID();
-				tmTrackName( 0, s_taskletTrackID, "Tasklets" );
-				tmTrackOrder( 0, s_taskletTrackID, 0 );
 			}
 #endif
 		}
@@ -343,6 +339,24 @@ void BlueStatistics::UpdateTelemetry()
 #endif
 }
 
+void SwitchToFiber( PyTaskletObject* to )
+{
+	if ( to )
+	{
+		auto existing = g_fiberNameStore.find( to );
+		if( existing == g_fiberNameStore.cend() )
+		{
+			auto toInfo = GetTaskletInfo( to );
+			// Construct the tracy fiber name as `function_name (address_of_tasklet)`
+			// This should deal with the case of `function_name` running in two different tasklets
+			g_fiberNameStore[to] = std::string( toInfo.name ) + " (" + std::to_string( reinterpret_cast<uint64_t>( to ) ) + ")";
+			existing = g_fiberNameStore.find( to );
+		}
+		TracyFiberEnter( existing->second.c_str() );
+	}
+	g_activeFiber = to;
+}
+
 #if CCP_STACKLESS
 void BlueStatistics::OnTaskletSwitch( PyObject* _from, PyObject* _to )
 {
@@ -350,29 +364,24 @@ void BlueStatistics::OnTaskletSwitch( PyObject* _from, PyObject* _to )
 	PyTaskletObject* from = (PyTaskletObject*)_from;
 	PyTaskletObject* to = (PyTaskletObject*)_to;
 
-	if( tmRunning() )
+	if( TracyIsStarted && TracyIsConnected )
 	{
 		StoreFree( from );
 		StoreFree( to );
 
-		if( s_isTelemetryTaskletCaptureEnabled && from && !PyTasklet_IsMain( from ) )
-		{
-			tmEndTimeSpanEx( 0, reinterpret_cast<uintptr_t>( from ), s_lastTasklet.filename, s_lastTasklet.line );
-		}
-
 		if( !to || PyTasklet_IsMain( to ) )
 		{
-			tmSwitchToFiber( 0, 0 );
+			if ( g_activeFiber )
+			{
+				TracyFiberLeave;
+			}
+			g_activeFiber = nullptr;
 		}
 		else
 		{
-			tmSwitchToFiber( 0, reinterpret_cast<uintptr_t>( to ) );
-
 			if( s_isTelemetryTaskletCaptureEnabled )
 			{
-				auto toInfo = GetTaskletInfo( to );
-				tmBeginColoredTimeSpanEx( 0, reinterpret_cast<uintptr_t>( to ), s_taskletTrackID, 0, TMZF_NONE, toInfo.filename, toInfo.line, "%s", toInfo.name );
-				s_lastTasklet = toInfo;
+				SwitchToFiber( to );
 			}
 		}
 	}
@@ -477,9 +486,6 @@ ICcpStatisticsAccumulator* BlueStatistics::GetAccumulator( const std::string& na
 
 void BlueStatistics::SetTimelineSectionName( const char* name )
 {
-#if CCP_TELEMETRY_ENABLED
-	tmSetTimelineSectionName( TMCM_GENERAL, name );
-#endif
 }
 
 void BlueStatistics::SetCppCaptureEnabled( bool b )
@@ -720,7 +726,7 @@ void tmTaskletEnter( uint32_t ctx, const char* name )
 	// so we have to filter out zones manually
 	if( s_isTelemetryCppCaptureEnabled || (ctx & TMCM_CPP) == 0 )
 	{
-		tmEnter( ctx, TMZF_NONE, "%s", name );
+		tmEnter( TMCM_CPP, TMZF_NONE, "%s", name );
 	}
 }
 
@@ -738,7 +744,41 @@ void tmTaskletAppendText( uint32_t ctx, const char* appendText )
 	tmMessage( ctx, TMMF_ZONE_SUBLABEL, "%s", tmDynamicString( TMCM_GENERAL, appendText ) );
 }
 
-tmTaskletZone::tmTaskletZone( uint32_t ctx, const char* name ) : m_telemetryContext( ctx )
+void TracyEnterZone( void* key, const char* name, const char* filename, uint32_t lineno )
+{
+	if( TracyIsStarted && TracyIsConnected )
+	{
+		if( g_taskletZoneStore.find( key ) == g_taskletZoneStore.end() )
+		{
+			g_taskletZoneStore.insert( { key, TracyZone( TMCM_CPP, name, filename, lineno, 16765248u ) } );
+		}
+	}
+}
+
+void TracyLeaveZone( void* key )
+{
+	if( TracyIsStarted && TracyIsConnected )
+	{
+		if( g_taskletZoneStore.find( key ) != g_taskletZoneStore.end() )
+		{
+			g_taskletZoneStore.erase( key );
+		}
+	}
+}
+
+void TracyZoneAddText( void* key, const char* text )
+{
+	if( TracyIsStarted && TracyIsConnected )
+	{
+		auto zone = g_taskletZoneStore.find( key );
+		if( zone != g_taskletZoneStore.end() )
+		{
+			zone->second.text( text );
+		}
+	}
+}
+
+tmTaskletZone::tmTaskletZone( uint32_t ctx, const char* name )
 {
 	tmTaskletEnter( ctx, name );
 }
@@ -748,6 +788,42 @@ tmTaskletZone::~tmTaskletZone()
 	tmTaskletLeave( m_telemetryContext );
 }
 
+TracyZone::TracyZone( uint32_t ctx, const char* name, const char* filename, uint32_t lineno, uint32_t color ) : m_fiber( g_activeFiber )
+{
+	if( TracyIsStarted && TracyIsConnected )
+	{
+		CCP_ASSERT( filename != nullptr );
+		CCP_ASSERT( name != nullptr );
+		auto data = ___tracy_alloc_srcloc( lineno, filename, strlen( filename ), name, strlen( name ), color );
+		m_telemetryContext.emplace( ___tracy_emit_zone_begin_alloc( data, ctx & TMCM_CPP ) );
+	}
+}
+
+TracyZone::TracyZone( TracyZone&& other ) noexcept
+{
+	m_telemetryContext = other.m_telemetryContext;
+	// mark this instance's zone as inactive in case the destructor runs
+	other.m_telemetryContext.reset();
+}
+
+TracyZone::~TracyZone()
+{
+	if( TracyIsStarted && TracyIsConnected && m_telemetryContext )
+	{
+		auto previous = g_activeFiber;
+		SwitchToFiber( m_fiber );
+		TracyCZoneEnd( m_telemetryContext.value() );
+		SwitchToFiber( previous );
+	}
+}
+
+void TracyZone::text( const char* text ) const
+{
+	if( TracyIsStarted && TracyIsConnected && m_telemetryContext )
+	{
+		CCP_ASSERT( text != nullptr );
+		TracyCZoneText( m_telemetryContext.value(), text, strlen( text ) );
+	}
+}
+
 #endif
-
-

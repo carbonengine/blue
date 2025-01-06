@@ -3,7 +3,7 @@
 
 	TaskletTimer.cpp
 
-	Author:    Kristj·n Valur JÛnsson
+	Author:    Kristj√°n Valur J√≥nsson
 	Created:   Sept 2004
 	OS:        Win32
 	Project:   Yep
@@ -177,7 +177,7 @@ PyObject *TaskletTimer::EnterTaskletEx(PyObject *newContext, TASKLETFLAGS flags)
 		Py_DECREF(strifiedName);
 #if CCP_TELEMETRY_ENABLED
 		if (canonicalName) {
-			tmTaskletEnter(TMCM_GENERAL, PyString_AsString(canonicalName));
+			TracyEnterZone( mSimpleCtxt, PyString_AsString(canonicalName), __FILE__, __LINE__ );
 		}
 #else
 		CCP_UNUSED( canonicalName );
@@ -243,7 +243,7 @@ bool TaskletTimer::ReturnFromTasklet(PyObject *backContext)
 #if CCP_TELEMETRY_ENABLED
 	if (mDoTelemetry)
 	{
-		tmTaskletLeave( TMCM_GENERAL );
+		TracyLeaveZone( mSimpleCtxt );
 	}
 #endif
 	// Temporary hack to support IDLE

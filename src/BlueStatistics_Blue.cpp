@@ -293,7 +293,7 @@ PyObject* PyEnterZone( PyObject* self, PyObject* args )
 		return nullptr;
 	}
 
-	tmTaskletEnter( TMCM_GENERAL, zone );
+	TracyEnterZone( self, zone, __FILE__, __LINE__ );
 #endif
 	Py_RETURN_NONE;
 }
@@ -301,7 +301,7 @@ PyObject* PyEnterZone( PyObject* self, PyObject* args )
 PyObject* PyLeaveZone( PyObject* self, PyObject* args )
 {
 #if CCP_TELEMETRY_ENABLED
-	tmTaskletLeave( TMCM_GENERAL );
+	TracyLeaveZone( self );
 #endif
 	Py_RETURN_NONE;
 }
@@ -328,9 +328,9 @@ PyObject* PyAppendToZone( PyObject* self, PyObject* args )
 }
 
 #if CCP_TELEMETRY_ENABLED
-static TmU64 s_timespanId = 0xf00000000;
+static uint64_t s_timespanId = 0xf00000000;
 #endif
-    
+
 PyObject* PyBeginTimeSpan( PyObject* self, PyObject* args )
 {
 #if CCP_TELEMETRY_ENABLED
@@ -348,7 +348,6 @@ PyObject* PyBeginTimeSpan( PyObject* self, PyObject* args )
 	}
 
 	++s_timespanId;
-	tmBeginTimeSpan( TMCM_GENERAL, s_timespanId, TMTSF_NONE, label );
 
 	return PyLong_FromLongLong( s_timespanId );
 #else
@@ -359,7 +358,7 @@ PyObject* PyBeginTimeSpan( PyObject* self, PyObject* args )
 PyObject* PyEndTimeSpan( PyObject* self, PyObject* args )
 {
 #if CCP_TELEMETRY_ENABLED
-	TmU64 id = 0;
+	uint64_t id = 0;
 	PyObject* labelO;
 
 	if( !PyArg_ParseTuple( args, "LO", &id, &labelO ) )
@@ -372,8 +371,6 @@ PyObject* PyEndTimeSpan( PyObject* self, PyObject* args )
 	{
 		return nullptr;
 	}
-
-	tmEndTimeSpan( TMCM_GENERAL, id, TMTSF_NONE, label );
 #endif
 	Py_RETURN_NONE;
 }
@@ -825,4 +822,3 @@ const Be::ClassInfo* BlueStatistics::ExposeToBlue()
 
 	EXPOSURE_END()
 }
-
