@@ -156,7 +156,7 @@ class BLUEIMPORT TracyZone
 {
 public:
 	TracyZone() = delete;
-	TracyZone( uint32_t ctx, const char* name, const char* filename, uint32_t lineno, uint32_t color = 3766446u );
+	TracyZone( uint32_t ctx, const char* name, const char* filename, uint32_t lineno, uint32_t color = tracy::Color::SteelBlue4 );
 	~TracyZone();
 	TracyZone( TracyZone&& other ) noexcept;
 	TracyZone( const TracyZone& ) = delete;
