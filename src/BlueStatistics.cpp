@@ -750,7 +750,7 @@ void TracyEnterZone( void* key, const char* name, const char* filename, uint32_t
 	{
 		if( g_taskletZoneStore.find( key ) == g_taskletZoneStore.end() )
 		{
-			g_taskletZoneStore.insert( { key, TracyZone( TMCM_CPP, name, filename, lineno, 16765248u ) } );
+			g_taskletZoneStore.insert( { key, TracyZone( TMCM_CPP, name, filename, lineno, tracy::Color::Yellow ) } );
 		}
 	}
 }
