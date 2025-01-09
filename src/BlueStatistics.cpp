@@ -810,6 +810,7 @@ TracyZone::~TracyZone()
 {
 	if( TracyIsStarted && TracyIsConnected && m_telemetryContext )
 	{
+		// Zones need to end on the same fiber they were started from, so do a little song and dance to ensure that
 		auto previous = g_activeFiber;
 		SwitchToFiber( m_fiber );
 		TracyCZoneEnd( m_telemetryContext.value() );
