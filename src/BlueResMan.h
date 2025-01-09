@@ -166,4 +166,6 @@ private:
 	BlueScriptCallback m_callable;
 };
 
+BLUEIMPORT IBlueResMan* GetBeResMan();
+
 #endif

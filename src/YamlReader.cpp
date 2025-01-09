@@ -237,9 +237,12 @@ IRoot* YamlReader::CreateObjectHelper( unsigned int objectMarker, IRoot* calling
 	CCP_ASSERT( objectMarker < m_objectMarkers.size() );
 
 #if CCP_STACKLESS
-
-	PyTaskletObject* current = reinterpret_cast<PyTaskletObject*>( SchedulerAPI()->PyScheduler_GetCurrent() );
-	Py_DECREF( current );
+	PyTaskletObject* current{nullptr};
+	if( PyGILState_Check() )
+	{
+		current = reinterpret_cast<PyTaskletObject*>( SchedulerAPI()->PyScheduler_GetCurrent() );
+		Py_DECREF( current );
+	}
 
 	bool taskletCantYield = !PyOS->CanYield();
 

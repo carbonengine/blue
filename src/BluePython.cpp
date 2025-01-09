@@ -958,7 +958,14 @@ void BluePyOS::RebaseSimClock(Be::Time oldTime, Be::Time newTime)
 bool BluePyOS::CanYield()
 {
 #if CCP_STACKLESS
-
+	if( !PyGILState_Check() )
+	{
+		// We don't have thread state. Calling GetCurrent() would create new thread state
+		// resulting in a new main tasklet which cannot block.
+		// Early out because schedule managers only live as long as their Python thread state
+		// and decref-ing the current tasklet of a scheduler that does not exist anymore can cause issues.
+		return false;
+	}
 	PyTaskletObject *current = (PyTaskletObject *)SchedulerAPI()->PyScheduler_GetCurrent();
 	int isMain = SchedulerAPI()->PyTasklet_IsMain( current );
 	int blockTrap = SchedulerAPI()->PyTasklet_GetBlockTrap( current );

@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 
 #include "BlueResMan.h"
+#include "BlueResManBackgroundCall.h"
 #include "CallbackMan.h"
 #include "YamlWriter.h"
 #include "YamlReader.h"
@@ -20,7 +21,7 @@
 
 #include <cctype>
 #include <cwctype>
-#include "BlueResManBackgroundCall.h"
+#include <thread>
 
 BLUE_DEFINE( BlueResMan );
 
@@ -593,13 +594,37 @@ private:
 };
 
 #if BLUE_WITH_PYTHON
-typedef TrackableStdMap<PyObject*, RecursionLimiter> RecursionLimiterMap_t;
+
+// A key to identify the calling tasklet+thread.
+// Required because LoadObject can be called from multiple threads
+// without any Python state (m_tasklet can be nullptr).
+struct RecursionLimiterKey
+{
+	RecursionLimiterKey(std::thread::id threadId, PyObject* tasklet) : m_threadId(threadId), m_tasklet(tasklet){};
+	friend bool operator <(const RecursionLimiterKey& lhs, const RecursionLimiterKey& rhs)
+	{
+		if(lhs.m_threadId < rhs.m_threadId)
+		{
+			return true;
+		}
+		if(lhs.m_threadId == rhs.m_threadId)
+		{
+			return lhs.m_tasklet < rhs.m_tasklet;
+		}
+		return false;
+	}
+private:
+	std::thread::id m_threadId;
+	PyObject* m_tasklet;
+};
+
+typedef TrackableStdMap<RecursionLimiterKey, RecursionLimiter> RecursionLimiterMap_t;
 static RecursionLimiterMap_t s_limiterPerTasklet("BlueResMan/s_limiterPerTasklet");
 
 class RecursionLimiterHelper
 {
 public:
-	RecursionLimiterHelper(RecursionLimiter& rl, PyObject* key)
+	RecursionLimiterHelper(RecursionLimiter& rl, RecursionLimiterKey key)
 		: m_recursionLimiter(rl),
 		m_key(key)
 	{
@@ -616,7 +641,7 @@ public:
 
 private:
 	RecursionLimiter& m_recursionLimiter;
-	PyObject* m_key;
+	RecursionLimiterKey m_key;
 
 };
 #endif
@@ -644,14 +669,18 @@ IRootPtr BlueResMan::LoadObject(const wchar_t* unnormalizedName, Be::LOADOBJECT_
 	// per tasklet, otherwise the preloading of files we do below, which yields to other
 	// tasklets that my in turn start loading objects can look like very deep recursion.
 	// See: PyOS->Yield()
-	PyObject* myTasklet = SchedulerAPI()->PyScheduler_GetCurrent();
-
-	// Release the reference right away. We use it as a key for the map, but we don't
-	// need to hold a strong reference. Using it as a key without affecting the reference
-	// count ought to be safe - the tasklet object won't die while we're running on it.
-	Py_XDECREF( myTasklet );
+	PyObject* myTasklet{nullptr};
+	if( PyGILState_Check() )
+	{
+		myTasklet = SchedulerAPI()->PyScheduler_GetCurrent();
+		// Release the reference right away. We use it as a key for the map, but we don't
+		// need to hold a strong reference. Using it as a key without affecting the reference
+		// count ought to be safe - the tasklet object won't die while we're running on it.
+		Py_XDECREF( myTasklet );
+	}
 
 	RecursionLimiter* limit = NULL;
+	RecursionLimiterKey limiterKey(std::this_thread::get_id(), myTasklet);
 
 	{
 		// The insert function returns an iterator pointing to the value matching the key (myTasklet).
@@ -662,14 +691,14 @@ IRootPtr BlueResMan::LoadObject(const wchar_t* unnormalizedName, Be::LOADOBJECT_
 		// pointer to the limiter rather than a reference as we can't assign to it after declaring
 		// the variable.
 		std::pair<RecursionLimiterMap_t::iterator, bool> limitInsert;
-		limitInsert = s_limiterPerTasklet.insert( RecursionLimiterMap_t::value_type( myTasklet, RecursionLimiter( L"BlueOS::LoadObjectW", 25 ) ) );
+		limitInsert = s_limiterPerTasklet.insert( RecursionLimiterMap_t::value_type( limiterKey, RecursionLimiter( L"BlueOS::LoadObjectW", 25 ) ) );
 		limit = &(limitInsert.first->second);
 	}
 
 	limit->Enter( name );
 
 	// Make sure we call Leave - so many returns from this function
-	RecursionLimiterHelper onExit( *limit, myTasklet );
+	RecursionLimiterHelper onExit( *limit, limiterKey );
 
 	if( !limit->IsOK() )
 	{
@@ -1038,4 +1067,9 @@ IBlueResource* BluePythonDynamicResourceConstructor::GetResource( const wchar_t*
 	}
 
 	return result;
+}
+
+IBlueResMan* GetBeResMan()
+{
+	return BeResMan;
 }

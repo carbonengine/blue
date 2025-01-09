@@ -1,0 +1,2 @@
+type: BlueTestHelperAttributes
+myString: "Behold, data!"
