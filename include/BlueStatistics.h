@@ -11,6 +11,7 @@
 #define BlueStatistics_h
 
 #include "ICcpStatisticsAccumulator.h"
+#include <optional>
 
 BLUE_DECLARE( CcpStatisticsEntry );
 
@@ -167,7 +168,7 @@ public:
 
 private:
 	std::optional<TracyCZoneCtx> m_telemetryContext;
-	PyTaskletObject* m_fiber{nullptr};
+	void* m_fiber{nullptr};
 };
 
 void BLUEIMPORT TracyEnterZone( void* key, const char* name, const char* filename, uint32_t lineno );
