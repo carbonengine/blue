@@ -153,12 +153,12 @@ void BLUEIMPORT tmTaskletEnter( uint32_t ctx, const char* name );
 void BLUEIMPORT tmTaskletLeave( uint32_t ctx );
 void tmTaskletAppendText( uint32_t ctx, const char* appendText );
 
-class BLUEIMPORT TracyZone
+class TracyZone
 {
 public:
 	TracyZone() = delete;
-	TracyZone( uint32_t ctx, const char* name, const char* filename, uint32_t lineno, uint32_t color = tracy::Color::SteelBlue4 );
-	~TracyZone();
+	BLUEIMPORT TracyZone( uint32_t ctx, const char* name, const char* filename, uint32_t lineno, uint32_t color = tracy::Color::SteelBlue4 );
+	BLUEIMPORT ~TracyZone();
 	TracyZone( TracyZone&& other ) noexcept;
 	TracyZone( const TracyZone& ) = delete;
 	TracyZone& operator=( TracyZone&& ) = delete;
