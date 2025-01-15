@@ -288,6 +288,7 @@ void BlueStatistics::UpdateTelemetry()
 
 		if( s_isTelemetryConnected )
 		{
+			TracySetProgramName( s_telemetryServerOrFileSystemDumpPath.c_str() );
 #if CCP_STACKLESS
 			if( s_isTelemetryPythonCaptureEnabled )
 			{
