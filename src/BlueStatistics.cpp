@@ -251,11 +251,40 @@ void BlueStatistics::StopTelemetry()
 	{
 		return;
 	}
-	if( s_isTelemetryConnected )
+
+	if( s_isTelemetryPythonCaptureEnabled )
 	{
-		s_isTelemetryConnected = false;
-		s_isTelemetryShuttingDown = true;
+		PyEval_SetProfile( nullptr, nullptr );
 	}
+
+#if CCP_STACKLESS
+	for( auto& free : s_taskletFree )
+	{
+		free.first->tp_free = free.second;
+	}
+	s_taskletFree.clear();
+
+	s_lastTasklet = s_fallbackInfo;
+#endif
+	// Wrap up instrumentation data
+	g_taskletZoneStore.clear();
+	if ( g_activeFiber )
+	{
+		TracyFiberLeave;
+		g_activeFiber = nullptr;
+	}
+
+	// Ensure it gets flushed
+	CcpTelemetryTick();
+
+	// Ensure we stop profiling
+	s_isTelemetryConnected = false;
+	s_isTelemetryShuttingDown = true;
+
+	// Finally, ask for it to be shutdown
+	tracy::GetProfiler().RequestShutdown();
+
+	CcpTelemetryTick();
 #endif
 }
 
@@ -302,27 +331,18 @@ void BlueStatistics::UpdateTelemetry()
 		return;
 	}
 
-	CcpTelemetryTick();
+	if ( s_isTelemetryConnected && !s_isTelemetryShuttingDown )
+	{
+		CcpTelemetryTick();
+	}
 
 	if( s_isTelemetryShuttingDown )
 	{
-		CcpStopTelemetry();
-
-		if( s_isTelemetryPythonCaptureEnabled )
+		if ( tracy::GetProfiler().HasShutdownFinished() )
 		{
-			PyEval_SetProfile( nullptr, nullptr );
+			CcpStopTelemetry();
+			s_isTelemetryShuttingDown = false;
 		}
-
-#if CCP_STACKLESS
-		for( auto& free : s_taskletFree )
-		{
-			free.first->tp_free = free.second;
-		}
-		s_taskletFree.clear();
-
-		s_lastTasklet = s_fallbackInfo;
-#endif
-		s_isTelemetryShuttingDown = false;
 	}
 	else if(s_telemetrySamplePeriod > 0.0f ) // Check if we have passed our timed sample time
 	{
@@ -365,7 +385,7 @@ void BlueStatistics::OnTaskletSwitch( PyObject* _from, PyObject* _to )
 	PyTaskletObject* from = (PyTaskletObject*)_from;
 	PyTaskletObject* to = (PyTaskletObject*)_to;
 
-	if( TracyIsStarted && TracyIsConnected )
+	if( s_isTelemetryConnected )
 	{
 		StoreFree( from );
 		StoreFree( to );
@@ -747,7 +767,7 @@ void tmTaskletAppendText( uint32_t ctx, const char* appendText )
 
 void TracyEnterZone( void* key, const char* name, const char* filename, uint32_t lineno )
 {
-	if( TracyIsStarted && TracyIsConnected )
+	if( s_isTelemetryConnected )
 	{
 		if( g_taskletZoneStore.find( key ) == g_taskletZoneStore.end() )
 		{
@@ -758,7 +778,7 @@ void TracyEnterZone( void* key, const char* name, const char* filename, uint32_t
 
 void TracyLeaveZone( void* key )
 {
-	if( TracyIsStarted && TracyIsConnected )
+	if( s_isTelemetryConnected )
 	{
 		if( g_taskletZoneStore.find( key ) != g_taskletZoneStore.end() )
 		{
@@ -769,7 +789,7 @@ void TracyLeaveZone( void* key )
 
 void TracyZoneAddText( void* key, const char* text )
 {
-	if( TracyIsStarted && TracyIsConnected )
+	if( s_isTelemetryConnected )
 	{
 		auto zone = g_taskletZoneStore.find( key );
 		if( zone != g_taskletZoneStore.end() )
@@ -791,7 +811,7 @@ tmTaskletZone::~tmTaskletZone()
 
 TracyZone::TracyZone( uint32_t ctx, const char* name, const char* filename, uint32_t lineno, uint32_t color ) : m_fiber( g_activeFiber )
 {
-	if( TracyIsStarted && TracyIsConnected )
+	if( s_isTelemetryConnected )
 	{
 		CCP_ASSERT( filename != nullptr );
 		CCP_ASSERT( name != nullptr );
@@ -809,7 +829,7 @@ TracyZone::TracyZone( TracyZone&& other ) noexcept
 
 TracyZone::~TracyZone()
 {
-	if( TracyIsStarted && TracyIsConnected && m_telemetryContext )
+	if( s_isTelemetryConnected && m_telemetryContext )
 	{
 		// Zones need to end on the same fiber they were started from, so do a little song and dance to ensure that
 		auto previous = g_activeFiber;
@@ -821,7 +841,7 @@ TracyZone::~TracyZone()
 
 void TracyZone::text( const char* text ) const
 {
-	if( TracyIsStarted && TracyIsConnected && m_telemetryContext )
+	if( s_isTelemetryConnected && m_telemetryContext )
 	{
 		CCP_ASSERT( text != nullptr );
 		TracyCZoneText( m_telemetryContext.value(), text, strlen( text ) );
