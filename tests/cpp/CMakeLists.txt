@@ -42,7 +42,6 @@ if(APPLE)
     add_custom_command(TARGET BlueCppUnitTests POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy ${Exefile_ROOT}/${CCP_VENDOR_BIN_PATH}${EXEFILE_NAME} $<TARGET_FILE_DIR:Blue>
             COMMAND ${CMAKE_COMMAND} -E copy ${CcpCore_DIR}/${CCP_VENDOR_LIB_PATH}/$<TARGET_PROPERTY:CcpCore,NAME>.so $<TARGET_FILE_DIR:Blue>
-            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_LINKER_FILE:ccp::log> $<TARGET_FILE_DIR:Blue>
             COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_LINKER_FILE:Python> $<TARGET_FILE_DIR:Blue>
             COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_LINKER_FILE:Python> $<TARGET_FILE_DIR:BlueCppUnitTests>
             COMMAND ${CMAKE_COMMAND} -E copy ${CRASHPAD_EXECUTABLE} $<TARGET_FILE_DIR:Blue>
