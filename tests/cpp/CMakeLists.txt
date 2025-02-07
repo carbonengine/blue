@@ -5,11 +5,10 @@ find_package(libuv REQUIRED NO_CMAKE_PATH)
 find_package(Tracy CONFIG REQUIRED NO_CMAKE_PATH)
 
 find_package(CarbonIO REQUIRED NO_CMAKE_PATH)
-find_package(CcpLog REQUIRED NO_CMAKE_PATH)
 find_package(Python REQUIRED NO_CMAKE_PATH)
 find_package(Scheduler REQUIRED NO_CMAKE_PATH)
 find_package(Greenlet REQUIRED NO_CMAKE_PATH)
-find_package(CarbonIO REQUIRED NO_CMAKE_PATH)
+
 
 add_executable(BlueCppUnitTests
     main.cpp
@@ -40,7 +39,6 @@ add_custom_command(TARGET BlueCppUnitTests POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:Scheduler> $<TARGET_FILE_DIR:BlueCppUnitTests>
         COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:Greenlet> $<TARGET_FILE_DIR:BlueCppUnitTests>
         COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:Python> $<TARGET_FILE_DIR:BlueCppUnitTests>
-        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:ccp::log> $<TARGET_FILE_DIR:BlueCppUnitTests>
 )
 if(CMAKE_IMPORT_LIBRARY_SUFFIX)
     add_custom_command(TARGET BlueCppUnitTests POST_BUILD
@@ -50,6 +48,7 @@ if(CMAKE_IMPORT_LIBRARY_SUFFIX)
             COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:libuv::uv> $<TARGET_FILE_DIR:BlueCppUnitTests>  # Required to import _socket module.
             COMMAND ${CMAKE_COMMAND} -E copy ${Exefile_ROOT}/${CCP_VENDOR_BIN_PATH}/${EXEFILE_NAME} $<TARGET_FILE_DIR:Blue>
             COMMAND ${CMAKE_COMMAND} -E copy ${CcpCore_DIR}/${CCP_VENDOR_BIN_PATH}/$<TARGET_PROPERTY:CcpCore,NAME>.dll $<TARGET_FILE_DIR:Blue>
+            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:CcpCore>/CcpCore.dll $<TARGET_FILE_DIR:BlueCppUnitTests>          # Needed as runtime dependency for _carbonsocket
             COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:carbonio>/_carbonsocket.pyd $<TARGET_FILE_DIR:BlueCppUnitTests>
             COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:carbonio>/_carbonssl.pyd $<TARGET_FILE_DIR:BlueCppUnitTests>
             COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:carbonio>/carbonselect.pyd $<TARGET_FILE_DIR:BlueCppUnitTests>
@@ -67,6 +66,7 @@ if(APPLE)
             COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:libuv::uv> $<TARGET_FILE_DIR:Blue>/libuv.1.dylib  # Required to import _socket module.
             COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:libuv::uv> $<TARGET_FILE_DIR:BlueCppUnitTests>/libuv.1.dylib  # Required to import _socket module.
             COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:Tracy::TracyClient> $<TARGET_FILE_DIR:Blue>/libTracyClient.0.11.1.dylib  # CcpCore runtime dependency.
+            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:CcpCore>/CcpCore.so $<TARGET_FILE_DIR:BlueCppUnitTests>              # Needed as runtime dependency for _carbonsocket
             COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:carbonio>/_carbonsocket.so $<TARGET_FILE_DIR:BlueCppUnitTests>
             COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:carbonio>/_carbonssl.so $<TARGET_FILE_DIR:BlueCppUnitTests>
             COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:carbonio>/carbonselect.so $<TARGET_FILE_DIR:BlueCppUnitTests>
@@ -77,7 +77,11 @@ endif()
 
 # Provide backwards compatibility for running tests on macOS ONLY WHEN CcpLog_DIR is defined (meaning logging is done via carbon-log, not carbon-core)
 if (DEFINED CcpLog_DIR)
-    find_package(CcpLog REQUIRED)
+    find_package(CcpLog REQUIRED NO_CMAKE_PATH)
+    add_custom_command(TARGET BlueCppUnitTests POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:ccp::log> $<TARGET_FILE_DIR:BlueCppUnitTests>
+    )
+    # Extra case for macOS
     if(APPLE)
         add_custom_command(TARGET BlueCppUnitTests POST_BUILD
                 COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_LINKER_FILE:ccp::log> $<TARGET_FILE_DIR:Blue>
