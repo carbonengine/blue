@@ -61,7 +61,6 @@ if(APPLE)
     add_custom_command(TARGET BlueCppUnitTests POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy ${Exefile_ROOT}/${CCP_VENDOR_BIN_PATH}${EXEFILE_NAME} $<TARGET_FILE_DIR:Blue>
             COMMAND ${CMAKE_COMMAND} -E copy ${CcpCore_DIR}/${CCP_VENDOR_LIB_PATH}/$<TARGET_PROPERTY:CcpCore,NAME>.so $<TARGET_FILE_DIR:Blue>
-            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_LINKER_FILE:ccp::log> $<TARGET_FILE_DIR:Blue>
             COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_LINKER_FILE:Python> $<TARGET_FILE_DIR:Blue>
             COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_LINKER_FILE:Python> $<TARGET_FILE_DIR:BlueCppUnitTests>
             COMMAND ${CMAKE_COMMAND} -E copy ${CRASHPAD_EXECUTABLE} $<TARGET_FILE_DIR:Blue>
@@ -75,6 +74,19 @@ if(APPLE)
             VERBATIM
     )
 endif()
+
+# Provide backwards compatibility for running tests on macOS ONLY WHEN CcpLog_DIR is defined (meaning logging is done via carbon-log, not carbon-core)
+if (DEFINED CcpLog_DIR)
+    find_package(CcpLog REQUIRED)
+    if(APPLE)
+        add_custom_command(TARGET BlueCppUnitTests POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_LINKER_FILE:ccp::log> $<TARGET_FILE_DIR:Blue>
+                COMMAND_EXPAND_LISTS
+                VERBATIM
+        )
+    endif()
+endif ()
+
 
 # C++ test discovery needs to be delayed until tests are about to be run because they need the above post-build step.
 gtest_discover_tests(BlueCppUnitTests
