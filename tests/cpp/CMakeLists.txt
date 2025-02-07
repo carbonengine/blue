@@ -52,6 +52,19 @@ if(APPLE)
     )
 endif()
 
+# Provide backwards compatibility for running tests on macOS ONLY WHEN CcpLog_DIR is defined (meaning logging is done via carbon-log, not carbon-core)
+if (DEFINED CcpLog_DIR)
+    find_package(CcpLog REQUIRED)
+    if(APPLE)
+        add_custom_command(TARGET BlueCppUnitTests POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_LINKER_FILE:ccp::log> $<TARGET_FILE_DIR:Blue>
+                COMMAND_EXPAND_LISTS
+                VERBATIM
+        )
+    endif()
+endif ()
+
+
 # C++ test discovery needs to be delayed until tests are about to be run because they need the above post-build step.
 gtest_discover_tests(BlueCppUnitTests
         DISCOVERY_MODE PRE_TEST
