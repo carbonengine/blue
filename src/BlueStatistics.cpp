@@ -822,6 +822,7 @@ TracyZone::TracyZone( uint32_t ctx, const char* name, const char* filename, uint
 
 TracyZone::TracyZone( TracyZone&& other ) noexcept
 {
+	m_fiber = other.m_fiber;
 	m_telemetryContext = other.m_telemetryContext;
 	// mark this instance's zone as inactive in case the destructor runs
 	other.m_telemetryContext.reset();
