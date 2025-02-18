@@ -362,7 +362,15 @@ void BlueStatistics::UpdateTelemetry()
 
 void SwitchToFiber( PyTaskletObject* to )
 {
-	if ( to )
+	if( !to || PyTasklet_IsMain( to ) )
+	{
+		if ( g_activeFiber )
+		{
+			TracyFiberLeave;
+		}
+		g_activeFiber = nullptr;
+	}
+	else
 	{
 		auto existing = g_fiberNameStore.find( to );
 		if( existing == g_fiberNameStore.cend() )
@@ -374,8 +382,8 @@ void SwitchToFiber( PyTaskletObject* to )
 			existing = g_fiberNameStore.find( to );
 		}
 		TracyFiberEnter( existing->second.c_str() );
+		g_activeFiber = to;
 	}
-	g_activeFiber = to;
 }
 
 #if CCP_STACKLESS
@@ -390,20 +398,9 @@ void BlueStatistics::OnTaskletSwitch( PyObject* _from, PyObject* _to )
 		StoreFree( from );
 		StoreFree( to );
 
-		if( !to || PyTasklet_IsMain( to ) )
+		if( s_isTelemetryTaskletCaptureEnabled )
 		{
-			if ( g_activeFiber )
-			{
-				TracyFiberLeave;
-			}
-			g_activeFiber = nullptr;
-		}
-		else
-		{
-			if( s_isTelemetryTaskletCaptureEnabled )
-			{
-				SwitchToFiber( to );
-			}
+			SwitchToFiber( to );
 		}
 	}
 #endif
