@@ -72,10 +72,10 @@ uint32_t s_taskletTrackID = 0;  // telemetry track ID for tasklet time spans
 
 thread_local PyTaskletObject* g_activeFiber{nullptr};
 typedef std::unordered_map<PyTaskletObject *, std::string> FiberNameStore;
-thread_local FiberNameStore g_fiberNameStore;
+FiberNameStore g_fiberNameStore;
 
 typedef std::unordered_map<void*, TracyZone> TasketZoneStore;
-thread_local TasketZoneStore g_taskletZoneStore;
+TasketZoneStore g_taskletZoneStore;
 
 // Overriden tp_free function for tasklets: notify telemetry and call original tp_free
 void OnTaskletFree( void* tasklet )
