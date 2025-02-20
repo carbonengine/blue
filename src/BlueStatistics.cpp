@@ -13,16 +13,22 @@ BlueStatistics* g_statistics = &s_statisticsInstance;
 
 BLUE_REGISTER_GLOBAL_AS_MODULE_OBJECT( "statistics", g_statistics );
 
-static bool s_isTelemetryConnectionRequested = false;
-static bool s_isTelemetryConnected = false;
+enum ProfilerState {
+	Stopped,
+	StartRequested,
+	Started,
+	Paused,
+	StopRequested,
+};
+
+ProfilerState s_profilerState{ProfilerState::Stopped};
+
 static bool s_isTelemetryCppCaptureEnabled = true;
 static bool s_isTelemetryTaskletCaptureEnabled = true;
 static bool s_isTelemetryPythonCaptureEnabled = false;
-static bool s_isTelemetryPaused = false;
 static float s_telemetrySamplePeriod = 0.0f; // In seconds
 
 #if CCP_TELEMETRY_ENABLED
-static bool s_isTelemetryShuttingDown = false;
 static int s_telemetryConnectionType = 0;
 static std::string s_telemetryServerOrFileSystemDumpPath;
 static Be::Time s_telemetryStartTime;
@@ -202,15 +208,15 @@ void BlueStatistics::StartTelemetry( const std::string& server )
 void BlueStatistics::StartTimedTelemetry( const std::string& server, float samplePeriod )
 {
 #if CCP_TELEMETRY_ENABLED
-	if( s_isTelemetryConnected )
+	if (s_profilerState != ProfilerState::Stopped )
 	{
-		CCP_LOGERR( "Telemetry is already running!" );
 		return;
 	}
 
 	s_telemetryServerOrFileSystemDumpPath = server;
 	s_telemetrySamplePeriod = (float)samplePeriod;
-	s_isTelemetryConnectionRequested = true;
+
+	s_profilerState = ProfilerState::StartRequested;
 #else
 #endif
 }
@@ -218,14 +224,14 @@ void BlueStatistics::StartTimedTelemetry( const std::string& server, float sampl
 void BlueStatistics::StartTelemetryDump( const std::string& dumpFolder, float samplePeriod )
 {
 #if CCP_TELEMETRY_ENABLED
-	if( s_isTelemetryConnected )
+	if (s_profilerState != ProfilerState::Stopped )
 	{
-		CCP_LOGERR( "Telemetry is already running!" );
 		return;
 	}
 	s_telemetryServerOrFileSystemDumpPath = dumpFolder;
 	s_telemetrySamplePeriod = (float)samplePeriod;
-	s_isTelemetryConnectionRequested = true;
+
+	s_profilerState = ProfilerState::StartRequested;
 #else
 #endif
 }
@@ -233,21 +239,28 @@ void BlueStatistics::StartTelemetryDump( const std::string& dumpFolder, float sa
 void BlueStatistics::PauseTelemetry()
 {
 #if CCP_TELEMETRY_ENABLED
-	s_isTelemetryPaused = true;
+	if ( s_profilerState != ProfilerState::Started ) {
+		return;
+	}
+
+	s_profilerState = ProfilerState::Paused;
 #endif
 }
 
 void BlueStatistics::ResumeTelemetry()
 {
 #if CCP_TELEMETRY_ENABLED
-	s_isTelemetryPaused = false;
+	if ( s_profilerState != ProfilerState::Paused ) {
+		return;
+	}
+	s_profilerState = ProfilerState::Started;
 #endif
 }
 
 void BlueStatistics::StopTelemetry()
 {
 #if CCP_TELEMETRY_ENABLED
-	if( s_isTelemetryShuttingDown )
+	if ( s_profilerState != ProfilerState::Started && s_profilerState != ProfilerState::Paused )
 	{
 		return;
 	}
@@ -278,8 +291,7 @@ void BlueStatistics::StopTelemetry()
 	CcpTelemetryTick();
 
 	// Ensure we stop profiling
-	s_isTelemetryConnected = false;
-	s_isTelemetryShuttingDown = true;
+	s_profilerState = ProfilerState::StopRequested;
 
 	// Finally, ask for it to be shutdown
 	tracy::GetProfiler().RequestShutdown();
@@ -290,12 +302,12 @@ void BlueStatistics::StopTelemetry()
 
 bool BlueStatistics::IsTelemetryConnected()
 {
-	return s_isTelemetryConnected;
+	return s_profilerState == ProfilerState::Started || s_profilerState == ProfilerState::Paused;
 }
 
 bool BlueStatistics::IsTelemetryConnectionRequested()
 {
-	return s_isTelemetryConnectionRequested;
+	return s_profilerState == ProfilerState::StartRequested;
 }
 
 float BlueStatistics::TelemetrySamplingTimeLeft()
@@ -305,57 +317,63 @@ float BlueStatistics::TelemetrySamplingTimeLeft()
 
 bool BlueStatistics::IsTelemetryPaused()
 {
-	return s_isTelemetryPaused;
+	return s_profilerState == ProfilerState::Paused;
 }
 
 void BlueStatistics::UpdateTelemetry()
 {
 #if CCP_TELEMETRY_ENABLED
-	if( s_isTelemetryConnectionRequested && !s_isTelemetryShuttingDown )
+	switch ( s_profilerState )
 	{
-		s_isTelemetryConnected = CcpStartTelemetry( s_telemetryServerOrFileSystemDumpPath.c_str(), s_telemetryConnectionType, m_telemetryMaxThreadCount );
-
-		if( s_isTelemetryConnected )
+		case ProfilerState::StartRequested:
 		{
-			TracySetProgramName( s_telemetryServerOrFileSystemDumpPath.c_str() );
-#if CCP_STACKLESS
-			if( s_isTelemetryPythonCaptureEnabled )
-			{
-				// There doesn't seem to be an easy way to back up the previous profiler function, so it gets lost
-				PyEval_SetProfile( &PythonProfiler, nullptr );
+			if ( CcpStartTelemetry( s_telemetryServerOrFileSystemDumpPath.c_str(), s_telemetryConnectionType, m_telemetryMaxThreadCount ) ) {
+				TracySetProgramName( s_telemetryServerOrFileSystemDumpPath.c_str() );
+				if ( s_isTelemetryPythonCaptureEnabled ) {
+					PyEval_SetProfile( &PythonProfiler, nullptr );
+				}
+				s_profilerState = ProfilerState::Started;
+				s_telemetryLastCheckTime = s_telemetryStartTime = BeOS->GetActualTime();
+			} else {
+				CCP_LOGERR( "Failed to start Telemetry" );
+				s_profilerState = ProfilerState::Stopped;
 			}
-#endif
+			break;
 		}
-		s_isTelemetryConnectionRequested = false;
-		s_telemetryLastCheckTime = s_telemetryStartTime = BeOS->GetActualTime();
-		return;
-	}
-
-	if ( s_isTelemetryConnected && !s_isTelemetryShuttingDown )
-	{
-		CcpTelemetryTick();
-	}
-
-	if( s_isTelemetryShuttingDown )
-	{
-		if ( tracy::GetProfiler().HasShutdownFinished() )
+		case ProfilerState::Started:
 		{
-			CcpStopTelemetry();
-			s_isTelemetryShuttingDown = false;
-		}
-	}
-	else if(s_telemetrySamplePeriod > 0.0f ) // Check if we have passed our timed sample time
-	{
-		Be::Time newTime = BeOS->GetActualTime();
-		Be::Time delta = newTime - s_telemetryLastCheckTime;
-		s_telemetryLastCheckTime = newTime;
-		s_telemetrySamplePeriod -= ((float)delta / Be::Time(1e7));
+			CcpTelemetryTick();
+			if(s_telemetrySamplePeriod > 0.0f ) // Check if we have passed our timed sample time
+			{
+				Be::Time newTime = BeOS->GetActualTime();
+				Be::Time delta = newTime - s_telemetryLastCheckTime;
+				s_telemetryLastCheckTime = newTime;
+				s_telemetrySamplePeriod -= ((float)delta / Be::Time(1e7));
 
-		if(s_telemetrySamplePeriod < 0.0f)
-		{
-			CCP_LOG( "Finalising timed Telemetry run." );
-			StopTelemetry();
+				if(s_telemetrySamplePeriod < 0.0f)
+				{
+					CCP_LOG( "Finalising timed Telemetry run." );
+					StopTelemetry();
+				}
+			}
+			break;
 		}
+		case ProfilerState::StopRequested:
+		{
+			if ( tracy::GetProfiler().HasShutdownFinished() )
+			{
+				CcpStopTelemetry();
+				s_profilerState = ProfilerState::Stopped;
+			}
+			break;
+		}
+		case ProfilerState::Paused:
+		case ProfilerState::Stopped:
+			// Nothing to do
+			break;
+		default:
+			CCP_LOGERR( "BlueStatistics::UpdateTelemetry - unhandled profiler state %d", s_profilerState );
+			break;
 	}
 #endif
 }
@@ -393,7 +411,7 @@ void BlueStatistics::OnTaskletSwitch( PyObject* _from, PyObject* _to )
 	PyTaskletObject* from = (PyTaskletObject*)_from;
 	PyTaskletObject* to = (PyTaskletObject*)_to;
 
-	if( s_isTelemetryConnected )
+	if( s_profilerState == ProfilerState::Started )
 	{
 		StoreFree( from );
 		StoreFree( to );
@@ -764,7 +782,7 @@ void tmTaskletAppendText( uint32_t ctx, const char* appendText )
 
 void TracyEnterZone( void* key, const char* name, const char* filename, uint32_t lineno )
 {
-	if( s_isTelemetryConnected )
+	if( s_profilerState == ProfilerState::Started )
 	{
 		if( g_taskletZoneStore.find( key ) == g_taskletZoneStore.end() )
 		{
@@ -775,7 +793,7 @@ void TracyEnterZone( void* key, const char* name, const char* filename, uint32_t
 
 void TracyLeaveZone( void* key )
 {
-	if( s_isTelemetryConnected )
+	if( s_profilerState == ProfilerState::Started )
 	{
 		if( g_taskletZoneStore.find( key ) != g_taskletZoneStore.end() )
 		{
@@ -786,7 +804,7 @@ void TracyLeaveZone( void* key )
 
 void TracyZoneAddText( void* key, const char* text )
 {
-	if( s_isTelemetryConnected )
+	if( s_profilerState == ProfilerState::Started )
 	{
 		auto zone = g_taskletZoneStore.find( key );
 		if( zone != g_taskletZoneStore.end() )
@@ -808,7 +826,7 @@ tmTaskletZone::~tmTaskletZone()
 
 TracyZone::TracyZone( uint32_t ctx, const char* name, const char* filename, uint32_t lineno, uint32_t color ) : m_fiber( g_activeFiber )
 {
-	if( s_isTelemetryConnected )
+	if( s_profilerState == ProfilerState::Started )
 	{
 		CCP_ASSERT( filename != nullptr );
 		CCP_ASSERT( name != nullptr );
@@ -827,7 +845,7 @@ TracyZone::TracyZone( TracyZone&& other ) noexcept
 
 TracyZone::~TracyZone()
 {
-	if( s_isTelemetryConnected && m_telemetryContext )
+	if( s_profilerState == ProfilerState::Started && m_telemetryContext )
 	{
 		// Zones need to end on the same fiber they were started from, so do a little song and dance to ensure that
 		auto previous = g_activeFiber;
@@ -839,7 +857,7 @@ TracyZone::~TracyZone()
 
 void TracyZone::text( const char* text ) const
 {
-	if( s_isTelemetryConnected && m_telemetryContext )
+	if( s_profilerState == ProfilerState::Started && m_telemetryContext )
 	{
 		CCP_ASSERT( text != nullptr );
 		TracyCZoneText( m_telemetryContext.value(), text, strlen( text ) );
