@@ -327,14 +327,20 @@ void BlueStatistics::UpdateTelemetry()
 	{
 		case ProfilerState::StartRequested:
 		{
-			if ( CcpStartTelemetry( s_telemetryServerOrFileSystemDumpPath.c_str(), s_telemetryConnectionType, m_telemetryMaxThreadCount ) ) {
-				TracySetProgramName( s_telemetryServerOrFileSystemDumpPath.c_str() );
-				if ( s_isTelemetryPythonCaptureEnabled ) {
-					PyEval_SetProfile( &PythonProfiler, nullptr );
+			if (tracy::IsProfilerStarted())
+			{
+				if (tracy::GetProfiler().IsConnected())
+				{
+					TracySetProgramName( s_telemetryServerOrFileSystemDumpPath.c_str() );
+					if ( s_isTelemetryPythonCaptureEnabled ) {
+						PyEval_SetProfile( &PythonProfiler, nullptr );
+					}
+					s_profilerState = ProfilerState::Started;
+					s_telemetryLastCheckTime = s_telemetryStartTime = BeOS->GetActualTime();
 				}
-				s_profilerState = ProfilerState::Started;
-				s_telemetryLastCheckTime = s_telemetryStartTime = BeOS->GetActualTime();
-			} else {
+			}
+			else if (!CcpStartTelemetry( s_telemetryServerOrFileSystemDumpPath.c_str(), s_telemetryConnectionType, m_telemetryMaxThreadCount ))
+			{
 				CCP_LOGERR( "Failed to start Telemetry" );
 				s_profilerState = ProfilerState::Stopped;
 			}
