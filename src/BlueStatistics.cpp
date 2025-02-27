@@ -260,7 +260,7 @@ void BlueStatistics::ResumeTelemetry()
 void BlueStatistics::StopTelemetry()
 {
 #if CCP_TELEMETRY_ENABLED
-	if ( !IsTelemetryConnected() )
+	if ( s_profilerState != ProfilerState::Started && s_profilerState != ProfilerState::Paused )
 	{
 		return;
 	}
@@ -302,7 +302,7 @@ void BlueStatistics::StopTelemetry()
 
 bool BlueStatistics::IsTelemetryConnected()
 {
-	return s_profilerState == ProfilerState::Started || s_profilerState == ProfilerState::StartRequested || s_profilerState == ProfilerState::Paused;
+	return s_profilerState == ProfilerState::Started || s_profilerState == ProfilerState::Paused;
 }
 
 bool BlueStatistics::IsTelemetryConnectionRequested()
