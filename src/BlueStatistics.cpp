@@ -18,7 +18,6 @@ enum ProfilerState {
 	StartRequested,
 	Started,
 	Paused,
-	StopRequested,
 };
 
 ProfilerState s_profilerState{ProfilerState::Stopped};
@@ -239,7 +238,8 @@ void BlueStatistics::StartTelemetryDump( const std::string& dumpFolder, float sa
 void BlueStatistics::PauseTelemetry()
 {
 #if CCP_TELEMETRY_ENABLED
-	if ( s_profilerState != ProfilerState::Started ) {
+	if( s_profilerState != ProfilerState::Started )
+	{
 		return;
 	}
 
@@ -250,9 +250,11 @@ void BlueStatistics::PauseTelemetry()
 void BlueStatistics::ResumeTelemetry()
 {
 #if CCP_TELEMETRY_ENABLED
-	if ( s_profilerState != ProfilerState::Paused ) {
+	if ( s_profilerState != ProfilerState::Paused )
+	{
 		return;
 	}
+
 	s_profilerState = ProfilerState::Started;
 #endif
 }
@@ -260,43 +262,7 @@ void BlueStatistics::ResumeTelemetry()
 void BlueStatistics::StopTelemetry()
 {
 #if CCP_TELEMETRY_ENABLED
-	if ( s_profilerState != ProfilerState::Started && s_profilerState != ProfilerState::Paused )
-	{
-		return;
-	}
-
-	if( s_isTelemetryPythonCaptureEnabled )
-	{
-		PyEval_SetProfile( nullptr, nullptr );
-	}
-
-#if CCP_STACKLESS
-	for( auto& free : s_taskletFree )
-	{
-		free.first->tp_free = free.second;
-	}
-	s_taskletFree.clear();
-
-	s_lastTasklet = s_fallbackInfo;
-#endif
-	// Wrap up instrumentation data
-	g_taskletZoneStore.clear();
-	if ( g_activeFiber )
-	{
-		TracyFiberLeave;
-		g_activeFiber = nullptr;
-	}
-
-	// Ensure it gets flushed
-	CcpTelemetryTick();
-
-	// Ensure we stop profiling
-	s_profilerState = ProfilerState::StopRequested;
-
-	// Finally, ask for it to be shutdown
-	tracy::GetProfiler().RequestShutdown();
-
-	CcpTelemetryTick();
+	PauseTelemetry();
 #endif
 }
 
@@ -364,15 +330,6 @@ void BlueStatistics::UpdateTelemetry()
 			}
 			break;
 		}
-		case ProfilerState::StopRequested:
-		{
-			if ( tracy::GetProfiler().HasShutdownFinished() )
-			{
-				CcpStopTelemetry();
-				s_profilerState = ProfilerState::Stopped;
-			}
-			break;
-		}
 		case ProfilerState::Paused:
 		case ProfilerState::Stopped:
 			// Nothing to do
@@ -414,18 +371,20 @@ void SwitchToFiber( PyTaskletObject* to )
 void BlueStatistics::OnTaskletSwitch( PyObject* _from, PyObject* _to )
 {
 #if CCP_TELEMETRY_ENABLED
-	PyTaskletObject* from = (PyTaskletObject*)_from;
-	PyTaskletObject* to = (PyTaskletObject*)_to;
-
-	if( s_profilerState == ProfilerState::Started )
+	if (s_profilerState == ProfilerState::Stopped || s_profilerState == ProfilerState::StartRequested)
 	{
-		StoreFree( from );
-		StoreFree( to );
+		return;
+	}
 
-		if( s_isTelemetryTaskletCaptureEnabled )
-		{
-			SwitchToFiber( to );
-		}
+	auto from = (PyTaskletObject*)_from;
+	auto to = (PyTaskletObject*)_to;
+
+	StoreFree( from );
+	StoreFree( to );
+
+	if( s_isTelemetryTaskletCaptureEnabled )
+	{
+		SwitchToFiber( to );
 	}
 #endif
 }
@@ -799,12 +758,16 @@ void TracyEnterZone( void* key, const char* name, const char* filename, uint32_t
 
 void TracyLeaveZone( void* key )
 {
-	if( s_profilerState == ProfilerState::Started )
+	// An edge case exists where TracyEnterZone is called whilst the profiler is started with a matching call to TracyLeaveZone when paused.
+	// Therefore, we have to notify Tracy of any valid calls to TracyLeaveZone, even when active instrumentation is paused.
+	if (!(s_profilerState == ProfilerState::Started || s_profilerState == ProfilerState::Paused))
 	{
-		if( g_taskletZoneStore.find( key ) != g_taskletZoneStore.end() )
-		{
-			g_taskletZoneStore.erase( key );
-		}
+		return;
+	}
+
+	if( g_taskletZoneStore.find( key ) != g_taskletZoneStore.end() )
+	{
+		g_taskletZoneStore.erase( key );
 	}
 }
 
@@ -832,13 +795,15 @@ tmTaskletZone::~tmTaskletZone()
 
 TracyZone::TracyZone( uint32_t ctx, const char* name, const char* filename, uint32_t lineno, uint32_t color ) : m_fiber( g_activeFiber )
 {
-	if( s_profilerState == ProfilerState::Started )
+	if( s_profilerState != ProfilerState::Started )
 	{
-		CCP_ASSERT( filename != nullptr );
-		CCP_ASSERT( name != nullptr );
-		auto data = ___tracy_alloc_srcloc( lineno, filename, strlen( filename ), name, strlen( name ), color );
-		m_telemetryContext.emplace( ___tracy_emit_zone_begin_alloc( data, ctx & TMCM_CPP ) );
+		return;
 	}
+
+	CCP_ASSERT( filename != nullptr );
+	CCP_ASSERT( name != nullptr );
+	auto data = ___tracy_alloc_srcloc( lineno, filename, strlen( filename ), name, strlen( name ), color );
+	m_telemetryContext.emplace( ___tracy_emit_zone_begin_alloc( data, ctx & TMCM_CPP ) );
 }
 
 TracyZone::TracyZone( TracyZone&& other ) noexcept
@@ -851,14 +816,17 @@ TracyZone::TracyZone( TracyZone&& other ) noexcept
 
 TracyZone::~TracyZone()
 {
-	if( s_profilerState == ProfilerState::Started && m_telemetryContext )
+	// Notify Tracy of all zones ended with a valid context, regardless of profiler state
+	if( !m_telemetryContext )
 	{
-		// Zones need to end on the same fiber they were started from, so do a little song and dance to ensure that
-		auto previous = g_activeFiber;
-		SwitchToFiber( (PyTaskletObject*) m_fiber );
-		TracyCZoneEnd( m_telemetryContext.value() );
-		SwitchToFiber( previous );
+		return;
 	}
+
+	// Zones need to end on the same fiber they were started from, so do a little song and dance to ensure that
+	auto previous = g_activeFiber;
+	SwitchToFiber( (PyTaskletObject*) m_fiber );
+	TracyCZoneEnd( m_telemetryContext.value() );
+	SwitchToFiber( previous );
 }
 
 void TracyZone::text( const char* text ) const
