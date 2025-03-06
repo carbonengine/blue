@@ -293,7 +293,7 @@ PyObject* PyEnterZone( PyObject* self, PyObject* args )
 		return nullptr;
 	}
 
-	TracyEnterZone( PyEval_GetFrame(), zone, __FILE__, __LINE__ );
+	TracyEnterZone( nullptr, zone, __FILE__, __LINE__ );
 #endif
 	Py_RETURN_NONE;
 }
@@ -301,7 +301,7 @@ PyObject* PyEnterZone( PyObject* self, PyObject* args )
 PyObject* PyLeaveZone( PyObject* self, PyObject* args )
 {
 #if CCP_TELEMETRY_ENABLED
-	TracyLeaveZone( PyEval_GetFrame() );
+	TracyLeaveZone( nullptr );
 #endif
 	Py_RETURN_NONE;
 }

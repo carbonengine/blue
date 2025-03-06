@@ -77,14 +77,15 @@ uint32_t s_taskletTrackID = 0;  // telemetry track ID for tasklet time spans
 
 thread_local PyTaskletObject* g_activeFiber{nullptr};
 typedef std::unordered_map<PyTaskletObject *, std::string> FiberNameStore;
-FiberNameStore g_fiberNameStore;
+thread_local FiberNameStore g_fiberNameStore; // Per-thread record of valid fiber names
 
-typedef std::unordered_map<void*, TracyZone> TasketZoneStore;
-TasketZoneStore g_taskletZoneStore;
+typedef std::unordered_map<PyTaskletObject*, std::stack<std::pair<void*, TracyZone>>> TasketZoneStore;
+thread_local TasketZoneStore g_taskletZoneStore; // Per-thread record of zones instrumented from python
 
 // Overriden tp_free function for tasklets: notify telemetry and call original tp_free
 void OnTaskletFree( void* tasklet )
 {
+	g_taskletZoneStore.erase( (PyTaskletObject*) tasklet );
 	g_fiberNameStore.erase( (PyTaskletObject*) tasklet );
 	auto found = s_taskletFree.find( Py_TYPE( tasklet ) );
 	if( found != end( s_taskletFree ) )
@@ -364,6 +365,12 @@ void SwitchToFiber( PyTaskletObject* to )
 		}
 		TracyFiberEnter( existing->second.c_str() );
 		g_activeFiber = to;
+	}
+
+	if( auto existing = g_taskletZoneStore.find( g_activeFiber  ); existing == g_taskletZoneStore.cend() )
+	{
+		// Initialize an empty zone stack, main tasklet is mapped to nullptr
+		g_taskletZoneStore[g_activeFiber] = {};
 	}
 }
 
@@ -749,25 +756,22 @@ void TracyEnterZone( void* key, const char* name, const char* filename, uint32_t
 {
 	if( s_profilerState.load( std::memory_order_acquire ) == ProfilerState::Started )
 	{
-		if( g_taskletZoneStore.find( key ) == g_taskletZoneStore.end() )
+		 if (auto existing = g_taskletZoneStore.find( g_activeFiber ); existing != g_taskletZoneStore.end())
 		{
-			g_taskletZoneStore.insert( { key, TracyZone( TMCM_CPP, name, filename, lineno, tracy::Color::Yellow ) } );
+			existing->second.emplace( PyEval_GetFrame(), TracyZone(TMCM_CPP, name, filename, lineno, tracy::Color::Yellow ));
 		}
 	}
 }
 
 void TracyLeaveZone( void* key )
 {
-	// An edge case exists where TracyEnterZone is called whilst the profiler is started with a matching call to TracyLeaveZone when paused.
-	// Therefore, we have to notify Tracy of any valid calls to TracyLeaveZone, even when active instrumentation is paused.
-	if (!(s_profilerState.load( std::memory_order_acquire ) == ProfilerState::Started || s_profilerState.load( std::memory_order_acquire ) == ProfilerState::Paused))
+	if (auto existing = g_taskletZoneStore.find( g_activeFiber ); existing != g_taskletZoneStore.end() && !existing->second.empty())
 	{
-		return;
-	}
-
-	if( g_taskletZoneStore.find( key ) != g_taskletZoneStore.end() )
-	{
-		g_taskletZoneStore.erase( key );
+		// Frame object guards against whether this function had a prior call to `TracyEnterZone` result in a new Zone pushed to the stack
+		if ( existing->second.top().first == PyEval_GetFrame())
+		{
+			existing->second.pop();
+		}
 	}
 }
 
