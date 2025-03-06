@@ -20,7 +20,7 @@ enum ProfilerState {
 	Paused,
 };
 
-ProfilerState s_profilerState{ProfilerState::Stopped};
+std::atomic<ProfilerState> s_profilerState{ProfilerState::Stopped};
 
 static bool s_isTelemetryCppCaptureEnabled = true;
 static bool s_isTelemetryTaskletCaptureEnabled = true;
@@ -207,7 +207,7 @@ void BlueStatistics::StartTelemetry( const std::string& server )
 void BlueStatistics::StartTimedTelemetry( const std::string& server, float samplePeriod )
 {
 #if CCP_TELEMETRY_ENABLED
-	if (s_profilerState != ProfilerState::Stopped )
+	if (s_profilerState.load( std::memory_order_acquire ) != ProfilerState::Stopped )
 	{
 		return;
 	}
@@ -215,7 +215,7 @@ void BlueStatistics::StartTimedTelemetry( const std::string& server, float sampl
 	s_telemetryServerOrFileSystemDumpPath = server;
 	s_telemetrySamplePeriod = (float)samplePeriod;
 
-	s_profilerState = ProfilerState::StartRequested;
+	s_profilerState.store( ProfilerState::StartRequested, std::memory_order_release );
 #else
 #endif
 }
@@ -223,14 +223,14 @@ void BlueStatistics::StartTimedTelemetry( const std::string& server, float sampl
 void BlueStatistics::StartTelemetryDump( const std::string& dumpFolder, float samplePeriod )
 {
 #if CCP_TELEMETRY_ENABLED
-	if (s_profilerState != ProfilerState::Stopped )
+	if (s_profilerState.load( std::memory_order_acquire ) != ProfilerState::Stopped )
 	{
 		return;
 	}
 	s_telemetryServerOrFileSystemDumpPath = dumpFolder;
 	s_telemetrySamplePeriod = (float)samplePeriod;
 
-	s_profilerState = ProfilerState::StartRequested;
+	s_profilerState.store( ProfilerState::StartRequested, std::memory_order_release );
 #else
 #endif
 }
@@ -238,24 +238,24 @@ void BlueStatistics::StartTelemetryDump( const std::string& dumpFolder, float sa
 void BlueStatistics::PauseTelemetry()
 {
 #if CCP_TELEMETRY_ENABLED
-	if( s_profilerState != ProfilerState::Started )
+	if( s_profilerState.load( std::memory_order_acquire ) != ProfilerState::Started )
 	{
 		return;
 	}
 
-	s_profilerState = ProfilerState::Paused;
+	s_profilerState.store( ProfilerState::Paused, std::memory_order_release );
 #endif
 }
 
 void BlueStatistics::ResumeTelemetry()
 {
 #if CCP_TELEMETRY_ENABLED
-	if ( s_profilerState != ProfilerState::Paused )
+	if ( s_profilerState.load( std::memory_order_acquire ) != ProfilerState::Paused )
 	{
 		return;
 	}
 
-	s_profilerState = ProfilerState::Started;
+	s_profilerState.store( ProfilerState::Started, std::memory_order_release );
 #endif
 }
 
@@ -268,12 +268,12 @@ void BlueStatistics::StopTelemetry()
 
 bool BlueStatistics::IsTelemetryConnected()
 {
-	return s_profilerState == ProfilerState::Started || s_profilerState == ProfilerState::Paused;
+	return s_profilerState.load( std::memory_order_acquire ) == ProfilerState::Started || s_profilerState.load( std::memory_order_acquire ) == ProfilerState::Paused;
 }
 
 bool BlueStatistics::IsTelemetryConnectionRequested()
 {
-	return s_profilerState == ProfilerState::StartRequested;
+	return s_profilerState.load( std::memory_order_acquire ) == ProfilerState::StartRequested;
 }
 
 float BlueStatistics::TelemetrySamplingTimeLeft()
@@ -283,13 +283,13 @@ float BlueStatistics::TelemetrySamplingTimeLeft()
 
 bool BlueStatistics::IsTelemetryPaused()
 {
-	return s_profilerState == ProfilerState::Paused;
+	return s_profilerState.load( std::memory_order_acquire ) == ProfilerState::Paused;
 }
 
 void BlueStatistics::UpdateTelemetry()
 {
 #if CCP_TELEMETRY_ENABLED
-	switch ( s_profilerState )
+	switch ( s_profilerState.load(std::memory_order_acquire) )
 	{
 		case ProfilerState::StartRequested:
 		{
@@ -301,14 +301,14 @@ void BlueStatistics::UpdateTelemetry()
 					if ( s_isTelemetryPythonCaptureEnabled ) {
 						PyEval_SetProfile( &PythonProfiler, nullptr );
 					}
-					s_profilerState = ProfilerState::Started;
+					s_profilerState.store( ProfilerState::Started, std::memory_order_release );
 					s_telemetryLastCheckTime = s_telemetryStartTime = BeOS->GetActualTime();
 				}
 			}
 			else if (!CcpStartTelemetry( s_telemetryServerOrFileSystemDumpPath.c_str(), s_telemetryConnectionType, m_telemetryMaxThreadCount ))
 			{
 				CCP_LOGERR( "Failed to start Telemetry" );
-				s_profilerState = ProfilerState::Stopped;
+				s_profilerState.store( ProfilerState::Stopped, std::memory_order_release );
 			}
 			break;
 		}
@@ -335,7 +335,7 @@ void BlueStatistics::UpdateTelemetry()
 			// Nothing to do
 			break;
 		default:
-			CCP_LOGERR( "BlueStatistics::UpdateTelemetry - unhandled profiler state %d", s_profilerState );
+			CCP_LOGERR( "BlueStatistics::UpdateTelemetry - unhandled profiler state %d", s_profilerState.load(std::memory_order_acquire));
 			break;
 	}
 #endif
@@ -371,7 +371,7 @@ void SwitchToFiber( PyTaskletObject* to )
 void BlueStatistics::OnTaskletSwitch( PyObject* _from, PyObject* _to )
 {
 #if CCP_TELEMETRY_ENABLED
-	if (s_profilerState == ProfilerState::Stopped || s_profilerState == ProfilerState::StartRequested)
+	if (s_profilerState.load( std::memory_order_acquire ) != ProfilerState::Started)
 	{
 		return;
 	}
@@ -747,7 +747,7 @@ void tmTaskletAppendText( uint32_t ctx, const char* appendText )
 
 void TracyEnterZone( void* key, const char* name, const char* filename, uint32_t lineno )
 {
-	if( s_profilerState == ProfilerState::Started )
+	if( s_profilerState.load( std::memory_order_acquire ) == ProfilerState::Started )
 	{
 		if( g_taskletZoneStore.find( key ) == g_taskletZoneStore.end() )
 		{
@@ -760,7 +760,7 @@ void TracyLeaveZone( void* key )
 {
 	// An edge case exists where TracyEnterZone is called whilst the profiler is started with a matching call to TracyLeaveZone when paused.
 	// Therefore, we have to notify Tracy of any valid calls to TracyLeaveZone, even when active instrumentation is paused.
-	if (!(s_profilerState == ProfilerState::Started || s_profilerState == ProfilerState::Paused))
+	if (!(s_profilerState.load( std::memory_order_acquire ) == ProfilerState::Started || s_profilerState.load( std::memory_order_acquire ) == ProfilerState::Paused))
 	{
 		return;
 	}
@@ -773,7 +773,7 @@ void TracyLeaveZone( void* key )
 
 void TracyZoneAddText( void* key, const char* text )
 {
-	if( s_profilerState == ProfilerState::Started )
+	if( s_profilerState.load( std::memory_order_acquire ) == ProfilerState::Started )
 	{
 		auto zone = g_taskletZoneStore.find( key );
 		if( zone != g_taskletZoneStore.end() )
@@ -795,7 +795,7 @@ tmTaskletZone::~tmTaskletZone()
 
 TracyZone::TracyZone( uint32_t ctx, const char* name, const char* filename, uint32_t lineno, uint32_t color ) : m_fiber( g_activeFiber )
 {
-	if( s_profilerState != ProfilerState::Started )
+	if( s_profilerState.load( std::memory_order_acquire ) != ProfilerState::Started )
 	{
 		return;
 	}
@@ -831,7 +831,7 @@ TracyZone::~TracyZone()
 
 void TracyZone::text( const char* text ) const
 {
-	if( s_profilerState == ProfilerState::Started && m_telemetryContext )
+	if( s_profilerState.load( std::memory_order_acquire ) == ProfilerState::Started && m_telemetryContext )
 	{
 		CCP_ASSERT( text != nullptr );
 		TracyCZoneText( m_telemetryContext.value(), text, strlen( text ) );
