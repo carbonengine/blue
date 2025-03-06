@@ -317,19 +317,26 @@ void BlueStatistics::UpdateTelemetry()
 		}
 		case ProfilerState::Started:
 		{
-			CcpTelemetryTick();
-			if(s_telemetrySamplePeriod > 0.0f ) // Check if we have passed our timed sample time
+			if (TracyIsConnected)
 			{
-				Be::Time newTime = BeOS->GetActualTime();
-				Be::Time delta = newTime - s_telemetryLastCheckTime;
-				s_telemetryLastCheckTime = newTime;
-				s_telemetrySamplePeriod -= ((float)delta / Be::Time(1e7));
-
-				if(s_telemetrySamplePeriod < 0.0f)
+				CcpTelemetryTick();
+				if(s_telemetrySamplePeriod > 0.0f ) // Check if we have passed our timed sample time
 				{
-					CCP_LOG( "Finalising timed Telemetry run." );
-					StopTelemetry();
+					Be::Time newTime = BeOS->GetActualTime();
+					Be::Time delta = newTime - s_telemetryLastCheckTime;
+					s_telemetryLastCheckTime = newTime;
+					s_telemetrySamplePeriod -= ((float)delta / Be::Time(1e7));
+
+					if(s_telemetrySamplePeriod < 0.0f)
+					{
+						CCP_LOG( "Finalising timed Telemetry run." );
+						StopTelemetry();
+					}
 				}
+			}
+			else
+			{
+				StopTelemetry();
 			}
 			break;
 		}
