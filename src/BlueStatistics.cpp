@@ -17,7 +17,7 @@ enum ProfilerState {
 	Stopped,
 	StartRequested,
 	Started,
-	Paused,
+	StopRequested,
 };
 
 std::atomic<ProfilerState> s_profilerState{ProfilerState::Stopped};
@@ -241,19 +241,14 @@ void BlueStatistics::StartTelemetryDump( const std::string& dumpFolder, float sa
 void BlueStatistics::PauseTelemetry()
 {
 #if CCP_TELEMETRY_ENABLED
-	if( s_profilerState.load( std::memory_order_acquire ) != ProfilerState::Started )
-	{
-		return;
-	}
-
-	s_profilerState.store( ProfilerState::Paused, std::memory_order_release );
+	StopTelemetry();
 #endif
 }
 
 void BlueStatistics::ResumeTelemetry()
 {
 #if CCP_TELEMETRY_ENABLED
-	if ( s_profilerState.load( std::memory_order_acquire ) != ProfilerState::Paused )
+	if ( s_profilerState.load( std::memory_order_acquire ) != ProfilerState::StopRequested )
 	{
 		return;
 	}
@@ -265,13 +260,18 @@ void BlueStatistics::ResumeTelemetry()
 void BlueStatistics::StopTelemetry()
 {
 #if CCP_TELEMETRY_ENABLED
-	PauseTelemetry();
+	if( s_profilerState.load( std::memory_order_acquire ) != ProfilerState::Started )
+	{
+		return;
+	}
+
+	s_profilerState.store( ProfilerState::StopRequested, std::memory_order_release );
 #endif
 }
 
 bool BlueStatistics::IsTelemetryConnected()
 {
-	return s_profilerState.load( std::memory_order_acquire ) == ProfilerState::Started || s_profilerState.load( std::memory_order_acquire ) == ProfilerState::Paused;
+	return TracyIsConnected;
 }
 
 bool BlueStatistics::IsTelemetryConnectionRequested()
@@ -286,7 +286,7 @@ float BlueStatistics::TelemetrySamplingTimeLeft()
 
 bool BlueStatistics::IsTelemetryPaused()
 {
-	return s_profilerState.load( std::memory_order_acquire ) == ProfilerState::Paused;
+	return s_profilerState.load( std::memory_order_acquire ) == ProfilerState::StopRequested;
 }
 
 void BlueStatistics::UpdateTelemetry()
@@ -296,9 +296,9 @@ void BlueStatistics::UpdateTelemetry()
 	{
 		case ProfilerState::StartRequested:
 		{
-			if (tracy::IsProfilerStarted())
+			if (TracyIsStarted)
 			{
-				if (tracy::GetProfiler().IsConnected())
+				if (TracyIsConnected)
 				{
 					TracySetProgramName( s_telemetryServerOrFileSystemDumpPath.c_str() );
 					if ( s_isTelemetryPythonCaptureEnabled ) {
@@ -340,7 +340,8 @@ void BlueStatistics::UpdateTelemetry()
 			}
 			break;
 		}
-		case ProfilerState::Paused:
+		case ProfilerState::StopRequested:
+			// Wait until zone starvation to suspend active instrumentation
 			if (g_zoneCount > 0)
 			{
 				CcpTelemetryTick();
