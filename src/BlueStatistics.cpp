@@ -771,18 +771,6 @@ void TracyLeaveZone( void* key )
 	}
 }
 
-void TracyZoneAddText( void* key, const char* text )
-{
-	if( s_profilerState.load( std::memory_order_acquire ) == ProfilerState::Started )
-	{
-		auto zone = g_taskletZoneStore.find( key );
-		if( zone != g_taskletZoneStore.end() )
-		{
-			zone->second.text( text );
-		}
-	}
-}
-
 tmTaskletZone::tmTaskletZone( uint32_t ctx, const char* name )
 {
 	tmTaskletEnter( ctx, name );

@@ -173,7 +173,6 @@ private:
 
 void BLUEIMPORT TracyEnterZone( void* key, const char* name, const char* filename, uint32_t lineno );
 void BLUEIMPORT TracyLeaveZone( void* key );
-void TracyZoneAddText( void* key, const char* text );
 
 #define CCP_STATS_SCOPED_TIME( identifier ) \
 	TracyZone tracy_zone_##__COUNTER__( TMCM_CPP, g_ccpStatistics_##identifier.GetName().c_str(), __FILE__, __LINE__ );\
