@@ -17,7 +17,7 @@ enum ProfilerState {
 	Stopped,
 	StartRequested,
 	Started,
-	Paused,
+	StopRequested,
 };
 
 std::atomic<ProfilerState> s_profilerState{ProfilerState::Stopped};
@@ -210,7 +210,7 @@ void BlueStatistics::StartTelemetry( const std::string& server )
 void BlueStatistics::StartTimedTelemetry( const std::string& server, float samplePeriod )
 {
 #if CCP_TELEMETRY_ENABLED
-	if (s_profilerState.load( std::memory_order_acquire ) != ProfilerState::Stopped )
+	if( s_profilerState.load( std::memory_order_acquire ) == ProfilerState::Started || s_profilerState.load( std::memory_order_acquire ) == ProfilerState::StartRequested )
 	{
 		return;
 	}
@@ -226,7 +226,7 @@ void BlueStatistics::StartTimedTelemetry( const std::string& server, float sampl
 void BlueStatistics::StartTelemetryDump( const std::string& dumpFolder, float samplePeriod )
 {
 #if CCP_TELEMETRY_ENABLED
-	if (s_profilerState.load( std::memory_order_acquire ) != ProfilerState::Stopped )
+	if( s_profilerState.load( std::memory_order_acquire ) == ProfilerState::Started || s_profilerState.load( std::memory_order_acquire ) == ProfilerState::StartRequested )
 	{
 		return;
 	}
@@ -240,43 +240,34 @@ void BlueStatistics::StartTelemetryDump( const std::string& dumpFolder, float sa
 
 void BlueStatistics::PauseTelemetry()
 {
-#if CCP_TELEMETRY_ENABLED
-	if( s_profilerState.load( std::memory_order_acquire ) != ProfilerState::Started )
-	{
-		return;
-	}
-
-	s_profilerState.store( ProfilerState::Paused, std::memory_order_release );
-#endif
+	// Deprecated
 }
 
 void BlueStatistics::ResumeTelemetry()
 {
-#if CCP_TELEMETRY_ENABLED
-	if ( s_profilerState.load( std::memory_order_acquire ) != ProfilerState::Paused )
-	{
-		return;
-	}
-
-	s_profilerState.store( ProfilerState::Started, std::memory_order_release );
-#endif
+	// Deprecated
 }
 
 void BlueStatistics::StopTelemetry()
 {
 #if CCP_TELEMETRY_ENABLED
-	PauseTelemetry();
+	if( s_profilerState.load( std::memory_order_acquire ) == ProfilerState::Stopped || s_profilerState.load( std::memory_order_acquire ) == ProfilerState::StopRequested )
+	{
+		return;
+	}
+
+	s_profilerState.store( ProfilerState::StopRequested, std::memory_order_release );
 #endif
 }
 
 bool BlueStatistics::IsTelemetryConnected()
 {
-	return s_profilerState.load( std::memory_order_acquire ) == ProfilerState::Started || s_profilerState.load( std::memory_order_acquire ) == ProfilerState::Paused;
+	return TracyIsStarted && TracyIsConnected;
 }
 
 bool BlueStatistics::IsTelemetryConnectionRequested()
 {
-	return s_profilerState.load( std::memory_order_acquire ) == ProfilerState::StartRequested;
+	return TracyIsStarted && !TracyIsConnected && s_profilerState.load( std::memory_order_acquire ) == ProfilerState::StartRequested;
 }
 
 float BlueStatistics::TelemetrySamplingTimeLeft()
@@ -286,7 +277,12 @@ float BlueStatistics::TelemetrySamplingTimeLeft()
 
 bool BlueStatistics::IsTelemetryPaused()
 {
-	return s_profilerState.load( std::memory_order_acquire ) == ProfilerState::Paused;
+	return false; // Deprecated
+}
+
+bool BlueStatistics::IsTelemetryStarted()
+{
+	return s_profilerState.load( std::memory_order_acquire ) == ProfilerState::Started;
 }
 
 void BlueStatistics::UpdateTelemetry()
@@ -296,9 +292,9 @@ void BlueStatistics::UpdateTelemetry()
 	{
 		case ProfilerState::StartRequested:
 		{
-			if (tracy::IsProfilerStarted())
+			if (TracyIsStarted)
 			{
-				if (tracy::GetProfiler().IsConnected())
+				if (TracyIsConnected)
 				{
 					TracySetProgramName( s_telemetryServerOrFileSystemDumpPath.c_str() );
 					if ( s_isTelemetryPythonCaptureEnabled ) {
@@ -340,7 +336,7 @@ void BlueStatistics::UpdateTelemetry()
 			}
 			break;
 		}
-		case ProfilerState::Paused:
+		case ProfilerState::StopRequested:
 			if (g_zoneCount > 0)
 			{
 				CcpTelemetryTick();

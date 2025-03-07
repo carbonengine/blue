@@ -664,18 +664,14 @@ const Be::ClassInfo* BlueStatistics::ExposeToBlue()
 		(
 			"PauseTelemetry",
 			PauseTelemetry,
-			"Pauses Telemetry capture. Ticking and frame boundary information are"
-			"\nstill sent over, but high frequency data such as memory events, mutex"
-			"\nstates, and zones are discarded. An application can use this function"
-			"\nto keep Telemetry live but with very low overhead until a specific"
-			"\nproblem area is encountered."
+			"Pauses Telemetry capture. (deprecated)"
 		)
 
 		MAP_METHOD_AND_WRAP
 		(
 			"ResumeTelemetry",
 			ResumeTelemetry,
-			"Resumes Telemetry captures."
+			"Resumes Telemetry capture. (deprecated)"
 		)
 
 		MAP_METHOD_AND_WRAP
@@ -689,7 +685,7 @@ const Be::ClassInfo* BlueStatistics::ExposeToBlue()
 		(
 			"isTelemetryConnectionRequested",
 			IsTelemetryConnectionRequested,
-			"Is Telemetry connection pending?"
+			"Is Telemetry profiler connection pending?"
 		)
 
 		MAP_PROPERTY_READONLY
@@ -703,14 +699,21 @@ const Be::ClassInfo* BlueStatistics::ExposeToBlue()
 		(
 			"isTelemetryConnected",
 			IsTelemetryConnected,
-			"Is Telemetry connected?"
+			"Is Telemetry connected to a profiler?"
 		)
 
 		MAP_PROPERTY_READONLY
 		(
 			"isTelemetryPaused",
 			IsTelemetryPaused,
-			"Is Telemetry paused?"
+			"Is Telemetry paused? (deprecated)"
+		)
+
+		MAP_PROPERTY_READONLY
+		(
+			"isTelemetryStarted",
+			IsTelemetryStarted,
+			"Is Telemetry instrumentation active?"
 		)
 
 		MAP_PROPERTY

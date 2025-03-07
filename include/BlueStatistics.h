@@ -86,6 +86,7 @@ public:
 	float TelemetrySamplingTimeLeft();
 	bool IsTelemetryConnected();
 	bool IsTelemetryPaused();
+	bool IsTelemetryStarted();
 
 	void SetCppCaptureEnabled( bool b );
 	bool IsCppCaptureEnabled();
