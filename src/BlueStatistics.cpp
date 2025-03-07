@@ -8,6 +8,8 @@
 #include "StdAfx.h"
 #include "IBlueOS.h"
 
+static CcpLogChannel_t s_ch = CCP_LOG_DEFINE_CHANNEL( "Telemetry" );
+
 static CBlueStatistics s_statisticsInstance;
 BlueStatistics* g_statistics = &s_statisticsInstance;
 
@@ -218,6 +220,7 @@ void BlueStatistics::StartTimedTelemetry( const std::string& server, float sampl
 	s_telemetryServerOrFileSystemDumpPath = server;
 	s_telemetrySamplePeriod = (float)samplePeriod;
 
+	CCP_LOG_CH( s_ch, "StartTelemetry - initiating lazy start" );
 	s_profilerState.store( ProfilerState::StartRequested, std::memory_order_release );
 #else
 #endif
@@ -256,6 +259,7 @@ void BlueStatistics::StopTelemetry()
 		return;
 	}
 
+	CCP_LOG_CH( s_ch, "StopTelemetry - initiating lazy stop" );
 	s_profilerState.store( ProfilerState::StopRequested, std::memory_order_release );
 #endif
 }
@@ -296,6 +300,7 @@ void BlueStatistics::UpdateTelemetry()
 			{
 				if (TracyIsConnected)
 				{
+					CCP_LOG_CH( s_ch, "UpdateTelemetry - Telemetry server connected to Profiler" );
 					TracySetProgramName( s_telemetryServerOrFileSystemDumpPath.c_str() );
 					if ( s_isTelemetryPythonCaptureEnabled ) {
 						PyEval_SetProfile( &PythonProfiler, nullptr );
@@ -304,10 +309,14 @@ void BlueStatistics::UpdateTelemetry()
 					s_telemetryLastCheckTime = s_telemetryStartTime = BeOS->GetActualTime();
 				}
 			}
-			else if (!CcpStartTelemetry( s_telemetryServerOrFileSystemDumpPath.c_str(), s_telemetryConnectionType, m_telemetryMaxThreadCount ))
+			else
 			{
-				CCP_LOGERR( "Failed to start Telemetry" );
-				s_profilerState.store( ProfilerState::Stopped, std::memory_order_release );
+				CCP_LOG_CH( s_ch, "UpdateTelemetry - Starting Telemetry Server" );
+				if (!CcpStartTelemetry( s_telemetryServerOrFileSystemDumpPath.c_str(), s_telemetryConnectionType, m_telemetryMaxThreadCount ))
+				{
+					CCP_LOGERR_CH( s_ch, "UpdateTelemetry - Failed to start Telemetry server" );
+					s_profilerState.store( ProfilerState::Stopped, std::memory_order_release );
+				}
 			}
 			break;
 		}
@@ -325,7 +334,7 @@ void BlueStatistics::UpdateTelemetry()
 
 					if(s_telemetrySamplePeriod < 0.0f)
 					{
-						CCP_LOG( "Finalising timed Telemetry run." );
+						CCP_LOG_CH( s_ch, "UpdateTelemetry - Finalizing timed Telemetry run" );
 						StopTelemetry();
 					}
 				}
@@ -343,6 +352,7 @@ void BlueStatistics::UpdateTelemetry()
 			}
 			else
 			{
+				CCP_LOG_CH( s_ch, "UpdateTelemetry - Lazy stop finished." );
 				PyEval_SetProfile( nullptr, nullptr );
 				s_profilerState.store( ProfilerState::Stopped, std::memory_order_release );
 			}
@@ -350,7 +360,7 @@ void BlueStatistics::UpdateTelemetry()
 			// Nothing to do
 			break;
 		default:
-			CCP_LOGERR( "BlueStatistics::UpdateTelemetry - unhandled profiler state %d", s_profilerState.load(std::memory_order_acquire));
+			CCP_LOGERR_CH( s_ch, "UpdateTelemetry - Unhandled profiler state %d", s_profilerState.load(std::memory_order_acquire));
 			break;
 	}
 #endif
