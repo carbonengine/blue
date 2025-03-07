@@ -322,9 +322,10 @@ void BlueStatistics::UpdateTelemetry()
 		}
 		case ProfilerState::Started:
 		{
+			CcpTelemetryTick();
+
 			if (TracyIsConnected)
 			{
-				CcpTelemetryTick();
 				if(s_telemetrySamplePeriod > 0.0f ) // Check if we have passed our timed sample time
 				{
 					Be::Time newTime = BeOS->GetActualTime();
