@@ -342,6 +342,7 @@ void BlueStatistics::UpdateTelemetry()
 			}
 			else
 			{
+				CCP_LOG_CH( s_ch, "UpdateTelemetry - Disconnected from profiler" );
 				StopTelemetry();
 			}
 			break;
