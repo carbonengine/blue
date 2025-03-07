@@ -346,16 +346,16 @@ void BlueStatistics::UpdateTelemetry()
 			break;
 		}
 		case ProfilerState::StopRequested:
-			if (g_zoneCount > 0)
-			{
-				CcpTelemetryTick();
-			}
-			else
+		{
+			CcpTelemetryTick();
+
+			if( g_zoneCount <= 0 )
 			{
 				CCP_LOG_CH( s_ch, "UpdateTelemetry - Lazy stop finished." );
 				PyEval_SetProfile( nullptr, nullptr );
 				s_profilerState.store( ProfilerState::Stopped, std::memory_order_release );
 			}
+		}
 		case ProfilerState::Stopped:
 			// Nothing to do
 			break;
