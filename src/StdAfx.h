@@ -20,6 +20,8 @@
 #endif
 #endif
 
+#include <optional>   // TODO: Check if this is really needed here. Seems to already be included in files that need it.
+
 // include all python stuff
 #if BLUE_WITH_PYTHON
 #define PY_SSIZE_T_CLEAN

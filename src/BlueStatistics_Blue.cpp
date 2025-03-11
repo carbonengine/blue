@@ -294,7 +294,7 @@ PyObject* PyEnterZone( PyObject* self, PyObject* args )
 		return nullptr;
 	}
 
-	TracyEnterZone( self, zone, "", 0 );
+	TracyEnterZone( PyEval_GetFrame(), zone, __FILE__, __LINE__ );
 #endif
 	Py_RETURN_NONE;
 }
@@ -302,7 +302,7 @@ PyObject* PyEnterZone( PyObject* self, PyObject* args )
 PyObject* PyLeaveZone( PyObject* self, PyObject* args )
 {
 #if CCP_TELEMETRY_ENABLED
-	TracyLeaveZone( self );
+	TracyLeaveZone( PyEval_GetFrame() );
 #endif
 	Py_RETURN_NONE;
 }
@@ -331,7 +331,7 @@ PyObject* PyAppendToZone( PyObject* self, PyObject* args )
 #if CCP_TELEMETRY_ENABLED
 static uint64_t s_timespanId = 0xf00000000;
 #endif
-    
+
 PyObject* PyBeginTimeSpan( PyObject* self, PyObject* args )
 {
 #if CCP_TELEMETRY_ENABLED
@@ -349,7 +349,6 @@ PyObject* PyBeginTimeSpan( PyObject* self, PyObject* args )
 	}
 
 	++s_timespanId;
-//	tmBeginTimeSpan( TMCM_GENERAL, s_timespanId, TMTSF_NONE, label );
 
 	return PyLong_FromLongLong( s_timespanId );
 #else
