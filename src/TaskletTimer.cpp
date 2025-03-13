@@ -108,8 +108,7 @@ TaskletTimer::~TaskletTimer()
 	;
 }
 
-// TODO: Steini - Somehow I missed this function the first time around.
-// TODO:          Need to check if it should be part of it or not.
+
 bool TaskletTimer::InitPythonObjects()
 {
     if (!mSimpleCtxt) {

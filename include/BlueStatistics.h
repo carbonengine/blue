@@ -139,22 +139,8 @@ extern BlueStatistics* g_statistics;
 
 #if CCP_TELEMETRY_ENABLED
 
-// TODO: Steini - Removing the old tmTaskletZone class, no longer used (ABI breaking change)
-//class BLUEIMPORT tmTaskletZone
-//{
-//public:
-//	tmTaskletZone( uint32_t ctx, const char* name );
-//	~tmTaskletZone();
-//
-//private:
-//	uint32_t m_telemetryContext;
-//};
-
-// TODO: Steini - Removing the tmTaskletEnter, tmTaskletLeave and tmTaskletAppendText
-// TODO:          Not sure that they are needed anymore (check with Alli)
-// void BLUEIMPORT tmTaskletEnter( uint32_t ctx, const char* name );
-// void BLUEIMPORT tmTaskletLeave( uint32_t ctx );
-// void tmTaskletAppendText( uint32_t ctx, const char* appendText );
+#include <tracy/Tracy.hpp>
+#include <tracy/TracyC.h>
 
 class TracyZone
 {
@@ -174,14 +160,9 @@ private:
 	void* m_fiber{nullptr};
 };
 
-// #endif
-
-#include <tracy/Tracy.hpp>
-#include <tracy/TracyC.h>
-
 void BLUEIMPORT TracyEnterZone( void* key, const char* name, const char* filename, uint32_t lineno );
 void BLUEIMPORT TracyLeaveZone( void* key );
-void TracyZoneAddText( void* key, const char* text );
+void BLUEIMPORT TracyZoneAddText( void* key, const char* text );
 
 #define CCP_STATS_SCOPED_TIME( identifier ) \
 	TracyZone tracy_zone_##__COUNTER__( TMCM_CPP, g_ccpStatistics_##identifier.GetName().c_str(), __FILE__, __LINE__ );\
@@ -190,12 +171,13 @@ void TracyZoneAddText( void* key, const char* text );
 #undef CCP_STATS_ZONE
 #define CCP_STATS_ZONE( name ) \
 	TracyZone tracy_zone_##__COUNTER__( TMCM_CPP, name, __FILE__, __LINE__ );
-#else
+
+#else  // CCP_TELEMETRY_ENABLED
 
 #define CCP_STATS_SCOPED_TIME( identifier ) CcpStatisticsStopwatch ccpStatsStopwatch_##identifier( g_ccpStatistics_##identifier )
 #undef CCP_STATS_ZONE
 #define CCP_STATS_ZONE( name )
 
-#endif
+#endif  // CCP_TELEMETRY_ENABLED
 
 #endif // BlueStatistics_h

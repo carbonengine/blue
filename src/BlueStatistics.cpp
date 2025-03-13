@@ -57,7 +57,7 @@ const char *Immortalize( PyObject *s )
     Py_DECREF( s );
     return result;
 }
-#endif
+#endif  // BLUE_WITH_PYTHON
 
 #if CCP_STACKLESS
 
@@ -161,16 +161,7 @@ int PythonProfiler( PyObject* obj, PyFrameObject* frame, int what, PyObject* arg
 {
 	switch( what )
 	{
-		// TODO: Check with Thomas on the different way this was done in Python2.7 vs 3.12
-
-//	case PyTrace_CALL: {   // This is the Python 2.7 version
-//		auto zoneName = Immortalize( frame->f_code->co_name );
-//		auto fileName = Immortalize( frame->f_code->co_filename );
-//		if( zoneName && fileName )
-//			TracyEnterZone( frame, zoneName, fileName, static_cast<uint32_t>( PyFrame_GetLineNumber( frame ) ) );
-//	}
-//	break;
-	case PyTrace_CALL:  // This is the Python 3.12 version
+	case PyTrace_CALL:
 	{
 		auto codeObj = PyFrame_GetCode( frame );
 		TracyEnterZone( frame, PyUnicode_AsUTF8( codeObj->co_name ), PyUnicode_AsUTF8( codeObj->co_filename ), static_cast<uint32_t>( PyFrame_GetLineNumber( frame ) ) );
@@ -188,9 +179,9 @@ int PythonProfiler( PyObject* obj, PyFrameObject* frame, int what, PyObject* arg
 
 }
 
-#endif
+#endif  // CCP_STACKLESS
 
-#endif
+#endif  // CCP_TELEMETRY_ENABLED
 
 
 BlueStatistics::BlueStatistics(IRoot* lockobj) :
@@ -799,20 +790,6 @@ void TracyZoneAddText( void* key, const char* text )
 	}
 }
 
-//tmTaskletZone::tmTaskletZone( uint32_t ctx, const char* name )
-//{
-//	// TODO: Steini - Remove reference to tmTaskletEnter, just do nothing.
-//	// TODO:          Check with Alli what we want to do with those. Is this part of taskletTimers and is that part of radGameTools?
-//	// tmTaskletEnter( ctx, name );
-//}
-//
-//tmTaskletZone::~tmTaskletZone()
-//{
-//	// TODO: Steini - Remove reference to tmTaskletLeave, just do nothing.
-//	// TODO:          Check with Alli what we want to do with those.
-//	// tmTaskletLeave( m_telemetryContext );
-//}
-
 TracyZone::TracyZone( uint32_t ctx, const char* name, const char* filename, uint32_t lineno, uint32_t color ) : m_fiber( g_activeFiber )
 {
 	if( s_profilerState == ProfilerState::Started )
@@ -853,4 +830,4 @@ void TracyZone::text( const char* text ) const
 	}
 }
 
-#endif
+#endif  // CCP_TELEMETRY_ENABLED

@@ -20,8 +20,6 @@
 #endif
 #endif
 
-#include <optional>   // TODO: Check if this is really needed here. Seems to already be included in files that need it.
-
 // include all python stuff
 #if BLUE_WITH_PYTHON
 #define PY_SSIZE_T_CLEAN
@@ -31,7 +29,7 @@
 #include <structmember.h>
 #include <compile.h>
 #include <frameobject.h>
-#endif
+#endif  // BLUE_WITH_PYTHON
 
 //disable warning about evil use of placement new in class constructors
 #pragma warning( disable : 4291 )
