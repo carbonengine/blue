@@ -217,12 +217,6 @@ PyObject *TaskletTimer::EnterTaskletEx(PyObject *newContext, TASKLETFLAGS flags)
 		
 bool TaskletTimer::ReturnFromTasklet(PyObject *backContext)
 {
-#if CCP_TELEMETRY_ENABLED
-	if (mDoTelemetry)
-	{
-		TracyLeaveZone( this );
-	}
-#endif
 	// Temporary hack to support IDLE
 	if (mFlags) {
 		TimesliceReset();

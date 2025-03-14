@@ -163,8 +163,12 @@ int PythonProfiler( PyObject* obj, PyFrameObject* frame, int what, PyObject* arg
 	{
 	case PyTrace_CALL:
 	{
-		auto codeObj = PyFrame_GetCode( frame );
-		TracyEnterZone( frame, PyUnicode_AsUTF8( codeObj->co_name ), PyUnicode_AsUTF8( codeObj->co_filename ), static_cast<uint32_t>( PyFrame_GetLineNumber( frame ) ) );
+		auto codeObj = PyFrame_GetCode( frame );  // Returns a strong reference
+		auto zoneName = Immortalize( codeObj->co_name );
+		auto fileName = Immortalize( codeObj->co_filename );
+		if( zoneName && fileName )
+			TracyEnterZone( frame, zoneName, fileName, static_cast<uint32_t>( PyFrame_GetLineNumber( frame ) ) );
+		Py_XDECREF( codeObj );  // Release the reference to the frame code
 	}
 	break;
 	case PyTrace_EXCEPTION:
@@ -590,8 +594,8 @@ CcpStaticStatisticsEntry* CcpStatisticsEntry::GetAttachedStat()
 {
 	if( !m_statsEntry )
 	{
-		m_statsEntry = CCP_NEW( "m_statsEntry" ) CcpStaticStatisticsEntry( 
-			m_name.c_str(), 
+		m_statsEntry = CCP_NEW( "m_statsEntry" ) CcpStaticStatisticsEntry(
+			m_name.c_str(),
 			m_resetPerFrame,
 			m_type,
 			m_description.c_str() );
