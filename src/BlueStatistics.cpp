@@ -84,8 +84,6 @@ thread_local FiberNameStore g_fiberNameStore; // Per-thread record of valid fibe
 typedef std::unordered_map<PyTaskletObject*, std::stack<std::pair<void*, TracyZone>>> TasketZoneStore;
 thread_local TasketZoneStore g_taskletZoneStore; // Per-thread record of zones instrumented from python
 
-thread_local int g_zoneCount = 0; // Per-thread zone count used to determine when it is safe to suspend instrumentation
-
 // Overriden tp_free function for tasklets: notify telemetry and call original tp_free
 void OnTaskletFree( void* tasklet )
 {
@@ -351,12 +349,8 @@ void BlueStatistics::UpdateTelemetry()
 		{
 			CcpTelemetryTick();
 
-			if( g_zoneCount <= 0 )
-			{
-				CCP_LOG_CH( s_ch, "UpdateTelemetry - Lazy stop finished." );
-				PyEval_SetProfile( nullptr, nullptr );
-				s_profilerState.store( ProfilerState::Stopped, std::memory_order_release );
-			}
+			PyEval_SetProfile( nullptr, nullptr );
+			s_profilerState.store( ProfilerState::Stopped, std::memory_order_release );
 		}
 		case ProfilerState::Stopped:
 			// Nothing to do
@@ -822,7 +816,6 @@ TracyZone::TracyZone( uint32_t ctx, const char* name, const char* filename, uint
 	CCP_ASSERT( name != nullptr );
 	auto data = ___tracy_alloc_srcloc( lineno, filename, strlen( filename ), name, strlen( name ), color );
 	m_telemetryContext.emplace( ___tracy_emit_zone_begin_alloc( data, ctx & TMCM_CPP ) );
-	g_zoneCount++;
 }
 
 TracyZone::TracyZone( TracyZone&& other ) noexcept
@@ -846,7 +839,6 @@ TracyZone::~TracyZone()
 	SwitchToFiber( (PyTaskletObject*) m_fiber );
 	TracyCZoneEnd( m_telemetryContext.value() );
 	SwitchToFiber( previous );
-	g_zoneCount--;
 }
 
 void TracyZone::text( const char* text ) const
