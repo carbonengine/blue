@@ -778,7 +778,7 @@ void TracyEnterZone( void* key, const char* name, const char* filename, uint32_t
 	{
 		 if (auto existing = g_taskletZoneStore.find( g_activeFiber ); existing != g_taskletZoneStore.end())
 		{
-			existing->second.emplace( PyEval_GetFrame(), TracyZone(TMCM_CPP, name, filename, lineno, tracy::Color::Yellow ));
+			existing->second.emplace( key, TracyZone(TMCM_CPP, name, filename, lineno, tracy::Color::Yellow ));
 		}
 	}
 }
@@ -788,7 +788,7 @@ void TracyLeaveZone( void* key )
 	if (auto existing = g_taskletZoneStore.find( g_activeFiber ); existing != g_taskletZoneStore.end() && !existing->second.empty())
 	{
 		// Frame object guards against whether this function had a prior call to `TracyEnterZone` result in a new Zone pushed to the stack
-		if ( existing->second.top().first == PyEval_GetFrame())
+		if ( existing->second.top().first == key )
 		{
 			existing->second.pop();
 		}
