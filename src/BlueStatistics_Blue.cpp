@@ -294,7 +294,7 @@ PyObject* PyEnterZone( PyObject* self, PyObject* args )
 		return nullptr;
 	}
 
-	TracyEnterZone( nullptr, zone, __FILE__, __LINE__ );
+	TracyEnterZone( PyEval_GetFrame(), zone, __FILE__, __LINE__ );
 #endif
 	Py_RETURN_NONE;
 }
@@ -302,7 +302,7 @@ PyObject* PyEnterZone( PyObject* self, PyObject* args )
 PyObject* PyLeaveZone( PyObject* self, PyObject* args )
 {
 #if CCP_TELEMETRY_ENABLED
-	TracyLeaveZone( nullptr );
+	TracyLeaveZone( PyEval_GetFrame() );
 #endif
 	Py_RETURN_NONE;
 }
@@ -323,7 +323,7 @@ PyObject* PyAppendToZone( PyObject* self, PyObject* args )
 		return nullptr;
 	}
 
-	TracyZoneAddText( self, appendText );   // TODO: This function is currently not available/exposed on the EVE (2.7) side. Need to agree on implementation with Team-Core.
+	TracyZoneAddText( PyEval_GetFrame(), appendText );   // TODO: This function is currently not available/exposed on the EVE (2.7) side. Need to agree on implementation with Team-Core.
 #endif
 	Py_RETURN_NONE;
 }

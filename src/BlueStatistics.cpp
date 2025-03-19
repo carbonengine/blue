@@ -222,7 +222,7 @@ void BlueStatistics::StartTimedTelemetry( const std::string& server, float sampl
 	s_telemetryServerOrFileSystemDumpPath = server;
 	s_telemetrySamplePeriod = (float)samplePeriod;
 
-	CCP_LOG_CH( s_ch, "StartTelemetry - initiating lazy start" );
+	CCP_LOG_CH( s_ch, "Profiler start requested" );
 	s_profilerState.store( ProfilerState::StartRequested, std::memory_order_release );
 #else
 #endif
@@ -261,7 +261,7 @@ void BlueStatistics::StopTelemetry()
 		return;
 	}
 
-	CCP_LOG_CH( s_ch, "StopTelemetry - initiating lazy stop" );
+	CCP_LOG_CH( s_ch, "Profiler stop requested" );
 	s_profilerState.store( ProfilerState::StopRequested, std::memory_order_release );
 #endif
 }
@@ -752,7 +752,7 @@ void TracyEnterZone( void* key, const char* name, const char* filename, uint32_t
 	{
 		 if (auto existing = g_taskletZoneStore.find( g_activeFiber ); existing != g_taskletZoneStore.end())
 		{
-			existing->second.emplace( PyEval_GetFrame(), TracyZone(TMCM_CPP, name, filename, lineno, tracy::Color::Yellow ));
+			existing->second.emplace( key, TracyZone(TMCM_CPP, name, filename, lineno, tracy::Color::Yellow ));
 		}
 	}
 }
@@ -762,7 +762,7 @@ void TracyLeaveZone( void* key )
 	if (auto existing = g_taskletZoneStore.find( g_activeFiber ); existing != g_taskletZoneStore.end() && !existing->second.empty())
 	{
 		// Frame object guards against whether this function had a prior call to `TracyEnterZone` result in a new Zone pushed to the stack
-		if ( existing->second.top().first == PyEval_GetFrame())
+		if ( existing->second.top().first == key )
 		{
 			existing->second.pop();
 		}
@@ -776,7 +776,10 @@ void TracyZoneAddText( void* key, const char* text )
 	{
 		if( auto existing = g_taskletZoneStore.find( g_activeFiber ); existing != g_taskletZoneStore.end() && !existing->second.empty() )
 		{
-			existing->second.top().second.text( text );
+			if ( existing->second.top().first == key )
+			{
+				existing->second.top().second.text( text );
+			}
 		}
 	}
 }
