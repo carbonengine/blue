@@ -85,6 +85,7 @@ public:
 	float TelemetrySamplingTimeLeft();
 	bool IsTelemetryConnected();
 	bool IsTelemetryPaused();
+	bool IsTelemetryStarted();
 
 	void SetCppCaptureEnabled( bool b );
 	bool IsCppCaptureEnabled();
@@ -130,7 +131,6 @@ protected:
 	TrackableStdHashMap<std::string, std::vector<double>> m_capture;
 	uint32_t m_telemetryMaxThreadCount;
 	bool m_isCapturing;
-	std::string m_applicationName;
 };
 
 TYPEDEF_BLUECLASS( BlueStatistics );
@@ -162,7 +162,7 @@ private:
 
 void BLUEIMPORT TracyEnterZone( void* key, const char* name, const char* filename, uint32_t lineno );
 void BLUEIMPORT TracyLeaveZone( void* key );
-void BLUEIMPORT TracyZoneAddText( void* key, const char* text );
+void BLUEIMPORT TracyZoneAddText( void* key, const char* text );  // TODO: This function is currently not available/exposed on the EVE (2.7) side. Need to agree on implementation with Team-Core.
 
 #define CCP_STATS_SCOPED_TIME( identifier ) \
 	TracyZone tracy_zone_##__COUNTER__( TMCM_CPP, g_ccpStatistics_##identifier.GetName().c_str(), __FILE__, __LINE__ );\

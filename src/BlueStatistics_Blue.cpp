@@ -294,7 +294,7 @@ PyObject* PyEnterZone( PyObject* self, PyObject* args )
 		return nullptr;
 	}
 
-	TracyEnterZone( PyEval_GetFrame(), zone, __FILE__, __LINE__ );
+	TracyEnterZone( nullptr, zone, __FILE__, __LINE__ );
 #endif
 	Py_RETURN_NONE;
 }
@@ -302,7 +302,7 @@ PyObject* PyEnterZone( PyObject* self, PyObject* args )
 PyObject* PyLeaveZone( PyObject* self, PyObject* args )
 {
 #if CCP_TELEMETRY_ENABLED
-	TracyLeaveZone( PyEval_GetFrame() );
+	TracyLeaveZone( nullptr );
 #endif
 	Py_RETURN_NONE;
 }
@@ -323,7 +323,7 @@ PyObject* PyAppendToZone( PyObject* self, PyObject* args )
 		return nullptr;
 	}
 
-	TracyZoneAddText( self, appendText );
+	TracyZoneAddText( self, appendText );   // TODO: This function is currently not available/exposed on the EVE (2.7) side. Need to agree on implementation with Team-Core.
 #endif
 	Py_RETURN_NONE;
 }
@@ -657,18 +657,14 @@ const Be::ClassInfo* BlueStatistics::ExposeToBlue()
 		(
 			"PauseTelemetry",
 			PauseTelemetry,
-			"Pauses Telemetry capture. Ticking and frame boundary information are"
-			"\nstill sent over, but high frequency data such as memory events, mutex"
-			"\nstates, and zones are discarded. An application can use this function"
-			"\nto keep Telemetry live but with very low overhead until a specific"
-			"\nproblem area is encountered."
+			"Pauses Telemetry capture. (deprecated)"
 		)
 
 		MAP_METHOD_AND_WRAP
 		(
 			"ResumeTelemetry",
 			ResumeTelemetry,
-			"Resumes Telemetry captures."
+			"Resumes Telemetry capture. (deprecated)"
 		)
 
 		MAP_METHOD_AND_WRAP
@@ -682,7 +678,7 @@ const Be::ClassInfo* BlueStatistics::ExposeToBlue()
 		(
 			"isTelemetryConnectionRequested",
 			IsTelemetryConnectionRequested,
-			"Is Telemetry connection pending?"
+			"Is Telemetry profiler connection pending?"
 		)
 
 		MAP_PROPERTY_READONLY
@@ -696,14 +692,21 @@ const Be::ClassInfo* BlueStatistics::ExposeToBlue()
 		(
 			"isTelemetryConnected",
 			IsTelemetryConnected,
-			"Is Telemetry connected?"
+			"Is Telemetry connected to a profiler?"
 		)
 
 		MAP_PROPERTY_READONLY
 		(
 			"isTelemetryPaused",
 			IsTelemetryPaused,
-			"Is Telemetry paused?"
+			"Is Telemetry paused? (deprecated)"
+		)
+
+		MAP_PROPERTY_READONLY
+		(
+			"isTelemetryStarted",
+			IsTelemetryStarted,
+			"Is Telemetry instrumentation active?"
 		)
 
 		MAP_PROPERTY
