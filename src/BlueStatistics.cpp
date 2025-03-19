@@ -218,7 +218,7 @@ void BlueStatistics::StartTimedTelemetry( const std::string& server, float sampl
 	s_telemetryServerOrFileSystemDumpPath = server;
 	s_telemetrySamplePeriod = (float)samplePeriod;
 
-	CCP_LOG_CH( s_ch, "StartTelemetry - initiating lazy start" );
+	CCP_LOG_CH( s_ch, "Profiler start requested" );
 	s_profilerState.store( ProfilerState::StartRequested, std::memory_order_release );
 #else
 #endif
@@ -257,7 +257,7 @@ void BlueStatistics::StopTelemetry()
 		return;
 	}
 
-	CCP_LOG_CH( s_ch, "StopTelemetry - initiating lazy stop" );
+	CCP_LOG_CH( s_ch, "Profiler stop requested" );
 	s_profilerState.store( ProfilerState::StopRequested, std::memory_order_release );
 #endif
 }
