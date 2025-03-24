@@ -398,7 +398,7 @@ void SwitchToFiber( PyTaskletObject* to )
 void BlueStatistics::OnTaskletSwitch( PyObject* _from, PyObject* _to )
 {
 #if CCP_TELEMETRY_ENABLED
-	if (!TracyIsStarted || s_profilerState.load( std::memory_order_acquire ) == ProfilerState::Stopped)
+	if (s_profilerState.load( std::memory_order_acquire ) != ProfilerState::Started)
 	{
 		return;
 	}
