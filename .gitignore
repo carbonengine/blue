@@ -25,9 +25,6 @@ __pycache__/
 *.pyc
 *.pyd
 
-.editorconfig
-.idea/
-
 ### CMAKE ###
 # Intermediate cmake build flavor folders #
 cmake-build-*/
