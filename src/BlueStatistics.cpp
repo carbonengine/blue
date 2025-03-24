@@ -89,6 +89,12 @@ void OnTaskletFree( void* tasklet )
 {
 	g_taskletZoneStore.erase( (PyTaskletObject*) tasklet );
 	g_fiberNameStore.erase( (PyTaskletObject*) tasklet );
+	if (g_activeFiber && g_activeFiber == tasklet)
+	{
+		// Catch an edge case where the profiler is stopped and a tasklet switch
+		// away from this tasklet is not reflected in the active fiber
+		g_activeFiber = nullptr;
+	}
 	auto found = s_taskletFree.find( Py_TYPE( tasklet ) );
 	if( found != end( s_taskletFree ) )
 	{
