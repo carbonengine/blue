@@ -80,7 +80,9 @@ uint32_t s_taskletTrackID = 0;  // telemetry track ID for tasklet time spans
 
 thread_local PyTaskletObject* g_activeFiber{nullptr};
 typedef std::unordered_map<PyTaskletObject *, std::string> FiberNameStore;
-thread_local FiberNameStore g_fiberNameStore; // Per-thread record of valid fiber names
+FiberNameStore g_fiberNameStore; // Persisted fiber name string store
+
+std::unordered_map<PyTaskletObject *, Be::Time> g_fiberEraseMap; // Map of fibers scheduled for erasure
 
 typedef std::unordered_map<PyTaskletObject*, std::stack<std::pair<void*, TracyZone>>> TasketZoneStore;
 thread_local TasketZoneStore g_taskletZoneStore; // Per-thread record of zones instrumented from python
@@ -89,7 +91,7 @@ thread_local TasketZoneStore g_taskletZoneStore; // Per-thread record of zones i
 void OnTaskletFree( void* tasklet )
 {
 	g_taskletZoneStore.erase( (PyTaskletObject*) tasklet );
-	g_fiberNameStore.erase( (PyTaskletObject*) tasklet );
+	g_fiberEraseMap.emplace( (PyTaskletObject*) tasklet, BeOS->GetActualTime());
 	if (g_activeFiber && g_activeFiber == tasklet)
 	{
 		// Catch an edge case where the profiler is stopped and a tasklet switch
@@ -334,11 +336,23 @@ void BlueStatistics::UpdateTelemetry()
 
 			if (TracyIsConnected)
 			{
+				Be::Time now = BeOS->GetActualTime();
+
+				// Erase fibers scheduled for erasure
+				for ( const auto& [tasklet, time] : g_fiberEraseMap)
+				{
+					// Give the profiler a few seconds to receive information from the fiber name store before deallocating
+					// the underlying string
+					if ((time - now) / Be::Time(1e7) >= 5)
+					{
+						g_fiberNameStore.erase( tasklet );
+						g_fiberEraseMap.erase( tasklet );
+					}
+				}
 				if(s_telemetrySamplePeriod > 0.0f ) // Check if we have passed our timed sample time
 				{
-					Be::Time newTime = BeOS->GetActualTime();
-					Be::Time delta = newTime - s_telemetryLastCheckTime;
-					s_telemetryLastCheckTime = newTime;
+					Be::Time delta = now - s_telemetryLastCheckTime;
+					s_telemetryLastCheckTime = now;
 					s_telemetrySamplePeriod -= ((float)delta / Be::Time(1e7));
 
 					if(s_telemetrySamplePeriod < 0.0f)
