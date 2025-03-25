@@ -287,14 +287,25 @@ PyObject* PyEnterZone( PyObject* self, PyObject* args )
 	{
 		return nullptr;
 	}
-
 	const char* zone = Immortalize( zoneO );
 	if( !zone )
 	{
 		return nullptr;
 	}
 
-	TracyEnterZone( PyEval_GetFrame(), zone, __FILE__, __LINE__ );
+	auto frame = PyEval_GetFrame();
+	if ( !frame )
+	{
+		return nullptr;
+	}
+	auto codeObj = PyFrame_GetCode( frame );  // Returns a strong reference
+	auto fileName = Immortalize( codeObj->co_filename );
+	if (!fileName)
+	{
+		return nullptr;
+	}
+	TracyEnterZone( frame, zone, fileName, static_cast<uint32_t>( PyFrame_GetLineNumber( frame ) ) );
+	Py_XDECREF( codeObj );  // Release the reference to the frame code
 #endif
 	Py_RETURN_NONE;
 }
@@ -323,7 +334,7 @@ PyObject* PyAppendToZone( PyObject* self, PyObject* args )
 		return nullptr;
 	}
 
-	TracyZoneAddText( PyEval_GetFrame(), appendText );   // TODO: This function is currently not available/exposed on the EVE (2.7) side. Need to agree on implementation with Team-Core.
+	TracyZoneAddText( PyEval_GetFrame(), appendText );
 #endif
 	Py_RETURN_NONE;
 }

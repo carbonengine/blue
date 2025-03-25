@@ -29,7 +29,7 @@
 #include <structmember.h>
 #include <compile.h>
 #include <frameobject.h>
-#endif  // BLUE_WITH_PYTHON
+#endif
 
 //disable warning about evil use of placement new in class constructors
 #pragma warning( disable : 4291 )
