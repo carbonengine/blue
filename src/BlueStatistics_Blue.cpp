@@ -292,8 +292,14 @@ PyObject* PyEnterZone( PyObject* self, PyObject* args )
 	{
 		return nullptr;
 	}
+	auto frame = PyEval_GetFrame();
 
-	TracyEnterZone( PyEval_GetFrame(), zone, __FILE__, __LINE__ );
+	auto fileName = Immortalize( frame->f_code->co_filename );
+	if (!fileName)
+	{
+		return nullptr;
+	}
+	TracyEnterZone( frame, zone, fileName, frame->f_lineno );
 #endif
 	Py_RETURN_NONE;
 }
