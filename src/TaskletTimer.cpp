@@ -3,7 +3,7 @@
 
 	TaskletTimer.cpp
 
-	Author:    Kristj�n Valur J�nsson
+	Author:    Kristján Valur Jónsson
 	Created:   Sept 2004
 	OS:        Win32
 	Project:   Yep
@@ -31,9 +31,6 @@
 #include <structmember.h>
 #include <sstream>
 
-#if !CCP_STACKLESS
-	#define PyCCP_MemSetContext(x)
-#endif
 
 static CcpLogChannel_t s_ch = CCP_LOG_DEFINE_CHANNEL( "TaskletTimer" );
 CCP_STATS_DECLARE( timesliceWarnings, "Blue/TimesliceWarnings", false, CST_COUNTER_LOW, "Count of timeslice warnings issued" );
@@ -164,37 +161,6 @@ PyObject *TaskletTimer::EnterTaskletStr(const char *context, TASKLETFLAGS flags)
 
 PyObject *TaskletTimer::EnterTaskletEx(PyObject *newContext, TASKLETFLAGS flags)
 {
-	if (mDoTelemetry) {
-		PyObject *strifiedName = PyObject_Str(newContext);
-
-		if (strifiedName == NULL) {
-			return NULL;
-		}
-
-		PyObject *canonicalName = PyDict_GetItem(mCanonicalizationDict, strifiedName);
-
-		if (!canonicalName) {
-			// First time we've seen this particular name, set it in the dict and use it directly
-			int err = PyDict_SetItem(mCanonicalizationDict, strifiedName, strifiedName);
-			if (err != 0) {
-				// Not being able to set an entry in our dict is pretty fatal, boil the exception on up.
-				return NULL;
-			}
-
-			// Success, we are the canonical string for this forever and ever and ever now
-			canonicalName = strifiedName;
-		}
-
-		Py_DECREF(strifiedName);
-#if CCP_TELEMETRY_ENABLED
-		if (canonicalName) {
-			TracyEnterZone( this, PyUnicode_AsUTF8( canonicalName ), "", 0 );
-		}
-#else
-		CCP_UNUSED( canonicalName );
-#endif
-	}
-
 	mFlags = flags; //temporary hack to support the IDLE flag
 	if (!mActive) {
 		//timer is not enabled.
@@ -250,12 +216,6 @@ PyObject *TaskletTimer::EnterTaskletEx(PyObject *newContext, TASKLETFLAGS flags)
 		
 bool TaskletTimer::ReturnFromTasklet(PyObject *backContext)
 {
-#if CCP_TELEMETRY_ENABLED
-	if (mDoTelemetry)
-	{
-		TracyLeaveZone( this );
-	}
-#endif
 	// Temporary hack to support IDLE
 	if (mFlags) {
 		TimesliceReset();

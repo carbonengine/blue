@@ -11,6 +11,7 @@
 #define BlueStatistics_h
 
 #include "ICcpStatisticsAccumulator.h"
+#include <optional>
 
 BLUE_DECLARE( CcpStatisticsEntry );
 
@@ -84,6 +85,7 @@ public:
 	float TelemetrySamplingTimeLeft();
 	bool IsTelemetryConnected();
 	bool IsTelemetryPaused();
+	bool IsTelemetryStarted();
 
 	void SetCppCaptureEnabled( bool b );
 	bool IsCppCaptureEnabled();
@@ -129,7 +131,6 @@ protected:
 	TrackableStdHashMap<std::string, std::vector<double>> m_capture;
 	uint32_t m_telemetryMaxThreadCount;
 	bool m_isCapturing;
-	std::string m_applicationName;
 };
 
 TYPEDEF_BLUECLASS( BlueStatistics );
@@ -138,46 +139,45 @@ extern BlueStatistics* g_statistics;
 
 #if CCP_TELEMETRY_ENABLED
 
-class BLUEIMPORT tmTaskletZone
+#include <tracy/Tracy.hpp>
+#include <tracy/TracyC.h>
+
+class TracyZone
 {
 public:
-	tmTaskletZone( uint32_t ctx, const char* name, const char* filename, uint32_t fileno, uint32_t color = 3766446u );
-	tmTaskletZone( tmTaskletZone&& other );
-	tmTaskletZone( const tmTaskletZone& ) = delete;
-	tmTaskletZone& operator=( tmTaskletZone&& ) = delete;
-	tmTaskletZone& operator=( const tmTaskletZone& ) = delete;
-	~tmTaskletZone();
+	TracyZone() = delete;
+	BLUEIMPORT TracyZone( uint32_t ctx, const char* name, const char* filename, uint32_t lineno, uint32_t color = tracy::Color::SteelBlue4 );
+	BLUEIMPORT ~TracyZone();
+	TracyZone( TracyZone&& other ) noexcept;
+	TracyZone( const TracyZone& ) = delete;
+	TracyZone& operator=( TracyZone&& ) = delete;
+	TracyZone& operator=( const TracyZone& ) = delete;
 
 	void text( const char* text ) const;
 
 private:
-	TracyCZoneCtx m_zone{0};
+	std::optional<TracyCZoneCtx> m_telemetryContext;
+	void* m_fiber{nullptr};
 };
-
-#endif
-
-#include <tracy/Tracy.hpp>
-#include <tracy/TracyC.h>
 
 void BLUEIMPORT TracyEnterZone( void* key, const char* name, const char* filename, uint32_t lineno );
 void BLUEIMPORT TracyLeaveZone( void* key );
 void BLUEIMPORT TracyZoneAddText( void* key, const char* text );
 
-#if CCP_TELEMETRY_ENABLED
-
 #define CCP_STATS_SCOPED_TIME( identifier ) \
-	tmTaskletZone zone_##_COUNTER_( TMCM_CPP, g_ccpStatistics_##identifier.GetName().c_str(), __FILE__, __LINE__ );\
+	TracyZone tracy_zone_##__COUNTER__( TMCM_CPP, g_ccpStatistics_##identifier.GetName().c_str(), __FILE__, __LINE__ );\
 	CcpStatisticsStopwatch ccpStatsStopwatch_##identifier( g_ccpStatistics_##identifier )
 
 #undef CCP_STATS_ZONE
 #define CCP_STATS_ZONE( name ) \
-	tmTaskletZone zone_##_COUNTER_( TMCM_CPP, name, __FILE__, __LINE__ )
-#else
+	TracyZone tracy_zone_##__COUNTER__( TMCM_CPP, name, __FILE__, __LINE__ );
+
+#else  // CCP_TELEMETRY_ENABLED
 
 #define CCP_STATS_SCOPED_TIME( identifier ) CcpStatisticsStopwatch ccpStatsStopwatch_##identifier( g_ccpStatistics_##identifier )
 #undef CCP_STATS_ZONE
 #define CCP_STATS_ZONE( name )
 
-#endif
+#endif  // CCP_TELEMETRY_ENABLED
 
 #endif // BlueStatistics_h

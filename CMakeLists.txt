@@ -309,7 +309,12 @@ if(WIN32)
             winhttp
             psapi
             iphlpapi
-)
+    )
+    add_custom_command(
+            TARGET Blue POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:Blue> $<TARGET_FILE_DIR:Blue>
+            COMMAND_EXPAND_LISTS
+    )
 endif()
 
 get_target_property(SCHEDULER_INCLUDE_DIR Scheduler INTERFACE_INCLUDE_DIRECTORIES)
