@@ -789,7 +789,6 @@ void TracyLeaveZone( void* key )
 	}
 }
 
-// TODO: This function is currently not available/exposed on the EVE (2.7) side. Need to agree on implementation with Team-Core.
 void TracyZoneAddText( void* key, const char* text )
 {
 	if (text != nullptr )
