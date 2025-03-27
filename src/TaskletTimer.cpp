@@ -92,7 +92,6 @@ TaskletTimer::TaskletTimer() :
 	mLastTime(0), mOverhead(0), mLastSwitch(0), mLastWarn(0),
 	mMaxWarn(1),
 	mStackMap( "TaskletTimer/mStackMap" ),
-	mSimpleCtxt(Py_None, true),
 	m_BlueOSPumpCountAtStart( 0 )
 {
 	mCurrentStack = 0;
