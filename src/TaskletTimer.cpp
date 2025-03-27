@@ -3,7 +3,7 @@
 
 	TaskletTimer.cpp
 
-	Author:    Kristj·n Valur JÛnsson
+	Author:    Kristj√°n Valur J√≥nsson
 	Created:   Sept 2004
 	OS:        Win32
 	Project:   Yep
@@ -96,7 +96,6 @@ TaskletTimer::TaskletTimer() :
 	mMaxWarn(1),
 	mStackMap( "TaskletTimer/mStackMap" ),
 	mSimpleCtxt(Py_None, true),
-	mCanonicalizationDict(PyDict_New()),
 	m_BlueOSPumpCountAtStart( 0 )
 {
 	mCurrentStack = 0;
@@ -153,37 +152,6 @@ PyObject *TaskletTimer::EnterTaskletStr(const char *context, TASKLETFLAGS flags)
 
 PyObject *TaskletTimer::EnterTaskletEx(PyObject *newContext, TASKLETFLAGS flags)
 {
-	if (mDoTelemetry) {
-		PyObject *strifiedName = PyObject_Str(newContext);
-
-		if (strifiedName == NULL) {
-			return NULL;
-		}
-
-		PyObject *canonicalName = PyDict_GetItem(mCanonicalizationDict, strifiedName);
-
-		if (!canonicalName) {
-			// First time we've seen this particular name, set it in the dict and use it directly
-			int err = PyDict_SetItem(mCanonicalizationDict, strifiedName, strifiedName);
-			if (err != 0) {
-				// Not being able to set an entry in our dict is pretty fatal, boil the exception on up.
-				return NULL;
-			}
-
-			// Success, we are the canonical string for this forever and ever and ever now
-			canonicalName = strifiedName;
-		}
-
-		Py_DECREF(strifiedName);
-#if CCP_TELEMETRY_ENABLED
-		if (canonicalName) {
-			tmTaskletEnter(TMCM_GENERAL, PyString_AsString(canonicalName));
-		}
-#else
-		CCP_UNUSED( canonicalName );
-#endif
-	}
-
 	mFlags = flags; //temporary hack to support the IDLE flag
 	if (!mActive) {
 		//timer is not enabled.
@@ -240,12 +208,6 @@ PyObject *TaskletTimer::EnterTaskletEx(PyObject *newContext, TASKLETFLAGS flags)
 		
 bool TaskletTimer::ReturnFromTasklet(PyObject *backContext)
 {
-#if CCP_TELEMETRY_ENABLED
-	if (mDoTelemetry)
-	{
-		tmTaskletLeave( TMCM_GENERAL );
-	}
-#endif
 	// Temporary hack to support IDLE
 	if (mFlags) {
 		TimesliceReset();

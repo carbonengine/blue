@@ -913,11 +913,7 @@ void BlueOS::PumpOSInternal()
 
 	// Sleep until we need to wake up
 	{
-		//CCP_STATS_ZONE( "BlueOS/PumpOS/DoSleep" );
-		// Defining this directly to be able to mark this as an "idle" telemetry zone
-#if CCP_TELEMETRY_ENABLED
-		tmZone( TMCM_GENERAL, TMZF_IDLE, "BlueOS/PumpOS/DoSleep" );
-#endif
+		CCP_STATS_ZONE( "BlueOS/PumpOS/DoSleep" );
 		DoSleep();
 		mNextScheduledEvent = int( mSleepTime );
 	}

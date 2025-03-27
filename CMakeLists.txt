@@ -338,7 +338,12 @@ if(WIN32)
             winhttp
             psapi
             iphlpapi
-)
+    )
+    add_custom_command(
+            TARGET Blue POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:Blue> $<TARGET_FILE_DIR:Blue>
+            COMMAND_EXPAND_LISTS
+    )
 endif()
 
 target_include_directories(Blue

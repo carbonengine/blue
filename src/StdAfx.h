@@ -20,6 +20,8 @@
 #endif
 #endif
 
+#include <optional>
+
 // include all python stuff
 #if BLUE_WITH_PYTHON
 #include <Python.h>

@@ -292,8 +292,14 @@ PyObject* PyEnterZone( PyObject* self, PyObject* args )
 	{
 		return nullptr;
 	}
+	auto frame = PyEval_GetFrame();
 
-	tmTaskletEnter( TMCM_GENERAL, zone );
+	auto fileName = Immortalize( frame->f_code->co_filename );
+	if (!fileName)
+	{
+		return nullptr;
+	}
+	TracyEnterZone( frame, zone, fileName, frame->f_lineno );
 #endif
 	Py_RETURN_NONE;
 }
@@ -301,7 +307,7 @@ PyObject* PyEnterZone( PyObject* self, PyObject* args )
 PyObject* PyLeaveZone( PyObject* self, PyObject* args )
 {
 #if CCP_TELEMETRY_ENABLED
-	tmTaskletLeave( TMCM_GENERAL );
+	TracyLeaveZone( PyEval_GetFrame() );
 #endif
 	Py_RETURN_NONE;
 }
@@ -328,9 +334,9 @@ PyObject* PyAppendToZone( PyObject* self, PyObject* args )
 }
 
 #if CCP_TELEMETRY_ENABLED
-static TmU64 s_timespanId = 0xf00000000;
+static uint64_t s_timespanId = 0xf00000000;
 #endif
-    
+
 PyObject* PyBeginTimeSpan( PyObject* self, PyObject* args )
 {
 #if CCP_TELEMETRY_ENABLED
@@ -348,7 +354,6 @@ PyObject* PyBeginTimeSpan( PyObject* self, PyObject* args )
 	}
 
 	++s_timespanId;
-	tmBeginTimeSpan( TMCM_GENERAL, s_timespanId, TMTSF_NONE, label );
 
 	return PyLong_FromLongLong( s_timespanId );
 #else
@@ -359,7 +364,7 @@ PyObject* PyBeginTimeSpan( PyObject* self, PyObject* args )
 PyObject* PyEndTimeSpan( PyObject* self, PyObject* args )
 {
 #if CCP_TELEMETRY_ENABLED
-	TmU64 id = 0;
+	uint64_t id = 0;
 	PyObject* labelO;
 
 	if( !PyArg_ParseTuple( args, "LO", &id, &labelO ) )
@@ -372,8 +377,6 @@ PyObject* PyEndTimeSpan( PyObject* self, PyObject* args )
 	{
 		return nullptr;
 	}
-
-	tmEndTimeSpan( TMCM_GENERAL, id, TMTSF_NONE, label );
 #endif
 	Py_RETURN_NONE;
 }
@@ -667,18 +670,14 @@ const Be::ClassInfo* BlueStatistics::ExposeToBlue()
 		(
 			"PauseTelemetry",
 			PauseTelemetry,
-			"Pauses Telemetry capture. Ticking and frame boundary information are"
-			"\nstill sent over, but high frequency data such as memory events, mutex"
-			"\nstates, and zones are discarded. An application can use this function"
-			"\nto keep Telemetry live but with very low overhead until a specific"
-			"\nproblem area is encountered."
+			"Pauses Telemetry capture. (deprecated)"
 		)
 
 		MAP_METHOD_AND_WRAP
 		(
 			"ResumeTelemetry",
 			ResumeTelemetry,
-			"Resumes Telemetry captures."
+			"Resumes Telemetry capture. (deprecated)"
 		)
 
 		MAP_METHOD_AND_WRAP
@@ -692,7 +691,7 @@ const Be::ClassInfo* BlueStatistics::ExposeToBlue()
 		(
 			"isTelemetryConnectionRequested",
 			IsTelemetryConnectionRequested,
-			"Is Telemetry connection pending?"
+			"Is Telemetry profiler connection pending?"
 		)
 
 		MAP_PROPERTY_READONLY
@@ -706,14 +705,21 @@ const Be::ClassInfo* BlueStatistics::ExposeToBlue()
 		(
 			"isTelemetryConnected",
 			IsTelemetryConnected,
-			"Is Telemetry connected?"
+			"Is Telemetry connected to a profiler?"
 		)
 
 		MAP_PROPERTY_READONLY
 		(
 			"isTelemetryPaused",
 			IsTelemetryPaused,
-			"Is Telemetry paused?"
+			"Is Telemetry paused? (deprecated)"
+		)
+
+		MAP_PROPERTY_READONLY
+		(
+			"isTelemetryStarted",
+			IsTelemetryStarted,
+			"Is Telemetry instrumentation active?"
 		)
 
 		MAP_PROPERTY
@@ -825,4 +831,3 @@ const Be::ClassInfo* BlueStatistics::ExposeToBlue()
 
 	EXPOSURE_END()
 }
-

@@ -35,10 +35,6 @@ public:
 	virtual ~BlueAsyncRes()
 	{
 		CCP_ASSERT( m_reloadNotifyTargetsCount == 0 );
-
-	#if CCP_TELEMETRY_ENABLED
-		tmFree( TMCM_GENERAL, this );
-	#endif
 	}
 
 	// This gets called right before destruction - safe to call virtual functions.
