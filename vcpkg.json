@@ -27,6 +27,13 @@
     {
       "name": "python3",
       "version>=": "3.12.3#1"
+    },
+    "openssl"
+  ],
+  "overrides": [
+    {
+      "name": "openssl",
+      "version": "1.1.1k#8"
     }
   ]
 }
