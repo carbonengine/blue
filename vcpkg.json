@@ -32,6 +32,10 @@
     {
       "name": "libyaml",
       "version>=": "0.2.5#5"
+    },
+    {
+      "name": "zlib-ng",
+      "version>=": "2.1.3"
     }
   ],
   "overrides": [
