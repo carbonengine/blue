@@ -19,6 +19,10 @@
     {
       "name": "carbon-scheduler",
       "version>=": "1.0.0#4"
+    },
+    {
+      "name": "gtest",
+      "version>=": "1.16.0"
     }
   ]
 }
