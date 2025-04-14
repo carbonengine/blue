@@ -28,3 +28,4 @@ __pycache__/
 ### CMAKE ###
 # Intermediate cmake build flavor folders #
 cmake-build-*/
+CMakeUserPresets.json
