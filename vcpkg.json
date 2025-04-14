@@ -23,6 +23,10 @@
     {
       "name": "gtest",
       "version>=": "1.16.0"
+    },
+    {
+      "name": "python3",
+      "version>=": "3.12.3#1"
     }
   ]
 }
