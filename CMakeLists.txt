@@ -15,8 +15,8 @@ endif()
 
 file(TO_CMAKE_PATH "$ENV{CCP_EVE_PERFORCE_BRANCH_PATH}" BRANCH_ROOT_DIR)
 list(INSERT CMAKE_MODULE_PATH 0 ${BRANCH_ROOT_DIR}/cmake)
-include(CcpGlobalSettings)
-include(CcpPackageConfigHelpers)
+include(cmake/CcpGlobalSettings.cmake)
+include(cmake/CcpTargetConfigurations.cmake)
 
 find_package(BlueExposure REQUIRED NO_CMAKE_PATH)
 find_package(CarbonIO REQUIRED NO_CMAKE_PATH)
