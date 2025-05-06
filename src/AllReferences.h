@@ -49,6 +49,8 @@ private:
 
 	bool CleanReferences( uint64_t endTime );
 	bool HasRoute( IRoot* from, IRoot* to, std::unordered_map<IRoot*, bool>& hasRoute ) const;
+	bool IsOutdated( const Reference& ref ) const;
+	bool IsOutdated( const References& refs ) const;
 
 	IRootPtr m_root;
 	std::vector<IRoot*> m_stack;
