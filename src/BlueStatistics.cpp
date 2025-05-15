@@ -6,6 +6,7 @@
 //
 
 #include "StdAfx.h"
+#include "BlueStatistics.h"
 #include "IBlueOS.h"
 #include <Scheduler.h>
 

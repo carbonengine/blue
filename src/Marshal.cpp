@@ -13,6 +13,7 @@
 #include "Marshal.h"
 #include "BlueMemStream.h"
 #include "BlueResFile.h"
+#include <BlueStatistics.h>
 #include "PyTemplates.h"
 #include "ITaskletTimer.h"
 #include "IBluePython.h"

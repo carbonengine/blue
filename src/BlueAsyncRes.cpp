@@ -3,6 +3,7 @@
 #include "BlueAsyncRes.h"
 #include "IBlueResMan.h"
 #include "IBluePaths.h"
+#include <BlueStatistics.h>
 #include "IBlueThreadMonitor.h"
 
 #define ASYNCLOADEDRESOURCE_DEBUGGING 0

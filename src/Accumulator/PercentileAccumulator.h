@@ -2,6 +2,8 @@
 #ifndef PercentileAccumulator_h
 #define PercentileAccumulator_h
 
+#include "ICcpStatisticsAccumulator.h"
+
 BLUE_DECLARE( PercentileAccumulator );
 
 class PercentileAccumulator : public ICcpStatisticsAccumulator

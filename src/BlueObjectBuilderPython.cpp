@@ -1,5 +1,7 @@
 #include "StdAfx.h"
 
+#include <BlueStatistics.h>
+
 #if BLUE_WITH_PYTHON
 
 #include "BlueObjectBuilderPython.h"

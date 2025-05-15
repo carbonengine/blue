@@ -10,8 +10,11 @@
 #ifndef BlueStatistics_h
 #define BlueStatistics_h
 
-#include "ICcpStatisticsAccumulator.h"
 #include <optional>
+
+#include <CcpTelemetry.h>
+
+#include <ICcpStatisticsAccumulator.h>
 
 BLUE_DECLARE( CcpStatisticsEntry );
 

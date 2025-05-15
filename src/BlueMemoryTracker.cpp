@@ -9,6 +9,7 @@
 
 #include "BlueMemoryTracker.h"
 
+#include <BlueStatistics.h>
 
 CCP_STATS_DECLARE( beMemory,					"Blue/Memory/Malloc", false, CST_MEMORY, "The amount of memory allocated via CCP_MALLOC" );
 CCP_STATS_DECLARE( trackedAllocationsCount,		"Blue/Memory/trackedAllocationsCount", false, CST_COUNTER_HIGH, "Number of tracked allocations live in the system" );
