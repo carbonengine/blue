@@ -15,6 +15,8 @@
 #include "zlib.h"
 #include <string>
 
+#include <BlueStatistics.h>
+
 //---------------------------------------------------
 // Uncomment this define to turn this files optimization off
 //#define OptimizeOff
