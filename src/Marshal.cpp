@@ -2414,7 +2414,7 @@ PyObject* Marshal::Load(PyObject* args, PyObject *kw)
 	if (offset >= 0) {
 		if (offset > bufflen) {
 			PyErr_Format(PyExc_ValueError, "invalid offset %d", (int)offset);
-			Py_DECREF(&buffer);
+			PyBuffer_Release(&buffer);
 			return nullptr;
 		}
 		srcbuff = (void*)((char*)srcbuff + offset);
@@ -2428,7 +2428,7 @@ PyObject* Marshal::Load(PyObject* args, PyObject *kw)
 	if (stringTable != Py_None) {
 		if (!PyList_Check(stringTable)) {
 			PyErr_SetString(PyExc_TypeError, "stringTable must be a list");
-			Py_DECREF(&buffer);
+			PyBuffer_Release(&buffer);
 			return nullptr;
 		}
 		mStrTableRev = BluePy(stringTable, true);
@@ -2449,7 +2449,7 @@ PyObject* Marshal::Load(PyObject* args, PyObject *kw)
 			f.Write(srcbuff, bufflen);
 	}
 
-	Py_DECREF(&buffer);
+	PyBuffer_Release(&buffer);
 
 	if (result && stream.mGotCRC) {
 		if (stream.GetVersion() > 0 && !mSkipCrcCheck) {

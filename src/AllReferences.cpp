@@ -202,12 +202,15 @@ BluePy AllReferences::GetReferences( IRoot* obj )
 		Py_XDECREF( element );
 	};
 
-	if( found != end( m_references ) )
+	if( found != end( m_references ) && !IsOutdated( found->second ) )
 	{
 		AddRef( found->second.first );
 		for( auto& rec : found->second.rest )
 		{
-			AddRef( rec );
+			if( !IsOutdated( rec ) )
+			{
+				AddRef( rec );
+			}
 		}
 	}
 	return BluePy( result );
@@ -281,7 +284,7 @@ bool AllReferences::HasRoute( IRoot* from, IRoot* to, std::unordered_map<IRoot*,
 	}
 
 	auto found = m_references.find( to );
-	if( found == end( m_references ) )
+	if( found == end( m_references ) || IsOutdated( found->second ) )
 	{
 		hasRoute[to] = false;
 		return false;
@@ -293,7 +296,7 @@ bool AllReferences::HasRoute( IRoot* from, IRoot* to, std::unordered_map<IRoot*,
 	}
 	for( auto& ref : found->second.rest )
 	{
-		if( HasRoute( from, ref.parent, hasRoute ) )
+		if( !IsOutdated( ref ) && HasRoute( from, ref.parent, hasRoute ) )
 		{
 			hasRoute[to] = true;
 			return true;
@@ -301,4 +304,14 @@ bool AllReferences::HasRoute( IRoot* from, IRoot* to, std::unordered_map<IRoot*,
 	}
 	hasRoute[to] = false;
 	return false;
+}
+
+bool AllReferences::IsOutdated( const Reference& ref ) const
+{
+	return m_cleaningReferences && ref.generation != m_generation;
+}
+
+bool AllReferences::IsOutdated( const References& refs ) const
+{
+	return m_cleaningReferences && refs.generation != m_generation;
 }
