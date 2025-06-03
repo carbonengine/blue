@@ -153,7 +153,6 @@ CcpStaticStatisticsEntry* BlueStatistics::CreateDynamicEntry( const char* name, 
 // Use StartTimedTelemetry or StartTelemetryDump otherwise.
 void BlueStatistics::StartTelemetry( const std::string& server )
 {
-	CCP_LOG_CH( s_ch, "Calling StartTimedTelemetry()" );
 	StartTimedTelemetry( server, 0 );
 }
 
@@ -167,7 +166,6 @@ void TelemetryEventHandler( CcpTelemetryEvent event, void* userdata )
 void BlueStatistics::StartTimedTelemetry( const std::string& server, float samplePeriod )
 {
 	using namespace std::chrono;
-	CCP_LOG_CH( s_ch, "Calling CcpStartTelemetry()" );
 	CcpStartTelemetry( CcpTelemetryConfig{ server, duration_cast<milliseconds>( duration<float>(samplePeriod) ) } );
 	CcpRegisterTelemetryEventHandler( TelemetryEventHandler, nullptr );
 }
