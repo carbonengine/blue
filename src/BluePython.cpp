@@ -6,6 +6,8 @@
 
 #include "BluePython.h"
 
+#include <BlueStatistics.h>
+
 #include "IBlueOS.h"
 #include "IMotherLode.h"
 #include "IBlueResMan.h"

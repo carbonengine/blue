@@ -8,6 +8,7 @@
 #include "StdAfx.h"
 
 #include "BlueRemoteStream.h"
+#include <BlueStatistics.h>
 #include "IBlueOS.h"
 #include "IBluePaths.h"
 
@@ -718,4 +719,3 @@ bool BlueRemoteStream::ShouldAbort()
 
 	return false;
 }
-

@@ -12,6 +12,7 @@
 #include "BlueRemoteStream.h"
 #include "IBluePaths.h"
 #include "BlueFileUtil.h"
+#include <BlueStatistics.h>
 
 #ifdef __ANDROID__
 #include <errno.h>

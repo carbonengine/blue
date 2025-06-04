@@ -10,6 +10,7 @@
 #include "BlueFileStream.h"
 #include "BlueMemStream.h"
 #include "BlueResManBackgroundCall.h"
+#include <BlueStatistics.h>
 #include "IBlueOS.h"
 
 #if CCP_STACKLESS
