@@ -22,7 +22,7 @@ public:
         if (ret) {
 #if _WIN32
 			// On Windows we either get what we request, or it fails.
-			int64_t tmp{size};
+			int64_t tmp(size);
 #elif __APPLE__
 			// On macOS we receive an aligned memory block which may be larger.
 			int64_t tmp = CCP_MSIZE( ret );
