@@ -5,6 +5,7 @@ CCP_STATS_DECLARED_ELSEWHERE( pyMemory );
 class PythonMemoryAllocatorTest : public ::testing::Test {
 protected:
     void SetUp() override {
+		::testing::Test::SetUp();
 		PyPreConfig preConfig;
 		PyPreConfig_InitIsolatedConfig( &preConfig );
 		preConfig.allocator = PYMEM_ALLOCATOR_NOT_SET;
@@ -49,6 +50,7 @@ protected:
 
     void TearDown() override {
         Py_FinalizeEx();
+		::testing::Test::TearDown();
     }
 };
 
