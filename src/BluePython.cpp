@@ -168,6 +168,53 @@ BluePyOS::BluePyOS(IRoot* lockobj) :
 
 PyTypeObject *LogChannelType();
 
+// This is a little Python helper script to allow loading flavoured Python C extensions through a simple `import extension_without_flavor`.
+// It kind of obsoletes the old `blue.LoadExtension` helper method.
+const char* IMPORT_HOOK_HELPER_SCRIPT = R"(
+import importlib.machinery
+import os
+import sys
+
+
+class BlueFlavoredExtensionFileLoader(importlib.machinery.ExtensionFileLoader):
+    def __init__(self, name, path, flavor):
+        super().__init__(name, path)
+        self.flavor = flavor
+
+    def create_module(self, spec):
+        import sys
+        unflavored_name = spec.name
+        spec.name = f"{spec.name}_{self.flavor}"
+        module = super().create_module(spec)
+        if spec.name in sys.modules:  # this is a simple guard in case that the import failed
+            sys.modules[unflavored_name] = sys.modules[spec.name]
+
+        return module
+
+
+class BlueFlavoredExtensionImporter:
+    def __init__(self, flavor, binary_path, loader_class):
+        import _imp
+        self.flavor = flavor
+        self.loader_class = loader_class
+        self.bin_path = binary_path
+        self.extension_suffixes = [f"_{self.flavor}{suffix}" for suffix in _imp.extension_suffixes()]
+
+    def find_spec(self, fullname, path=None, target=None):
+        import importlib
+        import os
+        for suffix in self.extension_suffixes:
+            origin = os.path.join(self.bin_path, f"{fullname}{suffix}")
+            if os.path.exists(origin):
+                break
+        else:
+            return None  # no flavored version was found, return None
+
+        return importlib.machinery.ModuleSpec(fullname, self.loader_class(fullname, origin, self.flavor), origin=origin)
+
+sys.meta_path.insert(0, BlueFlavoredExtensionImporter(CCP_BUILD_FLAVOR, CCP_EXEFILE_PATH, BlueFlavoredExtensionFileLoader))
+)";
+
 //--------------------------------------------------------------------
 bool BluePyOS::InitBasicModuleSupport()
 {
@@ -191,6 +238,22 @@ bool BluePyOS::InitBasicModuleSupport()
 
 	BlueRegisterObjectsToModule( mBlueModule, BlueRegistration::GetObjectRegs() );
 	BlueRegisterExceptionsToModule( mBlueModule, BlueRegistration::GetExceptionRegs() );
+
+	// Extend the Pyhon import mechanism with support for C extensions that use our "build flavors".
+	// This needs to happen before we import any flavored C extensions.
+#if ~(~CCP_BUILD_FLAVOR + 0) == 0 && ~(~CCP_BUILD_FLAVOR + 1) == 1
+// this is not a flavoured build, so no import hook is needed
+#else
+	auto executablePath = WideToUTF8( CcpExecutablePath() );
+	PyObject* localDict = Py_BuildValue( "{ssss}", "CCP_BUILD_FLAVOR", CCP_STRINGIZE( CCP_BUILD_FLAVOR ), "CCP_EXEFILE_PATH", executablePath.c_str() );
+	if ( ! PyRun_String( IMPORT_HOOK_HELPER_SCRIPT, Py_file_input, dict, localDict ) )
+	{
+		CCP_LOGERR_CH( s_chPy, "Failed executing import helper script" );
+		return false;
+	}
+	PyDict_Clear( localDict );
+	Py_DECREF( localDict );
+#endif
 
 	// Get ref to schedule manager for main thread
 	// This will ensure the main thread's schedule manager alive throughout game usage
