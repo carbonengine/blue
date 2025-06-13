@@ -22,10 +22,10 @@ find_package(BlueExposure REQUIRED NO_CMAKE_PATH)
 find_package(CarbonIO REQUIRED NO_CMAKE_PATH)
 find_package(CURL REQUIRED NO_CMAKE_PATH)
 find_package(OpenSSL REQUIRED NO_CMAKE_PATH)
-find_package(PDM REQUIRED NO_CMAKE_PATH)
 find_package(YAML REQUIRED NO_CMAKE_PATH)
 find_package(ZLIB REQUIRED NO_CMAKE_PATH)
 find_package(Scheduler REQUIRED NO_CMAKE_PATH)
+find_package(carbon-pdmprotowrapper REQUIRED CONFIG)
 
 
 set(PUBLIC_HEADER_FILES_INCLUDE
@@ -291,7 +291,7 @@ target_link_libraries(Blue
         BlueExposure
         CcpCore
     PRIVATE
-        PDM::PDM
+        platform_pdm_proto_wrapper
         CURL::libcurl
         YAML::YAML
         ZLIB::ZLIB
