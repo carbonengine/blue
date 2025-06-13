@@ -19,6 +19,10 @@
     {
       "name": "carbon-scheduler",
       "version>=": "1.0.0#4"
+    {
+      "name": "carbon-exefile",
+      "version>=": "4.0.1",
+      "host": true
     },
     {
       "name": "gtest",
