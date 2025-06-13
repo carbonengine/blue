@@ -26,7 +26,6 @@ target_include_directories(BlueCppUnitTests
 target_link_libraries(BlueCppUnitTests
     Blue
     GTest::GTest
-    Scheduler
     Python3::Python
 )
 
