@@ -4,8 +4,6 @@ find_package(Crashpad REQUIRED NO_CMAKE_PATH)
 find_package(libuv REQUIRED NO_CMAKE_PATH)
 find_package(Tracy CONFIG REQUIRED NO_CMAKE_PATH)
 
-find_package(CarbonIO REQUIRED NO_CMAKE_PATH)
-find_package(Scheduler REQUIRED NO_CMAKE_PATH)
 find_package(Greenlet REQUIRED NO_CMAKE_PATH)
 
 find_package(Python3 COMPONENTS Development REQUIRED)

@@ -18,13 +18,14 @@ list(INSERT CMAKE_MODULE_PATH 0 ${BRANCH_ROOT_DIR}/cmake)
 include(cmake/CcpGlobalSettings.cmake)
 include(cmake/CcpTargetConfigurations.cmake)
 
-find_package(BlueExposure REQUIRED NO_CMAKE_PATH)
-find_package(CarbonIO REQUIRED NO_CMAKE_PATH)
-find_package(CURL REQUIRED NO_CMAKE_PATH)
-find_package(OpenSSL REQUIRED NO_CMAKE_PATH)
-find_package(YAML REQUIRED NO_CMAKE_PATH)
-find_package(ZLIB REQUIRED NO_CMAKE_PATH)
-find_package(Scheduler REQUIRED NO_CMAKE_PATH)
+find_package(carbon-core REQUIRED CONFIG)
+find_package(carbon-blueexposure REQUIRED CONFIG)
+find_package(carbon-io REQUIRED CONFIG)
+find_package(CURL REQUIRED CONFIG)
+find_package(YAML REQUIRED CONFIG)
+find_package(zlib REQUIRED)
+find_package(carbon-scheduler REQUIRED CONFIG)
+find_package(OpenSSL COMPONENTS Crypto SSL REQUIRED)
 find_package(carbon-pdmprotowrapper REQUIRED CONFIG)
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
@@ -284,7 +285,7 @@ if(APPLE)
     target_link_libraries(Blue PRIVATE "-framework SystemConfiguration -framework Foundation -framework IOKit -framework AppKit")
 endif()
 
-get_target_property(CARBONIO_INCLUDE_DIR carbonio INTERFACE_INCLUDE_DIRECTORIES)
+get_target_property(CARBONIO_INCLUDE_DIR _socket INTERFACE_INCLUDE_DIRECTORIES)
 target_include_directories(Blue PRIVATE ${CARBONIO_INCLUDE_DIR})
 
 target_link_libraries(Blue
@@ -294,7 +295,7 @@ target_link_libraries(Blue
     PRIVATE
         platform_pdm_proto_wrapper
         CURL::libcurl
-        YAML::YAML
+        yaml
         ZLIB::ZLIB
         OpenSSL::Crypto
         OpenSSL::SSL
@@ -331,13 +332,6 @@ set_target_properties(Blue PROPERTIES OUTPUT_NAME "blue")
 
 # Provide tests and an install target iff this is the top level project only
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
-    # Running tests happen through exefile in interpreter mode. For that we need to determine the correct name of Exefile,
-    # which differs by platform. Additionally, we kind of guess it here because there's no CMake target which could be
-    # queried for the property instead.
-    set(EXEFILE_NAME Exefile)
-    if(WIN32)
-        set(EXEFILE_NAME ${EXEFILE_NAME}.exe)
-    endif()
     # tests
     option(BUILD_TESTING "Build tests. Enabled by default." ON)
     include(CTest)
@@ -364,11 +358,12 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     if(${PYTHON_TEST_DISCOVERY_RETVAL})
         message(FATAL_ERROR "Error encountered during test discovery:\n=== stderr: ===\n${PYTHON_TEST_DISCOVERY_ERRORS}\n=== stdout: ===\n${PYTHON_TESTS_STR}")
     endif()
+    find_program(exefile_tool exefile NO_CACHE)
     separate_arguments(PYTHON_TESTS UNIX_COMMAND ${PYTHON_TESTS_STR})
     foreach(PYTHON_TEST ${PYTHON_TESTS})
         message(STATUS "Found test ${PYTHON_TEST}")
         add_test(NAME ${PYTHON_TEST}
-            COMMAND $<TARGET_FILE_DIR:Blue>/${EXEFILE_NAME} /inherit /buildflavor=$<LOWER_CASE:$<CONFIG>> /py -m bluetests -v ${PYTHON_TEST}
+            COMMAND ${exefile_tool} /inherit /buildflavor=$<LOWER_CASE:$<CONFIG>> /py -m bluetests -v ${PYTHON_TEST}
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests/python
         )
         if(WIN32)
@@ -392,11 +387,6 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     # Install rule for available public headers
     install(DIRECTORY include DESTINATION . FILES_MATCHING PATTERN "*.h")
 
-    configure_ccp_vendor_config_file(
-        TARGET Blue
-        DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/BlueConfig.cmake"
-        DEPENDENCIES "BlueExposure;CURL;OpenSSL;PDM;YAML;ZLIB"
-    )
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/BlueConfig.cmake DESTINATION .)
 
     # Install python package
