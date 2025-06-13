@@ -8,6 +8,14 @@ set(VCPKG_ENV_PASSTHROUGH CCP_EVE_PERFORCE_BRANCH_PATH)
 
 set(VCPKG_BUILD_TYPE release)
 
-if (PORT MATCHES crashpad)
-    set(VCPKG_PLATFORM_TOOLSET v143)
+if (PORT MATCHES "libyaml")
+    set(VCPKG_LIBRARY_LINKAGE static)
+endif ()
+
+if (PORT MATCHES "curl")
+    set(VCPKG_LIBRARY_LINKAGE static)
+endif ()
+
+if (PORT MATCHES "openssl")
+    set(VCPKG_LIBRARY_LINKAGE static)
 endif ()
