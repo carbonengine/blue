@@ -5,10 +5,10 @@ find_package(libuv REQUIRED NO_CMAKE_PATH)
 find_package(Tracy CONFIG REQUIRED NO_CMAKE_PATH)
 
 find_package(CarbonIO REQUIRED NO_CMAKE_PATH)
-find_package(Python REQUIRED NO_CMAKE_PATH)
 find_package(Scheduler REQUIRED NO_CMAKE_PATH)
 find_package(Greenlet REQUIRED NO_CMAKE_PATH)
 
+find_package(Python3 COMPONENTS Development REQUIRED)
 
 add_executable(BlueCppUnitTests
     main.cpp
@@ -28,8 +28,8 @@ target_include_directories(BlueCppUnitTests
 target_link_libraries(BlueCppUnitTests
     Blue
     GTest::GTest
-    Python
     Scheduler
+    Python3::Python
 )
 
 # Setting up the test environment here is a little bit convoluted because Python and C++ tests expect binaries in
@@ -38,7 +38,7 @@ target_link_libraries(BlueCppUnitTests
 add_custom_command(TARGET BlueCppUnitTests POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:Scheduler> $<TARGET_FILE_DIR:BlueCppUnitTests>
         COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:Greenlet> $<TARGET_FILE_DIR:BlueCppUnitTests>
-        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:Python> $<TARGET_FILE_DIR:BlueCppUnitTests>
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:Python3::Python> $<TARGET_FILE_DIR:BlueCppUnitTests>
 )
 if(CMAKE_IMPORT_LIBRARY_SUFFIX)
     add_custom_command(TARGET BlueCppUnitTests POST_BUILD

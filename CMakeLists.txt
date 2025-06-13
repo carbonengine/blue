@@ -26,6 +26,7 @@ find_package(YAML REQUIRED NO_CMAKE_PATH)
 find_package(ZLIB REQUIRED NO_CMAKE_PATH)
 find_package(Scheduler REQUIRED NO_CMAKE_PATH)
 find_package(carbon-pdmprotowrapper REQUIRED CONFIG)
+find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
 
 set(PUBLIC_HEADER_FILES_INCLUDE
@@ -352,7 +353,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     endif()
     # Discovery works with the standard python interpreter because it isn't running anything, it just needs to find all
     # the defined test cases. Therefore, just use that one, even though it cannot run the discovered test cases.
-    execute_process(COMMAND ${PYTHON_EXECUTABLE} discover.py
+    execute_process(COMMAND ${Python3_EXECUTABLE} discover.py
         OUTPUT_VARIABLE PYTHON_TESTS_STR
         OUTPUT_STRIP_TRAILING_WHITESPACE
         ERROR_STRIP_TRAILING_WHITESPACE
