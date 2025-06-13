@@ -19,3 +19,7 @@ endif ()
 if (PORT MATCHES "openssl")
     set(VCPKG_LIBRARY_LINKAGE static)
 endif ()
+
+if (PORT MATCHES "protobuf")
+    set(VCPKG_LIBRARY_LINKAGE static)
+endif ()
