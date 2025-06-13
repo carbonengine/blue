@@ -55,7 +55,7 @@ void* MeasuredRealloc( void* ctx, void* ptr, size_t newSize )
 	uint64_t prev = CCPMSize( ptr );
 	auto ret = _this->allocator.realloc( _this->allocator.ctx, ptr, newSize );
 #if _WIN32
-	_this->measurement.Add( int64_t( newSize ) - prev );
+	_this->measurement.Add( int64_t( newSize - prev ) );
 #elif __APPLE__
 	_this->measurement.Add( int64_t( CCPMSize( ret ) - prev ) );
 #else
