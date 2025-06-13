@@ -2,15 +2,15 @@
   "dependencies": [
     {
       "name": "carbon-blueexposure",
-      "version>=": "2.0.3-alpha.0"
+      "version>=": "2.0.3-alpha.1"
     },
     {
       "name": "carbon-core",
-      "version>=": "2.1.1#4"
+      "version>=": "2.1.1#6"
     },
     {
       "name": "carbon-io",
-      "version>=": "1.0.7-alpha.0"
+      "version>=": "1.0.7-alpha.1"
     },
     {
       "name": "carbon-pdm",
@@ -18,7 +18,8 @@
     },
     {
       "name": "carbon-scheduler",
-      "version>=": "1.0.0#4"
+      "version>=": "1.0.0#10"
+    },
     {
       "name": "carbon-exefile",
       "version>=": "4.0.1",
