@@ -19,6 +19,7 @@ endif ()
 
 if (PORT MATCHES "protobuf")
     set(VCPKG_LIBRARY_LINKAGE static)
+    set(VCPKG_BUILD_TYPE release)
 endif ()
 
 if (PORT MATCHES "crashpad")
