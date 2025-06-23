@@ -4,6 +4,7 @@ project(Blue VERSION 1.0.0)
 
 include(cmake/CcpGlobalSettings.cmake)
 include(cmake/CcpTargetConfigurations.cmake)
+include(cmake/CcpPackageConfigHelpers.cmake)
 
 find_package(carbon-core REQUIRED CONFIG)
 find_package(carbon-blueexposure REQUIRED CONFIG)
@@ -372,23 +373,43 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
         endif ()
     endforeach()
 
-    # Install rule to ensure that our runtime and linker files are in the expected, platform-specific folders
-    install(
-        TARGETS Blue
-        EXPORT BlueTargets
-        CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES}
-        ARCHIVE DESTINATION lib/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
-        LIBRARY DESTINATION lib/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
-        RUNTIME DESTINATION bin/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
+    option(
+            INSTALL_TO_MONOLITH
+            "Install this package to a perforce branch vendor folder - provided for backwards compatability"
+            ON
     )
-    # Install rule for available public headers
+
+    if (INSTALL_TO_MONOLITH)
+        # Install rule to ensure that our runtime and linker files are in the expected, platform-specific folders
+        install(
+            TARGETS Blue
+            EXPORT BlueTargets
+            CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES}
+            ARCHIVE DESTINATION lib/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}
+            LIBRARY DESTINATION lib/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}
+            RUNTIME DESTINATION bin/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}
+        )
+
+        # Generate target configuration for the monolith
+        configure_ccp_vendor_config_file(
+                TARGET Blue
+                DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/BlueConfig.cmake"
+                DEPENDENCIES "BlueExposure;CURL;OpenSSL;PDM;YAML;ZLIB"
+        )
+        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/BlueConfig.cmake DESTINATION .)
+    else ()
+        install(
+                TARGETS Blue
+                EXPORT BlueTargets
+                CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES}
+                ARCHIVE DESTINATION lib
+                LIBRARY DESTINATION lib
+                RUNTIME DESTINATION bin
+        )
+
+        install(FILES carbon-blueConfig.cmake DESTINATION ${CMAKE_INSTALL_PREFIX}/share/carbon-blue)
+    endif ()
+
     install(DIRECTORY include DESTINATION . FILES_MATCHING PATTERN "*.h")
-
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/BlueConfig.cmake DESTINATION .)
-
-    # Install python package
-    install(DIRECTORY python/ DESTINATION python
-            FILES_MATCHING
-            PATTERN "*.py"
-    )
+    install(DIRECTORY python DESTINATION . FILES_MATCHING PATTERN "*.py")
 endif()
