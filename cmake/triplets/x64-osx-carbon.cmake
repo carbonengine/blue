@@ -24,3 +24,11 @@ endif ()
 if (PORT MATCHES "crashpad")
     set(VCPKG_BUILD_TYPE release)
 endif ()
+
+if (PORT MATCHES "zlib")
+    set(VCPKG_LIBRARY_LINKAGE static)
+endif ()
+
+if (PORT MATCHES "zlib-ng")
+    set(VCPKG_LIBRARY_LINKAGE static)
+endif ()

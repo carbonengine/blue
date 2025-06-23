@@ -10,7 +10,7 @@ find_package(carbon-blueexposure REQUIRED CONFIG)
 find_package(carbon-io REQUIRED CONFIG)
 find_package(CURL REQUIRED CONFIG)
 find_package(YAML REQUIRED CONFIG)
-find_package(zlib REQUIRED)
+find_package(zlib-ng REQUIRED)
 find_package(carbon-scheduler REQUIRED CONFIG)
 find_package(OpenSSL COMPONENTS Crypto SSL REQUIRED)
 find_package(carbon-pdmprotowrapper REQUIRED CONFIG)
@@ -283,7 +283,7 @@ target_link_libraries(Blue
         platform_pdm_proto_wrapper
         CURL::libcurl
         yaml
-        ZLIB::ZLIB
+        zlib-ng::zlib
         OpenSSL::Crypto
         OpenSSL::SSL
 )
