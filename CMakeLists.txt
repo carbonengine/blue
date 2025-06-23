@@ -315,21 +315,16 @@ set_target_properties(Blue PROPERTIES OUTPUT_NAME "blue")
 
 # Provide tests and an install target iff this is the top level project only
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
-    # tests
     option(BUILD_TESTING "Build tests. Enabled by default." ON)
-    include(CTest)
     if(BUILD_TESTING)
+        include(CTest)
         add_subdirectory(tests)
 
         # discover python tests ... this may be a little bit brittle since we're working around the missing `_blueexposuretest`
         # binary. As in, test discovery happens during the configure stage at which the binary does not exist yet.
-        if(WIN32)
-            set(ENV{PYTHONPATH} ${CMAKE_CURRENT_SOURCE_DIR}/python)
-        elseif(APPLE)
-            set(ENV{PYTHONPATH} ${CMAKE_CURRENT_SOURCE_DIR}/python)
-        endif()
         # Discovery works with the standard python interpreter because it isn't running anything, it just needs to find all
         # the defined test cases. Therefore, just use that one, even though it cannot run the discovered test cases.
+        set(ENV{PYTHONPATH} ${CMAKE_CURRENT_SOURCE_DIR}/python)
         execute_process(COMMAND ${Python3_EXECUTABLE} discover.py
             OUTPUT_VARIABLE PYTHON_TESTS_STR
             OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -374,12 +369,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
         endforeach()
     endif()
 
-    option(
-            INSTALL_TO_MONOLITH
-            "Install this package to a perforce branch vendor folder - provided for backwards compatability"
-            ON
-    )
-
+    option(INSTALL_TO_MONOLITH "Install this package to a perforce branch vendor folder - provided for backwards compatability" ON)
     if (INSTALL_TO_MONOLITH)
         # Install rule to ensure that our runtime and linker files are in the expected, platform-specific folders
         install(
