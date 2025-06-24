@@ -216,6 +216,40 @@ class BlueFlavoredExtensionImporter:
 sys.meta_path.insert(0, BlueFlavoredExtensionImporter(CCP_BUILD_FLAVOR, CCP_EXEFILE_PATH, BlueFlavoredExtensionFileLoader))
 )";
 
+bool InstallImportHook()
+{
+	// Extend the Pyhon import mechanism with support for C extensions that use our "build flavors".
+	// This needs to happen before we import any flavored C extensions.
+#if ~(~CCP_BUILD_FLAVOR + 0) == 0 && ~(~CCP_BUILD_FLAVOR + 1) == 1
+	// this is not a flavoured build, so no import hook is needed
+	return true;
+#else
+	PyObject* globalDict = PyDict_New();
+	if ( !globalDict ) {
+		CCP_LOGERR_CH( s_chPy, "Failed to create global dict for import helper script execution");
+		return false;
+	}
+	auto executablePath = WideToUTF8( CcpExecutablePath() );
+	PyObject* localDict = Py_BuildValue( "{ssss}", "CCP_BUILD_FLAVOR", CCP_STRINGIZE( CCP_BUILD_FLAVOR ), "CCP_EXEFILE_PATH", executablePath.c_str() );
+	if ( !localDict ) {
+		CCP_LOGERR_CH( s_chPy, "Failed to create local dict for import helper script execution");
+		Py_DecRef( globalDict );
+		return false;
+	}
+	if ( ! PyRun_String( IMPORT_HOOK_HELPER_SCRIPT, Py_file_input, globalDict, localDict ) )
+	{
+		CCP_LOGERR_CH( s_chPy, "Failed executing import helper script" );
+		Py_DecRef( localDict );
+		Py_DecRef( globalDict );
+		return false;
+	}
+	Py_DecRef( localDict );
+	Py_DecRef( globalDict );
+
+	return true;
+#endif
+}
+
 //--------------------------------------------------------------------
 bool BluePyOS::InitBasicModuleSupport()
 {
@@ -541,33 +575,10 @@ bool BluePyOS::Startup()
 		TASKLETS[i].mContext = PyUnicode_InternFromString(TASKLETS[i].mName);
 	}
 
-	// Extend the Pyhon import mechanism with support for C extensions that use our "build flavors".
-	// This needs to happen before we import any flavored C extensions.
-#if ~(~CCP_BUILD_FLAVOR + 0) == 0 && ~(~CCP_BUILD_FLAVOR + 1) == 1
-// this is not a flavoured build, so no import hook is needed
-#else
-	PyObject* globalDict = PyDict_New();
-	if ( !globalDict ) {
-		CCP_LOGERR_CH( s_chPy, "Failed to create global dict for import helper script execution");
-		return false;
-	}
-	auto executablePath = WideToUTF8( CcpExecutablePath() );
-	PyObject* localDict = Py_BuildValue( "{ssss}", "CCP_BUILD_FLAVOR", CCP_STRINGIZE( CCP_BUILD_FLAVOR ), "CCP_EXEFILE_PATH", executablePath.c_str() );
-	if ( !localDict ) {
-		CCP_LOGERR_CH( s_chPy, "Failed to create local dict for import helper script execution");
-		Py_DecRef( globalDict );
-		return false;
-	}
-	if ( ! PyRun_String( IMPORT_HOOK_HELPER_SCRIPT, Py_file_input, globalDict, localDict ) )
+	if ( !InstallImportHook() )
 	{
-		CCP_LOGERR_CH( s_chPy, "Failed executing import helper script" );
-		Py_DecRef( localDict );
-		Py_DecRef( globalDict );
 		return false;
 	}
-	Py_DecRef( localDict );
-	Py_DecRef( globalDict );
-#endif
 
 	mSocketAPI = reinterpret_cast<PySocketModule_APIObject*>( PySocketModule_ImportModuleAndAPI() );
 	if ( !mSocketAPI )
