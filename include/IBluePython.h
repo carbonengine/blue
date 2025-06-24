@@ -239,6 +239,8 @@ BLUE_INTERFACE(IBluePyOS) : public IRoot
 
 extern BLUEIMPORT IBluePyOS* PyOS;
 
+BLUEIMPORT bool InstallImportHook();
+
 #endif
 
 #endif // _IBLUEPYTHON_H_

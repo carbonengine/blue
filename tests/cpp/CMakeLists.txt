@@ -48,10 +48,9 @@ if(CMAKE_IMPORT_LIBRARY_SUFFIX)
             COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:libuv::uv> $<TARGET_FILE_DIR:BlueCppUnitTests>  # Required to import _socket module.
             COMMAND ${CMAKE_COMMAND} -E copy ${Exefile_ROOT}/${CCP_VENDOR_BIN_PATH}/${EXEFILE_NAME} $<TARGET_FILE_DIR:Blue>
             COMMAND ${CMAKE_COMMAND} -E copy ${CcpCore_DIR}/${CCP_VENDOR_BIN_PATH}/$<TARGET_PROPERTY:CcpCore,NAME>.dll $<TARGET_FILE_DIR:Blue>
-            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:CcpCore>/CcpCore.dll $<TARGET_FILE_DIR:BlueCppUnitTests>          # Needed as runtime dependency for _carbonsocket
-            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:carbonio>/_carbonsocket.pyd $<TARGET_FILE_DIR:BlueCppUnitTests>
-            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:carbonio>/_carbonssl.pyd $<TARGET_FILE_DIR:BlueCppUnitTests>
-            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:carbonio>/carbonselect.pyd $<TARGET_FILE_DIR:BlueCppUnitTests>
+            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:carbonio>/_carbonsocket$<LOWER_CASE:$<IF:$<CONFIG:Release>,,_$<CONFIG>>>.pyd $<TARGET_FILE_DIR:BlueCppUnitTests>
+            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:carbonio>/_carbonssl$<LOWER_CASE:$<IF:$<CONFIG:Release>,,_$<CONFIG>>>.pyd $<TARGET_FILE_DIR:BlueCppUnitTests>
+            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:carbonio>/carbonselect$<LOWER_CASE:$<IF:$<CONFIG:Release>,,_$<CONFIG>>>.pyd $<TARGET_FILE_DIR:BlueCppUnitTests>
             COMMAND_EXPAND_LISTS
             VERBATIM
     )
@@ -66,10 +65,9 @@ if(APPLE)
             COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:libuv::uv> $<TARGET_FILE_DIR:Blue>/libuv.1.dylib  # Required to import _socket module.
             COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:libuv::uv> $<TARGET_FILE_DIR:BlueCppUnitTests>/libuv.1.dylib  # Required to import _socket module.
             COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:Tracy::TracyClient> $<TARGET_FILE_DIR:Blue>/libTracyClient.0.11.1.dylib  # CcpCore runtime dependency.
-            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:CcpCore>/CcpCore.so $<TARGET_FILE_DIR:BlueCppUnitTests>              # Needed as runtime dependency for _carbonsocket
-            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:carbonio>/_carbonsocket.so $<TARGET_FILE_DIR:BlueCppUnitTests>
-            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:carbonio>/_carbonssl.so $<TARGET_FILE_DIR:BlueCppUnitTests>
-            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:carbonio>/carbonselect.so $<TARGET_FILE_DIR:BlueCppUnitTests>
+            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:carbonio>/_carbonsocket$<LOWER_CASE:$<IF:$<CONFIG:Release>,,_$<CONFIG>>>.so $<TARGET_FILE_DIR:BlueCppUnitTests>
+            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:carbonio>/_carbonssl$<LOWER_CASE:$<IF:$<CONFIG:Release>,,_$<CONFIG>>>.so $<TARGET_FILE_DIR:BlueCppUnitTests>
+            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE_DIR:carbonio>/carbonselect$<LOWER_CASE:$<IF:$<CONFIG:Release>,,_$<CONFIG>>>.so $<TARGET_FILE_DIR:BlueCppUnitTests>
             COMMAND_EXPAND_LISTS
             VERBATIM
     )
