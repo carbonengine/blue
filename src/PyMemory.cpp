@@ -52,7 +52,7 @@ void* MeasuredCalloc( void* ctx, size_t nelem, size_t size )
 void* MeasuredRealloc( void* ctx, void* ptr, size_t newSize )
 {
 	auto _this = reinterpret_cast<MeasuredAllocator*>( ctx );
-	uint64_t prev = CCPMSize( ptr );
+	uint64_t prev = ptr ? CCPMSize( ptr ) : 0;
 	auto ret = _this->allocator.realloc( _this->allocator.ctx, ptr, newSize );
 #if _WIN32
 	_this->measurement.Add( int64_t( newSize - prev ) );
@@ -67,8 +67,11 @@ void* MeasuredRealloc( void* ctx, void* ptr, size_t newSize )
 void MeasuredFree( void* ctx, void* ptr )
 {
 	auto _this = reinterpret_cast<MeasuredAllocator*>( ctx );
-	_this->measurement.Add( -int64_t( CCPMSize( ptr ) ) );
-	_this->allocator.free( _this->allocator.ctx, ptr );
+	if ( ptr )
+	{
+		_this->measurement.Add( -int64_t( CCPMSize( ptr ) ) );
+		_this->allocator.free( _this->allocator.ctx, ptr );
+	}
 }
 }
 
