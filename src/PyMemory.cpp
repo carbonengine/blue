@@ -77,34 +77,19 @@ void MeasuredFree( void* ctx, void* ptr )
 
 extern "C" BLUEIMPORT void BlueInstallPythonMemoryHooks()
 {
-	static std::array<MeasuredAllocator, 3> measurers;
-	static std::array<PyMemAllocatorEx, 3> overrides{
-		{ { &measurers[PYMEM_DOMAIN_RAW], Ccp::MeasuredMalloc, Ccp::MeasuredCalloc, Ccp::MeasuredRealloc, Ccp::MeasuredFree },
-		  { &measurers[PYMEM_DOMAIN_MEM], Ccp::MeasuredMalloc, Ccp::MeasuredCalloc, Ccp::MeasuredRealloc, Ccp::MeasuredFree },
-		  { &measurers[PYMEM_DOMAIN_OBJ], Ccp::MeasuredMalloc, Ccp::MeasuredCalloc, Ccp::MeasuredRealloc, Ccp::MeasuredFree } }
-	};
+	static MeasuredAllocator measurer{};
+	static PyMemAllocatorEx override{&measurer, Ccp::MeasuredMalloc, Ccp::MeasuredCalloc, Ccp::MeasuredRealloc, Ccp::MeasuredFree };
 
 	PyMemAllocatorEx temporaryHelper;
 
+	// Only install an allocator for the `PYMEM_DOMAIN_RAW` because this is the allocator Python will always end up calling,
+	// even from the _MEM and _OBJ domains. The reason for this is that Python's _MEM and _OBJ domains use an internal heap
+	// that works on memory allocated through the _RAW domain.
 	PyMem_GetAllocator( PYMEM_DOMAIN_RAW, &temporaryHelper );
-	if( temporaryHelper.ctx != &overrides[PYMEM_DOMAIN_RAW] )
+	if( temporaryHelper.ctx != &override.ctx )
 	{
-		measurers[PYMEM_DOMAIN_RAW].allocator = temporaryHelper;
-		PyMem_SetAllocator( PYMEM_DOMAIN_RAW, &overrides[PYMEM_DOMAIN_RAW] );
-	}
-
-	PyMem_GetAllocator( PYMEM_DOMAIN_MEM, &temporaryHelper );
-	if( temporaryHelper.ctx != &overrides[PYMEM_DOMAIN_MEM] )
-	{
-		measurers[PYMEM_DOMAIN_MEM].allocator = temporaryHelper;
-		PyMem_SetAllocator( PYMEM_DOMAIN_MEM, &overrides[PYMEM_DOMAIN_MEM] );
-	}
-
-	PyMem_GetAllocator( PYMEM_DOMAIN_OBJ, &temporaryHelper );
-	if( temporaryHelper.ctx != &overrides[PYMEM_DOMAIN_OBJ] )
-	{
-		measurers[PYMEM_DOMAIN_OBJ].allocator = temporaryHelper;
-		PyMem_SetAllocator( PYMEM_DOMAIN_OBJ, &overrides[PYMEM_DOMAIN_OBJ] );
+		measurer.allocator = temporaryHelper;
+		PyMem_SetAllocator( PYMEM_DOMAIN_RAW, &override );
 	}
 }
 
