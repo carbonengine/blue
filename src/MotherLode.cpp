@@ -31,6 +31,7 @@
 #if BLUE_WITH_PYTHON
 #include "BluePythonWeakRef.h"
 #endif
+#include <BlueStatistics.h>
 
 static CMotherLode s_beMotherLode;
 IMotherLode* BeMotherLode = &s_beMotherLode;

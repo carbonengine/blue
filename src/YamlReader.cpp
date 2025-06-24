@@ -6,6 +6,7 @@
 #include "IRootReader.h"
 #include "Base64.h"
 #include "BlueMemStream.h"
+#include <BlueStatistics.h>
 #include "IBluePaths.h"
 #include "IBlueObjectMetadata.h"
 #include <Scheduler.h>

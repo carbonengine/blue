@@ -6,6 +6,7 @@
 //
 
 #include "StdAfx.h"
+#include "BlueStatistics.h"
 #include "IBlueOS.h"
 #include <Scheduler.h>
 
@@ -16,25 +17,12 @@ BlueStatistics* g_statistics = &s_statisticsInstance;
 
 BLUE_REGISTER_GLOBAL_AS_MODULE_OBJECT( "statistics", g_statistics );
 
-enum ProfilerState {
-	Stopped,
-	StartRequested,
-	Started,
-	StopRequested,
-};
-
-std::atomic<ProfilerState> s_profilerState{ProfilerState::Stopped};
-
 static bool s_isTelemetryCppCaptureEnabled = true;
 static bool s_isTelemetryTaskletCaptureEnabled = true;
 static bool s_isTelemetryPythonCaptureEnabled = false;
 static float s_telemetrySamplePeriod = 0.0f; // In seconds
 
 #if CCP_TELEMETRY_ENABLED
-static int s_telemetryConnectionType = 0;
-static std::string s_telemetryServerOrFileSystemDumpPath;
-static Be::Time s_telemetryStartTime;
-static Be::Time s_telemetryLastCheckTime;
 
 #if BLUE_WITH_PYTHON
 // Turn a python string into an "immortal" string.  It is kept alive as long as the
@@ -65,39 +53,35 @@ const char *Immortalize( PyObject *s )
 namespace
 {
 
-struct TaskletInfo
-{
-	const char* name;
-	const char* filename;
-	int line;
-};
-
-const TaskletInfo s_fallbackInfo = { "Tasklet?", "", 0 };
-TaskletInfo s_lastTasklet = s_fallbackInfo;  // need to remember last activated tasklet for tmEnd
-
 std::unordered_map<PyTypeObject*, freefunc> s_taskletFree; // original tp_free functions for tasklet types
-uint32_t s_taskletTrackID = 0;  // telemetry track ID for tasklet time spans
 
-thread_local PyTaskletObject* g_activeFiber{nullptr};
-typedef std::unordered_map<PyTaskletObject *, std::string> FiberNameStore;
-FiberNameStore g_fiberNameStore; // Persisted fiber name string store
-
-std::unordered_map<PyTaskletObject *, Be::Time> g_fiberEraseMap; // Map of fibers scheduled for erasure
-
-typedef std::unordered_map<PyTaskletObject*, std::stack<std::pair<void*, TracyZone>>> TasketZoneStore;
-thread_local TasketZoneStore g_taskletZoneStore; // Per-thread record of zones instrumented from python
+std::string GetFiberName( const PyTaskletObject* to )
+{
+	std::string taskletName;
+	if( auto methodName = PyObject_GetAttrString( (PyObject*)to, "method_name" ) )
+	{
+		if( PyUnicode_CheckExact( methodName ) )
+		{
+			taskletName = PyUnicode_AsUTF8( methodName );
+		}
+		Py_XDECREF( methodName );
+	}
+	else
+	{
+		PyErr_Clear();
+	}
+	// Construct the tracy fiber name as `function_name (address_of_tasklet)`
+	// This should deal with the case of `function_name` running in two different tasklets
+	taskletName += " (";
+	taskletName += std::to_string( reinterpret_cast<uint64_t>( to ) );
+	taskletName += ")";
+	return taskletName;
+}
 
 // Overriden tp_free function for tasklets: notify telemetry and call original tp_free
 void OnTaskletFree( void* tasklet )
 {
-	g_taskletZoneStore.erase( (PyTaskletObject*) tasklet );
-	g_fiberEraseMap.emplace( (PyTaskletObject*) tasklet, BeOS->GetActualTime());
-	if (g_activeFiber && g_activeFiber == tasklet)
-	{
-		// Catch an edge case where the profiler is stopped and a tasklet switch
-		// away from this tasklet is not reflected in the active fiber
-		g_activeFiber = nullptr;
-	}
+	CcpTelemetryRemoveFiber( GetFiberName( (PyTaskletObject*)tasklet ) );
 	auto found = s_taskletFree.find( Py_TYPE( tasklet ) );
 	if( found != end( s_taskletFree ) )
 	{
@@ -120,53 +104,6 @@ void StoreFree( PyTaskletObject* tasklet )
 	}
 }
 
-// Try to get a readable description of a tasklet object for telemetry time span.
-// Use infomation set by bluepy.TaskletExt.
-TaskletInfo GetTaskletInfo( PyTaskletObject* tasklet )
-{
-	TaskletInfo info = s_fallbackInfo;
-
-	if( auto methodName = PyObject_GetAttrString( (PyObject*)tasklet, "method_name" ) )
-	{
-		if( PyUnicode_CheckExact( methodName ) )
-		{
-			info.name = PyUnicode_AsUTF8( methodName );
-		}
-		Py_XDECREF( methodName );
-	}
-	else
-	{
-		PyErr_Clear();
-	}
-
-	if( auto fileName = PyObject_GetAttrString( (PyObject*)tasklet, "file_name" ) )
-	{
-		if( PyUnicode_CheckExact( fileName ) )
-		{
-			info.filename = PyUnicode_AsUTF8( fileName );
-		}
-		Py_XDECREF( fileName );
-	}
-	else
-	{
-		PyErr_Clear();
-	}
-
-	if( auto lineNumber = PyObject_GetAttrString( (PyObject*)tasklet, "line_number" ) )
-	{
-		if( PyLong_Check( lineNumber ) )
-		{
-			info.line = int( PyLong_AsLong( lineNumber ) );
-		}
-		Py_XDECREF( lineNumber );
-	}
-	else
-	{
-		PyErr_Clear();
-	}
-	return info;
-}
-
 int PythonProfiler( PyObject* obj, PyFrameObject* frame, int what, PyObject* arg )
 {
 	switch( what )
@@ -177,13 +114,13 @@ int PythonProfiler( PyObject* obj, PyFrameObject* frame, int what, PyObject* arg
 		auto zoneName = Immortalize( codeObj->co_name );
 		auto fileName = Immortalize( codeObj->co_filename );
 		if( zoneName && fileName )
-			TracyEnterZone( frame, zoneName, fileName, static_cast<uint32_t>( PyFrame_GetLineNumber( frame ) ) );
+			CcpTelemetryEnterZone( frame, zoneName, fileName, static_cast<uint32_t>( PyFrame_GetLineNumber( frame ) ) );
 		Py_XDECREF( codeObj );  // Release the reference to the frame code
 	}
 	break;
 	case PyTrace_EXCEPTION:
 	case PyTrace_RETURN:
-		TracyLeaveZone( frame );
+		CcpTelemetryLeaveZone( frame );
 		break;
 	default:
 		break;
@@ -219,36 +156,23 @@ void BlueStatistics::StartTelemetry( const std::string& server )
 	StartTimedTelemetry( server, 0 );
 }
 
+void TelemetryEventHandler( CcpTelemetryEvent event, void* userdata )
+{
+	if ( event == CCP_TELEMETRY_STARTED && s_isTelemetryPythonCaptureEnabled ) {
+		PyEval_SetProfile( &PythonProfiler, nullptr );
+	}
+}
+
 void BlueStatistics::StartTimedTelemetry( const std::string& server, float samplePeriod )
 {
-#if CCP_TELEMETRY_ENABLED
-	if( s_profilerState.load( std::memory_order_acquire ) == ProfilerState::Started || s_profilerState.load( std::memory_order_acquire ) == ProfilerState::StartRequested )
-	{
-		return;
-	}
-
-	s_telemetryServerOrFileSystemDumpPath = server;
-	s_telemetrySamplePeriod = (float)samplePeriod;
-
-	CCP_LOG_CH( s_ch, "Profiler start requested" );
-	s_profilerState.store( ProfilerState::StartRequested, std::memory_order_release );
-#else
-#endif
+	using namespace std::chrono;
+	CcpStartTelemetry( CcpTelemetryConfig{ server, duration_cast<milliseconds>( duration<float>(samplePeriod) ) } );
+	CcpRegisterTelemetryEventHandler( TelemetryEventHandler, nullptr );
 }
 
 void BlueStatistics::StartTelemetryDump( const std::string& dumpFolder, float samplePeriod )
 {
-#if CCP_TELEMETRY_ENABLED
-	if( s_profilerState.load( std::memory_order_acquire ) == ProfilerState::Started || s_profilerState.load( std::memory_order_acquire ) == ProfilerState::StartRequested )
-	{
-		return;
-	}
-	s_telemetryServerOrFileSystemDumpPath = dumpFolder;
-	s_telemetrySamplePeriod = (float)samplePeriod;
-
-	s_profilerState.store( ProfilerState::StartRequested, std::memory_order_release );
-#else
-#endif
+	// Deprecated
 }
 
 void BlueStatistics::PauseTelemetry()
@@ -263,25 +187,19 @@ void BlueStatistics::ResumeTelemetry()
 
 void BlueStatistics::StopTelemetry()
 {
-#if CCP_TELEMETRY_ENABLED
-	if( s_profilerState.load( std::memory_order_acquire ) == ProfilerState::Stopped || s_profilerState.load( std::memory_order_acquire ) == ProfilerState::StopRequested )
-	{
-		return;
-	}
-
-	CCP_LOG_CH( s_ch, "Profiler stop requested" );
-	s_profilerState.store( ProfilerState::StopRequested, std::memory_order_release );
-#endif
+	PyEval_SetProfile( nullptr, nullptr );
+	CcpUnregisterTelemetryEventHandler( TelemetryEventHandler, nullptr );
+	CcpStopTelemetry();
 }
 
 bool BlueStatistics::IsTelemetryConnected()
 {
-	return TracyIsStarted && TracyIsConnected;
+	return CcpTelemetryIsConnected();
 }
 
 bool BlueStatistics::IsTelemetryConnectionRequested()
 {
-	return TracyIsStarted && !TracyIsConnected && s_profilerState.load( std::memory_order_acquire ) == ProfilerState::StartRequested;
+	return CcpTelemetryIsConnectionRequested();
 }
 
 float BlueStatistics::TelemetrySamplingTimeLeft()
@@ -296,93 +214,14 @@ bool BlueStatistics::IsTelemetryPaused()
 
 bool BlueStatistics::IsTelemetryStarted()
 {
-	return s_profilerState.load( std::memory_order_acquire ) == ProfilerState::Started;
+	return CcpTelemetryIsStarted();
 }
 
 void BlueStatistics::UpdateTelemetry()
 {
 #if CCP_TELEMETRY_ENABLED
-	switch ( s_profilerState.load(std::memory_order_acquire) )
-	{
-		case ProfilerState::StartRequested:
-		{
-			if (TracyIsStarted)
-			{
-				if (TracyIsConnected)
-				{
-					CCP_LOG_CH( s_ch, "UpdateTelemetry - Telemetry server connected to Profiler" );
-					TracySetProgramName( s_telemetryServerOrFileSystemDumpPath.c_str() );
-					if ( s_isTelemetryPythonCaptureEnabled ) {
-						PyEval_SetProfile( &PythonProfiler, nullptr );
-					}
-					s_profilerState.store( ProfilerState::Started, std::memory_order_release );
-					s_telemetryLastCheckTime = s_telemetryStartTime = BeOS->GetActualTime();
-				}
-			}
-			else
-			{
-				CCP_LOG_CH( s_ch, "UpdateTelemetry - Starting Telemetry Server" );
-				if (!CcpStartTelemetry( s_telemetryServerOrFileSystemDumpPath.c_str(), s_telemetryConnectionType, m_telemetryMaxThreadCount ))
-				{
-					CCP_LOGERR_CH( s_ch, "UpdateTelemetry - Failed to start Telemetry server" );
-					s_profilerState.store( ProfilerState::Stopped, std::memory_order_release );
-				}
-			}
-			break;
-		}
-		case ProfilerState::Started:
-		{
-			CcpTelemetryTick();
+	CcpTelemetryTick();
 
-			if (TracyIsConnected)
-			{
-				Be::Time now = BeOS->GetActualTime();
-
-				// Erase fibers scheduled for erasure
-				for ( const auto& [tasklet, time] : g_fiberEraseMap)
-				{
-					// Give the profiler a few seconds to receive information from the fiber name store before deallocating
-					// the underlying string
-					if ((time - now) / Be::Time(1e7) >= 5)
-					{
-						g_fiberNameStore.erase( tasklet );
-						g_fiberEraseMap.erase( tasklet );
-					}
-				}
-				if(s_telemetrySamplePeriod > 0.0f ) // Check if we have passed our timed sample time
-				{
-					Be::Time delta = now - s_telemetryLastCheckTime;
-					s_telemetryLastCheckTime = now;
-					s_telemetrySamplePeriod -= ((float)delta / Be::Time(1e7));
-
-					if(s_telemetrySamplePeriod < 0.0f)
-					{
-						CCP_LOG_CH( s_ch, "UpdateTelemetry - Finalizing timed Telemetry run" );
-						StopTelemetry();
-					}
-				}
-			}
-			else
-			{
-				CCP_LOG_CH( s_ch, "UpdateTelemetry - Disconnected from profiler" );
-				StopTelemetry();
-			}
-			break;
-		}
-		case ProfilerState::StopRequested:
-		{
-			CcpTelemetryTick();
-
-			PyEval_SetProfile( nullptr, nullptr );
-			s_profilerState.store( ProfilerState::Stopped, std::memory_order_release );
-		}
-		case ProfilerState::Stopped:
-			// Nothing to do
-			break;
-		default:
-			CCP_LOGERR_CH( s_ch, "UpdateTelemetry - Unhandled profiler state %d", s_profilerState.load(std::memory_order_acquire));
-			break;
-	}
 #endif
 }
 
@@ -390,31 +229,12 @@ void SwitchToFiber( PyTaskletObject* to )
 {
 	if( !to || SchedulerAPI()->PyTasklet_IsMain( to ) )
 	{
-		if ( g_activeFiber )
-		{
-			TracyFiberLeave;
-		}
-		g_activeFiber = nullptr;
+		CcpTelemetrySetActiveFiber( "" );
 	}
 	else
 	{
-		auto existing = g_fiberNameStore.find( to );
-		if( existing == g_fiberNameStore.cend() )
-		{
-			auto toInfo = GetTaskletInfo( to );
-			// Construct the tracy fiber name as `function_name (address_of_tasklet)`
-			// This should deal with the case of `function_name` running in two different tasklets
-			g_fiberNameStore[to] = std::string( toInfo.name ) + " (" + std::to_string( reinterpret_cast<uint64_t>( to ) ) + ")";
-			existing = g_fiberNameStore.find( to );
-		}
-		TracyFiberEnter( existing->second.c_str() );
-		g_activeFiber = to;
-	}
-
-	if( auto existing = g_taskletZoneStore.find( g_activeFiber  ); existing == g_taskletZoneStore.cend() )
-	{
-		// Initialize an empty zone stack, main tasklet is mapped to nullptr
-		g_taskletZoneStore[g_activeFiber] = {};
+		std::string taskletName = GetFiberName( to );
+		CcpTelemetrySetActiveFiber( taskletName );
 	}
 }
 
@@ -422,7 +242,7 @@ void SwitchToFiber( PyTaskletObject* to )
 void BlueStatistics::OnTaskletSwitch( PyObject* _from, PyObject* _to )
 {
 #if CCP_TELEMETRY_ENABLED
-	if (s_profilerState.load( std::memory_order_acquire ) != ProfilerState::Started)
+	if ( ! CcpTelemetryIsStarted() )
 	{
 		return;
 	}
@@ -768,83 +588,46 @@ void CcpStatisticsEntry::SetResetPerFrame( bool val )
 
 void TracyEnterZone( void* key, const char* name, const char* filename, uint32_t lineno )
 {
-	if( s_profilerState.load( std::memory_order_acquire ) == ProfilerState::Started )
-	{
-		 if (auto existing = g_taskletZoneStore.find( g_activeFiber ); existing != g_taskletZoneStore.end())
-		{
-			existing->second.emplace( key, TracyZone(TMCM_CPP, name, filename, lineno, tracy::Color::Yellow ));
-		}
-	}
+	CcpTelemetryEnterZone( key, name, filename, lineno );
 }
 
 void TracyLeaveZone( void* key )
 {
-	if (auto existing = g_taskletZoneStore.find( g_activeFiber ); existing != g_taskletZoneStore.end() && !existing->second.empty())
-	{
-		// Frame object guards against whether this function had a prior call to `TracyEnterZone` result in a new Zone pushed to the stack
-		if ( existing->second.top().first == key )
-		{
-			existing->second.pop();
-		}
-	}
+	CcpTelemetryLeaveZone( key );
 }
 
 void TracyZoneAddText( void* key, const char* text )
 {
 	if (text != nullptr )
 	{
-		if( auto existing = g_taskletZoneStore.find( g_activeFiber ); existing != g_taskletZoneStore.end() && !existing->second.empty() )
-		{
-			if ( existing->second.top().first == key )
-			{
-				existing->second.top().second.text( text );
-			}
-		}
+		CcpTelemetryZoneAddText( key, text );
 	}
 }
 
-TracyZone::TracyZone( uint32_t ctx, const char* name, const char* filename, uint32_t lineno, uint32_t color ) : m_fiber( g_activeFiber )
+TracyZone::TracyZone( uint32_t ctx, const char* name, const char* filename, uint32_t lineno, uint32_t color ) : m_fiber( new TelemetryZone( ctx, name, filename, lineno, color ) )
 {
-	if( s_profilerState.load( std::memory_order_acquire ) != ProfilerState::Started )
-	{
-		return;
-	}
 
-	CCP_ASSERT( filename != nullptr );
-	CCP_ASSERT( name != nullptr );
-	auto data = ___tracy_alloc_srcloc( lineno, filename, strlen( filename ), name, strlen( name ), color );
-	m_telemetryContext.emplace( ___tracy_emit_zone_begin_alloc( data, ctx & TMCM_CPP ) );
 }
 
 TracyZone::TracyZone( TracyZone&& other ) noexcept
 {
 	m_fiber = other.m_fiber;
-	m_telemetryContext = other.m_telemetryContext;
-	// mark this instance's zone as inactive in case the destructor runs
-	other.m_telemetryContext.reset();
+	other.m_fiber = nullptr;
 }
 
 TracyZone::~TracyZone()
 {
-	// Notify Tracy of all zones ended with a valid context, regardless of profiler state
-	if( !m_telemetryContext )
+	if( m_fiber )
 	{
-		return;
+		delete reinterpret_cast<TelemetryZone*>( m_fiber );
 	}
-
-	// Zones need to end on the same fiber they were started from, so do a little song and dance to ensure that
-	auto previous = g_activeFiber;
-	SwitchToFiber( (PyTaskletObject*) m_fiber );
-	TracyCZoneEnd( m_telemetryContext.value() );
-	SwitchToFiber( previous );
 }
 
 void TracyZone::text( const char* text ) const
 {
-	if( s_profilerState.load( std::memory_order_acquire ) == ProfilerState::Started && m_telemetryContext )
+	if ( m_fiber )
 	{
-		CCP_ASSERT( text != nullptr );
-		TracyCZoneText( m_telemetryContext.value(), text, strlen( text ) );
+		reinterpret_cast<TelemetryZone*>( m_fiber )->text( text );
 	}
 }
 

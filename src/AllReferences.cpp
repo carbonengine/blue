@@ -7,6 +7,7 @@
 
 #include "StdAfx.h"
 #include "AllReferences.h"
+#include <BlueStatistics.h>
 
 
 bool AllReferences::Reference::operator==(const Reference& other) const

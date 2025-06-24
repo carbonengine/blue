@@ -10,6 +10,7 @@
 #include "BlueResFile2.h"
 #include "BlueFileStream.h"
 #include "BlueRemoteStream.h"
+#include <BlueStatistics.h>
 #include "IBlueOS.h"
 #include "IBluePaths.h"
 
