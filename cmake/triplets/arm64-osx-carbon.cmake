@@ -33,3 +33,15 @@ endif ()
 if (PORT MATCHES "zlib-ng")
     set(VCPKG_LIBRARY_LINKAGE static)
 endif ()
+
+if (PORT MATCHES "gtest")
+    set(VCPKG_BUILD_TYPE release)
+endif()
+
+if (PORT MATCHES "exefile")
+    set(VCPKG_BUILD_TYPE release)
+endif()
+
+if (PORT MATCHES "tracy")
+    set(VCPKG_BUILD_TYPE release)
+endif()

@@ -305,7 +305,8 @@ endif()
 get_target_property(SCHEDULER_INCLUDE_DIR Scheduler INTERFACE_INCLUDE_DIRECTORIES)
 target_include_directories(Blue
     PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
     PRIVATE
         ${SCHEDULER_INCLUDE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -340,29 +341,35 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
         # Tests need to run through exefile. Exefile will attempt to load the blue library which requires blue to be
         # co-located with exefile alongside any runtime dependencies.
         find_program(exefile_tool exefile NO_CACHE)
-        add_custom_command(TARGET Blue POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy ${exefile_tool} $<TARGET_FILE_DIR:Blue>
-        )
-        set(exefile_tool $<TARGET_FILE_DIR:Blue>/exefile)
+
         if (WIN32)
-            add_custom_command(
-                    TARGET Blue POST_BUILD
-                    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:Blue> $<TARGET_FILE_DIR:Blue>
-                    COMMAND_EXPAND_LISTS
+            add_custom_command(TARGET Blue POST_BUILD
+                    COMMAND ${CMAKE_COMMAND} -E copy ${exefile_tool} $<TARGET_FILE_DIR:Blue>
             )
-        endif ()
+            set(exefile_tool $<TARGET_FILE_DIR:Blue>/exefile)
+            if (WIN32)
+                add_custom_command(
+                        TARGET Blue POST_BUILD
+                        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:Blue> $<TARGET_FILE_DIR:Blue>
+                        COMMAND_EXPAND_LISTS
+                )
+            endif ()
+            set(TESTS_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests/python)
+        else()
+            set(TESTS_WORKING_DIRECTORY $<TARGET_FILE_DIR:Blue>)
+        endif()
 
         separate_arguments(PYTHON_TESTS UNIX_COMMAND ${PYTHON_TESTS_STR})
         foreach(PYTHON_TEST ${PYTHON_TESTS})
             message(STATUS "Found test ${PYTHON_TEST}")
             add_test(NAME ${PYTHON_TEST}
                 COMMAND ${exefile_tool} /inherit /buildflavor=$<LOWER_CASE:$<CONFIG>> /py -m bluetests -v ${PYTHON_TEST}
-                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests/python
+                WORKING_DIRECTORY ${TESTS_WORKING_DIRECTORY}
             )
             if(WIN32)
                 set_tests_properties(${PYTHON_TEST} PROPERTIES ENVIRONMENT  "PYTHONPATH=$<TARGET_FILE_DIR:Blue>\;${CMAKE_CURRENT_SOURCE_DIR}/python\;${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin\;${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib\;${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin/python\;${Python3_STDLIB};BUILDFLAVOR=$<LOWER_CASE:$<CONFIG>>")
             elseif (APPLE)
-                 set_tests_properties(${PYTHON_TEST} PROPERTIES ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:Blue>:${CMAKE_CURRENT_SOURCE_DIR}/python:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin/python:${Python3_STDLIB};BUILDFLAVOR=$<LOWER_CASE:$<CONFIG>>")
+                 set_tests_properties(${PYTHON_TEST} PROPERTIES ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/tests/python:$<TARGET_FILE_DIR:Blue>:${CMAKE_CURRENT_SOURCE_DIR}/python:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib/python3.12/lib-dynload:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin/python:${Python3_STDLIB};BUILDFLAVOR=$<LOWER_CASE:$<CONFIG>>")
             else()
                 message(FATAL_ERROR "Unsupported platform")
             endif ()

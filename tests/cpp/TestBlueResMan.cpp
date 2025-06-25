@@ -54,14 +54,25 @@ protected:
 			GTEST_FAIL() << "Could not find `IMPORT_PATH` environment variable, thus the test fixture cannot be initialized.\n";
 		}
 
+#if WIN32
 		// Python package directory
 		swprintf( packagePath, sizeof( packagePath ) / sizeof( *packagePath ), L"%S/bin/python", envImportPath );
 		// Python extension directory
 		swprintf( extensionPath, sizeof( extensionPath ) / sizeof( *extensionPath ), L"%S/bin", envImportPath );
-		// Scheduler is installed as a module, meaning the
+		// Scheduler is installed as a module, meaning the scheduler extension is installed under lib/
 		swprintf( modulePath, sizeof( modulePath ) / sizeof( *modulePath ), L"%S/lib", envImportPath );
 		swprintf( pythonPath, sizeof( pythonPath ) / sizeof( *pythonPath ), L"%S", envPythonPath );
 		swprintf( resPath, sizeof( resPath ) / sizeof( *resPath ), L"res=%S", envResPath );
+#else
+		// Python package directory
+		swprintf( packagePath, sizeof( packagePath ) / sizeof( *packagePath ), L"%s/bin/python", envImportPath );
+		// Python extension directory
+		swprintf( extensionPath, sizeof( extensionPath ) / sizeof( *extensionPath ), L"%s/bin", envImportPath );
+		// Scheduler is installed as a module, meaning the scheduler extension is installed under lib/
+		swprintf( modulePath, sizeof( modulePath ) / sizeof( *modulePath ), L"%s/lib", envImportPath );
+		swprintf( pythonPath, sizeof( pythonPath ) / sizeof( *pythonPath ), L"%s", envPythonPath );
+		swprintf( resPath, sizeof( resPath ) / sizeof( *resPath ), L"res=%s", envResPath );
+#endif
 
 		PyConfig_InitIsolatedConfig( &config );
 		PyWideStringList_Append( &config.module_search_paths, L"." );
