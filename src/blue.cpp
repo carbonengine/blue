@@ -162,8 +162,13 @@ HERR:
 	return 0;
 
 #elif defined(__APPLE__)
-
-	CW2A filenameStr( reinterpret_cast<const wchar_t*>( PyUnicode_AsWideCharString( ufn.o, nullptr ) ) );
+	wchar_t* tmp = PyUnicode_AsWideCharString( ufn.o, nullptr );
+	if ( !tmp )
+	{
+		return nullptr;
+	}
+	CW2A filenameStr( tmp );
+	PyMem_Free( tmp );
 	int f;
 	long fileSize;
 	{
