@@ -340,13 +340,19 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 
         # Tests need to run through exefile. Exefile will attempt to load the blue library which requires blue to be
         # co-located with exefile alongside any runtime dependencies.
-        find_program(exefile_tool exefile NO_CACHE)
+        # This needs to be hardened
+        if (DEFINED CMAKE_BUILD_TYPE AND NOT CMAKE_BUILD_TYPE MATCHES "Release")
+            set(EXEFILE_TOOL_NAME exefile_${CMAKE_BUILD_TYPE})
+        else()
+            set(EXEFILE_TOOL_NAME exefile)
+        endif()
+        find_program(exefile_tool ${EXEFILE_TOOL_NAME} NO_CACHE)
 
         if (WIN32)
             add_custom_command(TARGET Blue POST_BUILD
                     COMMAND ${CMAKE_COMMAND} -E copy ${exefile_tool} $<TARGET_FILE_DIR:Blue>
             )
-            set(exefile_tool $<TARGET_FILE_DIR:Blue>/exefile)
+            set(exefile_tool $<TARGET_FILE_DIR:Blue>/${EXEFILE_TOOL_NAME})
             if (WIN32)
                 add_custom_command(
                         TARGET Blue POST_BUILD
