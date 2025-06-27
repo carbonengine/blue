@@ -304,7 +304,7 @@ PyObject* PyEnterZone( PyObject* self, PyObject* args )
 	{
 		return nullptr;
 	}
-	TracyEnterZone( frame, zone, fileName, static_cast<uint32_t>( PyFrame_GetLineNumber( frame ) ) );
+	CcpTelemetryEnterZone( frame, zone, fileName, static_cast<uint32_t>( PyFrame_GetLineNumber( frame ) ) );
 	Py_XDECREF( codeObj );  // Release the reference to the frame code
 #endif
 	Py_RETURN_NONE;
@@ -313,7 +313,7 @@ PyObject* PyEnterZone( PyObject* self, PyObject* args )
 PyObject* PyLeaveZone( PyObject* self, PyObject* args )
 {
 #if CCP_TELEMETRY_ENABLED
-	TracyLeaveZone( PyEval_GetFrame() );
+	CcpTelemetryLeaveZone( PyEval_GetFrame() );
 #endif
 	Py_RETURN_NONE;
 }
@@ -334,7 +334,7 @@ PyObject* PyAppendToZone( PyObject* self, PyObject* args )
 		return nullptr;
 	}
 
-	TracyZoneAddText( PyEval_GetFrame(), appendText );
+	CcpTelemetryZoneAddText( PyEval_GetFrame(), appendText );
 #endif
 	Py_RETURN_NONE;
 }

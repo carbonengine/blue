@@ -18,6 +18,7 @@
 #include "BluePaths.h"
 #include "BlueResFile.h"
 #include "BlueSocketLogger.h"
+#include <BlueStatistics.h>
 #include "crypto.h"
 #include "errormessage.h"
 

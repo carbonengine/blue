@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 
 #include "BlueObjectProxy.h"
+#include <BlueStatistics.h>
 #include "IBlueOS.h"
 #include "IUnloadable.h"
 

@@ -2,6 +2,7 @@
 
 #include "CallbackMan.h"
 #include <CcpTime.h>
+#include <BlueStatistics.h>
 #include "IBlueThreadMonitor.h"
 
 static CcpLogChannel_t s_ch = CCP_LOG_DEFINE_CHANNEL( "CallbackMan" );

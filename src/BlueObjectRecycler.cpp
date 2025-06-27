@@ -9,6 +9,7 @@
 
 #include "BlueObjectRecycler.h"
 #include "BlueFileUtil.h"
+#include <BlueStatistics.h>
 #include "IBlueResMan.h"
 #include "IBlueOS.h"
 

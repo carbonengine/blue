@@ -10,8 +10,11 @@
 #ifndef BlueStatistics_h
 #define BlueStatistics_h
 
-#include "ICcpStatisticsAccumulator.h"
 #include <optional>
+
+#include <CcpTelemetry.h>
+
+#include <ICcpStatisticsAccumulator.h>
 
 BLUE_DECLARE( CcpStatisticsEntry );
 
@@ -142,7 +145,7 @@ extern BlueStatistics* g_statistics;
 #include <tracy/Tracy.hpp>
 #include <tracy/TracyC.h>
 
-class TracyZone
+class [[deprecated( "Use CcpTelemetryZone from CcpCore instead" )]] TracyZone
 {
 public:
 	TracyZone() = delete;
@@ -156,21 +159,21 @@ public:
 	void text( const char* text ) const;
 
 private:
-	std::optional<TracyCZoneCtx> m_telemetryContext;
-	void* m_fiber{nullptr};
+	std::optional<TracyCZoneCtx> m_telemetryContext; // now un-used
+	void* m_fiber{nullptr}; // NB: This is now a pointer to CcpTelemetryZone from core, but kept this way to keep ABI compatibility
 };
 
-void BLUEIMPORT TracyEnterZone( void* key, const char* name, const char* filename, uint32_t lineno );
-void BLUEIMPORT TracyLeaveZone( void* key );
-void BLUEIMPORT TracyZoneAddText( void* key, const char* text );
+[[deprecated( "Use CcpTelemetryEnterZone from CcpCore instead" )]] void BLUEIMPORT TracyEnterZone( void* key, const char* name, const char* filename, uint32_t lineno );
+[[deprecated( "Use CcpTelemetryLeaveZone from CcpCore instead" )]] void BLUEIMPORT TracyLeaveZone( void* key );
+[[deprecated( "Use CcpTelemetryZoneAddText from CcpCore instead" )]] void BLUEIMPORT TracyZoneAddText( void* key, const char* text );
 
 #define CCP_STATS_SCOPED_TIME( identifier ) \
-	TracyZone tracy_zone_##__COUNTER__( TMCM_CPP, g_ccpStatistics_##identifier.GetName().c_str(), __FILE__, __LINE__ );\
+	TelemetryZone telemetry_zone_##__COUNTER__( TMCM_CPP, g_ccpStatistics_##identifier.GetName().c_str(), __FILE__, __LINE__ );\
 	CcpStatisticsStopwatch ccpStatsStopwatch_##identifier( g_ccpStatistics_##identifier )
 
 #undef CCP_STATS_ZONE
 #define CCP_STATS_ZONE( name ) \
-	TracyZone tracy_zone_##__COUNTER__( TMCM_CPP, name, __FILE__, __LINE__ );
+	TelemetryZone telemetry_zone_##__COUNTER__( TMCM_CPP, name, __FILE__, __LINE__ );
 
 #else  // CCP_TELEMETRY_ENABLED
 

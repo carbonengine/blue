@@ -8,6 +8,7 @@
 #include "StdAfx.h"
 #include "BlackReader.h"
 #include "BlueMemStream.h"
+#include <BlueStatistics.h>
 #include "IRootReader.h"
 #include "IBlueObjectProxy.h"
 #include "IBluePaths.h"
