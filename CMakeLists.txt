@@ -395,6 +395,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
                 DEPENDENCIES "BlueExposure;CURL;OpenSSL;PDM;YAML;ZLIB"
         )
         install(FILES ${CMAKE_CURRENT_BINARY_DIR}/BlueConfig.cmake DESTINATION .)
+        install(DIRECTORY python DESTINATION . FILES_MATCHING PATTERN "*.py")
     else ()
         install(
                 TARGETS Blue
@@ -405,9 +406,17 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
                 RUNTIME DESTINATION bin
         )
 
+        install(EXPORT BlueTargets
+                DESTINATION share/carbon-blue
+                FILE carbon-blue.cmake
+        )
+
+        install(DIRECTORY include DESTINATION . FILES_MATCHING PATTERN "*.h")
+
         install(FILES carbon-blueConfig.cmake DESTINATION ${CMAKE_INSTALL_PREFIX}/share/carbon-blue)
+        install(DIRECTORY bin/python DESTINATION . FILES_MATCHING PATTERN "*.py")
     endif ()
 
     install(DIRECTORY include DESTINATION . FILES_MATCHING PATTERN "*.h")
-    install(DIRECTORY python DESTINATION . FILES_MATCHING PATTERN "*.py")
+
 endif()
