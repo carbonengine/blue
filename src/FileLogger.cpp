@@ -15,6 +15,8 @@
 #include <iostream>
 #include <fstream>
 
+#include <BlueStatistics.h>
+
 //---------------------------------------------------
 // Uncomment this define to turn this files optimization off
 //#define OptimizeOff

@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "IRootReader.h"
 #include "IBluePersist.h"
+#include <BlueStatistics.h>
 
 BLUE_DEFINE_INTERFACE( IRootReader );
 
@@ -315,4 +316,3 @@ const Be::VarEntry* IRootReaderBase::FindEntry( const char* name, const Be::Clas
 
 	return NULL;
 }
-

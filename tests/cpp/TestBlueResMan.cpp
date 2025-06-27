@@ -95,6 +95,11 @@ protected:
 			GTEST_FAIL() << "Failed initializing Python interpreter\n";
 		}
 
+		if( !InstallImportHook() )
+		{
+			GTEST_FAIL() << "Failed installing import hook\n";
+		}
+
 		auto schedulerModule = PyImport_ImportModule( "scheduler" );
 		if( !schedulerModule )
 		{

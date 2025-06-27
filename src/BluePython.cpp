@@ -6,6 +6,8 @@
 
 #include "BluePython.h"
 
+#include <BlueStatistics.h>
+
 #include "IBlueOS.h"
 #include "IMotherLode.h"
 #include "IBlueResMan.h"
@@ -165,6 +167,88 @@ BluePyOS::BluePyOS(IRoot* lockobj) :
 
 
 PyTypeObject *LogChannelType();
+
+// This is a little Python helper script to allow loading flavoured Python C extensions through a simple `import extension_without_flavor`.
+// It kind of obsoletes the old `blue.LoadExtension` helper method.
+const char* IMPORT_HOOK_HELPER_SCRIPT = R"(
+import importlib.machinery
+import os
+import sys
+
+
+class BlueFlavoredExtensionFileLoader(importlib.machinery.ExtensionFileLoader):
+    def __init__(self, name, path, flavor):
+        super().__init__(name, path)
+        self.flavor = flavor
+
+    def create_module(self, spec):
+        import sys
+        unflavored_name = spec.name
+        spec.name = f"{spec.name}{self.flavor}"
+        module = super().create_module(spec)
+        sys.modules[unflavored_name] = module
+        sys.modules[spec.name] = module
+
+        return module
+
+
+class BlueFlavoredExtensionImporter:
+    def __init__(self, flavor, binary_path, loader_class):
+        import _imp
+        import os
+        self.flavor = flavor
+        self.loader_class = loader_class
+        self.bin_path = os.path.dirname(binary_path) if os.path.isfile(binary_path) else binary_path
+        self.extension_suffixes = [f"{self.flavor}{suffix}" for suffix in _imp.extension_suffixes()]
+
+    def find_spec(self, fullname, path=None, target=None):
+        import importlib
+        import os
+        for suffix in self.extension_suffixes:
+            origin = os.path.join(self.bin_path, f"{fullname}{suffix}")
+            if os.path.exists(origin):
+                break
+        else:
+            return None  # no flavored version was found, return None
+
+        return importlib.machinery.ModuleSpec(fullname, self.loader_class(fullname, origin, self.flavor), origin=origin)
+
+sys.meta_path.insert(0, BlueFlavoredExtensionImporter(CCP_BUILD_FLAVOR, CCP_EXEFILE_PATH, BlueFlavoredExtensionFileLoader))
+)";
+
+bool InstallImportHook()
+{
+	// Extend the Pyhon import mechanism with support for C extensions that use our "build flavors".
+	// This needs to happen before we import any flavored C extensions.
+#if ~(~CCP_BUILD_FLAVOR + 0) == 0 && ~(~CCP_BUILD_FLAVOR + 1) == 1
+	// this is not a flavoured build, so no import hook is needed
+	return true;
+#else
+	PyObject* globalDict = PyDict_New();
+	if ( !globalDict ) {
+		CCP_LOGERR_CH( s_chPy, "Failed to create global dict for import helper script execution");
+		return false;
+	}
+	auto executablePath = WideToUTF8( CcpExecutablePath() );
+	PyObject* localDict = Py_BuildValue( "{ssss}", "CCP_BUILD_FLAVOR", CCP_STRINGIZE( CCP_BUILD_FLAVOR ), "CCP_EXEFILE_PATH", executablePath.c_str() );
+	if ( !localDict ) {
+		CCP_LOGERR_CH( s_chPy, "Failed to create local dict for import helper script execution");
+		Py_DecRef( globalDict );
+		return false;
+	}
+	if ( ! PyRun_String( IMPORT_HOOK_HELPER_SCRIPT, Py_file_input, globalDict, localDict ) )
+	{
+		CCP_LOGERR_CH( s_chPy, "Failed executing import helper script" );
+		Py_DecRef( localDict );
+		Py_DecRef( globalDict );
+		return false;
+	}
+	Py_DecRef( localDict );
+	Py_DecRef( globalDict );
+
+	return true;
+#endif
+}
 
 //--------------------------------------------------------------------
 bool BluePyOS::InitBasicModuleSupport()
@@ -489,6 +573,11 @@ bool BluePyOS::Startup()
 	for (unsigned int i = 0; i < sizeof TASKLETS / sizeof TASKLETS[0]; i++)
 	{
 		TASKLETS[i].mContext = PyUnicode_InternFromString(TASKLETS[i].mName);
+	}
+
+	if ( !InstallImportHook() )
+	{
+		return false;
 	}
 
 	mSocketAPI = reinterpret_cast<PySocketModule_APIObject*>( PySocketModule_ImportModuleAndAPI() );

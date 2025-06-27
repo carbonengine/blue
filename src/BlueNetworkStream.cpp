@@ -9,6 +9,7 @@
 #include "BlueNetworkStream.h"
 #include "IBlueResMan.h"
 #include "BlueRemoteStream.h"
+#include <BlueStatistics.h>
 
 
 BlueNetworkStream::BlueNetworkStream()

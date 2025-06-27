@@ -10,6 +10,7 @@
 #include "BlackReader.h"
 #include "BlueResFile.h"
 #include "BlueAsyncRes.h"
+#include <BlueStatistics.h>
 #include "IBlueResource.h"
 #include "IBluePersist.h"
 #include "IBlueOS.h"
