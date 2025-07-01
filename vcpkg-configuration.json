@@ -11,5 +11,8 @@
       "baseline": "bae991603c52c770838b0e146f3b330ee3ee7677",
       "packages": ["carbon-*", "greenlet", "python3-prebuilt", "ccp-debug-info", "tracy", "crashpad"]
     }
+  ],
+  "overlay-ports": [
+    "C:\\Users\\josephf\\Documents\\github\\carbon-vcpkg-registry\\ports"
   ]
 }
