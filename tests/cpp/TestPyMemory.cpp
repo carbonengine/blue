@@ -33,7 +33,11 @@ protected:
 			GTEST_FAIL() << "Could not find `PYTHON_STDLIB` environment variable, thus Python cannot be initialized correctly.\n";
 		}
 
-    	swprintf(pythonPath, sizeof(pythonPath) / sizeof(*pythonPath), L"%S", envPythonPath);
+#if WIN32
+		swprintf(pythonPath, sizeof(pythonPath) / sizeof(*pythonPath), L"%S", envPythonPath);
+#else
+		swprintf(pythonPath, sizeof(pythonPath) / sizeof(*pythonPath), L"%s", envPythonPath);
+#endif
 
 		PyConfig_InitIsolatedConfig(&config);
 		PyWideStringList_Append(&config.module_search_paths, L".");

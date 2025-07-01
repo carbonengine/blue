@@ -204,9 +204,18 @@ class BlueFlavoredExtensionImporter:
     def find_spec(self, fullname, path=None, target=None):
         import importlib
         import os
+        import sys
         for suffix in self.extension_suffixes:
-            origin = os.path.join(self.bin_path, f"{fullname}{suffix}")
-            if os.path.exists(origin):
+            search_paths = [os.path.join(search_path, f"{fullname}{suffix}") for search_path in sys.path + [self.bin_path]]
+
+            found = False
+
+            for search_path in search_paths:
+                if os.path.exists(search_path):
+                    found = True
+                    origin = search_path
+
+            if found:
                 break
         else:
             return None  # no flavored version was found, return None

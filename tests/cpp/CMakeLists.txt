@@ -40,5 +40,6 @@ gtest_discover_tests(BlueCppUnitTests
             # import dependencies installed through vcpkg.
             ENVIRONMENT "PYTHON_STDLIB=${Python3_STDLIB}"
             ENVIRONMENT "IMPORT_PATH=${VCPKG_IMPORT_PREFIX}"
+            ENVIRONMENT "BUILDFLAVOR=$<LOWER_CASE:$<CONFIG>>"
         WORKING_DIRECTORY $<TARGET_FILE_DIR:BlueCppUnitTests>
 )

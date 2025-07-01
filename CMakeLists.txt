@@ -305,7 +305,8 @@ endif()
 get_target_property(SCHEDULER_INCLUDE_DIR Scheduler INTERFACE_INCLUDE_DIRECTORIES)
 target_include_directories(Blue
     PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
     PRIVATE
         ${SCHEDULER_INCLUDE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -315,70 +316,73 @@ set_target_properties(Blue PROPERTIES OUTPUT_NAME "blue")
 
 # Provide tests and an install target iff this is the top level project only
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
-    # tests
     option(BUILD_TESTING "Build tests. Enabled by default." ON)
-    include(CTest)
     if(BUILD_TESTING)
+        include(CTest)
         add_subdirectory(tests)
-    endif()
-    # discover python tests ... this may be a little bit brittle since we're working around the missing `_blueexposuretest`
-    # binary. As in, test discovery happens during the configure stage at which the binary does not exist yet.
-    if(WIN32)
-        set(ENV{PYTHONPATH} ${CMAKE_CURRENT_SOURCE_DIR}/python)
-    elseif(APPLE)
-        set(ENV{PYTHONPATH} ${CMAKE_CURRENT_SOURCE_DIR}/python)
-    endif()
-    # Discovery works with the standard python interpreter because it isn't running anything, it just needs to find all
-    # the defined test cases. Therefore, just use that one, even though it cannot run the discovered test cases.
-    execute_process(COMMAND ${Python3_EXECUTABLE} discover.py
-        OUTPUT_VARIABLE PYTHON_TESTS_STR
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-        ERROR_STRIP_TRAILING_WHITESPACE
-        RESULT_VARIABLE PYTHON_TEST_DISCOVERY_RETVAL
-        ERROR_VARIABLE PYTHON_TEST_DISCOVERY_ERRORS
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests/python
-    )
-    if(${PYTHON_TEST_DISCOVERY_RETVAL})
-        message(FATAL_ERROR "Error encountered during test discovery:\n=== stderr: ===\n${PYTHON_TEST_DISCOVERY_ERRORS}\n=== stdout: ===\n${PYTHON_TESTS_STR}")
-    endif()
 
-    # Tests need to run through exefile. Exefile will attempt to load the blue library which requires blue to be
-    # co-located with exefile alongside any runtime dependencies.
-    find_program(exefile_tool exefile NO_CACHE)
-    add_custom_command(TARGET Blue POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy ${exefile_tool} $<TARGET_FILE_DIR:Blue>
-    )
-    set(exefile_tool $<TARGET_FILE_DIR:Blue>/exefile)
-    if (WIN32)
-        add_custom_command(
-                TARGET Blue POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:Blue> $<TARGET_FILE_DIR:Blue>
-                COMMAND_EXPAND_LISTS
-        )
-    endif ()
-
-    separate_arguments(PYTHON_TESTS UNIX_COMMAND ${PYTHON_TESTS_STR})
-    foreach(PYTHON_TEST ${PYTHON_TESTS})
-        message(STATUS "Found test ${PYTHON_TEST}")
-        add_test(NAME ${PYTHON_TEST}
-            COMMAND ${exefile_tool} /inherit /buildflavor=$<LOWER_CASE:$<CONFIG>> /py -m bluetests -v ${PYTHON_TEST}
+        # discover python tests ... this may be a little bit brittle since we're working around the missing `_blueexposuretest`
+        # binary. As in, test discovery happens during the configure stage at which the binary does not exist yet.
+        # Discovery works with the standard python interpreter because it isn't running anything, it just needs to find all
+        # the defined test cases. Therefore, just use that one, even though it cannot run the discovered test cases.
+        set(ENV{PYTHONPATH} ${CMAKE_CURRENT_SOURCE_DIR}/python)
+        execute_process(COMMAND ${Python3_EXECUTABLE} discover.py
+            OUTPUT_VARIABLE PYTHON_TESTS_STR
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            ERROR_STRIP_TRAILING_WHITESPACE
+            RESULT_VARIABLE PYTHON_TEST_DISCOVERY_RETVAL
+            ERROR_VARIABLE PYTHON_TEST_DISCOVERY_ERRORS
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests/python
         )
-        if(WIN32)
-            set_tests_properties(${PYTHON_TEST} PROPERTIES ENVIRONMENT  "PYTHONPATH=$<TARGET_FILE_DIR:Blue>\;${CMAKE_CURRENT_SOURCE_DIR}/python\;${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin\;${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib\;${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin/python\;${Python3_STDLIB};BUILDFLAVOR=$<LOWER_CASE:$<CONFIG>>")
-        elseif (APPLE)
-             set_tests_properties(${PYTHON_TEST} PROPERTIES ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:Blue>:${CMAKE_CURRENT_SOURCE_DIR}/python:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin/python:${Python3_STDLIB};BUILDFLAVOR=$<LOWER_CASE:$<CONFIG>>")
+        if(${PYTHON_TEST_DISCOVERY_RETVAL})
+            message(FATAL_ERROR "Error encountered during test discovery:\n=== stderr: ===\n${PYTHON_TEST_DISCOVERY_ERRORS}\n=== stdout: ===\n${PYTHON_TESTS_STR}")
+        endif()
+
+        # Tests need to run through exefile. Exefile will attempt to load the blue library which requires blue to be
+        # co-located with exefile alongside any runtime dependencies.
+        # This needs to be hardened
+        if (DEFINED CMAKE_BUILD_TYPE AND NOT CMAKE_BUILD_TYPE MATCHES "Release")
+            set(EXEFILE_TOOL_NAME exefile_${CMAKE_BUILD_TYPE})
         else()
-            message(FATAL_ERROR "Unsupported platform")
-        endif ()
-    endforeach()
+            set(EXEFILE_TOOL_NAME exefile)
+        endif()
+        find_program(exefile_tool ${EXEFILE_TOOL_NAME} NO_CACHE)
 
-    option(
-            INSTALL_TO_MONOLITH
-            "Install this package to a perforce branch vendor folder - provided for backwards compatability"
-            ON
-    )
+        if (WIN32)
+            add_custom_command(TARGET Blue POST_BUILD
+                    COMMAND ${CMAKE_COMMAND} -E copy ${exefile_tool} $<TARGET_FILE_DIR:Blue>
+            )
+            set(exefile_tool $<TARGET_FILE_DIR:Blue>/${EXEFILE_TOOL_NAME})
+            if (WIN32)
+                add_custom_command(
+                        TARGET Blue POST_BUILD
+                        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:Blue> $<TARGET_FILE_DIR:Blue>
+                        COMMAND_EXPAND_LISTS
+                )
+            endif ()
+            set(TESTS_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests/python)
+        else()
+            set(TESTS_WORKING_DIRECTORY $<TARGET_FILE_DIR:Blue>)
+        endif()
 
+        separate_arguments(PYTHON_TESTS UNIX_COMMAND ${PYTHON_TESTS_STR})
+        foreach(PYTHON_TEST ${PYTHON_TESTS})
+            message(STATUS "Found test ${PYTHON_TEST}")
+            add_test(NAME ${PYTHON_TEST}
+                COMMAND ${exefile_tool} /inherit /buildflavor=$<LOWER_CASE:$<CONFIG>> /py -m bluetests -v ${PYTHON_TEST}
+                WORKING_DIRECTORY ${TESTS_WORKING_DIRECTORY}
+            )
+            if(WIN32)
+                set_tests_properties(${PYTHON_TEST} PROPERTIES ENVIRONMENT  "PYTHONPATH=$<TARGET_FILE_DIR:Blue>\;${CMAKE_CURRENT_SOURCE_DIR}/python\;${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin\;${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib\;${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin/python\;${Python3_STDLIB};BUILDFLAVOR=$<LOWER_CASE:$<CONFIG>>")
+            elseif (APPLE)
+                 set_tests_properties(${PYTHON_TEST} PROPERTIES ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/tests/python:$<TARGET_FILE_DIR:Blue>:${CMAKE_CURRENT_SOURCE_DIR}/python:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib/python3.12/lib-dynload:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin/python:${Python3_STDLIB};BUILDFLAVOR=$<LOWER_CASE:$<CONFIG>>")
+            else()
+                message(FATAL_ERROR "Unsupported platform")
+            endif ()
+        endforeach()
+    endif()
+
+    option(INSTALL_TO_MONOLITH "Install this package to a perforce branch vendor folder - provided for backwards compatability" ON)
     if (INSTALL_TO_MONOLITH)
         # Install rule to ensure that our runtime and linker files are in the expected, platform-specific folders
         install(
@@ -397,6 +401,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
                 DEPENDENCIES "BlueExposure;CURL;OpenSSL;PDM;YAML;ZLIB"
         )
         install(FILES ${CMAKE_CURRENT_BINARY_DIR}/BlueConfig.cmake DESTINATION .)
+        install(DIRECTORY python DESTINATION . FILES_MATCHING PATTERN "*.py")
     else ()
         install(
                 TARGETS Blue
@@ -407,9 +412,15 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
                 RUNTIME DESTINATION bin
         )
 
+        install(EXPORT BlueTargets
+                DESTINATION share/carbon-blue
+                FILE carbon-blue.cmake
+        )
+
         install(FILES carbon-blueConfig.cmake DESTINATION ${CMAKE_INSTALL_PREFIX}/share/carbon-blue)
+        install(DIRECTORY bin/python DESTINATION . FILES_MATCHING PATTERN "*.py")
     endif ()
 
     install(DIRECTORY include DESTINATION . FILES_MATCHING PATTERN "*.h")
-    install(DIRECTORY python DESTINATION . FILES_MATCHING PATTERN "*.py")
+
 endif()
