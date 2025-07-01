@@ -6,6 +6,8 @@ set(VCPKG_BUILD_TYPE "release")
 set(VCPKG_CMAKE_SYSTEM_NAME Darwin)
 set(VCPKG_OSX_ARCHITECTURES arm64)
 
+set(CARBON_BUILD_TYPE "Release")
+
 if (PORT MATCHES "libyaml")
     set(VCPKG_LIBRARY_LINKAGE static)
 endif ()
