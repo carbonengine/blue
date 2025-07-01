@@ -101,8 +101,12 @@ PyObject* PyAtomicFileRead(PyObject *self, PyObject* args)
 	HANDLE h = INVALID_HANDLE_VALUE;
 	DWORD fileSize;
 	BY_HANDLE_FILE_INFORMATION info;
+	wchar_t* fileName = PyUnicode_AsWideCharString( ufn.o, NULL );
+	if ( !fileName )
 	{
-		wchar_t* fileName = PyUnicode_AsWideCharString( ufn.o, NULL );
+		return nullptr;
+	}
+	{
 		Ccp::PyAllowThreads _allow;
 		for(int i = 0; i<10; i++) {
             h = CreateFileW(fileName,
@@ -116,7 +120,6 @@ PyObject* PyAtomicFileRead(PyObject *self, PyObject* args)
 			}
 			break;
 		}
-		PyMem_Free( fileName );
 		if (h==INVALID_HANDLE_VALUE)
 			goto HERR;
 
@@ -132,8 +135,7 @@ PyObject* PyAtomicFileRead(PyObject *self, PyObject* args)
 	{
 		BluePy r(PyBytes_FromStringAndSize(0, fileSize));
 		if (!r) {
-			CloseHandle(h);
-			return 0;
+			goto HERR;
 		}
 		DWORD read;
 		{
@@ -152,18 +154,25 @@ PyObject* PyAtomicFileRead(PyObject *self, PyObject* args)
 			return nullptr;
 		}
 
+		PyMem_Free( fileName );
 		return r.Detach();
 	}
 
 HERR:
+	PyMem_Free( fileName );
 	PyWin32Error();
 	if (h != INVALID_HANDLE_VALUE)
 		CloseHandle(h);
 	return 0;
 
 #elif defined(__APPLE__)
-
-	CW2A filenameStr( reinterpret_cast<const wchar_t*>( PyUnicode_AsWideCharString( ufn.o, nullptr ) ) );
+	wchar_t* tmp = PyUnicode_AsWideCharString( ufn.o, nullptr );
+	if ( !tmp )
+	{
+		return nullptr;
+	}
+	CW2A filenameStr( tmp );
+	PyMem_Free( tmp );
 	int f;
 	long fileSize;
 	{
@@ -221,8 +230,8 @@ PyObject* PyAtomicFileWrite(PyObject *self, PyObject* args)
 
 //	Py_ssize_t segcount;
 	HANDLE h;
+	wchar_t* fileName = PyUnicode_AsWideCharString( ufn, NULL );
 	{
-		wchar_t* fileName = PyUnicode_AsWideCharString( ufn, NULL );
 		Ccp::PyAllowThreads _allow;
 		for(int i = 0; i<10; i++) {
             h = CreateFileW(fileName,
@@ -236,7 +245,6 @@ PyObject* PyAtomicFileWrite(PyObject *self, PyObject* args)
 			}
 			break;
 		}
-		PyMem_Free( fileName );
 		if (h==INVALID_HANDLE_VALUE)
 			goto HERR;
 	}
@@ -252,17 +260,18 @@ PyObject* PyAtomicFileWrite(PyObject *self, PyObject* args)
 				goto HERR;
 		}
 		if (written != buffer.len) {
-			if (h != INVALID_HANDLE_VALUE) CloseHandle(h);
 			PyErr_SetString(PyExc_IOError, "Wrote short file");
-			return nullptr;
+			goto HERR;
 		}
 	if (h != INVALID_HANDLE_VALUE)
 		CloseHandle(h);
+	PyMem_Free( fileName );
 	Py_INCREF(Py_None);
 	return Py_None;
 
 HERR:
 	PyWin32Error();
+	PyMem_Free( fileName );
 	if (h != INVALID_HANDLE_VALUE)
 		CloseHandle(h);
 	return 0;
