@@ -418,7 +418,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
         )
 
         install(FILES carbon-blueConfig.cmake DESTINATION ${CMAKE_INSTALL_PREFIX}/share/carbon-blue)
-        install(DIRECTORY bin/python DESTINATION . FILES_MATCHING PATTERN "*.py")
+        install(DIRECTORY python/bluepycore DESTINATION bin/python)
     endif ()
 
     install(DIRECTORY include DESTINATION . FILES_MATCHING PATTERN "*.h")
