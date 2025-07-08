@@ -17,8 +17,10 @@ if (PORT MATCHES "curl")
 endif ()
 
 if (PORT MATCHES "openssl")
+    set(CARBON_x86_64_TRIPLET "arm64-osx-debug")
+    set(CARBON_arm64_TRIPLET "x64-osx-debug")
     set(VCPKG_LIBRARY_LINKAGE static)
-endif ()
+endif()
 
 if (PORT MATCHES "protobuf")
     set(VCPKG_LIBRARY_LINKAGE static)
@@ -34,4 +36,8 @@ endif ()
 
 if (PORT MATCHES "libuv")
     set(VCPKG_CMAKE_CONFIGURE_OPTIONS "-DBUILD_TESTING=OFF")
+endif()
+
+if (PORT MATCHES "carbon-exefile")
+    set(VCPKG_FIXUP_MACHO_RPATH OFF)
 endif()
