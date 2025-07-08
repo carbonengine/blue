@@ -23,9 +23,6 @@
         "lhs": "${hostSystemName}",
         "rhs": "Windows"
       },
-      "environment": {
-        "X_VCPKG_REGISTRIES_CACHE": "${sourceDir}/vcpkg_registry_cache"
-      },
       "hidden": true
     },
     {
