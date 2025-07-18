@@ -73,13 +73,13 @@ class CarbonBuildWindows(buildName: String, configType: String, preset: String) 
             name = "Create VCPKG buildtree location"
             workingDir = "%teamcity.build.checkoutDir%/%github_checkout_folder%"
             path = "mkdir"
-            arguments "buildtrees"
+            arguments = "buildtrees"
         }
         exec {
             name = "Create VCPKG registrycache location"
             workingDir = "%teamcity.build.checkoutDir%/%github_checkout_folder%"
             path = "mkdir"
-            arguments "regcache"
+            arguments = "regcache"
         }
         exec {
             name = "(Windows) Get Git Tag/Hash"
