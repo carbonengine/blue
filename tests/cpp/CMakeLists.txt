@@ -12,6 +12,7 @@ target_precompile_headers(BlueCppUnitTests
     PRIVATE
         <Python.h>
         <gtest/gtest.h>
+        "StdAfx.h"
 )
 target_include_directories(BlueCppUnitTests
     PRIVATE

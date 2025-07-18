@@ -261,7 +261,8 @@ target_sources(Blue PRIVATE
     ${PUBLIC_HEADER_FILES_INCLUDE}
 )
 
-target_precompile_headers(Blue PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/StdAfx.h)
+target_precompile_headers(Blue PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/StdAfx.h)
+
 target_compile_definitions(Blue
     PUBLIC
         CCP_STACKLESS
