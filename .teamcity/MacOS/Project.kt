@@ -60,6 +60,7 @@ class CarbonBuildMacOS(buildName: String, configType: String, preset: String) : 
         param("env.EXECUTABLE_FILENAMES_MATCH", "")
         param("env.CMAKE_PRESET", preset)
         param("env.VCPKG_BINARY_SOURCES", "clear;x-aws,s3://vcpkg-binary-cache-static/cache/,readwrite")
+        param("env.X_VCPKG_REGISTRIES_CACHE", "%teamcity.build.checkoutDir%/%github_checkout_folder%/regcache")
     }
 
 
@@ -70,6 +71,12 @@ class CarbonBuildMacOS(buildName: String, configType: String, preset: String) : 
     }
 
     steps {
+        exec {
+            name = "Create VCPKG registrycache location"
+            workingDir = "%teamcity.build.checkoutDir%/%github_checkout_folder%"
+            path = "mkdir"
+            arguments = "regcache"
+        }
         exec {
             name = "(macOS) Get Git Tag/Hash"
             workingDir = "carbon_pipeline_tools"
@@ -84,7 +91,7 @@ class CarbonBuildMacOS(buildName: String, configType: String, preset: String) : 
         exec {
             name = "Configure"
             path = "cmake"
-            arguments = "--preset %env.CMAKE_PRESET% -S %teamcity.build.checkoutDir%/%github_checkout_folder% -B %env.CMAKE_BUILD_FOLDER% -D CMAKE_INSTALL_PREFIX=%env.CMAKE_INSTALL_PREFIX%"
+            arguments = "--preset %env.CMAKE_PRESET% -S %teamcity.build.checkoutDir%/%github_checkout_folder% -B %env.CMAKE_BUILD_FOLDER% -DCMAKE_INSTALL_PREFIX=%env.CMAKE_INSTALL_PREFIX% -DVCPKG_INSTALL_OPTIONS=--x-buildtrees-root=%teamcity.build.checkoutDir%/%github_checkout_folder%/buildtrees"
         }
         exec {
             name = "Build"

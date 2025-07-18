@@ -71,12 +71,6 @@ class CarbonBuildWindows(buildName: String, configType: String, preset: String) 
 
     steps {
         exec {
-            name = "Create VCPKG buildtree location"
-            workingDir = "%teamcity.build.checkoutDir%/%github_checkout_folder%"
-            path = "mkdir"
-            arguments = "buildtrees"
-        }
-        exec {
             name = "Create VCPKG registrycache location"
             workingDir = "%teamcity.build.checkoutDir%/%github_checkout_folder%"
             path = "mkdir"
