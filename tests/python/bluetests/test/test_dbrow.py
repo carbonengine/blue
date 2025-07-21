@@ -30,7 +30,7 @@ class TestDBRow(blueunittest.TestCase):
         self.assertListEqual(self.row[:-1], [0.0, None])
         self.assertListEqual(self.row[0:], [0.0, None, 0])
 
-        with self.assertRaises(NotImplementedError):
+        with self.assertRaises(TypeError):
             self.row[::2]
 
     def testIndexSubscript(self):
