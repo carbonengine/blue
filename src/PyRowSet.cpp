@@ -1047,13 +1047,39 @@ PyObject *DBRow::Get(const ColumnDescriptor &c, Py_ssize_t i) const
 		return PyFloat_FromDouble(*(double*)data);
 	case DBTYPE_CY:
 		return PyFloat_FromDouble(double(*(int64_t*)data) / 10000.0);
-	case DBTYPE_STR:
-	case DBTYPE_WSTR:
+	case DBTYPE_STR: {
+		//a python object
+		PyObject* result = *(PyObject**)data;
+		if( result && result != Py_None && !PyString_CheckExact( result ) )
+		{
+			PyErr_Format( PyExc_TypeError, "Unexpected value for db column %d", c.mType );
+			return nullptr;
+		}
+		Py_XINCREF( result );
+		return result;
+	}
+	case DBTYPE_WSTR: {
+		//a python object
+		PyObject* result = *(PyObject**)data;
+		if( result && result != Py_None && !PyUnicode_CheckExact( result ) )
+		{
+			PyErr_Format( PyExc_TypeError, "Unexpected value for db column %d", c.mType );
+			return nullptr;
+		}
+		Py_XINCREF( result );
+		return result;
+	}
 	case DBTYPE_BYTES: {
 		//a python object
-		PyObject *result = *(PyObject**)data;
-		Py_XINCREF(result);
-		return result;}
+		PyObject* result = *(PyObject**)data;
+		if( result && result != Py_None && !PyBytes_CheckExact( result ) )
+		{
+			PyErr_Format( PyExc_TypeError, "Unexpected value for db column %d", c.mType );
+			return nullptr;
+		}
+		Py_XINCREF( result );
+		return result;
+	}
 	case DBTYPE_EMPTY:
 		// A virtual column!
 		return mRD->VirtualGet(c.mOffset, this);
@@ -1174,8 +1200,31 @@ bool DBRow::SetNotNull(const ColumnDescriptor &c, PyObject *o)
 		return true; }
 
 	case DBTYPE_STR:
+		if ( o != Py_None && !PyString_CheckExact( o ) )
+		{
+			PyErr_Format( PyExc_TypeError, "Unexpected value for db column %d", c.mType );
+			return false;
+		}
+		Py_INCREF(o);
+		Py_XDECREF(*(PyObject**)data);
+		*(PyObject**)data = o;
+		return true;
 	case DBTYPE_WSTR:
+		if ( o != Py_None && !PyUnicode_CheckExact( o ) )
+		{
+			PyErr_Format( PyExc_TypeError, "Unexpected value for db column %d", c.mType );
+			return false;
+		}
+		Py_INCREF(o);
+		Py_XDECREF(*(PyObject**)data);
+		*(PyObject**)data = o;
+		return true;
 	case DBTYPE_BYTES:
+		if ( o != Py_None && !PyBytes_CheckExact( o ) )
+		{
+			PyErr_Format( PyExc_TypeError, "Unexpected value for db column %d", c.mType );
+			return false;
+		}
 		//a python object
 		Py_INCREF(o);
 		Py_XDECREF(*(PyObject**)data);
