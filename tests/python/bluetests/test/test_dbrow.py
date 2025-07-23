@@ -11,6 +11,13 @@ class TestDBRow(blueunittest.TestCase):
         self.columns = (("nodeID", 4), ("ipAddress", 129), ("port", 3))
         self.row = blue.DBRow(blue.DBRowDescriptor(self.columns))
 
+    def testAttemptingToDeleteColumnDoesntCrash(self):
+        foo = self.row
+        with self.assertRaises(RuntimeError):
+            delattr(foo, "nodeID")
+        with self.assertRaises(RuntimeError):
+            del foo.ipAddress
+
     def testSliceSubscript(self):
         sliceTest = self.row[:]
 
