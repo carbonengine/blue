@@ -1077,21 +1077,10 @@ PyObject *DBRow::Get(const ColumnDescriptor &c, Py_ssize_t i) const
 	case DBTYPE_CY:
 		return PyFloat_FromDouble(double(*(int64_t*)data) / 10000.0);
 	case DBTYPE_STR:
-	case DBTYPE_WSTR: {
-		PyObject* result = *(PyObject**)data;
-		if ( result && !Py_IsNone( result ) && !PyUnicode_Check( result ) ) {
-			PyErr_Format( PyExc_TypeError, "Unexpected value for db column %d", c.mType );
-			return nullptr;
-		}
-		Py_XINCREF(result);
-		return result;}
+	case DBTYPE_WSTR:
 	case DBTYPE_BYTES: {
 		//a python object
 		PyObject *result = *(PyObject**)data;
-		if ( result && !Py_IsNone( result ) && !PyBytes_CheckExact( result ) ) {
-			PyErr_Format( PyExc_TypeError, "Unexpected value for db column %d", c.mType );
-			return nullptr;
-		}
 		Py_XINCREF(result);
 		return result;}
 	case DBTYPE_EMPTY:
@@ -1215,21 +1204,8 @@ bool DBRow::SetNotNull(const ColumnDescriptor &c, PyObject *o)
 
 	case DBTYPE_STR:
 	case DBTYPE_WSTR:
-		if ( !Py_IsNone( o ) && !PyUnicode_CheckExact( o ) )
-		{
-			PyErr_Format( PyExc_TypeError, "Unexpected value for db column %d", c.mType );
-			return false;
-		}
-		Py_INCREF(o);
-		Py_XDECREF(*(PyObject**)data);
-		*(PyObject**)data = o;
-		return true;
 	case DBTYPE_BYTES:
-		if ( !Py_IsNone( o ) && !PyBytes_CheckExact( o ) )
-		{
-			PyErr_Format( PyExc_TypeError, "Unexpected value for db column %d", c.mType );
-			return false;
-		}
+		//a python object
 		Py_INCREF(o);
 		Py_XDECREF(*(PyObject**)data);
 		*(PyObject**)data = o;
