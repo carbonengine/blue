@@ -130,8 +130,6 @@ struct ColumnDescriptor
 		case DBTYPE_BYTES:
 			size = 5; break;  //signal an object
 		case DBTYPE_EMPTY:
-			// PyErr_SetString(PyExc_RuntimeError, "Virtual columns are no longer supported");
-			// return false;
 			size = -1; break;
 		default:
 			PyErr_Format(PyExc_TypeError, "DBRowDescriptor doesn't support data type %d", type);
@@ -596,9 +594,6 @@ Py_ssize_t DBRowDescriptor::SequenceLength(DBRowDescriptor *row)
 //Return a shallow copy of the dude
 PyObject *DBRowDescriptor::Get_virtual()
 {
-	// The virtual column mechanism was an open door for remote code execution, there it was removed.
-	// PyErr_SetString(PyExc_RuntimeError, "Virtual columns are no longer supported");
-	// return nullptr;
 	BluePyList newList(0);
 	if (!newList)
 		return 0;
@@ -613,9 +608,6 @@ PyObject *DBRowDescriptor::Get_virtual()
 
 bool DBRowDescriptor::Set_virtual(PyObject *l)
 {
-	// The virtual column mechanism was an open door for remote code execution, there it was removed.
-	// PyErr_SetString(PyExc_RuntimeError, "Virtual columns are ready only");
-	// return false;
 	//make sure we have a list of tuples at least three
 	if (!PyList_Check(l))
 		return PyErr_SetString(PyExc_TypeError, "list required"), false;
@@ -679,19 +671,6 @@ bool DBRowDescriptor::VirtualSet(int n, PyObject *row, PyObject *val)
 {
 	PyErr_SetString(PyExc_RuntimeError, "Virtual columns are read-only");
 	return false;
-	if (!mVirtualGetSet || !PyList_Check(mVirtualGetSet.o))
-        return PyErr_SetString(PyExc_RuntimeError, "Internal error in VirtualSet"), false;
-	if (n < 0 || n >= PyList_GET_SIZE(mVirtualGetSet.o))
-        return PyErr_SetString(PyExc_RuntimeError, "Internal error in VirtualSet"), false;
-	PyObject *t = PyList_GET_ITEM(mVirtualGetSet.o, n);
-	if (!PyTuple_Check(t))
-        return PyErr_SetString(PyExc_RuntimeError, "Internal error in VirtualSet"), false;
-	if (PyTuple_GET_SIZE(t)<3)
-		return (PyErr_SetString(PyExc_AttributeError, "read only attribute")), false;
-	PyObject *res = PyObject_CallFunctionObjArgs(PyTuple_GET_ITEM(t, 2), row, val, 0);
-	if (!res) return false;
-	Py_DECREF(res);
-	return true;
 }
 
 
@@ -1090,8 +1069,7 @@ PyObject *DBRow::Get(const ColumnDescriptor &c, Py_ssize_t i) const
 		return result;
 	}
 	case DBTYPE_EMPTY:
-		// PyErr_SetString(PyExc_RuntimeError, "Virtual columns are no longer supported");
-		// return nullptr;
+		// A virtual column!
 		return mRD->VirtualGet(c.mOffset, this);
 	default:
 		PyErr_Format(PyExc_RuntimeError, "Unexpected db column type encountered: %d", c.mType);
