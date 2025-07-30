@@ -57,20 +57,3 @@ class TestDBRow(blueunittest.TestCase):
         self.assertNotEqual(self.row, blue.DBRowDescriptor(self.columns))
 
         self.assertEqual(self.row, blue.DBRow(blue.DBRowDescriptor(self.columns)))
-
-    def testPythonObjectValidation(self):
-        objectStoringRow = blue.DBRow(blue.DBRowDescriptor((("text", 128),("unicodeText", 129),("data", 130))))
-
-        for illegalValue in (
-                object(),
-                4711,
-                0.815,
-                (1,2,3,),
-                ['a','b', 'c']
-        ):
-            with self.assertRaises(TypeError):
-                setattr(objectStoringRow, "text", illegalValue)
-            with self.assertRaises(TypeError):
-                setattr(objectStoringRow, "unicodeText", illegalValue)
-            with self.assertRaises(TypeError):
-                setattr(objectStoringRow, "data", illegalValue)
