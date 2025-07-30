@@ -1220,7 +1220,7 @@ bool DBRow::SetNotNull(const ColumnDescriptor &c, PyObject *o)
 		return true;
 
 	case DBTYPE_EMPTY:
-		PyErr_SetString(PyExc_RuntimeError, "Virtual columns are no longer supported");
+		PyErr_SetString(PyExc_RuntimeError, "Virtual columns are read-only");
 		return false;
 	default:
 		PyErr_Format(PyExc_RuntimeError, "Unexpected db column type encountered: %d", c.mType);
