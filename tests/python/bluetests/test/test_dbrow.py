@@ -23,6 +23,13 @@ class TestDBRow(blueunittest.TestCase):
         row = blue.DBRow(desc)
         self.assertEqual(row.foo, 4711)
 
+    def testAttemptingToDeleteColumnDoesntCrash(self):
+        foo = self.row
+        with self.assertRaises(RuntimeError):
+            delattr(foo, "nodeID")
+        with self.assertRaises(RuntimeError):
+            del foo.ipAddress
+
     def testSliceSubscript(self):
         sliceTest = self.row[:]
 

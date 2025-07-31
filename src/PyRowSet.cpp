@@ -1683,6 +1683,12 @@ int DBRow::SetAttr(PyObject *self, PyObject *key, PyObject *val)
 	const ColumnDescriptor *cd = tis->GetCD(idx, key, NULL);
 	if (cd != 0)
 	{
+		// Guard against `del DBRow.column` / `delattr(DBRow, "column")`
+		if (!val)
+		{
+			PyErr_SetString(PyExc_RuntimeError, "Cannot delete a column from a DBRow");
+			return -1;
+		}
 		if (!tis->Set(*cd, idx, val))
 			return -1;
 		return 0;
