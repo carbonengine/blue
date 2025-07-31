@@ -11,6 +11,18 @@ class TestDBRow(blueunittest.TestCase):
         self.columns = (("nodeID", 4), ("ipAddress", 129), ("port", 3))
         self.row = blue.DBRow(blue.DBRowDescriptor(self.columns))
 
+    def testVirtualColumnsAreReadOnly(self):
+        def getFoo(*args, **kwargs):
+            return 4711
+        def setFoo(*args, **kwargs):
+            pass
+        desc = blue.DBRowDescriptor(self.columns)
+        with self.assertRaises(TypeError):
+            desc.virtual = [("foo", getFoo, setFoo)]
+        desc.virtual = [("foo", getFoo)]
+        row = blue.DBRow(desc)
+        self.assertEqual(row.foo, 4711)
+
     def testSliceSubscript(self):
         sliceTest = self.row[:]
 

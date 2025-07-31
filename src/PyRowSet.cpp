@@ -130,8 +130,7 @@ struct ColumnDescriptor
 		case DBTYPE_BYTES:
 			size = 5; break;  //signal an object
 		case DBTYPE_EMPTY:
-			size = -1; break;  //virtual
-		
+			size = -1; break;
 		default:
 			PyErr_Format(PyExc_TypeError, "DBRowDescriptor doesn't support data type %d", type);
 			return false;
@@ -633,7 +632,7 @@ bool DBRowDescriptor::Set_virtual(PyObject *l)
 		goto ERR1;
 	for (Py_ssize_t i = 0; i<newLen; i++) {
 		PyObject *t = PyList_GET_ITEM(l, i);
-		if (!PyTuple_Check(t) || (PyTuple_GET_SIZE(t) < 2))
+		if (!PyTuple_Check(t) || (PyTuple_GET_SIZE(t) != 2))
 			goto ERR1;
 		BluePy name(PyObject_Str(PyTuple_GET_ITEM(t, 0)));
 		if (!name)
@@ -678,19 +677,8 @@ PyObject *DBRowDescriptor::VirtualGet(int n, const PyObject *row) const
 
 bool DBRowDescriptor::VirtualSet(int n, PyObject *row, PyObject *val)
 {
-	if (!mVirtualGetSet || !PyList_Check(mVirtualGetSet.o))
-        return PyErr_SetString(PyExc_RuntimeError, "Internal error in VirtualSet"), false;
-	if (n < 0 || n >= PyList_GET_SIZE(mVirtualGetSet.o))
-        return PyErr_SetString(PyExc_RuntimeError, "Internal error in VirtualSet"), false;
-	PyObject *t = PyList_GET_ITEM(mVirtualGetSet.o, n);
-	if (!PyTuple_Check(t))
-        return PyErr_SetString(PyExc_RuntimeError, "Internal error in VirtualSet"), false;
-	if (PyTuple_GET_SIZE(t)<3)
-		return (PyErr_SetString(PyExc_AttributeError, "read only attribute")), false;
-	PyObject *res = PyObject_CallFunctionObjArgs(PyTuple_GET_ITEM(t, 2), row, val, 0);
-	if (!res) return false;
-	Py_DECREF(res);
-	return true;
+	PyErr_SetString(PyExc_RuntimeError, "Virtual columns are read-only");
+	return false;
 }
 
 
@@ -1212,7 +1200,8 @@ bool DBRow::SetNotNull(const ColumnDescriptor &c, PyObject *o)
 		return true;
 
 	case DBTYPE_EMPTY:
-		return mRD->VirtualSet(c.mOffset, this, o);
+		PyErr_SetString(PyExc_RuntimeError, "Virtual columns are read-only");
+		return false;
 	default:
 		PyErr_Format(PyExc_RuntimeError, "Unexpected db column type encountered: %d", c.mType);
 		return false;
