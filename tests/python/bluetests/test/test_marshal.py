@@ -181,3 +181,17 @@ class testMarshal(blueunittest.TestCase):
         obj = [OldSchoolObject(), SimpleObject(), "this is a test"]
         ws = blue.marshal.Save(obj)
         self.verify_round_trip(ws)
+
+    def test_dbrow(self):
+        rowDesc = blue.DBRowDescriptor((("Test", 20),))
+        sourceRow = blue.DBRow(rowDesc, (123, ))
+        self.verify_round_trip(sourceRow)
+
+    def test_dbrow_with_invalid_descriptor_in_stream_raises_error(self):
+        # Unmarshalled bytes will attempt to create a DBRow and create a blue.Dict rather than
+        # expected blue.DBRowDescriptor
+        bytes = b'~\x00\x00\x00\x00*",\x02\tblue.Dict$--'
+        with self.assertRaises(RuntimeError) as raisedValue:
+            blue.marshal.Load(bytes)
+        
+        self.assertEqual(raisedValue.exception.args[0], TypeError)
