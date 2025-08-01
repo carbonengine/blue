@@ -188,7 +188,7 @@ class testMarshal(blueunittest.TestCase):
         self.verify_round_trip(sourceRow)
 
     def test_dbrow_with_invalid_descriptor_in_stream_raises_error(self):
-        # Unmarshalled bytes will attempt to craete a DBRow and create an eveexception.SQLError rather than
+        # Unmarshalled bytes will attempt to create a DBRow and create a blue.Dict rather than
         # expected blue.DBRowDescriptor
         bytes = b'~\x00\x00\x00\x00*",\x02\tblue.Dict$--'
         with self.assertRaises(RuntimeError) as raisedValue:
