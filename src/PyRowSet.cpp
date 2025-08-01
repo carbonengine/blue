@@ -1745,6 +1745,14 @@ PyObject *DBRow::Read(Marshal &m, ReadStream &s)
 {
 	BluePy rd(m.ReadObject(&s)); //read row descriptor
 	if (!rd) return 0;
+
+	//Check object is of correct DBRowDescriptorType
+	if( DBRowDescriptor::GetType() != rd.o->ob_type )
+	{
+		PyErr_Format( PyExc_TypeError, "Hacker Warning! Invalid type in marshal data, expected blue.DBRowDescriptor." );
+		return 0;
+	}
+
 	//Create object
 	BluePy rowO(DBRow::CreateFromRowDescriptor( rd ) ); 
 	if (!rowO) return 0;
