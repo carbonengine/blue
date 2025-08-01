@@ -1818,7 +1818,7 @@ PyObject *DBRow::Read(Marshal &m, ReadStream &s)
 	if (!rd) return 0;
 
 	//Check object is of correct DBRowDescriptorType
-	if( DBRowDescriptor::GetType() != rd.o->ob_type )
+	if( DBRowDescriptor::GetType() != Py_TYPE( rd.o ) )
 	{
 		PyErr_Format( PyExc_TypeError, "Hacker Warning! Invalid type in marshal data, expected blue.DBRowDescriptor." );
 		return 0;
