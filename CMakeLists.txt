@@ -383,7 +383,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
         endforeach()
     endif()
 
-    option(INSTALL_TO_MONOLITH "Install this package to a perforce branch vendor folder - provided for backwards compatability" ON)
+    option(INSTALL_TO_MONOLITH "Install this package to a perforce branch vendor folder - provided for backwards compatability" OFF)
     if (INSTALL_TO_MONOLITH)
         # Install rule to ensure that our runtime and linker files are in the expected, platform-specific folders
         install(
