@@ -41,3 +41,7 @@ endif()
 if (PORT MATCHES "carbon-exefile")
     set(VCPKG_FIXUP_MACHO_RPATH OFF)
 endif()
+
+if (PORT MATCHES "carbon-pdmprotowrapper")
+    set(VCPKG_LIBRARY_LINKAGE static)
+endif ()
