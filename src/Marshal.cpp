@@ -1485,57 +1485,92 @@ PyObject *Marshal::ReadObjectGlobal(ReadStream *stream, bool shared)
 //Read an instance of an old-style class
 PyObject *Marshal::ReadObjectInstance(ReadStream *stream, bool shared)
 {
-	PyErr_SetString(PyExc_NotImplementedError, "Support for old-style classes is no longer implemented");
-	return nullptr;
-//	//mark shared according to stream position
-//	size_t index;
-//	if (shared && (index = stream->MarkShared()) == -1)
-//		return 0;
-//
-//	BluePy guid(ReadObject(stream));
-//	if (!guid) return 0;
-//	BluePy klass(GetGlobalObject(guid));
-//	if (!klass) return 0;
-//	if (!PyObject_IsInstance(klass.o, (PyObject *)&PyType_Type)) {
-//		BluePy r(PyObject_Repr(guid));
-//		BluePy t(PyObject_Type(klass));
-//		BluePy tr(PyObject_Repr(t));
-//		PyErr_Format(PyExc_TypeError, "global object %s should be of class type but is of %s",
-//			r ? PyString_AS_STRING(r.o):"<>", tr?PyString_AS_STRING(tr.o):"<>");
-//		return 0;
-//	}
-//
-//	if (!UpdateGlobalNames(guid, 0)) return 0;
-//
-//	//create the empty object
-//	BluePy inst(PyInstance_NewRaw(klass, 0));
-//	if (!inst)
-//		return 0;
-//	if (shared && !stream->UpdateShared(index, inst))
-//		return 0;
-//
-//	// Get the instance data
-//	BluePy data(ReadObject(stream));
-//	if (!data) return 0;
-//
-//	// set the state
-//	bool setstate = PyObject_HasAttr(klass, mStock_SetState) != 0;
-//	if (setstate)
-//	{
-//		AutoTasklet _at(PyOS->GetTaskletTimer(), mTimer_SetState);
-//		BluePy r(PyObject_CallMethodObjArgs(inst, mStock_SetState, data.o, NULL));
-//		if (!r)
-//			return 0;
-//	}
-//	else
-//	{
-//		BluePy dict(PyObject_GetAttr(inst, mStock_Dict));
-//		if (!dict)
-//			return 0;
-//		if (PyDict_Update(dict, data) == -1)
-//			return 0;
-//	}
-//	return inst.Detach();
+//	mark shared according to stream position
+	size_t index;
+	if (shared && (index = stream->MarkShared()) == -1)
+    {
+		return nullptr;
+    }
+
+	BluePy guid(ReadObject(stream));
+	if (!guid)
+    {
+        return nullptr;
+    }
+	BluePy klass(GetGlobalObject(guid));
+	if (!klass)
+    {
+        return nullptr;
+    }
+	if (!PyObject_IsInstance(klass.o, (PyObject *)&PyType_Type))
+    {
+		BluePy r(PyObject_Repr(guid));
+		BluePy t(PyObject_Type(klass));
+		BluePy tr(PyObject_Repr(t));
+		PyErr_Format(PyExc_TypeError, "global object %s should be of class type but is of %s",
+			r ? PyUnicode_AsUTF8(r.o): "<>", tr ? PyUnicode_AsUTF8(tr.o): "<>");
+		return nullptr;
+	}
+
+	if (!UpdateGlobalNames(guid, 0))
+    {
+        return nullptr;
+    }
+
+    BluePy __new__(PyObject_GetAttr(klass, mStock_New));
+    if (!__new__)
+    {
+        return nullptr;
+    }
+
+    // We require that the new version of the class
+    // does not require any additional arguments when calling __new__
+    BluePy args( PyTuple_New( 1 ) );
+    if( PyTuple_SetItem( args, 0, klass ) != 0 )
+    {
+        return nullptr;
+    }
+    BluePy inst(PyObject_CallObject(__new__, args));
+	if (!inst)
+    {
+		return nullptr;
+    }
+	if (shared)
+    {
+        stream->UpdateShared(index, inst);
+    }
+
+	// Get the instance data
+	BluePy data(ReadObject(stream));
+	if (!data)
+    {
+        return nullptr;
+    }
+
+	// set the state
+	bool setstate = PyObject_HasAttr(klass, mStock_SetState) != 0;
+	if (setstate)
+	{
+		AutoTasklet _at(PyOS->GetTaskletTimer(), mTimer_SetState);
+		BluePy r(PyObject_CallMethodObjArgs(inst, mStock_SetState, data.o, NULL));
+		if (!r)
+        {
+			return nullptr;
+        }
+	}
+	else
+	{
+		BluePy dict(PyObject_GetAttr(inst, mStock_Dict));
+		if (!dict)
+        {
+			return nullptr;
+        }
+		if (PyDict_Update(dict, data) == -1)
+        {
+			return nullptr;
+        }
+	}
+	return inst.Detach();
 }
 	
 
@@ -1688,15 +1723,29 @@ PyObject *Marshal::ReadObjectLong(ReadStream *stream, bool shared)
 //The stuff is cached for quick retrieval
 PyObject *Marshal::GetGlobalObject(PyObject *nameO)
 {
+    BluePy obj(nameO, true);
+
 	PyObject *cached = PyDict_GetItem(mGuidTable, nameO);
 	if (cached) {
 		Py_INCREF(cached);
 		return cached;
 	}
 
-	if (!PyUnicode_Check(nameO))
-		return PyErr_SetString(PyExc_RuntimeError, "expected string"), nullptr;
-	const char *name = PyUnicode_AsUTF8(nameO);
+    // Backwards compatibility with old-style classes marshalled from python 2.7
+    if (PyBytes_Check(obj.o))
+    {
+        obj = BluePy(PyUnicode_FromEncodedObject(nameO, "UTF-8", 0));
+    }
+
+    const char *name;
+	if (PyUnicode_Check(obj.o))
+    {
+        name = PyUnicode_AsUTF8(obj.o);
+    }
+    else
+    {
+        return PyErr_SetString(PyExc_RuntimeError, "expected string"), nullptr;
+    }
 	const char *dot = strrchr(name, '.');
 	BluePyStr modulename;
 	if (dot){

@@ -1,6 +1,7 @@
 __author__ = 'snorri.sturluson'
 
 from . import blueunittest
+from . import marshaltesthelper
 import blue
 import sys
 
@@ -241,3 +242,13 @@ class TestBackwardsCompatibiily(blueunittest.TestCase):
         bytes = b'~\x00\x00\x00\x00\x13\x0cByte string.'
         byte_string = blue.marshal.Load(bytes)
         self.assertEqual(byte_string, b"Byte string.")
+
+    def test_load_old_style_object(self):
+        bytes = b'~\x00\x00\x00\x00#%%\x02/bluetests.test.marshaltesthelper.OldStyleObject--' # Python2.7 old-style object
+        obj = blue.marshal.Load(bytes)
+        self.assertIsInstance(obj, marshaltesthelper.OldStyleObject)
+
+    def test_load_new_style_object(self):
+        bytes = b'~\x00\x00\x00\x00#%%\x02/bluetests.test.marshaltesthelper.NewStyleObject--' # Python2.7 new-style object
+        obj = blue.marshal.Load(bytes)
+        self.assertIsInstance(obj, marshaltesthelper.NewStyleObject)
