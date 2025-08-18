@@ -252,3 +252,8 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         bytes = b'~\x00\x00\x00\x00#%%\x02/bluetests.test.marshaltesthelper.NewStyleObject--' # Python2.7 new-style object
         obj = blue.marshal.Load(bytes)
         self.assertIsInstance(obj, marshaltesthelper.NewStyleObject)
+
+    def test_load_object_with_data(self):
+        bytes = b'~\x00\x00\x00\x00#,%\x02/bluetests.test.marshaltesthelper.ObjectWithData\x16\x01\x12\x04test\x12\x04data--'
+        obj = blue.marshal.Load(bytes)
+        self.assertEqual(obj.data, "test")
