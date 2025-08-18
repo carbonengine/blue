@@ -236,3 +236,8 @@ class TestBackwardsCompatibiily(blueunittest.TestCase):
         bytes = b'~\x00\x00\x00\x00.\x0fUnicode string.'
         unicode_string = blue.marshal.Load(bytes)
         self.assertEqual(unicode_string, "Unicode string.")
+
+    def test_load_legacy_byte_string(self):
+        bytes = b'~\x00\x00\x00\x00\x13\x0cByte string.'
+        byte_string = blue.marshal.Load(bytes)
+        self.assertEqual(byte_string, b"Byte string.")
