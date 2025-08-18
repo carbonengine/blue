@@ -83,6 +83,7 @@ bool MarshalInit(PyObject *module)
 	Marshal::s_typeHandlers[ TY_NEWOBJ ] = &Marshal::ReadObjectNewobj;
 	Marshal::s_typeHandlers[ TY_DBROW ] = &Marshal::ReadObjectDBRow;
 	Marshal::s_typeHandlers[ TY_WSTREAM	] = &Marshal::ReadObjectWStream;
+	Marshal::s_typeHandlers[ TY_UTF8_OBSOLETE ] = &Marshal::ReadObjectUnicode;
 	Marshal::s_typeHandlers[ TY_LONG ] = &Marshal::ReadObjectLong;
 
 	Py_INCREF( WriteStream::GetType() );
