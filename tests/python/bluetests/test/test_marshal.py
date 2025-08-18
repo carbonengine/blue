@@ -232,7 +232,7 @@ class testMarshal(blueunittest.TestCase):
         self.assertEqual(raisedValue.exception.args[0], TypeError)
 
 
-class TestBackwardsCompatibiily(blueunittest.TestCase):
+class TestBackwardsCompatibility(blueunittest.TestCase):
     def test_load_legacy_unicode_string(self):
         bytes = b'~\x00\x00\x00\x00.\x0fUnicode string.'
         unicode_string = blue.marshal.Load(bytes)
