@@ -285,7 +285,7 @@ bool RowDescriptor::Init(PyObject *a)
 		const char *name;
 		int type;
 		PyObject *dummy = 0;
-		if (!PyArg_ParseTuple(t, "si|O:DBRowDescriptor", &name, &type, &dummy))
+		if (!PyArg_ParseTuple(t, "s*i|O:DBRowDescriptor", &name, &type, &dummy))
 			return false;
 		mColumnList.push_back(ColumnDescriptor(name));
 		mColumnList.back().mType = (DBTYPE)type;
