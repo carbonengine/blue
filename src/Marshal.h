@@ -282,7 +282,9 @@ private:
 	PyObject *ReadObjectOrMarker(struct ReadStream *s, bool &mark); //reads an object or a marker
 	PyObject *ReadObjectBuffer(struct ReadStream &s);
 	PyObject *ReadObjectGlobal( struct ReadStream *s, bool shared );
+#ifdef PY27_COMPATIBILITY_MODE
 	PyObject *ReadObjectInstance(struct ReadStream *s, bool shared);
+#endif
 	PyObject *ReadObjectReduce(struct ReadStream *s, bool shared);
 	PyObject *ReadObjectNewobj(struct ReadStream *s, bool shared);
 	PyObject *ReadObjectLong(struct ReadStream *s, bool shared);

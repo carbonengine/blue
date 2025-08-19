@@ -73,7 +73,6 @@ bool MarshalInit(PyObject *module)
 	Marshal::s_typeHandlers[ TY_LIST1 ] = &Marshal::ReadObjectList1;
 	Marshal::s_typeHandlers[ TY_LIST ] = &Marshal::ReadObjectList;
 	Marshal::s_typeHandlers[ TY_DICT ] = &Marshal::ReadObjectDict;
-	Marshal::s_typeHandlers[ TY_INSTANCE ] = &Marshal::ReadObjectInstance;
 	Marshal::s_typeHandlers[ TY_CALLBACK ] = &Marshal::ReadObjectCallback;
 	Marshal::s_typeHandlers[ TY_PICKLE ] = &Marshal::ReadObjectPickle;
 	Marshal::s_typeHandlers[ TY_PICKLER	] = &Marshal::ReadObjectPickler;
@@ -83,8 +82,12 @@ bool MarshalInit(PyObject *module)
 	Marshal::s_typeHandlers[ TY_NEWOBJ ] = &Marshal::ReadObjectNewobj;
 	Marshal::s_typeHandlers[ TY_DBROW ] = &Marshal::ReadObjectDBRow;
 	Marshal::s_typeHandlers[ TY_WSTREAM	] = &Marshal::ReadObjectWStream;
-	Marshal::s_typeHandlers[ TY_UTF8_OBSOLETE ] = &Marshal::ReadObjectUnicode;
 	Marshal::s_typeHandlers[ TY_LONG ] = &Marshal::ReadObjectLong;
+#ifdef PY27_COMPATIBILITY_MODE
+	// Handle types that are never sent by Python 3.
+	Marshal::s_typeHandlers[ TY_INSTANCE ] = &Marshal::ReadObjectInstance;
+	Marshal::s_typeHandlers[ TY_UTF8_OBSOLETE ] = &Marshal::ReadObjectUnicode;
+#endif
 
 	Py_INCREF( WriteStream::GetType() );
 	if (PyModule_AddObject(module, "MarshalStream", (PyObject*)WriteStream::GetType()))
@@ -1481,7 +1484,7 @@ PyObject *Marshal::ReadObjectGlobal(ReadStream *stream, bool shared)
 	return obj.Detach();
 }
 
-
+#ifdef PY27_COMPATIBILITY_MODE
 //Read an instance of an old-style class
 PyObject *Marshal::ReadObjectInstance(ReadStream *stream, bool shared)
 {
@@ -1572,6 +1575,7 @@ PyObject *Marshal::ReadObjectInstance(ReadStream *stream, bool shared)
 	}
 	return inst.Detach();
 }
+#endif
 	
 
 PyObject *Marshal::ReadObjectReduce(ReadStream *stream, bool shared)
@@ -1969,8 +1973,27 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 	case  's':
 		if (PyUnicode_CheckExact(o))
 		{
-//			Py_ssize_t size = PyUnicode_GET_LENGTH(o);
-//			const char *data = PyUnicode_AS_DATA(o);
+#ifdef PY27_COMPATIBILITY_MODE
+			BluePy encoded( PyUnicode_AsUTF8String( o ) );
+			RETFAIL( encoded.o );
+			Py_ssize_t size = PyObject_Length( encoded.o );
+			const char* data = PyBytes_AsString( encoded.o );
+			if (size == 0) {
+				return WriteType(stream, TY_UNICODE_0);
+			} else {
+				PyObject* index = PyDict_GetItem( mStrTable, encoded.o );
+				if( index )
+				{
+					RETFAIL( WriteType( stream, TY_STR_TABLE ) );
+					return stream->Write( (char)PyLong_AS_LONG( index ) );
+				}
+				else
+				{
+					return WriteType( stream, TY_UTF8_OBSOLETE ) && stream->WriteInteger( (int)size ) &&
+						stream->WriteBuffWoSize( data, size );
+				}
+			}
+#else
 			Py_ssize_t size = 0;
 			const char *data = PyUnicode_AsUTF8AndSize(o, &size);
 			if (size == 0) {
@@ -1990,6 +2013,7 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 						stream->WriteBuffWoSize( data, size );
 				}
 			}
+#endif
 		}
 		break;
 
