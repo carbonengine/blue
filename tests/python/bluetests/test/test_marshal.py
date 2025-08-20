@@ -263,3 +263,8 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         dbrow = blue.marshal.Load(bytes)
         self.assertBlueObjectsEqual(dbrow, blue.DBRow(blue.DBRowDescriptor((("Test", 20),)), (123, )))
 
+    def test_empty_dbrow(self):
+        bytes = b'~\x00\x00\x00\x00*",\x02\x14blue.DBRowDescriptor%$--\x00' # Python 2.7 empty blue.DBRow object
+        dbrow = blue.marshal.Load(bytes)
+        self.assertBlueObjectsEqual(dbrow, blue.DBRow(blue.DBRowDescriptor(())))
+
