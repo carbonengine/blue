@@ -268,3 +268,33 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         dbrow = blue.marshal.Load(bytes)
         self.assertBlueObjectsEqual(dbrow, blue.DBRow(blue.DBRowDescriptor(())))
 
+    def test_none(self):
+        bytes = b'~\x00\x00\x00\x00\x01' # Python 2.7 None object
+        self.assertIsNone(blue.marshal.Load(bytes))
+
+    def test_empty_string(self):
+        bytes = b'~\x00\x00\x00\x00\x0e' # Python 2.7 empty string
+        string = blue.marshal.Load(bytes)
+        self.assertIsInstance(string, str)
+        self.assertEqual(string, "")
+
+    def test_integer(self):
+        self.assertEqual(blue.marshal.Load(b'~\x00\x00\x00\x00\x08'), 0)
+        self.assertEqual(blue.marshal.Load(b'~\x00\x00\x00\x00\t'), 1)
+        self.assertEqual(blue.marshal.Load(b'~\x00\x00\x00\x00\x07'), -1)
+        self.assertEqual(blue.marshal.Load(b'~\x00\x00\x00\x00\x06*'), 42)
+        self.assertEqual(blue.marshal.Load(b'~\x00\x00\x00\x00\x05\xff\x7f'), 32767)
+        self.assertEqual(blue.marshal.Load(b'~\x00\x00\x00\x00\x04\xff\xff\xff\x7f'), 2147483647)
+        self.assertEqual(blue.marshal.Load(b'~\x00\x00\x00\x00\x04\x00\x00\x00\x80'), -2147483648)
+
+    def test_long(self):
+        self.assertEqual(blue.marshal.Load(b'~\x00\x00\x00\x00/\x08\xff\xff\xff\xff\xff\xff\xff\x7f'), 9223372036854775807)
+        self.assertEqual(blue.marshal.Load(b'~\x00\x00\x00\x00/\t\x00\x00\x00\x00\x00\x00\x00\x80\x00'), 9223372036854775808)
+    def test_float(self):
+        self.assertEqual(blue.marshal.Load(b'~\x00\x00\x00\x00\x0b'), 0.0)
+        self.assertEqual(blue.marshal.Load(b'~\x00\x00\x00\x00\n\xcd\x06xV\xfb!\t@'), 3.14159267)
+        self.assertEqual(blue.marshal.Load(b'~\x00\x00\x00\x00\nO\x80\xb7)_@\x06\xc0'), -2.781431508934509809834)
+
+    def test_bool(self):
+        self.assertTrue(blue.marshal.Load(b'~\x00\x00\x00\x00\x1f'), True)
+        self.assertFalse(blue.marshal.Load(b'~\x00\x00\x00\x00 '), False)
