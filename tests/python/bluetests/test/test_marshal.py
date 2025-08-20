@@ -1,7 +1,6 @@
 __author__ = 'snorri.sturluson'
 
 from . import blueunittest
-from . import marshaltesthelper
 import blue
 import sys
 
@@ -20,6 +19,15 @@ class SimpleObject:
     def __eq__(self, other):
         return isinstance(other, type(self)) and self.a == other.a and self.b == other.b and self.c == other.c and self.d == other.d
 
+class NewStyleObject(object):
+    pass
+
+class OldStyleObject:
+    pass
+
+class ObjectWithData(object):
+    def __init__(self, data):
+        self.data = data
 
 class testMarshal(blueunittest.TestCase):
     loaded = []
@@ -244,17 +252,17 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         self.assertEqual(byte_string, b"Byte string.")
 
     def test_load_old_style_object(self):
-        bytes = b'~\x00\x00\x00\x00#%%\x02/bluetests.test.marshaltesthelper.OldStyleObject--' # Python2.7 old-style object
+        bytes = b'~\x00\x00\x00\x00\x17\x13*bluetests.test.test_marshal.OldStyleObject\x16\x00' # Python2.7 old-style object
         obj = blue.marshal.Load(bytes)
-        self.assertIsInstance(obj, marshaltesthelper.OldStyleObject)
+        self.assertIsInstance(obj, OldStyleObject)
 
     def test_load_new_style_object(self):
-        bytes = b'~\x00\x00\x00\x00#%%\x02/bluetests.test.marshaltesthelper.NewStyleObject--' # Python2.7 new-style object
+        bytes = b'~\x00\x00\x00\x00#,%\x02*bluetests.test.test_marshal.NewStyleObject\x16\x00--' # Python2.7 new-style object
         obj = blue.marshal.Load(bytes)
-        self.assertIsInstance(obj, marshaltesthelper.NewStyleObject)
+        self.assertIsInstance(obj, NewStyleObject)
 
     def test_load_object_with_data(self):
-        bytes = b'~\x00\x00\x00\x00#,%\x02/bluetests.test.marshaltesthelper.ObjectWithData\x16\x01\x12\x04test\x12\x04data--'
+        bytes = b'~\x00\x00\x00\x00#,%\x02*bluetests.test.test_marshal.ObjectWithData\x16\x01\x13\x04test\x13\x04data--'
         obj = blue.marshal.Load(bytes)
         self.assertEqual(obj.data, "test")
 
