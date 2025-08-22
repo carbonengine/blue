@@ -1529,6 +1529,7 @@ PyObject *Marshal::ReadObjectInstance(ReadStream *stream, bool shared)
     // We require that the new version of the class
     // does not require any additional arguments when calling __new__
     BluePy args( PyTuple_New( 1 ) );
+    Py_IncRef( klass ); // PyTuple_SetItem steals a reference.
     if( PyTuple_SetItem( args, 0, klass ) != 0 )
     {
         return nullptr;
