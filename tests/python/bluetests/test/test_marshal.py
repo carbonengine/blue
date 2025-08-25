@@ -306,3 +306,154 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
     def test_bool(self):
         self.assertTrue(blue.marshal.Load(b'~\x00\x00\x00\x00\x1f'), True)
         self.assertFalse(blue.marshal.Load(b'~\x00\x00\x00\x00 '), False)
+
+    def test_empty_dict(self):
+        self.assertEqual(blue.marshal.Load(b'~\x00\x00\x00\x00\x16\x00'), {})
+
+    def test_empty_unicode(self):
+        bytes = b'~\x00\x00\x00\x00.\x00'
+        string = blue.marshal.Load(bytes)
+        self.assertIsInstance(string, str)
+        self.assertEqual(string, u"")
+
+    def test_empty_object(self):
+        self.assertBlueObjectsEqual(blue.marshal.Load(b"~\x00\x00\x00\x00\x17\x13'bluetests.test.test_marshal.EmptyObject\x16\x00"), EmptyObject())
+
+    #
+    # def test_string(self):
+    #     self.verify_round_trip("this is a test")
+    #
+    # def test_string_from_stringtable(self):
+    #     self.verify_round_trip("ballID")
+    #
+    #
+    # def test_single_char_unicode(self):
+    #     self.verify_round_trip(u"A")
+    #
+    # def test_unicode(self):
+    #     self.verify_round_trip(u"\u20A8\u20B1\u20A9")
+    #
+    # def test_unicode_as_utf8(self):
+    #     self.verify_round_trip(u"this is a unicode test")
+    #
+    #
+    # def test_simple_object(self):
+    #     self.verify_round_trip(SimpleObject())
+    #
+    # def test_empty_list(self):
+    #     self.verify_round_trip([])
+    #
+    # def test_list_of_one_string(self):
+    #     self.verify_round_trip(["this is a test"])
+    #
+    # def test_list_of_strings(self):
+    #     self.verify_round_trip(["this", "is", "a", "test"])
+    #
+    # def test_empty_tuple(self):
+    #     self.verify_round_trip(())
+    #
+    # def test_tuple_of_one_string(self):
+    #     self.verify_round_trip(("this is a test",))
+    #
+    # def test_tuple_of_two_strings(self):
+    #     self.verify_round_trip(("this is", "a test"))
+    #
+    # def test_tuple_of_strings(self):
+    #     self.verify_round_trip(("this", "is", "a", "test"))
+    #
+    # def test_instanced_object(self):
+    #     obj = SimpleObject()
+    #     self.verify_round_trip([obj, obj, obj])
+    #
+    # def test_write_callback_called(self):
+    #     def callback(obj):
+    #         callback.called = True
+    #     callback.called = False
+    #     obj = SimpleObject()
+    #     blue.marshal.Save(obj, callback=callback)
+    #     self.assertTrue(callback.called)
+    #
+    # def test_read_callback_called(self):
+    #     def write_callback(obj):
+    #         return "whatever"
+    #
+    #     def read_callback(obj):
+    #         read_callback.called = True
+    #     read_callback.called = False
+    #
+    #     obj = SimpleObject()
+    #     s = blue.marshal.Save(obj, callback=write_callback)
+    #     blue.marshal.Load(s, callback=read_callback)
+    #     self.assertTrue(read_callback.called)
+    #
+    # def test_read_and_write_callbacks_used(self):
+    #     def write_callback(obj):
+    #         return 2
+    #
+    #     def read_callback(obj):
+    #         ret = SimpleObject()
+    #         ret.b = obj * 3
+    #         return ret
+    #
+    #     obj = SimpleObject()
+    #     savedObj = blue.marshal.Save(obj, callback=write_callback)
+    #     loadedObj = blue.marshal.Load(savedObj, callback=read_callback)
+    #     self.assertEqual(6, loadedObj.b)
+    #
+    # def test_write_uses_default_pickle_method_when_callback_raises_error(self):
+    #     def write_callback(obj):
+    #         raise RuntimeError("Write callback failed spectacularly!")
+    #
+    #     obj = SimpleObject()
+    #     s = blue.marshal.Save(obj, callback=write_callback)
+    #     loaded_obj = blue.marshal.Load(s)
+    #     self.assertBlueObjectsEqual(obj, loaded_obj)
+    #
+    # def test_checksum(self):
+    #     obj = [SimpleObject(), "this is a test"]
+    #     s = blue.marshal.Save(obj, useChecksum=1)
+    #     obj2 = blue.marshal.Load(s)
+    #     self.assertBlueObjectsEqual(obj, obj2)
+    #     typeStats = blue.marshal.GetTypeStats()
+    #     self.assertEqual(typeStats[0], typeStats[1])
+    #     self._update_coverage()
+    #
+    # def test_empty_dbrow(self):
+    #     rd = blue.DBRowDescriptor(())
+    #     d = blue.DBRow(rd)
+    #     self.verify_round_trip(d)
+    #
+    # def test_wstream(self):
+    #     obj = [SimpleObject(), "this is a test"]
+    #     ws = blue.marshal.Save(obj)
+    #     self.verify_round_trip(ws)
+    #
+    # def test_converting_to_bytes_does_not_crash(self):
+    #     obj = [SimpleObject(), SimpleObject(), "this is a test"]
+    #     ws = blue.marshal.Save(obj)
+    #     self.assertIsInstance(bytes(ws), bytes)
+    #
+    # def test_can_slice(self):
+    #     obj = [SimpleObject(), "this is a test"]
+    #     ws = blue.marshal.Save(obj)
+    #     self.assertIsInstance(ws[:5], bytes)
+    #     self.assertEqual(len(ws[3:6]), 3)
+    #
+    # def test_str_method(self):
+    #     obj = [SimpleObject(), "this is a test"]
+    #     ws = blue.marshal.Save(obj)
+    #     self.assertIsInstance(str(ws), str)
+    #
+    # def test_dbrow(self):
+    #     rowDesc = blue.DBRowDescriptor((("Test", 20),))
+    #     sourceRow = blue.DBRow(rowDesc, (123, ))
+    #     self.verify_round_trip(sourceRow)
+    #
+    # def test_dbrow_with_invalid_descriptor_in_stream_raises_error(self):
+    #     # Unmarshalled bytes will attempt to create a DBRow and create a blue.Dict rather than
+    #     # expected blue.DBRowDescriptor
+    #     bytes = b'~\x00\x00\x00\x00*",\x02\tblue.Dict$--'
+    #     with self.assertRaises(RuntimeError) as raisedValue:
+    #         blue.marshal.Load(bytes)
+    #
+    #     self.assertEqual(raisedValue.exception.args[0], TypeError)
