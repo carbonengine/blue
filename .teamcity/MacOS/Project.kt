@@ -146,11 +146,6 @@ class CarbonBuildMacOS(buildName: String, configType: String, preset: String) : 
                 authType = token {
                     token = "credentialsJSON:06ae89f1-d5f2-4c8d-a91a-9712c233ce06"
                 }
-               // We do not support building these versions through VCPKG
-                filterTargetBranch = """
-                    -:refs/heads/release/2.x
-                    -:refs/heads/release/1.x
-                """.trimIndent()
                 filterAuthorRole = PullRequests.GitHubRoleFilter.MEMBER
             }
         }
