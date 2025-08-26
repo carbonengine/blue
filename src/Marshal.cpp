@@ -1624,26 +1624,49 @@ PyObject *Marshal::ReadObjectReduce(ReadStream *stream, bool shared)
 PyObject *Marshal::ReadObjectNewobj(ReadStream* stream, bool shared)
 {
 	size_t ix;
-	if (shared && (ix = stream->MarkShared()) == -1) return 0;
+	if ( shared && (ix = stream->MarkShared()) == -1 )
+	{
+		return nullptr;
+	}
 
 	BluePy rv(ReadObject(stream));
-	if (!rv)
-		return 0;
-	PyObject *args = PyTuple_GetItem(rv, 0);
-	if (!args) return 0;
-	PyObject *cls = PyTuple_GetItem(args, 0);
-	if (!cls) return 0;
-	
-	BluePy __new__(PyObject_GetAttr(cls, mStock_New));
-	if (!__new__) return 0;
-	BluePy r(PyObject_CallObject(__new__, args));
-	if (!r) return 0;
+	if ( !rv )
+	{
+		return nullptr;
+	}
 
+	PyObject *args = PyTuple_GetItem(rv, 0);
+	if ( !args )
+	{
+		return nullptr;
+	}
+
+	PyObject *cls = PyTuple_GetItem(args, 0);
+	if ( !cls )
+	{
+		return nullptr;
+	}
+	
+	BluePy __new__(PyObject_GetAttr( cls, mStock_New ));
+	if ( !__new__ )
+	{
+		return nullptr;
+	}
+
+	BluePy r(PyObject_CallObject(__new__, args));
+	if ( !r )
+	{
+		return nullptr;
+	}
 	//object is constructed, now update r
-	if (shared && !stream->UpdateShared(ix, r)) return 0;
+	if ( shared && !stream->UpdateShared(ix, r) )
+	{
+		return nullptr;
+	}
 	
 	//further initialization
-	if (PyTuple_GET_SIZE(rv.o)>1) {
+	if ( PyTuple_GET_SIZE(rv.o) > 1 )
+	{
 		auto state = PyTuple_GET_ITEM(rv.o, 1);
 #ifdef PY27_COMPATIBILITY_MODE
 		BluePy convertedState(PyDict_New());
@@ -1653,9 +1676,9 @@ PyObject *Marshal::ReadObjectNewobj(ReadStream* stream, bool shared)
 		Py_ssize_t pos = 0;
 		while (PyDict_Next(state, &pos, &key, &value))
 		{
-			if (PyBytes_Check( key ))
+			if ( PyBytes_Check(key) )
 			{
-				auto encodedKey = PyUnicode_FromEncodedObject( key, "UTF-8", nullptr );
+				auto encodedKey = PyUnicode_FromEncodedObject(key, "UTF-8", nullptr);
 				PyDict_SetItem(convertedState, encodedKey, value);
 			}
 			else
@@ -1666,19 +1689,35 @@ PyObject *Marshal::ReadObjectNewobj(ReadStream* stream, bool shared)
 		state = convertedState;
 #endif
 		BluePy setstate(PyObject_GetAttr(r, mStock_SetState));
-		if (setstate) {
+		if ( setstate )
+		{
 			BluePy tmp(PyObject_CallFunctionObjArgs(setstate, state, 0));
-			if (!tmp) return 0;
-		} else {
+			if ( !tmp )
+			{
+				return nullptr;
+			}
+		}
+		else
+		{
 			PyErr_Clear();
 			BluePy dict(PyObject_GetAttr(r, mStock_Dict));
-			if (!dict) return 0;
-			if (PyDict_Update(dict, state)) return 0;
+			if (!dict)
+			{
+				return nullptr;
+			}
+			if ( PyDict_Update(dict, state) )
+			{
+				return nullptr;
+			}
 		}
 	}
+
 	//read the iterators
-	if (!ReadObjectListIter(*stream, r) || !ReadObjectDictIter(*stream, r))
-		return 0;
+	if ( !ReadObjectListIter(*stream, r) || !ReadObjectDictIter(*stream, r) )
+	{
+		return nullptr;
+	}
+
 	return r.Detach();
 }
 
