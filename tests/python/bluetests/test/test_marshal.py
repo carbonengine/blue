@@ -327,10 +327,10 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         bytes = b'~\x00\x00\x00\x00\x13\x0ethis is a test'
         self.assertEqual(blue.marshal.Load(bytes), b'this is a test')
 
-    #
-    # def test_string_from_stringtable(self):
-    #     self.verify_round_trip("ballID")
-    #
+    def test_string_from_stringtable(self):
+        bytes = b'~\x00\x00\x00\x00\x11\x06'
+        self.assertEqual(blue.marshal.Load(bytes), "ballID")
+
     #
     # def test_single_char_unicode(self):
     #     self.verify_round_trip(u"A")
