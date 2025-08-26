@@ -1644,24 +1644,27 @@ PyObject *Marshal::ReadObjectNewobj(ReadStream* stream, bool shared)
 	
 	//further initialization
 	if (PyTuple_GET_SIZE(rv.o)>1) {
-		auto rawState = PyTuple_GET_ITEM(rv.o, 1);
-		BluePy state(PyDict_New());
+		auto state = PyTuple_GET_ITEM(rv.o, 1);
+#ifdef PY27_COMPATIBILITY_MODE
+		BluePy convertedState(PyDict_New());
 
 		// Ensure keys are encoded in UTF-8 unicode
 		PyObject *key, *value;
 		Py_ssize_t pos = 0;
-		while (PyDict_Next(rawState, &pos, &key, &value))
+		while (PyDict_Next(state, &pos, &key, &value))
 		{
 			if (PyBytes_Check( key ))
 			{
 				auto encodedKey = PyUnicode_FromEncodedObject( key, "UTF-8", nullptr );
-				PyDict_SetItem(state, encodedKey, value);
+				PyDict_SetItem(convertedState, encodedKey, value);
 			}
 			else
 			{
-				PyDict_SetItem(state, key, value);
+				PyDict_SetItem(convertedState, key, value);
 			}
 		}
+		state = convertedState;
+#endif
 		BluePy setstate(PyObject_GetAttr(r, mStock_SetState));
 		if (setstate) {
 			BluePy tmp(PyObject_CallFunctionObjArgs(setstate, state, 0));
