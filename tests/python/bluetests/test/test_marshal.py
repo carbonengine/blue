@@ -406,50 +406,15 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         bytes = b'~\x01\x00\x00\x00\x15\x03W\x13(bluetests.test.test_marshal.SimpleObject\x16\x04\x13\x10this is a string\x0fa\n\xcd\x06xV\xfb!\t@\x0fc\x06*\x0fb\x13\x07x\x01\x8d\x98{t\xd3\x0fd\x1b\x01\x1b\x01\x01\x00\x00\x00'
         self.assertEqual(blue.marshal.Load(bytes), [obj, obj, obj])
 
-    # def test_write_callback_called(self):
-    #     def callback(obj):
-    #         callback.called = True
-    #     callback.called = False
-    #     obj = SimpleObject()
-    #     blue.marshal.Save(obj, callback=callback)
-    #     self.assertTrue(callback.called)
-    #
-    # def test_read_callback_called(self):
-    #     def write_callback(obj):
-    #         return "whatever"
-    #
-    #     def read_callback(obj):
-    #         read_callback.called = True
-    #     read_callback.called = False
-    #
-    #     obj = SimpleObject()
-    #     s = blue.marshal.Save(obj, callback=write_callback)
-    #     blue.marshal.Load(s, callback=read_callback)
-    #     self.assertTrue(read_callback.called)
-    #
-    # def test_read_and_write_callbacks_used(self):
-    #     def write_callback(obj):
-    #         return 2
-    #
-    #     def read_callback(obj):
-    #         ret = SimpleObject()
-    #         ret.b = obj * 3
-    #         return ret
-    #
-    #     obj = SimpleObject()
-    #     savedObj = blue.marshal.Save(obj, callback=write_callback)
-    #     loadedObj = blue.marshal.Load(savedObj, callback=read_callback)
-    #     self.assertEqual(6, loadedObj.b)
-    #
-    # def test_write_uses_default_pickle_method_when_callback_raises_error(self):
-    #     def write_callback(obj):
-    #         raise RuntimeError("Write callback failed spectacularly!")
-    #
-    #     obj = SimpleObject()
-    #     s = blue.marshal.Save(obj, callback=write_callback)
-    #     loaded_obj = blue.marshal.Load(s)
-    #     self.assertBlueObjectsEqual(obj, loaded_obj)
-    #
+    def test_read_callback_called(self):
+        def read_callback(obj):
+            read_callback.called = True
+        read_callback.called = False
+
+        bytes =  b'~\x00\x00\x00\x00\x19\x13\x04test'
+        blue.marshal.Load(bytes, callback=read_callback)
+        self.assertTrue(read_callback.called)
+
     # def test_checksum(self):
     #     obj = [SimpleObject(), "this is a test"]
     #     s = blue.marshal.Save(obj, useChecksum=1)
