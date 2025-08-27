@@ -415,14 +415,10 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         blue.marshal.Load(bytes, callback=read_callback)
         self.assertTrue(read_callback.called)
 
-    # def test_checksum(self):
-    #     obj = [SimpleObject(), "this is a test"]
-    #     s = blue.marshal.Save(obj, useChecksum=1)
-    #     obj2 = blue.marshal.Load(s)
-    #     self.assertBlueObjectsEqual(obj, obj2)
-    #     typeStats = blue.marshal.GetTypeStats()
-    #     self.assertEqual(typeStats[0], typeStats[1])
-    #     self._update_coverage()
+    def test_checksum(self):
+        bytes = b'~\x00\x00\x00\x00\x1c6$\xfa\xd9\x15\x02\x17\x13(bluetests.test.test_marshal.SimpleObject\x16\x04\x13\x10this is a string\x0fa\n\xcd\x06xV\xfb!\t@\x0fc\x06*\x0fb\x13\x07x\x01\x8d\x98{t\xd3\x0fd\x13\x0ethis is a test'
+        comparison = blue.marshal.Save([SimpleObject(), "this is a test"], useChecksum=1)
+        self.assertBlueObjectsEqual(blue.marshal.Load(bytes), blue.marshal.Load(comparison))
     #
     # def test_empty_dbrow(self):
     #     rd = blue.DBRowDescriptor(())
