@@ -379,25 +379,28 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
 
     def test_list_of_one_string(self):
         bytes = b"~\x00\x00\x00\x00'\x13\x0ethis is a test"
-        self.assertBlueObjectsEqual(blue.marshal.Load(bytes), ["this is a test"])
+        self.assertEqual(blue.marshal.Load(bytes), ["this is a test"])
 
     def test_list_of_strings(self):
         bytes = b'~\x00\x00\x00\x00\x15\x04\x13\x04this\x13\x02is\x0fa\x13\x04test'
-        self.verify_round_trip(blue.marshal.Load(bytes), ["this", "is", "a", "test"])
+        self.assertEqual(blue.marshal.Load(bytes), ["this", "is", "a", "test"])
 
-    #
-    # def test_empty_tuple(self):
-    #     self.verify_round_trip(())
-    #
-    # def test_tuple_of_one_string(self):
-    #     self.verify_round_trip(("this is a test",))
-    #
-    # def test_tuple_of_two_strings(self):
-    #     self.verify_round_trip(("this is", "a test"))
-    #
-    # def test_tuple_of_strings(self):
-    #     self.verify_round_trip(("this", "is", "a", "test"))
-    #
+    def test_empty_tuple(self):
+        bytes = b'~\x00\x00\x00\x00$'
+        self.assertEqual(blue.marshal.Load(bytes), ())
+
+    def test_tuple_of_one_string(self):
+        bytes = b'~\x00\x00\x00\x00%\x13\x0ethis is a test'
+        self.assertEqual(blue.marshal.Load(bytes), ("this is a test",))
+
+    def test_tuple_of_two_strings(self):
+        bytes = b'~\x00\x00\x00\x00,\x13\x07this is\x13\x06a test'
+        self.assertEqual(blue.marshal.Load(bytes), ("this is", "a test"))
+
+    def test_tuple_of_strings(self):
+        bytes = b'~\x00\x00\x00\x00\x14\x04\x13\x04this\x13\x02is\x0fa\x13\x04test'
+        self.assertEqual(blue.marshal.Load(bytes), ("this", "is", "a", "test"))
+
     # def test_instanced_object(self):
     #     obj = SimpleObject()
     #     self.verify_round_trip([obj, obj, obj])
