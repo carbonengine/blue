@@ -381,9 +381,10 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         bytes = b"~\x00\x00\x00\x00'\x13\x0ethis is a test"
         self.assertBlueObjectsEqual(blue.marshal.Load(bytes), ["this is a test"])
 
-    #
-    # def test_list_of_strings(self):
-    #     self.verify_round_trip(["this", "is", "a", "test"])
+    def test_list_of_strings(self):
+        bytes = b'~\x00\x00\x00\x00\x15\x04\x13\x04this\x13\x02is\x0fa\x13\x04test'
+        self.verify_round_trip(blue.marshal.Load(bytes), ["this", "is", "a", "test"])
+
     #
     # def test_empty_tuple(self):
     #     self.verify_round_trip(())
