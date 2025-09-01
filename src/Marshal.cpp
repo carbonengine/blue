@@ -1864,22 +1864,21 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 			{
 				RETFAIL(WriteType(stream, TY_STR_EMPTY));
 			}
-			else if (size == 1)
+			else
 			{
-				RETFAIL(WriteType(stream, TY_STR_CHAR));
-				RETFAIL(stream->Write<char>(string[0]));
-			} else {
 				PyObject* index = PyDict_GetItem(mStrTable, o);
 				if (index)
 				{
 					RETFAIL(WriteType(stream, TY_STR_TABLE));
 					RETFAIL(stream->Write((char)PyInt_AS_LONG(index)));
-				} else {
+				}
+				else
+				{
 					//Write the string as buffer.  This gives us object sharing and all
 					//The old TY_STR_SHORT and TY_STR are kept for backwards compatibility
 					CHECKREF();
 					RETFAIL(WriteType(stream, TY_BUFFER));
-					RETFAIL(stream->WriteBuff(string, size));					
+					RETFAIL(stream->WriteBuff(string, size));
 				}
 			}
 
