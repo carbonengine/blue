@@ -355,7 +355,7 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
 
     def test_single_char(self):
         bytes = b'~\x00\x00\x00\x00\x0fA'
-        self.assertEqual(blue.marshal.Load(bytes), "A")
+        self.assertEqual(blue.marshal.Load(bytes), b"A")
 
     def test_single_byte_char(self):
         bytes = b'~\x00\x00\x00\x00\x0fA'
@@ -379,11 +379,11 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
 
     def test_list_of_one_string(self):
         bytes = b"~\x00\x00\x00\x00'\x13\x0ethis is a test"
-        self.assertEqual(blue.marshal.Load(bytes), ["this is a test"])
+        self.assertEqual(blue.marshal.Load(bytes), [b"this is a test"])
 
     def test_list_of_strings(self):
         bytes = b'~\x00\x00\x00\x00\x15\x04\x13\x04this\x13\x02is\x0fa\x13\x04test'
-        self.assertEqual(blue.marshal.Load(bytes), ["this", "is", "a", "test"])
+        self.assertEqual(blue.marshal.Load(bytes), [b"this", b"is", b"a", b"test"])
 
     def test_empty_tuple(self):
         bytes = b'~\x00\x00\x00\x00$'
@@ -391,15 +391,15 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
 
     def test_tuple_of_one_string(self):
         bytes = b'~\x00\x00\x00\x00%\x13\x0ethis is a test'
-        self.assertEqual(blue.marshal.Load(bytes), ("this is a test",))
+        self.assertEqual(blue.marshal.Load(bytes), (b"this is a test",))
 
     def test_tuple_of_two_strings(self):
         bytes = b'~\x00\x00\x00\x00,\x13\x07this is\x13\x06a test'
-        self.assertEqual(blue.marshal.Load(bytes), ("this is", "a test"))
+        self.assertEqual(blue.marshal.Load(bytes), (b"this is", b"a test"))
 
     def test_tuple_of_strings(self):
         bytes = b'~\x00\x00\x00\x00\x14\x04\x13\x04this\x13\x02is\x0fa\x13\x04test'
-        self.assertEqual(blue.marshal.Load(bytes), ("this", "is", "a", "test"))
+        self.assertEqual(blue.marshal.Load(bytes), (b"this", b"is", b"a", b"test"))
 
     def test_instanced_object(self):
         obj = SimpleObject()
@@ -417,5 +417,5 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
 
     def test_checksum(self):
         bytes = b'~\x00\x00\x00\x00\x1c6$\xfa\xd9\x15\x02\x17\x13(bluetests.test.test_marshal.SimpleObject\x16\x04\x13\x10this is a string\x0fa\n\xcd\x06xV\xfb!\t@\x0fc\x06*\x0fb\x13\x07x\x01\x8d\x98{t\xd3\x0fd\x13\x0ethis is a test'
-        comparison = blue.marshal.Save([SimpleObject(), "this is a test"], useChecksum=1)
+        comparison = blue.marshal.Save([SimpleObject(), b"this is a test"], useChecksum=1)
         self.assertBlueObjectsEqual(blue.marshal.Load(bytes), blue.marshal.Load(comparison))
