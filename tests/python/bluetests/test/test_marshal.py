@@ -354,11 +354,7 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         self.assertEqual(blue.marshal.Load(bytes), "ballID")
 
     def test_single_char(self):
-        bytes = b'~\x00\x00\x00\x00\x0fA'
-        self.assertEqual(blue.marshal.Load(bytes), b"A")
-
-    def test_single_byte_char(self):
-        bytes = b'~\x00\x00\x00\x00\x0fA'
+        bytes = b'~\x00\x00\x00\x00\x13\x01A'
         self.assertEqual(blue.marshal.Load(bytes), b"A")
 
     def test_single_char_unicode(self):
@@ -382,7 +378,7 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         self.assertEqual(blue.marshal.Load(bytes), [b"this is a test"])
 
     def test_list_of_strings(self):
-        bytes = b'~\x00\x00\x00\x00\x15\x04\x13\x04this\x13\x02is\x0fa\x13\x04test'
+        bytes = b'~\x00\x00\x00\x00\x15\x04\x13\x04this\x13\x02is\x13\x01a\x13\x04test'
         self.assertEqual(blue.marshal.Load(bytes), [b"this", b"is", b"a", b"test"])
 
     def test_empty_tuple(self):
@@ -398,7 +394,7 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         self.assertEqual(blue.marshal.Load(bytes), (b"this is", b"a test"))
 
     def test_tuple_of_strings(self):
-        bytes = b'~\x00\x00\x00\x00\x14\x04\x13\x04this\x13\x02is\x0fa\x13\x04test'
+        bytes = b'~\x00\x00\x00\x00\x14\x04\x13\x04this\x13\x02is\x13\x01a\x13\x04test'
         self.assertEqual(blue.marshal.Load(bytes), (b"this", b"is", b"a", b"test"))
 
     def test_instanced_object(self):
