@@ -261,7 +261,9 @@ class testMarshal(blueunittest.TestCase):
         
         self.assertEqual(raisedValue.exception.args[0], TypeError)
 
-
+"""
+This class adds coverage for objects marshalled in Python 2.7. 
+"""
 class TestBackwardsCompatibility(blueunittest.TestCase):
     def test_load_legacy_unicode_string(self):
         bytes = b'~\x00\x00\x00\x00.\x0fUnicode string.'
@@ -274,12 +276,12 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         self.assertEqual(byte_string, b"Byte string.")
 
     def test_load_old_style_object(self):
-        bytes = b'~\x00\x00\x00\x00\x17\x13*bluetests.test.test_marshal.OldStyleObject\x16\x00' # Python2.7 old-style object
+        bytes = b'~\x00\x00\x00\x00\x17\x13*bluetests.test.test_marshal.OldStyleObject\x16\x00'
         obj = blue.marshal.Load(bytes)
         self.assertIsInstance(obj, OldStyleObject)
 
     def test_load_new_style_object(self):
-        bytes = b'~\x00\x00\x00\x00#,%\x02*bluetests.test.test_marshal.NewStyleObject\x16\x00--' # Python2.7 new-style object
+        bytes = b'~\x00\x00\x00\x00#,%\x02*bluetests.test.test_marshal.NewStyleObject\x16\x00--'
         obj = blue.marshal.Load(bytes)
         self.assertIsInstance(obj, NewStyleObject)
 
@@ -289,21 +291,21 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         self.assertEqual(obj.data, b"test")
 
     def test_dbrow(self):
-        bytes = b'~\x00\x00\x00\x00*",\x02\x14blue.DBRowDescriptor%%,\x13\x04Test\x06\x14--\x02\xf7{' # Python 2.7 blue.DBRow object
+        bytes = b'~\x00\x00\x00\x00*",\x02\x14blue.DBRowDescriptor%%,\x13\x04Test\x06\x14--\x02\xf7{'
         dbrow = blue.marshal.Load(bytes)
         self.assertBlueObjectsEqual(dbrow, blue.DBRow(blue.DBRowDescriptor((("Test", 20),)), (123, )))
 
     def test_empty_dbrow(self):
-        bytes = b'~\x00\x00\x00\x00*",\x02\x14blue.DBRowDescriptor%$--\x00' # Python 2.7 empty blue.DBRow object
+        bytes = b'~\x00\x00\x00\x00*",\x02\x14blue.DBRowDescriptor%$--\x00'
         dbrow = blue.marshal.Load(bytes)
         self.assertBlueObjectsEqual(dbrow, blue.DBRow(blue.DBRowDescriptor(())))
 
     def test_none(self):
-        bytes = b'~\x00\x00\x00\x00\x01' # Python 2.7 None object
+        bytes = b'~\x00\x00\x00\x00\x01'
         self.assertIsNone(blue.marshal.Load(bytes))
 
     def test_empty_string(self):
-        bytes = b'~\x00\x00\x00\x00\x0e' # Python 2.7 empty string
+        bytes = b'~\x00\x00\x00\x00\x0e'
         string = blue.marshal.Load(bytes)
         self.assertIsInstance(string, str)
         self.assertEqual(string, "")
@@ -412,6 +414,8 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         self.assertTrue(read_callback.called)
 
     def test_checksum(self):
+        # Marshalled Python 2.7 object using checksum
         bytes = b'~\x00\x00\x00\x00\x1c6$\xfa\xd9\x15\x02\x17\x13(bluetests.test.test_marshal.SimpleObject\x16\x04\x13\x10this is a string\x0fa\n\xcd\x06xV\xfb!\t@\x0fc\x06*\x0fb\x13\x07x\x01\x8d\x98{t\xd3\x0fd\x13\x0ethis is a test'
         comparison = blue.marshal.Save([SimpleObject(), b"this is a test"], useChecksum=1)
+        # Marshalled data will differ due to string fields, so we must load both objects for comparison
         self.assertBlueObjectsEqual(blue.marshal.Load(bytes), blue.marshal.Load(comparison))
