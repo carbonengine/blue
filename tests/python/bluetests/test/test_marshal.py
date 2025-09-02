@@ -134,6 +134,9 @@ class testMarshal(blueunittest.TestCase):
         self.verify_round_trip(True)
         self.verify_round_trip(False)
 
+    def test_dict(self):
+        self.verify_round_trip({"key": "test"})
+
     def test_empty_dict(self):
         self.verify_round_trip({})
 
@@ -333,6 +336,10 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
 
     def test_empty_dict(self):
         self.assertEqual(blue.marshal.Load(b'~\x00\x00\x00\x00\x16\x00'), {})
+
+    def test_dict(self):
+        bytes = b'~\x00\x00\x00\x00\x16\x01\x13\x04test\x13\x03key'
+        self.assertEqual(blue.marshal.Load(bytes), {b"key": b"test"})
 
     def test_empty_unicode(self):
         bytes = b'~\x00\x00\x00\x00.\x00'
