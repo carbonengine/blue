@@ -308,6 +308,7 @@ target_precompile_headers(Blue PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/StdAfx.h)
 target_compile_definitions(Blue
     PUBLIC
         CCP_STACKLESS
+        PY3_COMPATIBILITY_MODE
     )
 
 if(APPLE)
