@@ -150,7 +150,7 @@ class testMarshal(blueunittest.TestCase):
         obj = SimpleObject()
         self.verify_round_trip([obj, obj, obj])
 
-    def test_instanced_old_shool_object(self):
+    def test_instanced_old_school_object(self):
         obj = OldSchoolObject()
         self.verify_round_trip([obj, obj, obj])
 
