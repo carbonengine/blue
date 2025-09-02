@@ -22,6 +22,11 @@ class OldSchoolObject:
         self.c = 3.14159267
 
 
+class ObjectWithData(object):
+    def __init__(self, data):
+        self.data = data
+
+
 def SaveCallback(obj):
     if isinstance(obj, OldSchoolObject):
         return "magic"
@@ -207,7 +212,9 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         pass
 
     def test_load_object_with_data(self):
-        pass
+        bytes = b'~\x00\x00\x00\x00#,%\x02*bluetests.test.test_marshal.ObjectWithData\x16\x01.\x04test.\x04data--'
+        obj = blue.marshal.Load(bytes)
+        self.assertEqual(obj.data, "test")
 
     def test_none(self):
         bytes = b'~\x00\x00\x00\x00\x01'
