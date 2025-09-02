@@ -1549,8 +1549,13 @@ PyObject *Marshal::ReadObjectNewobj(ReadStream* stream, bool shared)
 	if (!cls) return 0;
 	
 	BluePy __new__(PyObject_GetAttr(cls, mStock_New));
+#ifdef PY3_COMPATIBILITY_MODE
+	// Marshalled new-style objects from Python3 may have to be constructed as old-style objects in Python2.7
+	BluePy r(PyObject_HasAttr( cls, mStock_New ) ? BluePy(PyObject_CallObject(__new__, args)) : BluePy(PyInstance_NewRaw(cls, 0)));
+#else
 	if (!__new__) return 0;
 	BluePy r(PyObject_CallObject(__new__, args));
+#endif
 	if (!r) return 0;
 
 	//object is constructed, now update r
