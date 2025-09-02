@@ -2024,7 +2024,7 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 			if (size == 0) {
 				return WriteType(stream, TY_UNICODE_0);
 			} else {
-				PyObject* index = PyDict_GetItem( mStrTable, encoded.o );
+				PyObject* index = PyDict_GetItem( mStrTable, o );
 				if( index )
 				{
 					RETFAIL( WriteType( stream, TY_STR_TABLE ) );
