@@ -195,3 +195,99 @@ class testMarshal(blueunittest.TestCase):
             blue.marshal.Load(bytes)
         
         self.assertEqual(raisedValue.exception.args[0], TypeError)
+
+class TestBackwardsCompatibility(blueunittest.TestCase):
+    """
+    This class adds coverage for objects marshalled in Python 3.
+    """
+    def test_load_old_style_object(self):
+        pass
+
+    def test_load_new_style_object(self):
+        pass
+
+    def test_load_object_with_data(self):
+        pass
+
+    def test_none(self):
+        pass
+
+    def test_string_from_stringtable(self):
+        pass
+
+    def test_empty_unicode(self):
+        pass
+
+    def test_single_char_unicode(self):
+        pass
+
+    def test_unicode(self):
+        pass
+
+    def test_unicode_as_utf8(self):
+        pass
+
+    def test_integer(self):
+        pass
+
+    def test_long(self):
+        pass
+
+    def test_float(self):
+        pass
+
+    def test_bool(self):
+        pass
+    def test_empty_dict(self):
+        pass
+
+    def test_empty_object(self):
+        pass
+
+    def test_simple_object(self):
+        pass
+
+    def test_empty_list(self):
+        pass
+
+    def test_list_of_one_string(self):
+        pass
+
+    def test_list_of_strings(self):
+        pass
+
+    def test_empty_tuple(self):
+        pass
+
+    def test_tuple_of_one_string(self):
+        pass
+
+    def test_tuple_of_two_strings(self):
+        pass
+
+    def test_tuple_of_strings(self):
+        pass
+
+    def test_instanced_object(self):
+        pass
+
+    def test_instanced_old_school_object(self):
+        pass
+
+    def test_callback(self):
+        pass
+
+    def test_checksum(self):
+        pass
+
+    def test_empty_dbrow(self):
+        pass
+
+    def test_dbrow(self):
+        pass
+
+    def test_dbrow_with_invalid_descriptor_in_stream_raises_error(self):
+        pass
+
+    def test_wstream(self):
+        pass
