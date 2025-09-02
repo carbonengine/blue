@@ -222,7 +222,8 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         self.assertEqual(blue.marshal.Load(bytes), u"")
 
     def test_single_char_unicode(self):
-        pass
+        bytes = b'~\x00\x00\x00\x00.\x01A'
+        self.assertEqual(blue.marshal.Load(bytes), u"A")
 
     def test_unicode(self):
         pass
