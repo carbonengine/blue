@@ -26,6 +26,10 @@ class NewStyleObject(object):
     pass
 
 
+class OldStyleObject:
+    pass
+
+
 class ObjectWithData(object):
     def __init__(self, data):
         self.data = data
@@ -210,7 +214,8 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
     This class adds coverage for objects marshalled in Python 3.
     """
     def test_load_old_style_object(self):
-        pass
+        bytes = b'~\x00\x00\x00\x00#%%\x02*bluetests.test.test_marshal.OldStyleObject--'
+        self.assertIsInstance(blue.marshal.Load(bytes), OldStyleObject)
 
     def test_load_new_style_object(self):
         bytes = b'~\x00\x00\x00\x00#%%\x02*bluetests.test.test_marshal.NewStyleObject--'
