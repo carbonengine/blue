@@ -264,10 +264,10 @@ class testMarshal(blueunittest.TestCase):
         
         self.assertEqual(raisedValue.exception.args[0], TypeError)
 
-"""
-This class adds coverage for objects marshalled in Python 2.7. 
-"""
 class TestBackwardsCompatibility(blueunittest.TestCase):
+    """
+    This class adds coverage for objects marshalled in Python 2.7.
+    """
     def test_load_legacy_unicode_string(self):
         bytes = b'~\x00\x00\x00\x00.\x0fUnicode string.'
         unicode_string = blue.marshal.Load(bytes)
