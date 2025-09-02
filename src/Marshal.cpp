@@ -1678,7 +1678,7 @@ PyObject *Marshal::ReadObjectNewobj(ReadStream* stream, bool shared)
 		{
 			if ( PyBytes_Check(key) )
 			{
-				auto encodedKey = PyUnicode_FromEncodedObject(key, "UTF-8", nullptr);
+				BluePy encodedKey(PyUnicode_FromEncodedObject(key, "UTF-8", nullptr));
 				PyDict_SetItem(convertedState, encodedKey, value);
 			}
 			else
