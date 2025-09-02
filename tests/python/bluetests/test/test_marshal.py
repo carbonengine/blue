@@ -210,7 +210,8 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         pass
 
     def test_none(self):
-        pass
+        bytes = b'~\x00\x00\x00\x00\x01'
+        self.assertEqual(blue.marshal.Load(bytes), None)
 
     def test_string_from_stringtable(self):
         pass
