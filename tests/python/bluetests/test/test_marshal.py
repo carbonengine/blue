@@ -22,6 +22,10 @@ class OldSchoolObject:
         self.c = 3.14159267
 
 
+class NewStyleObject(object):
+    pass
+
+
 class ObjectWithData(object):
     def __init__(self, data):
         self.data = data
@@ -209,7 +213,8 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         pass
 
     def test_load_new_style_object(self):
-        pass
+        bytes = b'~\x00\x00\x00\x00#%%\x02*bluetests.test.test_marshal.NewStyleObject--'
+        self.assertIsInstance(blue.marshal.Load(bytes), NewStyleObject)
 
     def test_load_object_with_data(self):
         bytes = b'~\x00\x00\x00\x00#,%\x02*bluetests.test.test_marshal.ObjectWithData\x16\x01.\x04test.\x04data--'
