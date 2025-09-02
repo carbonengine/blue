@@ -214,7 +214,8 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         self.assertEqual(blue.marshal.Load(bytes), None)
 
     def test_string_from_stringtable(self):
-        pass
+        bytes = b'~\x00\x00\x00\x00\x11\x06'
+        self.assertEqual(blue.marshal.Load(bytes), "ballID")
 
     def test_empty_unicode(self):
         pass
