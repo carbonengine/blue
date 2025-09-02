@@ -42,7 +42,6 @@ class CarbonBuildWindows(buildName: String, configType: String, preset: String) 
     artifactRules = "%env.CMAKE_INSTALL_PREFIX%"
 
     params {
-        param("carbon_ref", "refs/heads/feature/kotlin")
         param("env.GIT_TAG_HASH_OVERRIDE", "")
         param("github_checkout_folder", "github")
         param("env.CTEST_JUNIT_OUTPUT_FILE", "ctest_results.xml")
@@ -207,6 +206,13 @@ class CarbonBuildWindows(buildName: String, configType: String, preset: String) 
                 authType = token {
                     token = "credentialsJSON:06ae89f1-d5f2-4c8d-a91a-9712c233ce06"
                 }
+               // Constrain PR triggers to compatible refs so as to avoid erroneous triggers
+                filterTargetBranch = """
+                    +:refs/heads/main
+                    +:refs/heads/release/*.x
+                    -:refs/heads/release/1.x
+                    -:refs/heads/release/2.x
+                """.trimIndent()
                 filterAuthorRole = PullRequests.GitHubRoleFilter.MEMBER
             }
         }

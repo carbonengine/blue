@@ -47,7 +47,6 @@ class CarbonBuildMacOS(buildName: String, configType: String, preset: String) : 
         param("env.CMAKE_CONFIG_TYPE", configType)
         param("env.CMAKE_GENERATOR", "Ninja Multi-Config")
         param("teamcity.vcsTrigger.runBuildInNewEmptyBranch", "true")
-        param("carbon_ref", "refs/heads/feature/kotlin")
         param("github_checkout_folder", "github")
         param("env.CTEST_JUNIT_OUTPUT_FILE", "ctest_results.xml")
         select("env.VISUAL_STUDIO_PLATFORM_TOOLSET", "v141", label = "Visual Studio Platform Toolset", description = "Specify the toolset for the build. e.g. v141 or v143.",
@@ -146,6 +145,13 @@ class CarbonBuildMacOS(buildName: String, configType: String, preset: String) : 
                 authType = token {
                     token = "credentialsJSON:06ae89f1-d5f2-4c8d-a91a-9712c233ce06"
                 }
+               // Constrain PR triggers to compatible refs so as to avoid erroneous triggers
+                filterTargetBranch = """
+                    +:refs/heads/main
+                    +:refs/heads/release/*.x
+                    -:refs/heads/release/1.x
+                    -:refs/heads/release/2.x
+                """.trimIndent()
                 filterAuthorRole = PullRequests.GitHubRoleFilter.MEMBER
             }
         }
