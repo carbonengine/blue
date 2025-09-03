@@ -227,7 +227,10 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
 
     def test_load_old_style_object_with_data(self):
         bytes = b'~\x00\x00\x00\x00#,%\x022bluetests.test.test_marshal.OldStyleObjectWithData\x16\x01.\x04test.\x04data--'
-        self.assertBlueObjectsEqual(blue.marshal.Load(bytes), OldStyleObjectWithData("test"))
+        loaded = blue.marshal.Load(bytes)
+
+        self.assertTrue(type(loaded.data) == unicode)
+        self.assertBlueObjectsEqual(loaded, OldStyleObjectWithData("test"))
 
     def test_load_new_style_object(self):
         bytes = b'~\x00\x00\x00\x00#%%\x02*bluetests.test.test_marshal.NewStyleObject--'
@@ -235,8 +238,10 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
 
     def test_load_object_with_data(self):
         bytes = b'~\x00\x00\x00\x00#,%\x02*bluetests.test.test_marshal.ObjectWithData\x16\x01.\x04test.\x04data--'
-        obj = blue.marshal.Load(bytes)
-        self.assertEqual(obj.data, "test")
+        loaded = blue.marshal.Load(bytes)
+
+        self.assertTrue(type(loaded.data) == unicode)
+        self.assertEqual(loaded.data, "test")
 
     def test_none(self):
         bytes = b'~\x00\x00\x00\x00\x01'
@@ -244,23 +249,38 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
 
     def test_string_from_stringtable(self):
         bytes = b'~\x00\x00\x00\x00\x11\x06'
-        self.assertEqual(blue.marshal.Load(bytes), "ballID")
+        loaded = blue.marshal.Load(bytes)
+
+        self.assertTrue(type(loaded) == str)
+        self.assertEqual(loaded, "ballID")
 
     def test_empty_unicode(self):
         bytes = b'~\x00\x00\x00\x00('
-        self.assertEqual(blue.marshal.Load(bytes), u"")
+        loaded = blue.marshal.Load(bytes)
+
+        self.assertTrue(type(loaded) == unicode)
+        self.assertEqual(loaded, "")
 
     def test_single_char_unicode(self):
         bytes = b'~\x00\x00\x00\x00.\x01A'
-        self.assertEqual(blue.marshal.Load(bytes), u"A")
+        loaded = blue.marshal.Load(bytes)
+
+        self.assertTrue(type(loaded) == unicode)
+        self.assertEqual(loaded, "A")
 
     def test_unicode(self):
         bytes = b'~\x00\x00\x00\x00.\t\xe2\x82\xa8\xe2\x82\xb1\xe2\x82\xa9'
-        self.assertEqual(blue.marshal.Load(bytes), u"\u20A8\u20B1\u20A9")
+        loaded = blue.marshal.Load(bytes)
+
+        self.assertTrue(type(loaded) == unicode)
+        self.assertEqual(loaded, u"\u20A8\u20B1\u20A9")
 
     def test_unicode_as_utf8(self):
         bytes = b'~\x00\x00\x00\x00.\x16this is a unicode test'
-        self.assertEqual(blue.marshal.Load(bytes), u"this is a unicode test")
+        loaded = blue.marshal.Load(bytes)
+
+        self.assertTrue(type(loaded) == unicode)
+        self.assertEqual(loaded, "this is a unicode test")
 
     def test_integer(self):
         self.assertEqual(blue.marshal.Load(b'~\x00\x00\x00\x00\x08'), 0)
