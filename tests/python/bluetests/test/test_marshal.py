@@ -282,7 +282,7 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         self.assertFalse(blue.marshal.Load(b'~\x00\x00\x00\x00 '), False)
 
     def test_empty_dict(self):
-        pass
+        self.assertEqual(blue.marshal.Load(b'~\x00\x00\x00\x00\x16\x00'), {})
 
     def test_empty_object(self):
         pass
