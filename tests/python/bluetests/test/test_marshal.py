@@ -330,7 +330,10 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         self.assertEqual(loaded, EmptyObject())
 
     def test_simple_object(self):
-        pass
+        bytes = b'~\x00\x00\x00\x00#,%\x02(bluetests.test.test_marshal.SimpleObject\x16\x05.\x10this is a string.\x01a\x06*.\x01b\n\xcd\x06xV\xfb!\t@.\x01c\x13\x07x\x01\x8d\x98{t\xd3.\x01d.\x10this is a string.\x01e--'
+        loaded = blue.marshal.Load(bytes)
+
+        self.assertEqual(loaded, SimpleObject())
 
     def test_empty_list(self):
         pass
