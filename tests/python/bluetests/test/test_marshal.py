@@ -379,7 +379,13 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         pass
 
     def test_checksum(self):
-        pass
+        # Marshalled Python3 object using checksum
+        bytes = b'~\x00\x00\x00\x00\x1c\xb9/\x0fL\x15\x02#,%\x02*bluetests.test.test_marshal.NewStyleObject\x16\x05.\x10this is a string.\x01a\x13\x10this is a string.\x01b.\x10this is a string.\x01c\x06*.\x01d\n\xcd\x06xV\xfb!\t@.\x01e--.\x0ethis is a test'
+        loaded = blue.marshal.Load(bytes)
+        comparison = blue.marshal.Save([NewStyleObject(), "this is a test"], useChecksum=1)
+
+        # Marshalled data will differ due to string fields, so we must load both objects for comparison
+        self.assertBlueObjectsEqual(loaded, blue.marshal.Load(comparison))
 
     def test_empty_dbrow(self):
         bytes = b'~\x00\x00\x00\x00*",\x02\x14blue.DBRowDescriptor%$--\x00'
