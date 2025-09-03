@@ -5,8 +5,8 @@ import blue
 import sys
 
 class EmptyObject(object):
-    pass
-
+    def __eq__(self, other):
+        return isinstance(other, type(self))
 
 class SimpleObject(object):
     def __init__(self):
@@ -324,7 +324,10 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
             self.assertTrue(type(value) == unicode)
 
     def test_empty_object(self):
-        pass
+        bytes = b"~\x00\x00\x00\x00#%%\x02'bluetests.test.test_marshal.EmptyObject--"
+        loaded = blue.marshal.Load(bytes)
+
+        self.assertEqual(loaded, EmptyObject())
 
     def test_simple_object(self):
         pass
