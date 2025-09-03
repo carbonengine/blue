@@ -385,7 +385,10 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         pass
 
     def test_dbrow(self):
-        pass
+        bytes = b'~\x00\x00\x00\x00*",\x02\x14blue.DBRowDescriptor%%,.\x04Test\x06\x14--\x02\xf7{'
+        loaded = blue.marshal.Load(bytes)
+
+        self.assertEqual(loaded, blue.DBRow(blue.DBRowDescriptor((("Test", 20),)), (123, )))
 
     def test_dbrow_with_invalid_descriptor_in_stream_raises_error(self):
         pass
