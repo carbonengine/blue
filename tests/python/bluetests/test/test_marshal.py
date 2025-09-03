@@ -256,7 +256,8 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         self.assertEqual(blue.marshal.Load(bytes), u"\u20A8\u20B1\u20A9")
 
     def test_unicode_as_utf8(self):
-        pass
+        bytes = b'~\x00\x00\x00\x00.\x16this is a unicode test'
+        self.assertEqual(blue.marshal.Load(bytes), u"this is a unicode test")
 
     def test_integer(self):
         pass
