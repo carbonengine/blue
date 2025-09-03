@@ -137,6 +137,9 @@ class testMarshal(blueunittest.TestCase):
     def test_empty_dict(self):
         self.verify_round_trip({})
 
+    def test_dict(self):
+        self.verify_round_trip({"key": "test"})
+
     def test_empty_object(self):
         self.verify_round_trip(EmptyObject())
 
@@ -283,6 +286,16 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
 
     def test_empty_dict(self):
         self.assertEqual(blue.marshal.Load(b'~\x00\x00\x00\x00\x16\x00'), {})
+
+    def test_dict(self):
+        bytes = b'~\x00\x00\x00\x00\x16\x01.\x04test.\x03key'
+        loaded = blue.marshal.Load(bytes)
+        self.assertEqual(loaded, {"key": "test"})
+
+        # Explicit type checking due to Unicode and str types being implicitly comparable
+        for key, value in loaded.items():
+            self.assertTrue(type(key) == unicode)
+            self.assertTrue(type(value) == unicode)
 
     def test_empty_object(self):
         pass
