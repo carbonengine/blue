@@ -9,55 +9,42 @@ class EmptyObject(object):
         return isinstance(other, type(self))
 
 
-class SimpleObject(object):
+class NewStyleObject(object):
     def __init__(self):
         self.a = "this is a string"
-        self.b = 42
-        self.c = 3.14159267
-        self.d = b'x\x01\x8d\x98{t\xd3'
-        self.e = u"this is a string"
+        self.b = b"this is a string"
+        self.c = u"this is a string"
+        self.d = 42
+        self.e = 3.14159267
 
     def __eq__(self, other):
         # String, byte and unicode comparisons are type-agnostic
-        # Therefore, an unmarshalled Python3 SimpleObject instance should compare truthfully
+        # Therefore, an unmarshalled Python3 NewStyleObject instance should compare truthfully
         # even though d and e fields differ in type
         return isinstance(self, type(other)) and self.__dict__ == other.__dict__
 
 
-class OldSchoolObject:
+class OldStyleObject:
     def __init__(self):
         self.a = "this is a string"
-        self.b = 42
-        self.c = 3.14159267
+        self.b = b"this is a string"
+        self.c = u"this is a string"
+        self.d = 42
+        self.e = 3.14159267
 
-
-class NewStyleObject(object):
-    pass
-
-
-class OldStyleObject:
-    pass
-
-
-class OldStyleObjectWithData:
-    def __init__(self, data):
-        self.data = data
-
-
-class ObjectWithData(object):
-    def __init__(self, data):
-        self.data = data
+    def __eq__(self, other):
+        return isinstance(self, type(other)) and self.__dict__ == other.__dict__
 
 
 def SaveCallback(obj):
-    if isinstance(obj, OldSchoolObject):
+    if isinstance(obj, OldStyleObject):
         return "magic"
     return None
 
 
 def LoadCallback(obj):
     if obj == "magic":
-        return OldSchoolObject()
+        return OldStyleObject()
     return None
 
 
@@ -152,8 +139,8 @@ class testMarshal(blueunittest.TestCase):
     def test_empty_object(self):
         self.verify_round_trip(EmptyObject())
 
-    def test_simple_object(self):
-        self.verify_round_trip(SimpleObject())
+    def test_new_style_object(self):
+        self.verify_round_trip(NewStyleObject())
 
     def test_empty_list(self):
         self.verify_round_trip([])
@@ -177,15 +164,15 @@ class testMarshal(blueunittest.TestCase):
         self.verify_round_trip(("this", "is", "a", "test"))
 
     def test_instanced_object(self):
-        obj = SimpleObject()
+        obj = NewStyleObject()
         self.verify_round_trip([obj, obj, obj])
 
-    def test_instanced_old_school_object(self):
-        obj = OldSchoolObject()
+    def test_instanced_old_style_object(self):
+        obj = OldStyleObject()
         self.verify_round_trip([obj, obj, obj])
 
     def test_callback(self):
-        obj = [OldSchoolObject(), SimpleObject(), "this is a test"]
+        obj = [OldStyleObject(), NewStyleObject(), "this is a test"]
         s = blue.marshal.Save(obj, callback=SaveCallback)
         obj2 = blue.marshal.Load(s, callback=LoadCallback)
         self.assertBlueObjectsEqual(obj, obj2)
@@ -194,7 +181,7 @@ class testMarshal(blueunittest.TestCase):
         self._update_coverage()
 
     def test_checksum(self):
-        obj = [OldSchoolObject(), SimpleObject(), "this is a test"]
+        obj = [OldStyleObject(), NewStyleObject(), "this is a test"]
         s = blue.marshal.Save(obj, useChecksum=1)
         obj2 = blue.marshal.Load(s)
         self.assertBlueObjectsEqual(obj, obj2)
@@ -208,7 +195,7 @@ class testMarshal(blueunittest.TestCase):
         self.verify_round_trip(d)
 
     def test_wstream(self):
-        obj = [OldSchoolObject(), SimpleObject(), "this is a test"]
+        obj = [OldStyleObject(), NewStyleObject(), "this is a test"]
         ws = blue.marshal.Save(obj)
         self.verify_round_trip(ws)
 
@@ -231,30 +218,10 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
     This class adds coverage for objects marshalled in Python 3.
     """
     def test_load_old_style_object(self):
-        bytes = b'~\x00\x00\x00\x00#%%\x02*bluetests.test.test_marshal.OldStyleObject--'
+        bytes = b'~\x00\x00\x00\x00#,%\x02*bluetests.test.test_marshal.OldStyleObject\x16\x05.\x10this is a string.\x01a\x13\x10this is a string.\x01b.\x10this is a string.\x01c\x06*.\x01d\n\xcd\x06xV\xfb!\t@.\x01e--'
         loaded = blue.marshal.Load(bytes)
 
-        self.assertIsInstance(loaded, OldStyleObject)
-
-    def test_load_old_style_object_with_data(self):
-        bytes = b'~\x00\x00\x00\x00#,%\x022bluetests.test.test_marshal.OldStyleObjectWithData\x16\x01.\x04test.\x04data--'
-        loaded = blue.marshal.Load(bytes)
-
-        self.assertTrue(type(loaded.data) == unicode)
-        self.assertBlueObjectsEqual(loaded, OldStyleObjectWithData("test"))
-
-    def test_load_new_style_object(self):
-        bytes = b'~\x00\x00\x00\x00#%%\x02*bluetests.test.test_marshal.NewStyleObject--'
-        loaded = blue.marshal.Load(bytes)
-
-        self.assertIsInstance(loaded, NewStyleObject)
-
-    def test_load_object_with_data(self):
-        bytes = b'~\x00\x00\x00\x00#,%\x02*bluetests.test.test_marshal.ObjectWithData\x16\x01.\x04test.\x04data--'
-        loaded = blue.marshal.Load(bytes)
-
-        self.assertTrue(type(loaded.data) == unicode)
-        self.assertEqual(loaded.data, "test")
+        self.assertEqual(loaded, OldStyleObject())
 
     def test_none(self):
         bytes = b'~\x00\x00\x00\x00\x01'
@@ -338,11 +305,11 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
 
         self.assertEqual(loaded, EmptyObject())
 
-    def test_simple_object(self):
-        bytes = b'~\x00\x00\x00\x00#,%\x02(bluetests.test.test_marshal.SimpleObject\x16\x05.\x10this is a string.\x01a\x06*.\x01b\n\xcd\x06xV\xfb!\t@.\x01c\x13\x07x\x01\x8d\x98{t\xd3.\x01d.\x10this is a string.\x01e--'
+    def test_new_style_object(self):
+        bytes = b'~\x00\x00\x00\x00#,%\x02*bluetests.test.test_marshal.NewStyleObject\x16\x05.\x10this is a string.\x01a\x13\x10this is a string.\x01b.\x10this is a string.\x01c\x06*.\x01d\n\xcd\x06xV\xfb!\t@.\x01e--'
         loaded = blue.marshal.Load(bytes)
 
-        self.assertEqual(loaded, SimpleObject())
+        self.assertEqual(loaded, NewStyleObject())
 
     def test_empty_list(self):
         bytes = b'~\x00\x00\x00\x00&'
@@ -395,14 +362,13 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
             self.assertIsInstance(item, unicode)
 
     def test_instanced_object(self):
-        bytes = b'~\x01\x00\x00\x00\x15\x03c,%\x02(bluetests.test.test_marshal.SimpleObject\x16\x05.\x10this is a string.\x01a\x06*.\x01b\n\xcd\x06xV\xfb!\t@.\x01c\x13\x07x\x01\x8d\x98{t\xd3.\x01d.\x10this is a string.\x01e--\x1b\x01\x1b\x01\x01\x00\x00\x00'
+        bytes = b'~\x01\x00\x00\x00\x15\x03c,%\x02*bluetests.test.test_marshal.NewStyleObject\x16\x05.\x10this is a string.\x01a\x13\x10this is a string.\x01b.\x10this is a string.\x01c\x06*.\x01d\n\xcd\x06xV\xfb!\t@.\x01e--\x1b\x01\x1b\x01\x01\x00\x00\x00'
         loaded = blue.marshal.Load(bytes)
-        instance = SimpleObject()
+        instance = NewStyleObject()
 
         self.assertEqual(loaded, [instance, instance, instance])
 
-    def test_instanced_old_school_object(self):
-        pass
+    def test_instanced_old_style_object(self):
 
     def test_callback(self):
         pass
