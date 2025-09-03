@@ -355,12 +355,15 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         loaded = blue.marshal.Load(bytes)
 
         self.assertEqual(loaded, ["this is a test"])
+        self.assertIsInstance(loaded[0], unicode)
 
     def test_list_of_strings(self):
         bytes = b'~\x00\x00\x00\x00\x15\x04.\x04this.\x02is.\x01a.\x04test'
         loaded = blue.marshal.Load(bytes)
 
         self.assertEqual(loaded, ["this", "is", "a", "test"])
+        for item in loaded:
+            self.assertIsInstance(item, unicode)
 
     def test_empty_tuple(self):
         bytes = b'~\x00\x00\x00\x00$'
@@ -373,12 +376,15 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         loaded = blue.marshal.Load(bytes)
 
         self.assertEqual(loaded, ("this is a test",))
+        self.assertIsInstance(loaded[0], unicode)
 
     def test_tuple_of_two_strings(self):
         bytes = b'~\x00\x00\x00\x00,.\x07this is.\x06a test'
         loaded = blue.marshal.Load(bytes)
 
         self.assertEqual(loaded, ("this is", "a test"))
+        for item in loaded:
+            self.assertIsInstance(item, unicode)
 
     def test_tuple_of_strings(self):
         pass
