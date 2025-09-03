@@ -382,7 +382,10 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         pass
 
     def test_empty_dbrow(self):
-        pass
+        bytes = b'~\x00\x00\x00\x00*",\x02\x14blue.DBRowDescriptor%$--\x00'
+        loaded = blue.marshal.Load(bytes)
+
+        self.assertEqual(loaded, blue.DBRow(blue.DBRowDescriptor(())))
 
     def test_dbrow(self):
         bytes = b'~\x00\x00\x00\x00*",\x02\x14blue.DBRowDescriptor%%,.\x04Test\x06\x14--\x02\xf7{'
