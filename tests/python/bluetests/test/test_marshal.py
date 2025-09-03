@@ -44,6 +44,22 @@ class SimpleObject:
 class NewStyleObject(object):
     pass
 
+class NewStyleWithSetState(object):
+    def __init__(self, string, number):
+        self.string = string
+        self.number = number
+
+    def __getstate__(self):
+        return self.string, self.number
+
+    def __setstate__(self, state):
+        self.string = state[0]
+        self.number = state[1]
+
+    def __eq__(self, other):
+        return (self.string == other.string and
+                self.number == other.number)
+
 class OldStyleObject:
     pass
 
@@ -435,3 +451,8 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
     def test_custom_exception(self):
         bytes = b'~\x00\x00\x00\x00"\x14\x03\x02+bluetests.test.test_marshal.CustomException$\x16\x02.\x1aTotally expected exception\x13\x07message\x06*\x13\x04data--'
         blue.marshal.Load(bytes)
+
+    def test_new_style_with_setstate(self):
+        bytes = b'~\x00\x00\x00\x00#,%\x020bluetests.test.test_marshal.NewStyleWithSetState,\x13\x05Pizza\x06C--'
+        loaded = blue.marshal.Load(bytes)
+        self.assertBlueObjectsEqual(loaded, NewStyleWithSetState(b"Pizza", 67))
