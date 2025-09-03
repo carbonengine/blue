@@ -387,7 +387,12 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
             self.assertIsInstance(item, unicode)
 
     def test_tuple_of_strings(self):
-        pass
+        bytes = b'~\x00\x00\x00\x00\x14\x04.\x04this.\x02is.\x01a.\x04test'
+        loaded = blue.marshal.Load(bytes)
+
+        self.assertEqual(loaded, ("this", "is", "a", "test"))
+        for item in loaded:
+            self.assertIsInstance(item, unicode)
 
     def test_instanced_object(self):
         pass
