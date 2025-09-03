@@ -273,7 +273,9 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         self.assertEqual(blue.marshal.Load(b'~\x00\x00\x00\x00/\t\x00\x00\x00\x00\x00\x00\x00\x80\x00'), 9223372036854775808)
 
     def test_float(self):
-        pass
+        self.assertEqual(blue.marshal.Load(b'~\x00\x00\x00\x00\x0b'), 0.0)
+        self.assertEqual(blue.marshal.Load(b'~\x00\x00\x00\x00\n\xcd\x06xV\xfb!\t@'), 3.14159267)
+        self.assertEqual(blue.marshal.Load(b'~\x00\x00\x00\x00\nO\x80\xb7)_@\x06\xc0'), -2.781431508934509809834)
 
     def test_bool(self):
         pass
