@@ -8,11 +8,20 @@ class EmptyObject(object):
     def __eq__(self, other):
         return isinstance(other, type(self))
 
+
 class SimpleObject(object):
     def __init__(self):
         self.a = "this is a string"
         self.b = 42
         self.c = 3.14159267
+        self.d = b'x\x01\x8d\x98{t\xd3'
+        self.e = u"this is a string"
+
+    def __eq__(self, other):
+        # String, byte and unicode comparisons are type-agnostic
+        # Therefore, an unmarshalled Python3 SimpleObject instance should compare truthfully
+        # even though d and e fields differ in type
+        return isinstance(self, type(other)) and self.__dict__ == other.__dict__
 
 
 class OldSchoolObject:
