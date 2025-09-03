@@ -369,6 +369,11 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         self.assertEqual(loaded, [instance, instance, instance])
 
     def test_instanced_old_style_object(self):
+        bytes = b'~\x01\x00\x00\x00\x15\x03c,%\x02*bluetests.test.test_marshal.OldStyleObject\x16\x05.\x10this is a string.\x01a\x13\x10this is a string.\x01b.\x10this is a string.\x01c\x06*.\x01d\n\xcd\x06xV\xfb!\t@.\x01e--\x1b\x01\x1b\x01\x01\x00\x00\x00'
+        loaded = blue.marshal.Load(bytes)
+        instance = OldStyleObject()
+
+        self.assertEqual(loaded, [instance, instance, instance])
 
     def test_callback(self):
         pass
