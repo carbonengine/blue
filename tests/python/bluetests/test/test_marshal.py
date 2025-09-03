@@ -395,7 +395,11 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
             self.assertIsInstance(item, unicode)
 
     def test_instanced_object(self):
-        pass
+        bytes = b'~\x01\x00\x00\x00\x15\x03c,%\x02(bluetests.test.test_marshal.SimpleObject\x16\x05.\x10this is a string.\x01a\x06*.\x01b\n\xcd\x06xV\xfb!\t@.\x01c\x13\x07x\x01\x8d\x98{t\xd3.\x01d.\x10this is a string.\x01e--\x1b\x01\x1b\x01\x01\x00\x00\x00'
+        loaded = blue.marshal.Load(bytes)
+        instance = SimpleObject()
+
+        self.assertEqual(loaded, [instance, instance, instance])
 
     def test_instanced_old_school_object(self):
         pass
