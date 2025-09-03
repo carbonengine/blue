@@ -375,8 +375,14 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
 
         self.assertEqual(loaded, [instance, instance, instance])
 
-    def test_callback(self):
-        pass
+    def test_read_callback_called(self):
+        def read_callback(obj):
+            read_callback.called = True
+        read_callback.called = False
+
+        bytes = b'~\x00\x00\x00\x00\x19.\x04test'
+        blue.marshal.Load(bytes, callback=read_callback)
+        self.assertTrue(read_callback.called)
 
     def test_checksum(self):
         # Marshalled Python3 object using checksum
