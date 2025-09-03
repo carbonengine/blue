@@ -345,7 +345,10 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         self.assertEqual(loaded, SimpleObject())
 
     def test_empty_list(self):
-        pass
+        bytes = b'~\x00\x00\x00\x00&'
+        loaded = blue.marshal.Load(bytes)
+
+        self.assertEqual(loaded, [])
 
     def test_list_of_one_string(self):
         pass
