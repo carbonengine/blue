@@ -223,7 +223,9 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
     """
     def test_load_old_style_object(self):
         bytes = b'~\x00\x00\x00\x00#%%\x02*bluetests.test.test_marshal.OldStyleObject--'
-        self.assertIsInstance(blue.marshal.Load(bytes), OldStyleObject)
+        loaded = blue.marshal.Load(bytes)
+
+        self.assertIsInstance(loaded, OldStyleObject)
 
     def test_load_old_style_object_with_data(self):
         bytes = b'~\x00\x00\x00\x00#,%\x022bluetests.test.test_marshal.OldStyleObjectWithData\x16\x01.\x04test.\x04data--'
@@ -234,7 +236,9 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
 
     def test_load_new_style_object(self):
         bytes = b'~\x00\x00\x00\x00#%%\x02*bluetests.test.test_marshal.NewStyleObject--'
-        self.assertIsInstance(blue.marshal.Load(bytes), NewStyleObject)
+        loaded = blue.marshal.Load(bytes)
+
+        self.assertIsInstance(loaded, NewStyleObject)
 
     def test_load_object_with_data(self):
         bytes = b'~\x00\x00\x00\x00#,%\x02*bluetests.test.test_marshal.ObjectWithData\x16\x01.\x04test.\x04data--'
@@ -245,7 +249,9 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
 
     def test_none(self):
         bytes = b'~\x00\x00\x00\x00\x01'
-        self.assertEqual(blue.marshal.Load(bytes), None)
+        loaded = blue.marshal.Load(bytes)
+
+        self.assertEqual(loaded, None)
 
     def test_string_from_stringtable(self):
         bytes = b'~\x00\x00\x00\x00\x11\x06'
@@ -310,8 +316,8 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
     def test_dict(self):
         bytes = b'~\x00\x00\x00\x00\x16\x01.\x04test.\x03key'
         loaded = blue.marshal.Load(bytes)
-        self.assertEqual(loaded, {"key": "test"})
 
+        self.assertEqual(loaded, {"key": "test"})
         # Explicit type checking due to Unicode and str types being implicitly comparable
         for key, value in loaded.items():
             self.assertTrue(type(key) == unicode)
