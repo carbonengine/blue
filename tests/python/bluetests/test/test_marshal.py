@@ -51,6 +51,11 @@ class ObjectWithData(object):
     def __init__(self, data):
         self.data = data
 
+class CustomException(Exception):
+    def __init__(self, message=None, data=None):
+        self.message = message
+        self.data = data
+
 class testMarshal(blueunittest.TestCase):
     loaded = []
     saved = []
@@ -426,3 +431,7 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         comparison = blue.marshal.Save([SimpleObject(), b"this is a test"], useChecksum=1)
         # Marshalled data will differ due to string fields, so we must load both objects for comparison
         self.assertBlueObjectsEqual(blue.marshal.Load(bytes), blue.marshal.Load(comparison))
+
+    def test_custom_exception(self):
+        bytes = b'~\x00\x00\x00\x00"\x14\x03\x02+bluetests.test.test_marshal.CustomException$\x16\x02.\x1aTotally expected exception\x13\x07message\x06*\x13\x04data--'
+        blue.marshal.Load(bytes)

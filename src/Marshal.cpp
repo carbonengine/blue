@@ -1602,6 +1602,75 @@ PyObject *Marshal::ReadObjectReduce(ReadStream *stream, bool shared)
 	if (PyTuple_GET_SIZE(rv.o)>2) {
 		PyObject *state = PyTuple_GET_ITEM(rv.o, 2);
 		BluePy setstate(PyObject_GetAttr(r, mStock_SetState));
+#ifdef PY27_COMPATIBILITY_MODE
+		if ( setstate ) {
+			BluePy exceptionSetState( PyObject_GetAttr( PyExc_Exception, mStock_SetState ) );
+			BluePy classSetState( PyObject_GetAttr( reinterpret_cast<PyObject*>( r.o->ob_type ), mStock_SetState ) );
+			if( classSetState.o == exceptionSetState.o )
+			{
+				BluePy items( PyDict_Items( state ) );
+				BluePy convertedState( PyDict_New() );
+
+				// Ensure keys are encoded in UTF-8 unicode
+				PyObject *key, *value;
+				Py_ssize_t pos = 0;
+				while ( PyDict_Next( state, &pos, &key, &value ) )
+				{
+					if ( PyBytes_Check(key) )
+					{
+						BluePy encodedKey(PyUnicode_FromEncodedObject( key, "UTF-8", nullptr ) );
+						PyDict_SetItem( convertedState, encodedKey, value );
+					}
+					else
+					{
+						PyDict_SetItem( convertedState, key, value );
+					}
+				}
+				BluePy tmp( PyObject_CallFunctionObjArgs( setstate, convertedState, 0 ) );
+				if ( !tmp )
+				{
+					return nullptr;
+				}
+			}
+			else
+			{
+				BluePy tmp( PyObject_CallFunctionObjArgs( setstate, state, 0 ) );
+				if ( !tmp )
+				{
+					return nullptr;
+				}
+			}
+		} else {
+			PyErr_Clear();
+			BluePy dict( PyObject_GetAttr( r, mStock_Dict ) );
+			if ( !dict )
+			{
+				return nullptr;
+			}
+			BluePy items( PyDict_Items( state ) );
+			BluePy convertedState( PyDict_New() );
+
+			// Ensure keys are encoded in UTF-8 unicode
+			PyObject *key, *value;
+			Py_ssize_t pos = 0;
+			while ( PyDict_Next( state, &pos, &key, &value ) )
+			{
+				if ( PyBytes_Check(key) )
+				{
+					BluePy encodedKey( PyUnicode_FromEncodedObject( key, "UTF-8", nullptr ) );
+					PyDict_SetItem( convertedState, encodedKey, value );
+				}
+				else
+				{
+					PyDict_SetItem( convertedState, key, value );
+				}
+			}
+			if ( PyDict_Update( dict, convertedState ) )
+			{
+				return nullptr;
+			}
+		}
+#else
 		if (setstate) {
 			BluePy tmp(PyObject_CallFunctionObjArgs(setstate, state, 0));
 			if (!tmp) return 0;
@@ -1611,6 +1680,7 @@ PyObject *Marshal::ReadObjectReduce(ReadStream *stream, bool shared)
 			if (!dict) return 0;
 			if (PyDict_Update(dict, state)) return 0;
 		}
+#endif
 	}
 
 	//read the iterators
