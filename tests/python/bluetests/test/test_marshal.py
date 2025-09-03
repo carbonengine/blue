@@ -407,6 +407,3 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
 
     def test_dbrow_with_invalid_descriptor_in_stream_raises_error(self):
         pass
-
-    def test_wstream(self):
-        pass
