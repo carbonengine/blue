@@ -369,7 +369,10 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         self.assertEqual(loaded, ())
 
     def test_tuple_of_one_string(self):
-        pass
+        bytes = b'~\x00\x00\x00\x00%.\x0ethis is a test'
+        loaded = blue.marshal.Load(bytes)
+
+        self.assertEqual(loaded, ("this is a test",))
 
     def test_tuple_of_two_strings(self):
         pass
