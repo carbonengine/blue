@@ -260,7 +260,13 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         self.assertEqual(blue.marshal.Load(bytes), u"this is a unicode test")
 
     def test_integer(self):
-        pass
+        self.assertEqual(blue.marshal.Load(b'~\x00\x00\x00\x00\x08'), 0)
+        self.assertEqual(blue.marshal.Load(b'~\x00\x00\x00\x00\t'), 1)
+        self.assertEqual(blue.marshal.Load(b'~\x00\x00\x00\x00\x07'), -1)
+        self.assertEqual(blue.marshal.Load(b'~\x00\x00\x00\x00\x06*'), 42)
+        self.assertEqual(blue.marshal.Load(b'~\x00\x00\x00\x00\x05\xff\x7f'), 32767)
+        self.assertEqual(blue.marshal.Load(b'~\x00\x00\x00\x00\x04\xff\xff\xff\x7f'), 2147483647)
+        self.assertEqual(blue.marshal.Load(b'~\x00\x00\x00\x00\x04\x00\x00\x00\x80'), -2147483648)
 
     def test_long(self):
         pass
