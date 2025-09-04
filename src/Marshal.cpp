@@ -1884,7 +1884,18 @@ PyObject *Marshal::GetGlobalObject(PyObject *nameO)
 	const char *dot = strrchr(name, '.');
 	BluePyStr modulename;
 	if (dot){
-		modulename = BluePyStr(dot-name, name);
+#ifdef PY27_COMPATIBILITY_MODE
+		if( strncmp( name, "__builtin__", 11 ) == 0 )
+		{
+			modulename = BluePyStr("builtins");
+		}
+		else
+		{
+			modulename = BluePyStr(dot-name, name);
+		}
+#else
+		modulename = BluePyStr( dot-name, name );
+#endif
 		name = dot+1;
 	} else {
 		modulename = BluePyStr("builtins");

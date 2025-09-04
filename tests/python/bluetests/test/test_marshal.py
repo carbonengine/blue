@@ -460,3 +460,11 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         bytes = b'~\x00\x00\x00\x00#,%\x020bluetests.test.test_marshal.NewStyleWithSetState,\x13\x05Pizza\x06C--'
         loaded = blue.marshal.Load(bytes)
         self.assertBlueObjectsEqual(loaded, NewStyleWithSetState(b"Pizza", 67))
+
+    def test_set(self):
+        blue.marshal.globalsWhitelist = {set: 0}
+        blue.marshal.collectWhitelist = False
+        bytes = b'~\x00\x00\x00\x00",\x02\x0f__builtin__.set%\x15\x03\t\x06\x02\x06\x03--'
+        loaded = blue.marshal.Load(bytes)
+        self.assertEqual(loaded, {1, 2, 3})
+
