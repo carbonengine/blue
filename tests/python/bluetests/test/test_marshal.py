@@ -2,7 +2,10 @@ __author__ = 'snorri.sturluson'
 
 from . import blueunittest
 import blue
+
+import unittest
 import sys
+import os
 
 class EmptyObject(object):
     def __eq__(self, other):
@@ -213,6 +216,7 @@ class testMarshal(blueunittest.TestCase):
         
         self.assertEqual(raisedValue.exception.args[0], TypeError)
 
+@unittest.skipUnless(os.environ.has_key("PY3_COMPATIBILITY_MODE"), "Skipping because these tests will fail if `PY3_COMPATIBILITY_MODE` is not enabled")
 class TestBackwardsCompatibility(blueunittest.TestCase):
     """
     This class adds coverage for objects marshalled in Python 3.
