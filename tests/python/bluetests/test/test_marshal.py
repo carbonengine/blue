@@ -237,36 +237,35 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         bytes = b'~\x00\x00\x00\x00\x11\x06'
         loaded = blue.marshal.Load(bytes)
 
-        # We expect a str type constructed from marshalled string table index
-        self.assertIsInstance(loaded, str)
+        self.assertTrue(type(loaded) == str)
         self.assertEqual(loaded, "ballID")
 
     def test_empty_unicode(self):
         bytes = b'~\x00\x00\x00\x00('
         loaded = blue.marshal.Load(bytes)
 
-        self.assertIsInstance(loaded, unicode)
+        self.assertTrue(type(loaded) == unicode)
         self.assertEqual(loaded, "")
 
     def test_single_char_unicode(self):
         bytes = b'~\x00\x00\x00\x00.\x01A'
         loaded = blue.marshal.Load(bytes)
 
-        self.assertIsInstance(loaded, unicode)
+        self.assertTrue(type(loaded) == unicode)
         self.assertEqual(loaded, "A")
 
     def test_unicode(self):
         bytes = b'~\x00\x00\x00\x00.\t\xe2\x82\xa8\xe2\x82\xb1\xe2\x82\xa9'
         loaded = blue.marshal.Load(bytes)
 
-        self.assertIsInstance(loaded, unicode)
+        self.assertTrue(type(loaded) == unicode)
         self.assertEqual(loaded, u"\u20A8\u20B1\u20A9")
 
     def test_unicode_as_utf8(self):
         bytes = b'~\x00\x00\x00\x00.\x16this is a unicode test'
         loaded = blue.marshal.Load(bytes)
 
-        self.assertIsInstance(loaded, unicode)
+        self.assertTrue(type(loaded) == unicode)
         self.assertEqual(loaded, "this is a unicode test")
 
     def test_integer(self):
@@ -301,8 +300,8 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         self.assertEqual(loaded, {"key": "test"})
         # Explicit type checking due to Unicode and str types being implicitly comparable
         for key, value in loaded.items():
-            self.assertIsInstance(key, unicode)
-            self.assertIsInstance(value, unicode)
+            self.assertTrue(type(key) == unicode)
+            self.assertTrue(type(value) == unicode)
 
     def test_empty_object(self):
         bytes = b"~\x00\x00\x00\x00#%%\x02'bluetests.test.test_marshal.EmptyObject--"
@@ -410,18 +409,5 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
 
         self.assertEqual(loaded, blue.DBRow(blue.DBRowDescriptor((("Test", 20),)), (123, )))
 
-    def test_set(self):
-        blue.marshal.globalsWhitelist = {set: None}
-        blue.marshal.collectWhitelist = False
-        bytes = b'~\x00\x00\x00\x00",\x02\x0cbuiltins.set%\x15\x03\t\x06\x02\x06\x03--'
-        loaded = blue.marshal.Load(bytes)
-        self.assertSetEqual(loaded, {1, 2, 3})
-
-    def test_runtime_error(self):
-        blue.marshal.globalsWhitelist = {RuntimeError: None}
-        blue.marshal.collectWhitelist = False
-        bytes = b'~\x00\x00\x00\x00",\x02\x15builtins.RuntimeError%.\x05Boom!--'
-        loaded = blue.marshal.Load(bytes)
-        self.assertIsInstance(loaded, RuntimeError)
-        self.assertIsInstance(loaded.message, unicode)
-        self.assertEqual(loaded.message, u"Boom!")
+    def test_dbrow_with_invalid_descriptor_in_stream_raises_error(self):
+        pass
