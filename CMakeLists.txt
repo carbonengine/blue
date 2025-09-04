@@ -261,13 +261,14 @@ target_sources(Blue PRIVATE
     ${PUBLIC_HEADER_FILES_INCLUDE}
 )
 
+option(PY27_COMPATIBILITY_MODE "Enable Python2.7 compatibility mode" ON)
 target_precompile_headers(Blue PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/StdAfx.h)
 
 target_compile_definitions(Blue
     PUBLIC
         CCP_STACKLESS
-        PY27_COMPATIBILITY_MODE # This define should get cleaned up when we stop supporting running the cluster with Python 27 and Python 312 nodes working together.    )
-    )
+        $<$<BOOL:${PY27_COMPATIBILITY_MODE}>:PY27_COMPATIBILITY_MODE> # This define should get cleaned up when we stop supporting running the cluster with Python 27 and Python 312 nodes working together.
+)
 
 if(APPLE)
     enable_language(OBJCXX)
