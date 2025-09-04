@@ -468,3 +468,10 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         loaded = blue.marshal.Load(bytes)
         self.assertEqual(loaded, {1, 2, 3})
 
+    def test_runtime_error(self):
+        blue.marshal.globalsWhitelist = {RuntimeError: 0}
+        blue.marshal.collectWhitelist = False
+        bytes = b'~\x00\x00\x00\x00",\x02\x17exceptions.RuntimeError%\x13\x05Boom!--'
+        loaded = blue.marshal.Load(bytes)
+        self.assertIsInstance(loaded, RuntimeError)
+        self.assertEqual(loaded.args, (b"Boom!",))
