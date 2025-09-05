@@ -1545,8 +1545,8 @@ PyObject *Marshal::ReadObjectInstance(ReadStream *stream, bool shared)
     }
 
 	// Get the instance data
-	BluePy data(ReadObject(stream));
-	if (!data)
+	BluePy state(ReadObject(stream));
+	if (!state)
     {
         return nullptr;
     }
@@ -1556,7 +1556,7 @@ PyObject *Marshal::ReadObjectInstance(ReadStream *stream, bool shared)
 	if (setstate)
 	{
 		AutoTasklet _at(PyOS->GetTaskletTimer(), mTimer_SetState);
-		BluePy r(PyObject_CallMethodObjArgs(inst, mStock_SetState, data.o, NULL));
+		BluePy r(PyObject_CallMethodObjArgs(inst, mStock_SetState, state.o, NULL));
 		if (!r)
         {
 			return nullptr;
@@ -1569,7 +1569,28 @@ PyObject *Marshal::ReadObjectInstance(ReadStream *stream, bool shared)
         {
 			return nullptr;
         }
-		if (PyDict_Update(dict, data) == -1)
+		// Ensure keys are encoded in UTF-8 unicode
+		BluePy convertedState;
+		PyObject *key, *value;
+		Py_ssize_t pos = 0;
+		while ( PyDict_Next( state, &pos, &key, &value ) )
+		{
+			if ( !PyBytes_Check(key) )
+			{
+				break;
+			}
+			if( !convertedState )
+			{
+				convertedState = BluePy( PyDict_New() );
+				if( !convertedState )
+				{
+					return nullptr;
+				}
+			}
+			BluePy encodedKey(PyUnicode_FromEncodedObject( key, "UTF-8", nullptr ) );
+			PyDict_SetItem( convertedState, encodedKey, value );
+		}
+		if (PyDict_Update( dict, convertedState ? convertedState : state ) == -1)
         {
 			return nullptr;
         }

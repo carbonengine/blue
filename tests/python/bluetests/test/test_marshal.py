@@ -318,6 +318,12 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         obj = blue.marshal.Load(bytes)
         self.assertEqual(obj.data, b"test")
 
+    def test_old_style_object_with_data(self):
+        bytes = b'~\x00\x00\x00\x00\x17\x13*bluetests.test.test_marshal.ObjectWithData\x16\x01\x13\x04test\x13\x04data'
+        obj = blue.marshal.Load(bytes)
+        self.assertEqual(obj.data, b"test")
+
+
     def test_dbrow(self):
         bytes = b'~\x00\x00\x00\x00*",\x02\x14blue.DBRowDescriptor%%,\x13\x04Test\x06\x14--\x02\xf7{'
         dbrow = blue.marshal.Load(bytes)
