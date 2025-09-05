@@ -1606,27 +1606,32 @@ PyObject *Marshal::ReadObjectReduce(ReadStream *stream, bool shared)
 		if ( setstate ) {
 			BluePy exceptionSetState( PyObject_GetAttr( PyExc_Exception, mStock_SetState ) );
 			BluePy classSetState( PyObject_GetAttr( reinterpret_cast<PyObject*>( r.o->ob_type ), mStock_SetState ) );
-			if( classSetState.o == exceptionSetState.o )
+			if( classSetState == exceptionSetState )
 			{
 				BluePy items( PyDict_Items( state ) );
-				BluePy convertedState( PyDict_New() );
+				BluePy convertedState;
 
 				// Ensure keys are encoded in UTF-8 unicode
 				PyObject *key, *value;
 				Py_ssize_t pos = 0;
 				while ( PyDict_Next( state, &pos, &key, &value ) )
 				{
-					if ( PyBytes_Check(key) )
+					if ( !PyBytes_Check(key) )
 					{
-						BluePy encodedKey(PyUnicode_FromEncodedObject( key, "UTF-8", nullptr ) );
-						PyDict_SetItem( convertedState, encodedKey, value );
+						break;
 					}
-					else
+					if( !convertedState )
 					{
-						PyDict_SetItem( convertedState, key, value );
+						convertedState = BluePy( PyDict_New() );
+						if( !convertedState )
+						{
+							return nullptr;
+						}
 					}
+					BluePy encodedKey(PyUnicode_FromEncodedObject( key, "UTF-8", nullptr ) );
+					PyDict_SetItem( convertedState, encodedKey, value );
 				}
-				BluePy tmp( PyObject_CallFunctionObjArgs( setstate, convertedState, 0 ) );
+				BluePy tmp( PyObject_CallFunctionObjArgs( setstate, convertedState ? convertedState : state, 0 ) );
 				if ( !tmp )
 				{
 					return nullptr;
@@ -1648,24 +1653,25 @@ PyObject *Marshal::ReadObjectReduce(ReadStream *stream, bool shared)
 				return nullptr;
 			}
 			BluePy items( PyDict_Items( state ) );
-			BluePy convertedState( PyDict_New() );
+			BluePy convertedState;
 
 			// Ensure keys are encoded in UTF-8 unicode
 			PyObject *key, *value;
 			Py_ssize_t pos = 0;
 			while ( PyDict_Next( state, &pos, &key, &value ) )
 			{
-				if ( PyBytes_Check(key) )
+				if ( !PyBytes_Check( key ) )
 				{
-					BluePy encodedKey( PyUnicode_FromEncodedObject( key, "UTF-8", nullptr ) );
-					PyDict_SetItem( convertedState, encodedKey, value );
+					break;
 				}
-				else
+				if( !convertedState )
 				{
-					PyDict_SetItem( convertedState, key, value );
+					convertedState = BluePy( PyDict_New() );
 				}
+				BluePy encodedKey( PyUnicode_FromEncodedObject( key, "UTF-8", nullptr ) );
+				PyDict_SetItem( convertedState, encodedKey, value );
 			}
-			if ( PyDict_Update( dict, convertedState ) )
+			if ( PyDict_Update( dict, convertedState ? convertedState : state ) )
 			{
 				return nullptr;
 			}
@@ -1757,24 +1763,28 @@ PyObject *Marshal::ReadObjectNewobj(ReadStream* stream, bool shared)
 				return nullptr;
 			}
 #ifdef PY27_COMPATIBILITY_MODE
-			BluePy convertedState(PyDict_New());
+			BluePy convertedState;
 
 			// Ensure keys are encoded in UTF-8 unicode
 			PyObject *key, *value;
 			Py_ssize_t pos = 0;
 			while (PyDict_Next(state, &pos, &key, &value))
 			{
-				if ( PyBytes_Check(key) )
+				if ( !PyBytes_Check(key) )
 				{
-					BluePy encodedKey(PyUnicode_FromEncodedObject(key, "UTF-8", nullptr));
-					PyDict_SetItem(convertedState, encodedKey, value);
+					break;
 				}
-				else
+				if( !convertedState )
 				{
-					PyDict_SetItem(convertedState, key, value);
+					convertedState = BluePy( PyDict_New() );
 				}
+				BluePy encodedKey(PyUnicode_FromEncodedObject(key, "UTF-8", nullptr));
+				PyDict_SetItem(convertedState, encodedKey, value);
 			}
-			state = convertedState;
+			if( convertedState )
+			{
+				state = convertedState;
+			}
 #endif
 			if ( PyDict_Update(dict, state) )
 			{
