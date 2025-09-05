@@ -1892,12 +1892,12 @@ PyObject *Marshal::GetGlobalObject(PyObject *nameO)
         return PyErr_SetString(PyExc_RuntimeError, "expected string"), nullptr;
     }
 #else
-	if( !Py_Unicode_Check(name0) )
+	if( !PyUnicode_Check(nameO) )
 	{
 		PyErr_SetString(PyExc_RuntimeError, "expected string");
 		return nullptr;
 	}
-	const char* name = PyUnicode_AsUTF8( name0 );
+	const char* name = PyUnicode_AsUTF8( nameO );
 #endif
 
 	const char *dot = strrchr(name, '.');
