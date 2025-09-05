@@ -1878,6 +1878,13 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 			{
 				RETFAIL(WriteType(stream, TY_STR_EMPTY));
 			}
+#ifndef PY3_COMPATIBILITY_MODE
+			else if (size == 1)
+			{
+				RETFAIL(WriteType(stream, TY_STR_CHAR));
+				RETFAIL(stream->Write<char>(string[0]));
+			}
+#endif
 			else
 			{
 				PyObject* index = PyDict_GetItem(mStrTable, o);
