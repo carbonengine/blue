@@ -261,7 +261,7 @@ target_sources(Blue PRIVATE
     ${PUBLIC_HEADER_FILES_INCLUDE}
 )
 
-option(PY27_COMPATIBILITY_MODE "Enable Python2.7 compatibility mode" ON)
+option(PY27_COMPATIBILITY_MODE "Enable Python2.7 compatibility mode" OFF)
 target_precompile_headers(Blue PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/StdAfx.h)
 
 target_compile_definitions(Blue
