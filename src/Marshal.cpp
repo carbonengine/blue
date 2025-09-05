@@ -1858,15 +1858,15 @@ PyObject *Marshal::ReadObjectLong(ReadStream *stream, bool shared)
 //The stuff is cached for quick retrieval
 PyObject *Marshal::GetGlobalObject(PyObject *nameO)
 {
-    BluePy obj(nameO, true);
-
 	PyObject *cached = PyDict_GetItem(mGuidTable, nameO);
 	if (cached) {
 		Py_INCREF(cached);
 		return cached;
 	}
 
+#ifdef PY27_COMPATIBILITY_MODE
     // Backwards compatibility with old-style classes marshalled from python 2.7
+    BluePy obj(nameO, true);
     if (PyBytes_Check(obj.o))
     {
         obj = BluePy(PyUnicode_FromEncodedObject(nameO, "UTF-8", 0));
@@ -1881,6 +1881,15 @@ PyObject *Marshal::GetGlobalObject(PyObject *nameO)
     {
         return PyErr_SetString(PyExc_RuntimeError, "expected string"), nullptr;
     }
+#else
+	if( !Py_Unicode_Check(name0) )
+	{
+		PyErr_SetString(PyExc_RuntimeError, "expected string");
+		return nullptr;
+	}
+	const char* name = PyUnicode_AsUTF8( name0 );
+#endif
+
 	const char *dot = strrchr(name, '.');
 	BluePyStr modulename;
 	if (dot){
