@@ -237,7 +237,8 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         bytes = b'~\x00\x00\x00\x00\x11\x06'
         loaded = blue.marshal.Load(bytes)
 
-        self.assertTrue(type(loaded) == str)
+        # We expect a str type constructed from marshalled string table index
+        self.assertIsInstance(loaded, str)
         self.assertEqual(loaded, "ballID")
 
     def test_empty_unicode(self):
