@@ -213,7 +213,7 @@ class testMarshal(blueunittest.TestCase):
         bytes = b'~\x00\x00\x00\x00*",\x02\tblue.Dict$--'
         with self.assertRaises(RuntimeError) as raisedValue:
             blue.marshal.Load(bytes)
-        
+
         self.assertEqual(raisedValue.exception.args[0], TypeError)
 
 @unittest.skipUnless(os.environ.has_key("PY3_COMPATIBILITY_MODE"), "Skipping because these tests will fail if `PY3_COMPATIBILITY_MODE` is not enabled")
@@ -244,28 +244,28 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         bytes = b'~\x00\x00\x00\x00('
         loaded = blue.marshal.Load(bytes)
 
-        self.assertTrue(type(loaded) == unicode)
+        self.assertIsInstance(loaded, unicode)
         self.assertEqual(loaded, "")
 
     def test_single_char_unicode(self):
         bytes = b'~\x00\x00\x00\x00.\x01A'
         loaded = blue.marshal.Load(bytes)
 
-        self.assertTrue(type(loaded) == unicode)
+        self.assertIsInstance(loaded, unicode)
         self.assertEqual(loaded, "A")
 
     def test_unicode(self):
         bytes = b'~\x00\x00\x00\x00.\t\xe2\x82\xa8\xe2\x82\xb1\xe2\x82\xa9'
         loaded = blue.marshal.Load(bytes)
 
-        self.assertTrue(type(loaded) == unicode)
+        self.assertIsInstance(loaded, unicode)
         self.assertEqual(loaded, u"\u20A8\u20B1\u20A9")
 
     def test_unicode_as_utf8(self):
         bytes = b'~\x00\x00\x00\x00.\x16this is a unicode test'
         loaded = blue.marshal.Load(bytes)
 
-        self.assertTrue(type(loaded) == unicode)
+        self.assertIsInstance(loaded, unicode)
         self.assertEqual(loaded, "this is a unicode test")
 
     def test_integer(self):
@@ -300,8 +300,8 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         self.assertEqual(loaded, {"key": "test"})
         # Explicit type checking due to Unicode and str types being implicitly comparable
         for key, value in loaded.items():
-            self.assertTrue(type(key) == unicode)
-            self.assertTrue(type(value) == unicode)
+            self.assertIsInstance(key, unicode)
+            self.assertIsInstance(value, unicode)
 
     def test_empty_object(self):
         bytes = b"~\x00\x00\x00\x00#%%\x02'bluetests.test.test_marshal.EmptyObject--"
