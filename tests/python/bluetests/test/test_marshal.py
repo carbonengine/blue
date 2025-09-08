@@ -410,9 +410,6 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
 
         self.assertEqual(loaded, blue.DBRow(blue.DBRowDescriptor((("Test", 20),)), (123, )))
 
-    def test_dbrow_with_invalid_descriptor_in_stream_raises_error(self):
-        pass
-
     def test_set(self):
         blue.marshal.globalsWhitelist = {set: None}
         blue.marshal.collectWhitelist = False
