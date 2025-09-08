@@ -2,35 +2,52 @@ __author__ = 'snorri.sturluson'
 
 from . import blueunittest
 import blue
+
+import unittest
 import sys
+import os
 
 class EmptyObject(object):
-    pass
+    def __eq__(self, other):
+        return isinstance(other, type(self))
 
 
-class SimpleObject(object):
+class NewStyleObject(object):
     def __init__(self):
         self.a = "this is a string"
-        self.b = 42
-        self.c = 3.14159267
+        self.b = b"this is a string"
+        self.c = u"this is a string"
+        self.d = 42
+        self.e = 3.14159267
+
+    def __eq__(self, other):
+        # String, byte and unicode comparisons are type-agnostic
+        # Therefore, an unmarshalled Python3 NewStyleObject instance should compare truthfully
+        # even though d and e fields differ in type
+        return isinstance(self, type(other)) and self.__dict__ == other.__dict__
 
 
-class OldSchoolObject:
+class OldStyleObject:
     def __init__(self):
         self.a = "this is a string"
-        self.b = 42
-        self.c = 3.14159267
+        self.b = b"this is a string"
+        self.c = u"this is a string"
+        self.d = 42
+        self.e = 3.14159267
+
+    def __eq__(self, other):
+        return isinstance(self, type(other)) and self.__dict__ == other.__dict__
 
 
 def SaveCallback(obj):
-    if isinstance(obj, OldSchoolObject):
+    if isinstance(obj, OldStyleObject):
         return "magic"
     return None
 
 
 def LoadCallback(obj):
     if obj == "magic":
-        return OldSchoolObject()
+        return OldStyleObject()
     return None
 
 
@@ -119,11 +136,14 @@ class testMarshal(blueunittest.TestCase):
     def test_empty_dict(self):
         self.verify_round_trip({})
 
+    def test_dict(self):
+        self.verify_round_trip({"key": "test"})
+
     def test_empty_object(self):
         self.verify_round_trip(EmptyObject())
 
-    def test_simple_object(self):
-        self.verify_round_trip(SimpleObject())
+    def test_new_style_object(self):
+        self.verify_round_trip(NewStyleObject())
 
     def test_empty_list(self):
         self.verify_round_trip([])
@@ -147,15 +167,15 @@ class testMarshal(blueunittest.TestCase):
         self.verify_round_trip(("this", "is", "a", "test"))
 
     def test_instanced_object(self):
-        obj = SimpleObject()
+        obj = NewStyleObject()
         self.verify_round_trip([obj, obj, obj])
 
-    def test_instanced_old_shool_object(self):
-        obj = OldSchoolObject()
+    def test_instanced_old_style_object(self):
+        obj = OldStyleObject()
         self.verify_round_trip([obj, obj, obj])
 
     def test_callback(self):
-        obj = [OldSchoolObject(), SimpleObject(), "this is a test"]
+        obj = [OldStyleObject(), NewStyleObject(), "this is a test"]
         s = blue.marshal.Save(obj, callback=SaveCallback)
         obj2 = blue.marshal.Load(s, callback=LoadCallback)
         self.assertBlueObjectsEqual(obj, obj2)
@@ -164,7 +184,7 @@ class testMarshal(blueunittest.TestCase):
         self._update_coverage()
 
     def test_checksum(self):
-        obj = [OldSchoolObject(), SimpleObject(), "this is a test"]
+        obj = [OldStyleObject(), NewStyleObject(), "this is a test"]
         s = blue.marshal.Save(obj, useChecksum=1)
         obj2 = blue.marshal.Load(s)
         self.assertBlueObjectsEqual(obj, obj2)
@@ -178,7 +198,7 @@ class testMarshal(blueunittest.TestCase):
         self.verify_round_trip(d)
 
     def test_wstream(self):
-        obj = [OldSchoolObject(), SimpleObject(), "this is a test"]
+        obj = [OldStyleObject(), NewStyleObject(), "this is a test"]
         ws = blue.marshal.Save(obj)
         self.verify_round_trip(ws)
 
@@ -193,5 +213,215 @@ class testMarshal(blueunittest.TestCase):
         bytes = b'~\x00\x00\x00\x00*",\x02\tblue.Dict$--'
         with self.assertRaises(RuntimeError) as raisedValue:
             blue.marshal.Load(bytes)
-        
+
         self.assertEqual(raisedValue.exception.args[0], TypeError)
+
+@unittest.skipUnless(os.environ.has_key("PY3_COMPATIBILITY_MODE"), "Skipping because these tests will fail if `PY3_COMPATIBILITY_MODE` is not enabled")
+class TestBackwardsCompatibility(blueunittest.TestCase):
+    """
+    This class adds coverage for objects marshalled in Python 3.
+    """
+    def test_load_old_style_object(self):
+        bytes = b'~\x00\x00\x00\x00#,%\x02*bluetests.test.test_marshal.OldStyleObject\x16\x05.\x10this is a string.\x01a\x13\x10this is a string.\x01b.\x10this is a string.\x01c\x06*.\x01d\n\xcd\x06xV\xfb!\t@.\x01e--'
+        loaded = blue.marshal.Load(bytes)
+
+        self.assertEqual(loaded, OldStyleObject())
+
+    def test_none(self):
+        bytes = b'~\x00\x00\x00\x00\x01'
+        loaded = blue.marshal.Load(bytes)
+
+        self.assertEqual(loaded, None)
+
+    def test_string_from_stringtable(self):
+        bytes = b'~\x00\x00\x00\x00\x11\x06'
+        loaded = blue.marshal.Load(bytes)
+
+        # We expect a str type constructed from marshalled string table index
+        self.assertIsInstance(loaded, str)
+        self.assertEqual(loaded, "ballID")
+
+    def test_empty_unicode(self):
+        bytes = b'~\x00\x00\x00\x00('
+        loaded = blue.marshal.Load(bytes)
+
+        self.assertIsInstance(loaded, unicode)
+        self.assertEqual(loaded, "")
+
+    def test_single_char_unicode(self):
+        bytes = b'~\x00\x00\x00\x00.\x01A'
+        loaded = blue.marshal.Load(bytes)
+
+        self.assertIsInstance(loaded, unicode)
+        self.assertEqual(loaded, "A")
+
+    def test_unicode(self):
+        bytes = b'~\x00\x00\x00\x00.\t\xe2\x82\xa8\xe2\x82\xb1\xe2\x82\xa9'
+        loaded = blue.marshal.Load(bytes)
+
+        self.assertIsInstance(loaded, unicode)
+        self.assertEqual(loaded, u"\u20A8\u20B1\u20A9")
+
+    def test_unicode_as_utf8(self):
+        bytes = b'~\x00\x00\x00\x00.\x16this is a unicode test'
+        loaded = blue.marshal.Load(bytes)
+
+        self.assertIsInstance(loaded, unicode)
+        self.assertEqual(loaded, "this is a unicode test")
+
+    def test_integer(self):
+        self.assertEqual(blue.marshal.Load(b'~\x00\x00\x00\x00\x08'), 0)
+        self.assertEqual(blue.marshal.Load(b'~\x00\x00\x00\x00\t'), 1)
+        self.assertEqual(blue.marshal.Load(b'~\x00\x00\x00\x00\x07'), -1)
+        self.assertEqual(blue.marshal.Load(b'~\x00\x00\x00\x00\x06*'), 42)
+        self.assertEqual(blue.marshal.Load(b'~\x00\x00\x00\x00\x05\xff\x7f'), 32767)
+        self.assertEqual(blue.marshal.Load(b'~\x00\x00\x00\x00\x04\xff\xff\xff\x7f'), 2147483647)
+        self.assertEqual(blue.marshal.Load(b'~\x00\x00\x00\x00\x04\x00\x00\x00\x80'), -2147483648)
+
+    def test_long(self):
+        self.assertEqual(blue.marshal.Load(b'~\x00\x00\x00\x00/\x08\xff\xff\xff\xff\xff\xff\xff\x7f'), 9223372036854775807)
+        self.assertEqual(blue.marshal.Load(b'~\x00\x00\x00\x00/\t\x00\x00\x00\x00\x00\x00\x00\x80\x00'), 9223372036854775808)
+
+    def test_float(self):
+        self.assertEqual(blue.marshal.Load(b'~\x00\x00\x00\x00\x0b'), 0.0)
+        self.assertEqual(blue.marshal.Load(b'~\x00\x00\x00\x00\n\xcd\x06xV\xfb!\t@'), 3.14159267)
+        self.assertEqual(blue.marshal.Load(b'~\x00\x00\x00\x00\nO\x80\xb7)_@\x06\xc0'), -2.781431508934509809834)
+
+    def test_bool(self):
+        self.assertTrue(blue.marshal.Load(b'~\x00\x00\x00\x00\x1f'), True)
+        self.assertFalse(blue.marshal.Load(b'~\x00\x00\x00\x00 '), False)
+
+    def test_empty_dict(self):
+        self.assertEqual(blue.marshal.Load(b'~\x00\x00\x00\x00\x16\x00'), {})
+
+    def test_dict(self):
+        bytes = b'~\x00\x00\x00\x00\x16\x01.\x04test.\x03key'
+        loaded = blue.marshal.Load(bytes)
+
+        self.assertEqual(loaded, {"key": "test"})
+        # Explicit type checking due to Unicode and str types being implicitly comparable
+        for key, value in loaded.items():
+            self.assertIsInstance(key, unicode)
+            self.assertIsInstance(value, unicode)
+
+    def test_empty_object(self):
+        bytes = b"~\x00\x00\x00\x00#%%\x02'bluetests.test.test_marshal.EmptyObject--"
+        loaded = blue.marshal.Load(bytes)
+
+        self.assertEqual(loaded, EmptyObject())
+
+    def test_new_style_object(self):
+        bytes = b'~\x00\x00\x00\x00#,%\x02*bluetests.test.test_marshal.NewStyleObject\x16\x05.\x10this is a string.\x01a\x13\x10this is a string.\x01b.\x10this is a string.\x01c\x06*.\x01d\n\xcd\x06xV\xfb!\t@.\x01e--'
+        loaded = blue.marshal.Load(bytes)
+
+        self.assertEqual(loaded, NewStyleObject())
+
+    def test_empty_list(self):
+        bytes = b'~\x00\x00\x00\x00&'
+        loaded = blue.marshal.Load(bytes)
+
+        self.assertEqual(loaded, [])
+
+    def test_list_of_one_string(self):
+        bytes = b"~\x00\x00\x00\x00'.\x0ethis is a test"
+        loaded = blue.marshal.Load(bytes)
+
+        self.assertEqual(loaded, ["this is a test"])
+        self.assertIsInstance(loaded[0], unicode)
+
+    def test_list_of_strings(self):
+        bytes = b'~\x00\x00\x00\x00\x15\x04.\x04this.\x02is.\x01a.\x04test'
+        loaded = blue.marshal.Load(bytes)
+
+        self.assertEqual(loaded, ["this", "is", "a", "test"])
+        for item in loaded:
+            self.assertIsInstance(item, unicode)
+
+    def test_empty_tuple(self):
+        bytes = b'~\x00\x00\x00\x00$'
+        loaded = blue.marshal.Load(bytes)
+
+        self.assertEqual(loaded, ())
+
+    def test_tuple_of_one_string(self):
+        bytes = b'~\x00\x00\x00\x00%.\x0ethis is a test'
+        loaded = blue.marshal.Load(bytes)
+
+        self.assertEqual(loaded, ("this is a test",))
+        self.assertIsInstance(loaded[0], unicode)
+
+    def test_tuple_of_two_strings(self):
+        bytes = b'~\x00\x00\x00\x00,.\x07this is.\x06a test'
+        loaded = blue.marshal.Load(bytes)
+
+        self.assertEqual(loaded, ("this is", "a test"))
+        for item in loaded:
+            self.assertIsInstance(item, unicode)
+
+    def test_tuple_of_strings(self):
+        bytes = b'~\x00\x00\x00\x00\x14\x04.\x04this.\x02is.\x01a.\x04test'
+        loaded = blue.marshal.Load(bytes)
+
+        self.assertEqual(loaded, ("this", "is", "a", "test"))
+        for item in loaded:
+            self.assertIsInstance(item, unicode)
+
+    def test_instanced_object(self):
+        bytes = b'~\x01\x00\x00\x00\x15\x03c,%\x02*bluetests.test.test_marshal.NewStyleObject\x16\x05.\x10this is a string.\x01a\x13\x10this is a string.\x01b.\x10this is a string.\x01c\x06*.\x01d\n\xcd\x06xV\xfb!\t@.\x01e--\x1b\x01\x1b\x01\x01\x00\x00\x00'
+        loaded = blue.marshal.Load(bytes)
+        instance = NewStyleObject()
+
+        self.assertEqual(loaded, [instance, instance, instance])
+
+    def test_instanced_old_style_object(self):
+        bytes = b'~\x01\x00\x00\x00\x15\x03c,%\x02*bluetests.test.test_marshal.OldStyleObject\x16\x05.\x10this is a string.\x01a\x13\x10this is a string.\x01b.\x10this is a string.\x01c\x06*.\x01d\n\xcd\x06xV\xfb!\t@.\x01e--\x1b\x01\x1b\x01\x01\x00\x00\x00'
+        loaded = blue.marshal.Load(bytes)
+        instance = OldStyleObject()
+
+        self.assertEqual(loaded, [instance, instance, instance])
+
+    def test_read_callback_called(self):
+        def read_callback(obj):
+            read_callback.called = True
+        read_callback.called = False
+
+        bytes = b'~\x00\x00\x00\x00\x19.\x04test'
+        blue.marshal.Load(bytes, callback=read_callback)
+        self.assertTrue(read_callback.called)
+
+    def test_checksum(self):
+        # Marshalled Python3 object using checksum
+        bytes = b'~\x00\x00\x00\x00\x1c\xb9/\x0fL\x15\x02#,%\x02*bluetests.test.test_marshal.NewStyleObject\x16\x05.\x10this is a string.\x01a\x13\x10this is a string.\x01b.\x10this is a string.\x01c\x06*.\x01d\n\xcd\x06xV\xfb!\t@.\x01e--.\x0ethis is a test'
+        loaded = blue.marshal.Load(bytes)
+        comparison = blue.marshal.Save([NewStyleObject(), "this is a test"], useChecksum=1)
+
+        # Marshalled data will differ due to string fields, so we must load both objects for comparison
+        self.assertBlueObjectsEqual(loaded, blue.marshal.Load(comparison))
+
+    def test_empty_dbrow(self):
+        bytes = b'~\x00\x00\x00\x00*",\x02\x14blue.DBRowDescriptor%$--\x00'
+        loaded = blue.marshal.Load(bytes)
+
+        self.assertEqual(loaded, blue.DBRow(blue.DBRowDescriptor(())))
+
+    def test_dbrow(self):
+        bytes = b'~\x00\x00\x00\x00*",\x02\x14blue.DBRowDescriptor%%,.\x04Test\x06\x14--\x02\xf7{'
+        loaded = blue.marshal.Load(bytes)
+
+        self.assertEqual(loaded, blue.DBRow(blue.DBRowDescriptor((("Test", 20),)), (123, )))
+
+    def test_set(self):
+        blue.marshal.globalsWhitelist = {set: None}
+        blue.marshal.collectWhitelist = False
+        bytes = b'~\x00\x00\x00\x00",\x02\x0cbuiltins.set%\x15\x03\t\x06\x02\x06\x03--'
+        loaded = blue.marshal.Load(bytes)
+        self.assertSetEqual(loaded, {1, 2, 3})
+
+    def test_runtime_error(self):
+        blue.marshal.globalsWhitelist = {RuntimeError: None}
+        blue.marshal.collectWhitelist = False
+        bytes = b'~\x00\x00\x00\x00",\x02\x15builtins.RuntimeError%.\x05Boom!--'
+        loaded = blue.marshal.Load(bytes)
+        self.assertIsInstance(loaded, RuntimeError)
+        self.assertIsInstance(loaded.message, unicode)
+        self.assertEqual(loaded.message, u"Boom!")

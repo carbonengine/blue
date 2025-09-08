@@ -304,10 +304,13 @@ target_sources(Blue PRIVATE
     ${PUBLIC_HEADER_FILES_INCLUDE}
 )
 
+option(ENABLE_PY3_COMPATIBILITY "Build with Python3 forward compatibility enabled" OFF)
+
 target_precompile_headers(Blue PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/StdAfx.h)
 target_compile_definitions(Blue
     PUBLIC
         CCP_STACKLESS
+        $<$<BOOL:${ENABLE_PY3_COMPATIBILITY}>:PY3_COMPATIBILITY_MODE>
     )
 
 if(APPLE)
@@ -387,9 +390,9 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests/python
         )
         if(WIN32)
-            set_tests_properties(${PYTHON_TEST} PROPERTIES ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:Blue>\;${BRANCH_ROOT_DIR}/carbon/common/stdlib\;${BRANCH_ROOT_DIR}/vendor/python/2.7.1+ccp-stackless/${CCP_VENDOR_BIN_PATH}\;${BRANCH_ROOT_DIR}/packages;BUILDFLAVOR=$<LOWER_CASE:$<CONFIG>>")
+            set_tests_properties(${PYTHON_TEST} PROPERTIES ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:Blue>\;${BRANCH_ROOT_DIR}/carbon/common/stdlib\;${BRANCH_ROOT_DIR}/vendor/python/2.7.1+ccp-stackless/${CCP_VENDOR_BIN_PATH}\;${BRANCH_ROOT_DIR}/packages;BUILDFLAVOR=$<LOWER_CASE:$<CONFIG>>;$<$<BOOL:${ENABLE_PY3_COMPATIBILITY}>:PY3_COMPATIBILITY_MODE=True>")
         elseif(APPLE)
-            set_tests_properties(${PYTHON_TEST} PROPERTIES ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:Blue>:${BRANCH_ROOT_DIR}/carbon/common/stdlib:${BRANCH_ROOT_DIR}/vendor/python/2.7.1+ccp-stackless/${CCP_VENDOR_BIN_PATH}:${BRANCH_ROOT_DIR}/packages;BUILDFLAVOR=$<LOWER_CASE:$<CONFIG>>")
+            set_tests_properties(${PYTHON_TEST} PROPERTIES ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:Blue>:${BRANCH_ROOT_DIR}/carbon/common/stdlib:${BRANCH_ROOT_DIR}/vendor/python/2.7.1+ccp-stackless/${CCP_VENDOR_BIN_PATH}:${BRANCH_ROOT_DIR}/packages;BUILDFLAVOR=$<LOWER_CASE:$<CONFIG>>;$<$<BOOL:${ENABLE_PY3_COMPATIBILITY}>:PY3_COMPATIBILITY_MODsE=True")
         else()
             message(FATAL_ERROR "Unsupported platform")
         endif()
