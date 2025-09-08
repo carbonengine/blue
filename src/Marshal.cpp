@@ -73,7 +73,6 @@ bool MarshalInit(PyObject *module)
 	Marshal::s_typeHandlers[ TY_LIST1 ] = &Marshal::ReadObjectList1;
 	Marshal::s_typeHandlers[ TY_LIST ] = &Marshal::ReadObjectList;
 	Marshal::s_typeHandlers[ TY_DICT ] = &Marshal::ReadObjectDict;
-	Marshal::s_typeHandlers[ TY_INSTANCE ] = &Marshal::ReadObjectInstance;
 	Marshal::s_typeHandlers[ TY_CALLBACK ] = &Marshal::ReadObjectCallback;
 	Marshal::s_typeHandlers[ TY_PICKLE ] = &Marshal::ReadObjectPickle;
 	Marshal::s_typeHandlers[ TY_PICKLER	] = &Marshal::ReadObjectPickler;
@@ -84,6 +83,11 @@ bool MarshalInit(PyObject *module)
 	Marshal::s_typeHandlers[ TY_DBROW ] = &Marshal::ReadObjectDBRow;
 	Marshal::s_typeHandlers[ TY_WSTREAM	] = &Marshal::ReadObjectWStream;
 	Marshal::s_typeHandlers[ TY_LONG ] = &Marshal::ReadObjectLong;
+#ifdef PY27_COMPATIBILITY_MODE
+	// Handle types that are never sent by Python 3.
+	Marshal::s_typeHandlers[ TY_INSTANCE ] = &Marshal::ReadObjectInstance;
+	Marshal::s_typeHandlers[ TY_UTF8_OBSOLETE ] = &Marshal::ReadObjectUnicode;
+#endif
 
 	Py_INCREF( WriteStream::GetType() );
 	if (PyModule_AddObject(module, "MarshalStream", (PyObject*)WriteStream::GetType()))
@@ -1480,62 +1484,120 @@ PyObject *Marshal::ReadObjectGlobal(ReadStream *stream, bool shared)
 	return obj.Detach();
 }
 
-
+#ifdef PY27_COMPATIBILITY_MODE
 //Read an instance of an old-style class
 PyObject *Marshal::ReadObjectInstance(ReadStream *stream, bool shared)
 {
-	PyErr_SetString(PyExc_NotImplementedError, "Support for old-style classes is no longer implemented");
-	return nullptr;
-//	//mark shared according to stream position
-//	size_t index;
-//	if (shared && (index = stream->MarkShared()) == -1)
-//		return 0;
-//
-//	BluePy guid(ReadObject(stream));
-//	if (!guid) return 0;
-//	BluePy klass(GetGlobalObject(guid));
-//	if (!klass) return 0;
-//	if (!PyObject_IsInstance(klass.o, (PyObject *)&PyType_Type)) {
-//		BluePy r(PyObject_Repr(guid));
-//		BluePy t(PyObject_Type(klass));
-//		BluePy tr(PyObject_Repr(t));
-//		PyErr_Format(PyExc_TypeError, "global object %s should be of class type but is of %s",
-//			r ? PyString_AS_STRING(r.o):"<>", tr?PyString_AS_STRING(tr.o):"<>");
-//		return 0;
-//	}
-//
-//	if (!UpdateGlobalNames(guid, 0)) return 0;
-//
-//	//create the empty object
-//	BluePy inst(PyInstance_NewRaw(klass, 0));
-//	if (!inst)
-//		return 0;
-//	if (shared && !stream->UpdateShared(index, inst))
-//		return 0;
-//
-//	// Get the instance data
-//	BluePy data(ReadObject(stream));
-//	if (!data) return 0;
-//
-//	// set the state
-//	bool setstate = PyObject_HasAttr(klass, mStock_SetState) != 0;
-//	if (setstate)
-//	{
-//		AutoTasklet _at(PyOS->GetTaskletTimer(), mTimer_SetState);
-//		BluePy r(PyObject_CallMethodObjArgs(inst, mStock_SetState, data.o, NULL));
-//		if (!r)
-//			return 0;
-//	}
-//	else
-//	{
-//		BluePy dict(PyObject_GetAttr(inst, mStock_Dict));
-//		if (!dict)
-//			return 0;
-//		if (PyDict_Update(dict, data) == -1)
-//			return 0;
-//	}
-//	return inst.Detach();
+//	mark shared according to stream position
+	size_t index;
+	if (shared && (index = stream->MarkShared()) == -1)
+    {
+		return nullptr;
+    }
+
+	BluePy guid(ReadObject(stream));
+	if (!guid)
+    {
+        return nullptr;
+    }
+	BluePy klass(GetGlobalObject(guid));
+	if (!klass)
+    {
+        return nullptr;
+    }
+	if (!PyObject_IsInstance(klass.o, (PyObject *)&PyType_Type))
+    {
+		BluePy r(PyObject_Repr(guid));
+		BluePy t(PyObject_Type(klass));
+		BluePy tr(PyObject_Repr(t));
+		PyErr_Format(PyExc_TypeError, "global object %s should be of class type but is of %s",
+			r ? PyUnicode_AsUTF8(r.o): "<>", tr ? PyUnicode_AsUTF8(tr.o): "<>");
+		return nullptr;
+	}
+
+	if (!UpdateGlobalNames(guid, 0))
+    {
+        return nullptr;
+    }
+
+    BluePy __new__(PyObject_GetAttr(klass, mStock_New));
+    if (!__new__)
+    {
+        return nullptr;
+    }
+
+    // We require that the new version of the class
+    // does not require any additional arguments when calling __new__
+    BluePy args( PyTuple_New( 1 ) );
+    Py_IncRef( klass ); // PyTuple_SetItem steals a reference.
+    if( PyTuple_SetItem( args, 0, klass ) != 0 )
+    {
+        return nullptr;
+    }
+    BluePy inst(PyObject_CallObject(__new__, args));
+	if (!inst)
+    {
+		return nullptr;
+    }
+	if (shared)
+    {
+        stream->UpdateShared(index, inst);
+    }
+
+	// Get the instance data
+	BluePy state(ReadObject(stream));
+	if (!state)
+    {
+        return nullptr;
+    }
+
+	// set the state
+	bool setstate = PyObject_HasAttr(klass, mStock_SetState) != 0;
+	if (setstate)
+	{
+		AutoTasklet _at(PyOS->GetTaskletTimer(), mTimer_SetState);
+		BluePy r(PyObject_CallMethodObjArgs(inst, mStock_SetState, state.o, NULL));
+		if (!r)
+        {
+			return nullptr;
+        }
+	}
+	else
+	{
+		BluePy dict(PyObject_GetAttr(inst, mStock_Dict));
+		if (!dict)
+        {
+			return nullptr;
+        }
+		// Ensure keys are encoded in UTF-8 unicode
+		BluePy convertedState;
+		PyObject *key, *value;
+		Py_ssize_t pos = 0;
+		while ( PyDict_Next( state, &pos, &key, &value ) )
+		{
+			if ( !PyBytes_Check(key) )
+			{
+				break;
+			}
+			if( !convertedState )
+			{
+				convertedState = BluePy( PyDict_New() );
+				if( !convertedState )
+				{
+					return nullptr;
+				}
+			}
+			BluePy encodedKey(PyUnicode_FromEncodedObject( key, "UTF-8", nullptr ) );
+			PyDict_SetItem( convertedState, encodedKey, value );
+		}
+		if (PyDict_Update( dict, convertedState ? convertedState : state ) == -1)
+        {
+			return nullptr;
+        }
+	}
+	return inst.Detach();
 }
+#endif
 	
 
 PyObject *Marshal::ReadObjectReduce(ReadStream *stream, bool shared)
@@ -1561,6 +1623,81 @@ PyObject *Marshal::ReadObjectReduce(ReadStream *stream, bool shared)
 	if (PyTuple_GET_SIZE(rv.o)>2) {
 		PyObject *state = PyTuple_GET_ITEM(rv.o, 2);
 		BluePy setstate(PyObject_GetAttr(r, mStock_SetState));
+#ifdef PY27_COMPATIBILITY_MODE
+		if ( setstate ) {
+			BluePy exceptionSetState( PyObject_GetAttr( PyExc_Exception, mStock_SetState ) );
+			BluePy classSetState( PyObject_GetAttr( reinterpret_cast<PyObject*>( r.o->ob_type ), mStock_SetState ) );
+			if( classSetState == exceptionSetState )
+			{
+				BluePy items( PyDict_Items( state ) );
+				BluePy convertedState;
+
+				// Ensure keys are encoded in UTF-8 unicode
+				PyObject *key, *value;
+				Py_ssize_t pos = 0;
+				while ( PyDict_Next( state, &pos, &key, &value ) )
+				{
+					if ( !PyBytes_Check(key) )
+					{
+						break;
+					}
+					if( !convertedState )
+					{
+						convertedState = BluePy( PyDict_New() );
+						if( !convertedState )
+						{
+							return nullptr;
+						}
+					}
+					BluePy encodedKey(PyUnicode_FromEncodedObject( key, "UTF-8", nullptr ) );
+					PyDict_SetItem( convertedState, encodedKey, value );
+				}
+				BluePy tmp( PyObject_CallFunctionObjArgs( setstate, convertedState ? convertedState : state, 0 ) );
+				if ( !tmp )
+				{
+					return nullptr;
+				}
+			}
+			else
+			{
+				BluePy tmp( PyObject_CallFunctionObjArgs( setstate, state, 0 ) );
+				if ( !tmp )
+				{
+					return nullptr;
+				}
+			}
+		} else {
+			PyErr_Clear();
+			BluePy dict( PyObject_GetAttr( r, mStock_Dict ) );
+			if ( !dict )
+			{
+				return nullptr;
+			}
+			BluePy items( PyDict_Items( state ) );
+			BluePy convertedState;
+
+			// Ensure keys are encoded in UTF-8 unicode
+			PyObject *key, *value;
+			Py_ssize_t pos = 0;
+			while ( PyDict_Next( state, &pos, &key, &value ) )
+			{
+				if ( !PyBytes_Check( key ) )
+				{
+					break;
+				}
+				if( !convertedState )
+				{
+					convertedState = BluePy( PyDict_New() );
+				}
+				BluePy encodedKey( PyUnicode_FromEncodedObject( key, "UTF-8", nullptr ) );
+				PyDict_SetItem( convertedState, encodedKey, value );
+			}
+			if ( PyDict_Update( dict, convertedState ? convertedState : state ) )
+			{
+				return nullptr;
+			}
+		}
+#else
 		if (setstate) {
 			BluePy tmp(PyObject_CallFunctionObjArgs(setstate, state, 0));
 			if (!tmp) return 0;
@@ -1570,6 +1707,7 @@ PyObject *Marshal::ReadObjectReduce(ReadStream *stream, bool shared)
 			if (!dict) return 0;
 			if (PyDict_Update(dict, state)) return 0;
 		}
+#endif
 	}
 
 	//read the iterators
@@ -1583,41 +1721,105 @@ PyObject *Marshal::ReadObjectReduce(ReadStream *stream, bool shared)
 PyObject *Marshal::ReadObjectNewobj(ReadStream* stream, bool shared)
 {
 	size_t ix;
-	if (shared && (ix = stream->MarkShared()) == -1) return 0;
+	if ( shared && (ix = stream->MarkShared()) == -1 )
+	{
+		return nullptr;
+	}
 
 	BluePy rv(ReadObject(stream));
-	if (!rv)
-		return 0;
-	PyObject *args = PyTuple_GetItem(rv, 0);
-	if (!args) return 0;
-	PyObject *cls = PyTuple_GetItem(args, 0);
-	if (!cls) return 0;
-	
-	BluePy __new__(PyObject_GetAttr(cls, mStock_New));
-	if (!__new__) return 0;
-	BluePy r(PyObject_CallObject(__new__, args));
-	if (!r) return 0;
+	if ( !rv )
+	{
+		return nullptr;
+	}
 
+	PyObject *args = PyTuple_GetItem(rv, 0);
+	if ( !args )
+	{
+		return nullptr;
+	}
+
+	PyObject *cls = PyTuple_GetItem(args, 0);
+	if ( !cls )
+	{
+		return nullptr;
+	}
+	
+	BluePy __new__(PyObject_GetAttr( cls, mStock_New ));
+	if ( !__new__ )
+	{
+		return nullptr;
+	}
+
+	BluePy r(PyObject_CallObject(__new__, args));
+	if ( !r )
+	{
+		return nullptr;
+	}
 	//object is constructed, now update r
-	if (shared && !stream->UpdateShared(ix, r)) return 0;
+	if ( shared && !stream->UpdateShared(ix, r) )
+	{
+		return nullptr;
+	}
 	
 	//further initialization
-	if (PyTuple_GET_SIZE(rv.o)>1) {
-		PyObject *state = PyTuple_GET_ITEM(rv.o, 1);
+	if ( PyTuple_GET_SIZE(rv.o) > 1 )
+	{
+		auto state = PyTuple_GET_ITEM(rv.o, 1);
+
 		BluePy setstate(PyObject_GetAttr(r, mStock_SetState));
-		if (setstate) {
+		if ( setstate )
+		{
 			BluePy tmp(PyObject_CallFunctionObjArgs(setstate, state, 0));
-			if (!tmp) return 0;
-		} else {
+			if ( !tmp )
+			{
+				return nullptr;
+			}
+		}
+		else
+		{
 			PyErr_Clear();
 			BluePy dict(PyObject_GetAttr(r, mStock_Dict));
-			if (!dict) return 0;
-			if (PyDict_Update(dict, state)) return 0;
+			if (!dict)
+			{
+				return nullptr;
+			}
+#ifdef PY27_COMPATIBILITY_MODE
+			BluePy convertedState;
+
+			// Ensure keys are encoded in UTF-8 unicode
+			PyObject *key, *value;
+			Py_ssize_t pos = 0;
+			while (PyDict_Next(state, &pos, &key, &value))
+			{
+				if ( !PyBytes_Check(key) )
+				{
+					break;
+				}
+				if( !convertedState )
+				{
+					convertedState = BluePy( PyDict_New() );
+				}
+				BluePy encodedKey(PyUnicode_FromEncodedObject(key, "UTF-8", nullptr));
+				PyDict_SetItem(convertedState, encodedKey, value);
+			}
+			if( convertedState )
+			{
+				state = convertedState;
+			}
+#endif
+			if ( PyDict_Update(dict, state) )
+			{
+				return nullptr;
+			}
 		}
 	}
+
 	//read the iterators
-	if (!ReadObjectListIter(*stream, r) || !ReadObjectDictIter(*stream, r))
-		return 0;
+	if ( !ReadObjectListIter(*stream, r) || !ReadObjectDictIter(*stream, r) )
+	{
+		return nullptr;
+	}
+
 	return r.Detach();
 }
 
@@ -1693,13 +1895,47 @@ PyObject *Marshal::GetGlobalObject(PyObject *nameO)
 		return cached;
 	}
 
-	if (!PyUnicode_Check(nameO))
-		return PyErr_SetString(PyExc_RuntimeError, "expected string"), nullptr;
-	const char *name = PyUnicode_AsUTF8(nameO);
+#ifdef PY27_COMPATIBILITY_MODE
+    // Backwards compatibility with old-style classes marshalled from python 2.7
+    BluePy obj(nameO, true);
+    if (PyBytes_Check(obj.o))
+    {
+        obj = BluePy(PyUnicode_FromEncodedObject(nameO, "UTF-8", 0));
+    }
+
+    const char *name;
+	if (PyUnicode_Check(obj.o))
+    {
+        name = PyUnicode_AsUTF8(obj.o);
+    }
+    else
+    {
+        return PyErr_SetString(PyExc_RuntimeError, "expected string"), nullptr;
+    }
+#else
+	if( !PyUnicode_Check(nameO) )
+	{
+		PyErr_SetString(PyExc_RuntimeError, "expected string");
+		return nullptr;
+	}
+	const char* name = PyUnicode_AsUTF8( nameO );
+#endif
+
 	const char *dot = strrchr(name, '.');
 	BluePyStr modulename;
 	if (dot){
-		modulename = BluePyStr(dot-name, name);
+#ifdef PY27_COMPATIBILITY_MODE
+		if( strncmp( name, "__builtin__.", 12 ) == 0 || strncmp( name, "exceptions.", 11 ) == 0 )
+		{
+			modulename = BluePyStr("builtins");
+		}
+		else
+		{
+			modulename = BluePyStr(dot-name, name);
+		}
+#else
+		modulename = BluePyStr( dot-name, name );
+#endif
 		name = dot+1;
 	} else {
 		modulename = BluePyStr("builtins");
@@ -1902,8 +2138,27 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 	case  's':
 		if (PyUnicode_CheckExact(o))
 		{
-//			Py_ssize_t size = PyUnicode_GET_LENGTH(o);
-//			const char *data = PyUnicode_AS_DATA(o);
+#ifdef PY27_COMPATIBILITY_MODE
+			BluePy encoded( PyUnicode_AsUTF8String( o ) );
+			RETFAIL( encoded.o );
+			Py_ssize_t size = PyObject_Length( encoded.o );
+			const char* data = PyBytes_AsString( encoded.o );
+			if (size == 0) {
+				return WriteType(stream, TY_UNICODE_0);
+			} else {
+				PyObject* index = PyDict_GetItem( mStrTable, o );
+				if( index )
+				{
+					RETFAIL( WriteType( stream, TY_STR_TABLE ) );
+					return stream->Write( (char)PyLong_AS_LONG( index ) );
+				}
+				else
+				{
+					return WriteType( stream, TY_UTF8_OBSOLETE ) && stream->WriteInteger( (int)size ) &&
+						stream->WriteBuffWoSize( data, size );
+				}
+			}
+#else
 			Py_ssize_t size = 0;
 			const char *data = PyUnicode_AsUTF8AndSize(o, &size);
 			if (size == 0) {
@@ -1923,6 +2178,7 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 						stream->WriteBuffWoSize( data, size );
 				}
 			}
+#endif
 		}
 		break;
 

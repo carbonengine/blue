@@ -283,10 +283,18 @@ bool RowDescriptor::Init(PyObject *a)
 	for(int i = 0; i<PyTuple_GET_SIZE(a); i++) {
 		PyObject *t = PyTuple_GET_ITEM(a, i);
 		const char *name;
+#ifdef PY27_COMPATIBILITY_MODE
+		Py_ssize_t size;
+		int type;
+		PyObject *dummy = 0;
+		if (!PyArg_ParseTuple(t, "s#i|O:DBRowDescriptor", &name, &size, &type, &dummy))
+			return false;
+#else
 		int type;
 		PyObject *dummy = 0;
 		if (!PyArg_ParseTuple(t, "si|O:DBRowDescriptor", &name, &type, &dummy))
 			return false;
+#endif
 		mColumnList.push_back(ColumnDescriptor(name));
 		mColumnList.back().mType = (DBTYPE)type;
 	}
