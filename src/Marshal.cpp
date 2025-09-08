@@ -1925,7 +1925,7 @@ PyObject *Marshal::GetGlobalObject(PyObject *nameO)
 	BluePyStr modulename;
 	if (dot){
 #ifdef PY27_COMPATIBILITY_MODE
-		if( strncmp( name, "__builtin__", 11 ) == 0 || strncmp( name, "exceptions", 10 ) == 0 )
+		if( strncmp( name, "__builtin__.", 12 ) == 0 || strncmp( name, "exceptions.", 11 ) == 0 )
 		{
 			modulename = BluePyStr("builtins");
 		}
