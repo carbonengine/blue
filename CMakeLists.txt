@@ -304,7 +304,7 @@ target_sources(Blue PRIVATE
     ${PUBLIC_HEADER_FILES_INCLUDE}
 )
 
-option(ENABLE_PY3_COMPATIBILITY "Build with Python3 forward compatibility enabled" ON)
+option(ENABLE_PY3_COMPATIBILITY "Build with Python3 forward compatibility enabled" OFF)
 
 target_precompile_headers(Blue PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/StdAfx.h)
 target_compile_definitions(Blue
