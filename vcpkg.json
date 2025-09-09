@@ -46,7 +46,6 @@
       "name": "curl",
       "version>=": "7.78.0",
       "features": [
-        "non-http",
         {
           "name": "schannel",
           "platform": "windows"
