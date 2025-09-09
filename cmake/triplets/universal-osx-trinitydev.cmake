@@ -30,10 +30,6 @@ if (PORT MATCHES "zlib")
     set(VCPKG_LIBRARY_LINKAGE static)
 endif ()
 
-if (PORT MATCHES "zlib-ng")
-    set(VCPKG_LIBRARY_LINKAGE static)
-endif ()
-
 if (PORT MATCHES "libuv")
     set(VCPKG_CMAKE_CONFIGURE_OPTIONS "-DBUILD_TESTING=OFF")
 endif()
