@@ -20,7 +20,6 @@ endif()
 if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     # We use combined x86_64/arm64 binaries on macOS
     set(CCP_ARCHITECTURE "universal")
-    #set(CCP_ARCHITECTURE ${CCP_VENDOR_ARCH_PREFIX})
 else()
     set(CCP_ARCHITECTURE ${CCP_VENDOR_ARCH_PREFIX})
 endif()

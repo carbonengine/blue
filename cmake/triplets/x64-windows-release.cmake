@@ -7,6 +7,9 @@ set(VCPKG_BUILD_TYPE "release")
 set(VCPKG_CMAKE_SYSTEM_VERSION "10.0.17763.0")
 set(VCPKG_CMAKE_CONFIGURE_OPTIONS -DCMAKE_MSVC_RUNTIME_LIBRARY:STRING=MultiThreadedDLL)
 
+set(VCPKG_CXX_FLAGS_RELEASE "/Zi")
+set(VCPKG_C_FLAGS_RELEASE "/Zi")
+
 set(CARBON_BUILD_TYPE "Release")
 
 if (PORT MATCHES "libyaml")
@@ -26,10 +29,6 @@ if (PORT MATCHES "protobuf")
 endif ()
 
 if (PORT MATCHES "zlib")
-    set(VCPKG_LIBRARY_LINKAGE static)
-endif ()
-
-if (PORT MATCHES "zlib-ng")
     set(VCPKG_LIBRARY_LINKAGE static)
 endif ()
 
