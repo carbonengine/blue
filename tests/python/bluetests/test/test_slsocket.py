@@ -40,7 +40,10 @@ def run_on_client(host_address, function):
         client.close()
 
 def send_packet(packet, oob_data, connection):
-    connection.sendpacket(packet, oob_data)
+    if oob_data is not None:
+        connection.sendpacket(packet, oob_data)
+    else:
+        connection.sendpacket(packet)
 
 def receive_packet(connection):
     receive_packet.received = connection.recvpacketoob()
@@ -100,3 +103,32 @@ class TestCarbonIO(unittest.TestCase):
         PACKET_DATA = "\x10\x00\x00\x0E\x00\x00\x00\x05WorldHello"
         run_connected(functools.partial(send, PACKET_DATA), receive_packet)
         self.assertEqual(receive_packet.received, ("Hello", "World", 1))
+
+class TestStacklessIO(unittest.TestCase):
+
+    def setUp(self):
+        import stacklessio
+        import _slsocket
+        import slselect
+        _slsocket.use_carbonio(False)
+        stacklessio._socket = _slsocket
+        sys.modules["_socket"] = _slsocket
+        sys.modules["select"] = slselect
+        reload(socket) # Make sure the socket module is using _slsocket instead of _socket
+
+    def test_sendpacket(self):
+        PACKET_DATA = "data"
+        OOB_DATA = None
+        run_connected(functools.partial(send_packet, PACKET_DATA, OOB_DATA), receive_packet)
+        self.assertEqual(receive_packet.received, (PACKET_DATA, None, 0))
+
+    def test_sent_packet_format(self):
+        PACKET_DATA = "data"
+        OOB_DATA = None
+        run_connected(functools.partial(send_packet, PACKET_DATA, OOB_DATA), receive)
+        self.assertEqual(receive.received, "\x00\x00\x00\x04data")
+
+    def test_receive_formatted_packet(self):
+        PACKET_DATA = "\x00\x00\x00\x04data"
+        run_connected(functools.partial(send, PACKET_DATA), receive_packet)
+        self.assertEqual(receive_packet.received, ("data", None, 0))
