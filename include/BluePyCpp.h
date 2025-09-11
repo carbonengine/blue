@@ -157,7 +157,12 @@ public:
     typename _p::pointer allocate(typename _p::size_type _Count, const void *) {
         return allocate(_Count);
     }
-};    
+
+    template <class U>
+    struct rebind {
+        using other = PyAllocator<U>;
+    };
+};
 
 
 // A simple smartpointer to own references.
