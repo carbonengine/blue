@@ -150,3 +150,10 @@ class TestStacklessIO(unittest.TestCase):
         PACKET_DATA = "\x00\x00\x00\x04data"
         run_connected(functools.partial(send, PACKET_DATA), receive_packet)
         self.assertEqual(receive_packet.received, ("data", None, 0))
+
+    def test_receive_formatted_packet_with_oob_data(self):
+        if sys.platform == "win32":
+            raise unittest.SkipTest("StacklessIO does not support OOB data on Windows")
+        PACKET_DATA = "\x10\x00\x00\x0E\x00\x00\x00\x05WorldHello"
+        run_connected(functools.partial(send, PACKET_DATA), receive_packet)
+        self.assertEqual(receive_packet.received, ("\x00\x00\x00\x05WorldHello", None, 0))

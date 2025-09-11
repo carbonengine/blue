@@ -1821,7 +1821,7 @@ protected:
         if (mBytesRead < (sizeof(mHeader) + sizeof(uint32_t)))
             return;
 
-        uint32_t oobDataLen = *(uint32_t *)(mData);
+        uint32_t oobDataLen = ntohl(*(uint32_t *)(mData));
         // sanity check the out-of-band data length; mPacketSize was sanity checked already
         if (oobDataLen > mPacketSize) {
             char tmp[128] = {'\0'};
