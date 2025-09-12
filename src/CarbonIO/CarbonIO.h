@@ -837,7 +837,11 @@ bool CarbonIO::isPacketValid( SPacket *packet )
 	return packet
 			&& packet->packetLen >= 4
 			&& (packet->auxData
+#ifdef PY3_COMPATIBILITY_MODE
 				|| ( packet->packetLen == ( ntohl( *reinterpret_cast<uint32_t *>( packet->data ) ) & ceHeaderSizeMask ) + sizeof( int ) ) );
+#else
+				|| (packet->packetLen == (*(int *)packet->data & ceHeaderSizeMask) + sizeof(int)));
+#endif
 }
 
 //------------------------------------------------------------------------------

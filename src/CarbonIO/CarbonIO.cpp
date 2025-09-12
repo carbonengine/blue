@@ -2818,12 +2818,19 @@ void CarbonIO::dataReceived( SCompletionUnit *completion, const char* data, cons
 			appendDataToPacket( completion->packetListTail, indat, need );
 			available -= need;
 			indat += need;
-
+#ifdef PY3_COMPATIBILITY_MODE
 			unsigned int header = ntohl( *reinterpret_cast<uint32_t *>( completion->packetListTail->data ) );
+#else
+			unsigned int header = *(int *)completion->packetListTail->data;
+#endif
 			if ( header & ceHeaderExpectPayloadOffset )
 			{
 				completion->packetListTail->oobData = sizeof(int)*2 + completion->packetListTail->data;
+#ifdef PY3_COMPATIBILITY_MODE
 				completion->packetListTail->oobLen = ntohl( *reinterpret_cast<uint32_t *>( completion->packetListTail->data + sizeof(  uint32_t ) ) );
+#else
+				completion->packetListTail->oobLen = *(int *)(completion->packetListTail->data + sizeof(int));
+#endif
 				completion->packetListTail->payloadOffset = sizeof(int)*2 + completion->packetListTail->oobLen;
 
 				if ( completion->packetListTail->payloadOffset > completion->packetListTail->packetLen )
@@ -3297,11 +3304,19 @@ bool CarbonIO::processRawQueuedData( SCompletionUnit *completion )
 
 		// find the offset to the body (the part we compress)
 		unsigned int offset = sizeof(unsigned int); // the header itself
+#ifdef PY3_COMPATIBILITY_MODE
 		if ( ntohl( *reinterpret_cast<uint32_t *>( packet->data ) ) & ceHeaderExpectPayloadOffset ) // was there out-of-band data?
 		{
 			offset += sizeof(unsigned int); // the size of the len param
 			offset += *reinterpret_cast<uint32_t *>( packet->data + sizeof( uint32_t ) ); // the size of the data
 		}
+#else
+		if ( *(unsigned int *)packet->data & ceHeaderExpectPayloadOffset ) // was there out-of-band data?
+		{
+			offset += sizeof(unsigned int); // the size of the len param
+			offset += *(unsigned int *)(packet->data + sizeof(unsigned int)); // the size of the data
+		}
+#endif
 
 		char *outbuf = 0;
 		unsigned int outlen;
@@ -3313,10 +3328,15 @@ bool CarbonIO::processRawQueuedData( SCompletionUnit *completion )
 		{
 			completion->stats.bytesSentCompressed += outlen + offset;
 
+#ifdef PY3_COMPATIBILITY_MODE
 			*reinterpret_cast<uint32_t *>( packet->data ) &= htonl( ceHeaderBitsMask ); // knock off old size
 			*reinterpret_cast<uint32_t *>( packet->data ) |= htonl( ( outlen + offset ) - sizeof( uint32_t ) ); // plug in NEW size
 			*reinterpret_cast<uint32_t *>( packet->data ) |= htonl( m_compressionType );
-
+#else
+			*(unsigned int *)packet->data &= ceHeaderBitsMask; // knock off old size
+			*(unsigned int *)packet->data |= (outlen + offset) - sizeof(unsigned int); // plug in NEW size
+			*(unsigned int *)packet->data |= m_compressionType;
+#endif
 			// if this is not the root packet, append the data TO the
 			// root packet
 			if ( packet != completion->queuedData )
@@ -3944,7 +3964,11 @@ bool CarbonIO::compress( const char *in, unsigned int inLen, char **out, unsigne
 //------------------------------------------------------------------------------
 bool CarbonIO::decompress( SPacket* packet )
 {
+#ifdef PY3_COMPATIBILITY_MODE
 	unsigned long packetHeader = ntohl( *reinterpret_cast<uint32_t*>( packet->data ) );
+#else
+	unsigned long packetHeader = *reinterpret_cast<uint32_t*>( packet->data );
+#endif
 	if ( packetHeader & ceHeaderBitZlibCompressed )
 	{
 		CPerformanceTime timeCompress( "decompress" );
