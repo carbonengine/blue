@@ -405,17 +405,20 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     endif()
     separate_arguments(PYTHON_TESTS UNIX_COMMAND ${PYTHON_TESTS_STR})
     foreach(PYTHON_TEST ${PYTHON_TESTS})
-        message(STATUS "Found test ${PYTHON_TEST}")
-        add_test(NAME ${PYTHON_TEST}
-            COMMAND ${EXEFILE_PATH} /inherit /buildflavor=$<LOWER_CASE:$<CONFIG>> /py -m unittest -v ${PYTHON_TEST}
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests/python
-        )
-        if(WIN32)
-            set_tests_properties(${PYTHON_TEST} PROPERTIES ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:Blue>\;${BRANCH_ROOT_DIR}/carbon/common/stdlib\;${BRANCH_ROOT_DIR}/vendor/python/2.7.1+ccp-stackless/${CCP_VENDOR_BIN_PATH}\;${BRANCH_ROOT_DIR}/packages;BUILDFLAVOR=$<LOWER_CASE:$<CONFIG>>;$<$<BOOL:${ENABLE_PY3_COMPATIBILITY}>:PY3_COMPATIBILITY_MODE=True>")
-        elseif(APPLE)
-            set_tests_properties(${PYTHON_TEST} PROPERTIES ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:Blue>:${BRANCH_ROOT_DIR}/carbon/common/stdlib:${BRANCH_ROOT_DIR}/vendor/python/2.7.1+ccp-stackless/${CCP_VENDOR_LIB_PATH}:${BRANCH_ROOT_DIR}/packages;BUILDFLAVOR=$<LOWER_CASE:$<CONFIG>>;$<$<BOOL:${ENABLE_PY3_COMPATIBILITY}>:PY3_COMPATIBILITY_MODE=True")
-        else()
-            message(FATAL_ERROR "Unsupported platform")
+        string(FIND ${PYTHON_TEST} "test" TEST_INDEX)
+        if( TEST_INDEX GREATER -1 ) # The line contains the string "test"
+            message(STATUS "Found test ${PYTHON_TEST}")
+            add_test(NAME ${PYTHON_TEST}
+                COMMAND ${EXEFILE_PATH} /inherit /buildflavor=$<LOWER_CASE:$<CONFIG>> /py -m unittest -v ${PYTHON_TEST}
+                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests/python
+            )
+            if(WIN32)
+                set_tests_properties(${PYTHON_TEST} PROPERTIES ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:Blue>\;${BRANCH_ROOT_DIR}/carbon/common/stdlib\;${BRANCH_ROOT_DIR}/vendor/python/2.7.1+ccp-stackless/${CCP_VENDOR_BIN_PATH}\;${BRANCH_ROOT_DIR}/packages;BUILDFLAVOR=$<LOWER_CASE:$<CONFIG>>;$<$<BOOL:${ENABLE_PY3_COMPATIBILITY}>:PY3_COMPATIBILITY_MODE=True>")
+            elseif(APPLE)
+                set_tests_properties(${PYTHON_TEST} PROPERTIES ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:Blue>:${BRANCH_ROOT_DIR}/carbon/common/stdlib:${BRANCH_ROOT_DIR}/vendor/python/2.7.1+ccp-stackless/${CCP_VENDOR_LIB_PATH}:${BRANCH_ROOT_DIR}/packages;BUILDFLAVOR=$<LOWER_CASE:$<CONFIG>>;$<$<BOOL:${ENABLE_PY3_COMPATIBILITY}>:PY3_COMPATIBILITY_MODE=True")
+            else()
+                message(FATAL_ERROR "Unsupported platform")
+            endif()
         endif()
     endforeach()
 
