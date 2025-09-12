@@ -2778,7 +2778,11 @@ void CarbonIO::dataReceived( SCompletionUnit *completion, const char* data, cons
 			}
 
 			// a partial packet has been recieved, call for completion
+#ifdef PY3_COMPATIBILITY_MODE
 			packetSize = ( ceHeaderSizeMask & ntohl( *reinterpret_cast<uint32_t*>( completion->packetListTail->data ) ) ) + sizeof(int);
+#else
+			packetSize = (ceHeaderSizeMask & *(int *)completion->packetListTail->data) + sizeof(int);
+#endif
 			need = packetSize - completion->packetListTail->packetLen;
 
 			D_HANDLEREAD(ciolog("working packet[%d:%d] need[%d] avail[%d] for [%d]", packetSize, completion->packetListTail->packetLen, need, available, (int)completion->workHandle ));
@@ -2787,7 +2791,11 @@ void CarbonIO::dataReceived( SCompletionUnit *completion, const char* data, cons
 		else
 		{
 			// packet is empty, call for the full amount
+#ifdef PY3_COMPATIBILITY_MODE
 			packetSize = ( ceHeaderSizeMask & ntohl( *reinterpret_cast<const uint32_t*>( indat ) ) ) + sizeof( uint32_t );
+#else
+			packetSize = (ceHeaderSizeMask & *(int *)indat) + sizeof(int);
+#endif
 			need = packetSize;
 
 			D_HANDLEREAD(ciolog("not working packet, needing full amount[%d] for[%d] [0x%08X]:[0x%08X]", need, (int)completion->workHandle, *(unsigned int *)indat, ceHeaderSizeMask & *(int *)indat));

@@ -556,6 +556,7 @@ bool CarbonIO::formatPacket( char* buf,
 	}
 
 	int pos;
+#ifdef PY3_COMPATIBILITY_MODE
 	if ( OOBData && OOBLen )
 	{
 		*reinterpret_cast<uint32_t *>( buf ) = htonl( (dataLen + OOBLen + sizeof( uint32_t ) ) | ceHeaderExpectPayloadOffset );
@@ -568,6 +569,20 @@ bool CarbonIO::formatPacket( char* buf,
 		*reinterpret_cast<uint32_t *>( buf ) = htonl( dataLen );
 		pos = sizeof( uint32_t );
 	}
+#else
+	if ( OOBData && OOBLen )
+	{
+		*(unsigned int *)buf = (dataLen + OOBLen + sizeof(unsigned int)) | ceHeaderExpectPayloadOffset;
+		*(unsigned int *)(buf + sizeof(unsigned int)) = OOBLen;
+		memcpy( buf + sizeof(unsigned int)*2, OOBData, OOBLen );
+		pos = OOBLen + sizeof(unsigned int)*2;
+	}
+	else
+	{
+		*(unsigned int *)buf = dataLen;
+		pos = sizeof(unsigned int);
+	}
+#endif
 
 	char *outbuf = 0;
 	unsigned int outlen;
@@ -576,9 +591,15 @@ bool CarbonIO::formatPacket( char* buf,
 		 && checkAndCompress(data, dataLen, &outbuf, &outlen) )
 	{
 		*len = pos + outlen;
+#ifdef PY3_COMPATIBILITY_MODE
 		*reinterpret_cast<uint32_t *>( buf ) &= htonl( ceHeaderBitsMask ); // knock off old size
 		*reinterpret_cast<uint32_t *>( buf ) |= htonl( *len - sizeof( uint32_t ) ); // plug in NEW size
 		*reinterpret_cast<uint32_t *>( buf ) |= htonl( m_compressionType );
+#else
+		*(unsigned int *)buf &= ceHeaderBitsMask; // knock off old size
+		*(unsigned int *)buf |= *len - sizeof(unsigned int); // plug in NEW size
+		*(unsigned int *)buf |= m_compressionType;
+#endif
 		memcpy( buf + pos, outbuf, outlen );
 		delete[] outbuf;
 	}
