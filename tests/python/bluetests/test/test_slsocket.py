@@ -104,9 +104,9 @@ class TestCarbonIO(unittest.TestCase):
         OOB_DATA = None
         run_connected(functools.partial(send_packet, PACKET_DATA, OOB_DATA), receive)
         if self.expectNetworkByteOrder:
-            self.assertEqual(receive_bytes.received, "\x00\x00\x00\x04data")
+            self.assertEqual(receive.received, "\x00\x00\x00\x04data")
         else:
-            self.assertEqual(receive_bytes.received, "\x04\x00\x00\x00data")
+            self.assertEqual(receive.received, "\x04\x00\x00\x00data")
 
     def test_receive_formatted_packet(self):
         if self.expectNetworkByteOrder:
