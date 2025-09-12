@@ -237,7 +237,8 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
         bytes = b'~\x00\x00\x00\x00\x11\x06'
         loaded = blue.marshal.Load(bytes)
 
-        self.assertTrue(type(loaded) == str)
+        # We expect a str type constructed from marshalled string table index
+        self.assertIsInstance(loaded, str)
         self.assertEqual(loaded, "ballID")
 
     def test_empty_unicode(self):
@@ -409,5 +410,18 @@ class TestBackwardsCompatibility(blueunittest.TestCase):
 
         self.assertEqual(loaded, blue.DBRow(blue.DBRowDescriptor((("Test", 20),)), (123, )))
 
-    def test_dbrow_with_invalid_descriptor_in_stream_raises_error(self):
-        pass
+    def test_set(self):
+        blue.marshal.globalsWhitelist = {set: None}
+        blue.marshal.collectWhitelist = False
+        bytes = b'~\x00\x00\x00\x00",\x02\x0cbuiltins.set%\x15\x03\t\x06\x02\x06\x03--'
+        loaded = blue.marshal.Load(bytes)
+        self.assertSetEqual(loaded, {1, 2, 3})
+
+    def test_runtime_error(self):
+        blue.marshal.globalsWhitelist = {RuntimeError: None}
+        blue.marshal.collectWhitelist = False
+        bytes = b'~\x00\x00\x00\x00",\x02\x15builtins.RuntimeError%.\x05Boom!--'
+        loaded = blue.marshal.Load(bytes)
+        self.assertIsInstance(loaded, RuntimeError)
+        self.assertIsInstance(loaded.message, unicode)
+        self.assertEqual(loaded.message, u"Boom!")
