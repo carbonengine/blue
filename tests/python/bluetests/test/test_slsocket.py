@@ -123,13 +123,13 @@ class TestCarbonIO(unittest.TestCase):
         if self.expectNetworkByteOrder:
             self.assertEqual(receive.received, "\x10\x00\x00\x0E\x00\x00\x00\x05WorldHello")
         else:
-            self.assertEqual(receive.received, "\x0E\x00\x00\x10\x05\x00\x00\x00HelloWorld")
+            self.assertEqual(receive.received, "\x0E\x00\x00\x10\x05\x00\x00\x00WorldHello")
 
     def test_receive_formatted_packet_with_oob_data(self):
         if self.expectNetworkByteOrder:
             PACKET_DATA = "\x10\x00\x00\x0E\x00\x00\x00\x05WorldHello"
         else:
-            PACKET_DATA = "\x0E\x00\x00\x10\x05\x00\x00\x00HelloWorld"
+            PACKET_DATA = "\x0E\x00\x00\x10\x05\x00\x00\x00WorldHello"
         run_connected(functools.partial(send, PACKET_DATA), receive_packet)
         self.assertEqual(receive_packet.received, ("Hello", "World", 1))
 
@@ -176,9 +176,9 @@ class TestStacklessIO(unittest.TestCase):
         if self.expectNetworkByteOrder:
             PACKET_DATA = "\x10\x00\x00\x0E\x00\x00\x00\x05WorldHello"
         else:
-            PACKET_DATA = "\x0E\x00\x00\x10\x05\x00\x00\x00HelloWorld"
+            PACKET_DATA = "\x0E\x00\x00\x10\x05\x00\x00\x00WorldHello"
         run_connected(functools.partial(send, PACKET_DATA), receive_packet)
         if self.expectNetworkByteOrder:
             self.assertEqual(receive_packet.received, ("\x00\x00\x00\x05WorldHello", None, 0))
         else:
-            self.assertEqual(receive_packet.received, ("\x05\x00\x00\x00HelloWorld", None, 0))
+            self.assertEqual(receive_packet.received, ("\x05\x00\x00\x00WorldHello", None, 0))
