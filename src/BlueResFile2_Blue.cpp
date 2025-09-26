@@ -56,7 +56,9 @@ static PyObject* PyOpenAlways( PyObject* self, PyObject* args )
 
 	if( !ok )
 	{
-		PyErr_SetString( PyExc_BlueError, "Couldn't open file" );
+		std::string msg = "Couldn't open file ";
+		msg += CW2A( (const wchar_t*)PyUnicode_AsUnicode( filename ) );
+		PyErr_SetString( PyExc_BlueError, msg.c_str() );
 		return nullptr;
 	}
 	

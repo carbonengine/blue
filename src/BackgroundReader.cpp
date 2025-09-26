@@ -32,7 +32,9 @@ void BackgroundReader::Perform()
 
 	if (!resFile->OpenW( m_filename.c_str(), true ) )
 	{
-		m_result = Be::Result<std::string>( "Couldn't open file" );
+		std::string msg = "Couldn't open file: ";
+		msg += CW2A(m_filename.c_str());
+		m_result = Be::Result<std::string>( msg );
 		return;
 	}
 

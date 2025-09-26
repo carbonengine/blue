@@ -300,7 +300,9 @@ Be::Result<std::string> BluePaths::Open( const std::wstring& filename, Be::Optio
 					*stream = fileStream.Detach();
 					return Be::Result<std::string>();
 				}
-				return Be::Result<std::string>("Couldn't create file");
+				std::string msg = "Couldn't open file ";
+				msg += CW2A( filename.c_str() );
+				return Be::Result<std::string>( msg );
 			}
 			else if( fileMode[0] == 'a' )
 			{
@@ -312,7 +314,9 @@ Be::Result<std::string> BluePaths::Open( const std::wstring& filename, Be::Optio
 					*stream = fileStream.Detach();
 					return Be::Result<std::string>();
 				}
-				return Be::Result<std::string>("Couldn't open file");
+				std::string msg = "Couldn't open file ";
+				msg += CW2A( filename.c_str() );
+				return Be::Result<std::string>( msg );
 			}
 		}
 	}
@@ -322,7 +326,9 @@ Be::Result<std::string> BluePaths::Open( const std::wstring& filename, Be::Optio
 		return Be::Result<std::string>();
 	}
 
-	return Be::Result<std::string>("Couldn't open file");
+	std::string msg = "Couldn't open file ";
+	msg += CW2A( filename.c_str() );
+	return Be::Result<std::string>( msg );
 }
 
 Be::Result<std::string> BluePaths::GetFileContentsWithYield( const std::wstring& path, IBlueStream** contents )
