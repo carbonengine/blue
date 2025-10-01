@@ -92,7 +92,6 @@ class TestCarbonIO(unittest.TestCase):
         sys.modules["_socket"] = _slsocket
         sys.modules["select"] = None
         reload(socket) # Make sure the socket module is using _slsocket instead of _socket
-        self.expectNetworkByteOrder = os.environ.has_key("PY3_COMPATIBILITY_MODE")
     def test_send_receive_packet(self):
         PACKET_DATA = "data"
         OOB_DATA = None
@@ -103,16 +102,10 @@ class TestCarbonIO(unittest.TestCase):
         PACKET_DATA = "data"
         OOB_DATA = None
         run_connected(functools.partial(send_packet, PACKET_DATA, OOB_DATA), receive)
-        if self.expectNetworkByteOrder:
-            self.assertEqual(receive.received, "\x00\x00\x00\x04data")
-        else:
-            self.assertEqual(receive.received, "\x04\x00\x00\x00data")
+        self.assertEqual(receive.received, "\x00\x00\x00\x04data")
 
     def test_receive_formatted_packet(self):
-        if self.expectNetworkByteOrder:
-            PACKET_DATA = "\x00\x00\x00\x04data"
-        else:
-            PACKET_DATA = "\x04\x00\x00\x00data"
+        PACKET_DATA = "\x00\x00\x00\x04data"
         run_connected(functools.partial(send, PACKET_DATA), receive_packet)
         self.assertEqual(receive_packet.received, ("data", "", 1))
 
@@ -120,16 +113,10 @@ class TestCarbonIO(unittest.TestCase):
         PACKET_DATA = "Hello"
         OOB_DATA = "World"
         run_connected(functools.partial(send_packet, PACKET_DATA, OOB_DATA), receive)
-        if self.expectNetworkByteOrder:
-            self.assertEqual(receive.received, "\x10\x00\x00\x0E\x00\x00\x00\x05WorldHello")
-        else:
-            self.assertEqual(receive.received, "\x0E\x00\x00\x10\x05\x00\x00\x00WorldHello")
+        self.assertEqual(receive.received, "\x10\x00\x00\x0E\x00\x00\x00\x05WorldHello")
 
     def test_receive_formatted_packet_with_oob_data(self):
-        if self.expectNetworkByteOrder:
-            PACKET_DATA = "\x10\x00\x00\x0E\x00\x00\x00\x05WorldHello"
-        else:
-            PACKET_DATA = "\x0E\x00\x00\x10\x05\x00\x00\x00WorldHello"
+        PACKET_DATA = "\x10\x00\x00\x0E\x00\x00\x00\x05WorldHello"
         run_connected(functools.partial(send, PACKET_DATA), receive_packet)
         self.assertEqual(receive_packet.received, ("Hello", "World", 1))
 
@@ -145,7 +132,6 @@ class TestStacklessIO(unittest.TestCase):
         sys.modules["_socket"] = _slsocket
         sys.modules["select"] = slselect
         reload(socket) # Make sure the socket module is using _slsocket instead of _socket
-        self.expectNetworkByteOrder = os.environ.has_key("PY3_COMPATIBILITY_MODE")
 
     def test_send_receive_packet(self):
         PACKET_DATA = "data"
@@ -157,28 +143,16 @@ class TestStacklessIO(unittest.TestCase):
         PACKET_DATA = "data"
         OOB_DATA = None
         run_connected(functools.partial(send_packet, PACKET_DATA, OOB_DATA), functools.partial(receive_bytes, 8))
-        if self.expectNetworkByteOrder:
-            self.assertEqual(receive_bytes.received, "\x00\x00\x00\x04data")
-        else:
-            self.assertEqual(receive_bytes.received, "\x04\x00\x00\x00data")
+        self.assertEqual(receive_bytes.received, "\x00\x00\x00\x04data")
 
     def test_receive_formatted_packet(self):
-        if self.expectNetworkByteOrder:
-            PACKET_DATA = "\x00\x00\x00\x04data"
-        else:
-            PACKET_DATA = "\x04\x00\x00\x00data"
+        PACKET_DATA = "\x00\x00\x00\x04data"
         run_connected(functools.partial(send, PACKET_DATA), receive_packet)
         self.assertEqual(receive_packet.received, ("data", None, 0))
 
     def test_receive_formatted_packet_with_oob_data(self):
         if sys.platform == "win32":
             raise unittest.SkipTest("StacklessIO does not support OOB data on Windows")
-        if self.expectNetworkByteOrder:
-            PACKET_DATA = "\x10\x00\x00\x0E\x00\x00\x00\x05WorldHello"
-        else:
-            PACKET_DATA = "\x0E\x00\x00\x10\x05\x00\x00\x00WorldHello"
+        PACKET_DATA = "\x10\x00\x00\x0E\x00\x00\x00\x05WorldHello"
         run_connected(functools.partial(send, PACKET_DATA), receive_packet)
-        if self.expectNetworkByteOrder:
-            self.assertEqual(receive_packet.received, ("\x00\x00\x00\x05WorldHello", None, 0))
-        else:
-            self.assertEqual(receive_packet.received, ("\x05\x00\x00\x00WorldHello", None, 0))
+        self.assertEqual(receive_packet.received, ("\x00\x00\x00\x05WorldHello", None, 0))

@@ -1150,7 +1150,6 @@ public:
 		buffers.Push(header);
 		SSIZE_T result = header.len;
 		result += SendResult::Prepare(buffers, obj, pbuf);
-#ifdef PY3_COMPATIBILITY_MODE
 		auto cargoBytes = static_cast<uint32_t>( result - sizeof(mHeader) ); //number of cargo bytes
 		if ( cargoBytes > static_cast<uint32_t>( mXtra->GetMaxPacketSize() ) ) {
 			char tmp[128];
@@ -1160,16 +1159,6 @@ public:
 			throw std::length_error(tmp);
 		}
 		mHeader = htonl( cargoBytes );
-#else
-		mHeader = (DWORD)(result-sizeof(mHeader)); //number of cargo bytes
-		if (mHeader > (DWORD)mXtra->GetMaxPacketSize()) {
-			char tmp[128];
-			sprintf_s(tmp, "packet too long at %d bytes, max size is %d",
-				mHeader, mXtra->GetMaxPacketSize());
-			OutputDebugString(tmp);
-			throw std::length_error(tmp);
-		}
-#endif
 		return result;
 	}
 	
@@ -1288,11 +1277,7 @@ public:
       {
           mBytesRead += bytesTransfered;
           bool more;
-#ifdef PY3_COMPATIBILITY_MODE
           uint32_t cargoBytes{ntohl( mHeader )};
-#else
-          uint32_t cargoBytes{mHeader};
-#endif
           if (mBytesRead < sizeof(mHeader)) {
               //continue reading header
               more = true;

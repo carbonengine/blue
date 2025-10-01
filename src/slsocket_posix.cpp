@@ -1625,10 +1625,7 @@ public:
         // Copy address
         // steal the buffer
         StealBuffer(buf);
-        mHeader = mKeeper.len;
-#ifdef PY3_COMPATIBILITY_MODE
-    	mHeader = htonl(mHeader);
-#endif
+    	mHeader = htonl(mKeeper.len);
         FlipHeader(mHeader);
         Request(s->sock_timeout);
         return mResult;
@@ -1837,11 +1834,7 @@ protected:
         if (mBytesRead < (sizeof(mHeader) + sizeof(uint32_t)))
             return;
 
-#ifdef PY3_COMPATIBILITY_MODE
         uint32_t oobDataLen = ntohl(*(uint32_t *)(mData));
-#else
-        uint32_t oobDataLen = *(uint32_t *)(mData);
-#endif
         // sanity check the out-of-band data length; mPacketSize was sanity checked already
         if (oobDataLen > mPacketSize) {
             char tmp[128] = {'\0'};
@@ -1915,9 +1908,7 @@ protected:
             rcvd = recv(handle, (char*)&mHeader + mBytesRead, sizeof(mHeader) - mBytesRead, 0);
             if (rcvd > 0 && mBytesRead+rcvd == 4) {
                 // We completed reading the header, do stuff!
-#ifdef PY3_COMPATIBILITY_MODE
             	mHeader = htonl(mHeader);
-#endif
                 FlipHeader(mHeader);
                 mPacketSize = (mHeader & ceHeaderSizeMask);
                 if (mPacketSize > (uint32_t)GetXtra()->GetMaxPacketSize()) {
