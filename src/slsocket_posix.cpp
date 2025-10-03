@@ -1625,7 +1625,7 @@ public:
         // Copy address
         // steal the buffer
         StealBuffer(buf);
-        mHeader = mKeeper.len;
+    	mHeader = htonl(mKeeper.len);
         FlipHeader(mHeader);
         Request(s->sock_timeout);
         return mResult;
@@ -1834,7 +1834,7 @@ protected:
         if (mBytesRead < (sizeof(mHeader) + sizeof(uint32_t)))
             return;
 
-        uint32_t oobDataLen = *(uint32_t *)(mData);
+        uint32_t oobDataLen = ntohl(*(uint32_t *)(mData));
         // sanity check the out-of-band data length; mPacketSize was sanity checked already
         if (oobDataLen > mPacketSize) {
             char tmp[128] = {'\0'};
@@ -1908,6 +1908,7 @@ protected:
             rcvd = recv(handle, (char*)&mHeader + mBytesRead, sizeof(mHeader) - mBytesRead, 0);
             if (rcvd > 0 && mBytesRead+rcvd == 4) {
                 // We completed reading the header, do stuff!
+            	mHeader = htonl(mHeader);
                 FlipHeader(mHeader);
                 mPacketSize = (mHeader & ceHeaderSizeMask);
                 if (mPacketSize > (uint32_t)GetXtra()->GetMaxPacketSize()) {

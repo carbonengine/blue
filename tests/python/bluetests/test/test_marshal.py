@@ -122,7 +122,7 @@ class testMarshal(blueunittest.TestCase):
 
     def test_long(self):
         self.verify_round_trip(42)
-        self.verify_round_trip(9223372036854775807)
+        self.verify_round_trip(9223372036854775807L)
 
     def test_float(self):
         self.verify_round_trip(0.0)
@@ -216,7 +216,6 @@ class testMarshal(blueunittest.TestCase):
 
         self.assertEqual(raisedValue.exception.args[0], TypeError)
 
-@unittest.skipUnless(os.environ.has_key("PY3_COMPATIBILITY_MODE"), "Skipping because these tests will fail if `PY3_COMPATIBILITY_MODE` is not enabled")
 class TestBackwardsCompatibility(blueunittest.TestCase):
     """
     This class adds coverage for objects marshalled in Python 3.

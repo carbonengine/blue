@@ -80,6 +80,7 @@ bool BlueResFileSystemLocal::IsDirectory( const std::wstring& dir )
 
 		// We have a prefix, look it up in our search paths map.
 		// If found, the value associated with it is a list of paths.
+		std::shared_lock guard( m_expandedSearchPathsMutex );
 		ExpandedSearchPathMap_t::iterator found = m_expandedSearchPaths.find( key );
 		if( found != m_expandedSearchPaths.end() )
 		{
@@ -123,6 +124,7 @@ void BlueResFileSystemLocal::GetDirectoryContents( const wchar_t* dir, std::set<
 
 		// We have a prefix, look it up in our search paths map.
 		// If found, the value associated with it is a list of paths.
+		std::shared_lock guard( m_expandedSearchPathsMutex );
 		ExpandedSearchPathMap_t::iterator found = m_expandedSearchPaths.find( key );
 		if( found != m_expandedSearchPaths.end() )
 		{
@@ -211,6 +213,7 @@ const wchar_t* BlueResFileSystemLocal::GetSearchPathW( const char* key )
 
 void BlueResFileSystemLocal::ClearSearchPaths()
 {
+	std::unique_lock guard( m_expandedSearchPathsMutex );
 	m_searchPaths.clear();
 	m_expandedSearchPaths.clear();
 }
@@ -229,6 +232,7 @@ bool BlueResFileSystemLocal::ResolvePathW( const std::wstring& path, std::wstrin
 
 		// We have a prefix, look it up in our search paths map.
 		// If found, the value associated with it is a list of paths.
+		std::shared_lock guard( m_expandedSearchPathsMutex );
 		ExpandedSearchPathMap_t::iterator found = m_expandedSearchPaths.find( key );
 		if( found != m_expandedSearchPaths.end() )
 		{
@@ -294,6 +298,7 @@ std::wstring BlueResFileSystemLocal::ResolvePathForWritingW( const std::wstring&
 		std::string key = (const char*)CW2A( keyW.c_str() );
 		ToLower( key );
 
+		std::shared_lock guard( m_expandedSearchPathsMutex );
 		ExpandedSearchPathMap_t::iterator found = m_expandedSearchPaths.find( key );
 		if( found != m_expandedSearchPaths.end() )
 		{
@@ -320,6 +325,7 @@ std::wstring BlueResFileSystemLocal::ResolvePathToRootW( const std::string& root
 	std::string rootLower = root;
 	ToLower( rootLower );
 
+	std::shared_lock guard( m_expandedSearchPathsMutex );
 	ExpandedSearchPathMap_t::iterator found = m_expandedSearchPaths.find( rootLower );
 	if( found != m_expandedSearchPaths.end() )
 	{
@@ -358,6 +364,7 @@ void BlueResFileSystemLocal::GetExpandedSearchPaths( const char* key, std::vecto
 	std::string keyLower = key;
 	ToLower( keyLower );
 
+	std::shared_lock guard( m_expandedSearchPathsMutex );
 	ExpandedSearchPathMap_t::iterator found = m_expandedSearchPaths.find( keyLower );
 	if( found != m_expandedSearchPaths.end() )
 	{
@@ -467,6 +474,7 @@ std::optional<std::vector<std::wstring>> ExpandSearchPath( const std::wstring& p
 
 bool BlueResFileSystemLocal::ExpandSearchPaths()
 {
+	std::unique_lock guard( m_expandedSearchPathsMutex );
 	m_expandedSearchPaths.clear();
 	for( const auto& searchPath : m_searchPaths )
 	{
@@ -494,6 +502,7 @@ bool BlueResFileSystemLocal::ExpandSearchPaths()
 
 void BlueResFileSystemLocal::LogPaths()
 {
+	std::shared_lock guard( m_expandedSearchPathsMutex );
 	CCP_LOG( "BlueOS search paths:" );
 	for( ExpandedSearchPathMap_t::const_iterator it = m_expandedSearchPaths.begin(); it != m_expandedSearchPaths.end(); ++it )
 	{
@@ -638,3 +647,9 @@ std::vector<std::wstring> BlueResFileSystemLocal::ListDirFromScript( const std::
 	std::vector<std::wstring> list( begin( results ), end( results ) );
 	return list;
 }
+
+BlueResFileSystemLocal::ExpandedSearchPathMap_t BlueResFileSystemLocal::GetExpandedSearchPaths() {
+	std::shared_lock guard( m_expandedSearchPathsMutex );
+	return m_expandedSearchPaths;
+}
+

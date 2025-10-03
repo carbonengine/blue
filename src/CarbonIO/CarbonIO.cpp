@@ -2778,7 +2778,7 @@ void CarbonIO::dataReceived( SCompletionUnit *completion, const char* data, cons
 			}
 
 			// a partial packet has been recieved, call for completion
-			packetSize = (ceHeaderSizeMask & *(int *)completion->packetListTail->data) + sizeof(int);
+			packetSize = ( ceHeaderSizeMask & ntohl( *reinterpret_cast<uint32_t*>( completion->packetListTail->data ) ) ) + sizeof(int);
 			need = packetSize - completion->packetListTail->packetLen;
 
 			D_HANDLEREAD(ciolog("working packet[%d:%d] need[%d] avail[%d] for [%d]", packetSize, completion->packetListTail->packetLen, need, available, (int)completion->workHandle ));
@@ -2787,7 +2787,7 @@ void CarbonIO::dataReceived( SCompletionUnit *completion, const char* data, cons
 		else
 		{
 			// packet is empty, call for the full amount
-			packetSize = (ceHeaderSizeMask & *(int *)indat) + sizeof(int);
+			packetSize = ( ceHeaderSizeMask & ntohl( *reinterpret_cast<const uint32_t*>( indat ) ) ) + sizeof( uint32_t );
 			need = packetSize;
 
 			D_HANDLEREAD(ciolog("not working packet, needing full amount[%d] for[%d] [0x%08X]:[0x%08X]", need, (int)completion->workHandle, *(unsigned int *)indat, ceHeaderSizeMask & *(int *)indat));
@@ -2810,12 +2810,11 @@ void CarbonIO::dataReceived( SCompletionUnit *completion, const char* data, cons
 			appendDataToPacket( completion->packetListTail, indat, need );
 			available -= need;
 			indat += need;
-
-			unsigned int header = *(int *)completion->packetListTail->data;
+			unsigned int header = ntohl( *reinterpret_cast<uint32_t *>( completion->packetListTail->data ) );
 			if ( header & ceHeaderExpectPayloadOffset )
 			{
 				completion->packetListTail->oobData = sizeof(int)*2 + completion->packetListTail->data;
-				completion->packetListTail->oobLen = *(int *)(completion->packetListTail->data + sizeof(int));
+				completion->packetListTail->oobLen = ntohl( *reinterpret_cast<uint32_t *>( completion->packetListTail->data + sizeof(  uint32_t ) ) );
 				completion->packetListTail->payloadOffset = sizeof(int)*2 + completion->packetListTail->oobLen;
 
 				if ( completion->packetListTail->payloadOffset > completion->packetListTail->packetLen )
@@ -3289,10 +3288,10 @@ bool CarbonIO::processRawQueuedData( SCompletionUnit *completion )
 
 		// find the offset to the body (the part we compress)
 		unsigned int offset = sizeof(unsigned int); // the header itself
-		if ( *(unsigned int *)packet->data & ceHeaderExpectPayloadOffset ) // was there out-of-band data?
+		if ( ntohl( *reinterpret_cast<uint32_t *>( packet->data ) ) & ceHeaderExpectPayloadOffset ) // was there out-of-band data?
 		{
 			offset += sizeof(unsigned int); // the size of the len param
-			offset += *(unsigned int *)(packet->data + sizeof(unsigned int)); // the size of the data
+			offset += *reinterpret_cast<uint32_t *>( packet->data + sizeof( uint32_t ) ); // the size of the data
 		}
 
 		char *outbuf = 0;
@@ -3305,10 +3304,9 @@ bool CarbonIO::processRawQueuedData( SCompletionUnit *completion )
 		{
 			completion->stats.bytesSentCompressed += outlen + offset;
 
-			*(unsigned int *)packet->data &= ceHeaderBitsMask; // knock off old size
-			*(unsigned int *)packet->data |= (outlen + offset) - sizeof(unsigned int); // plug in NEW size
-			*(unsigned int *)packet->data |= m_compressionType;
-
+			*reinterpret_cast<uint32_t *>( packet->data ) &= htonl( ceHeaderBitsMask ); // knock off old size
+			*reinterpret_cast<uint32_t *>( packet->data ) |= htonl( ( outlen + offset ) - sizeof( uint32_t ) ); // plug in NEW size
+			*reinterpret_cast<uint32_t *>( packet->data ) |= htonl( m_compressionType );
 			// if this is not the root packet, append the data TO the
 			// root packet
 			if ( packet != completion->queuedData )
@@ -3936,7 +3934,8 @@ bool CarbonIO::compress( const char *in, unsigned int inLen, char **out, unsigne
 //------------------------------------------------------------------------------
 bool CarbonIO::decompress( SPacket* packet )
 {
-	if ( *(unsigned int *)packet->data & ceHeaderBitZlibCompressed )
+	unsigned long packetHeader = ntohl( *reinterpret_cast<uint32_t*>( packet->data ) );
+	if ( packetHeader & ceHeaderBitZlibCompressed )
 	{
 		CPerformanceTime timeCompress( "decompress" );
 
