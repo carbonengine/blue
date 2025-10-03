@@ -10,6 +10,7 @@
 #define BlueResFileSystemLocal_h
 
 #include "IBlueResFileSystem.h"
+#include <shared_mutex>
 
 BLUE_CLASS( BlueResFileSystemLocal ) : public IBlueResFileSystem
 {
@@ -45,7 +46,7 @@ public:
 	typedef std::map<std::string, std::vector<std::wstring>> ExpandedSearchPathMap_t;
 
 	SearchPathMap_t GetAllSearchPaths() { return m_searchPaths; }
-	ExpandedSearchPathMap_t GetExpandedSearchPaths() { return m_expandedSearchPaths; }
+	ExpandedSearchPathMap_t GetExpandedSearchPaths();
 
 	std::wstring ResolvePath( const wchar_t* path );
 
@@ -60,6 +61,9 @@ private:
 
 	// Search paths expanded, for quicker resolving of paths
 	ExpandedSearchPathMap_t m_expandedSearchPaths;
+
+	// Expanded search paths can be accessed from multiple threads.
+	std::shared_timed_mutex m_expandedSearchPathsMutex;
 
 	// Helper function to expand search paths - called after any entry is changed
 	bool ExpandSearchPaths();
