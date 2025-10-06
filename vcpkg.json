@@ -14,7 +14,7 @@
     },
     {
       "name": "carbon-pdmprotowrapper",
-      "version>=": "2.0.2"
+      "version>=": "2.0.3"
     },
     {
       "name": "carbon-scheduler",
