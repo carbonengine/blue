@@ -10,7 +10,7 @@
     },
     {
       "name": "carbon-io",
-      "version>=": "1.2.2"
+      "version>=": "1.2.3"
     },
     {
       "name": "carbon-pdmprotowrapper",
