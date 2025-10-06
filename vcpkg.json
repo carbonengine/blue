@@ -10,7 +10,7 @@
     },
     {
       "name": "carbon-io",
-      "version>=": "1.2.1"
+      "version>=": "1.2.3"
     },
     {
       "name": "carbon-pdmprotowrapper",
@@ -18,7 +18,7 @@
     },
     {
       "name": "carbon-scheduler",
-      "version>=": "1.3.2"
+      "version>=": "1.3.3"
     },
     {
       "name": "carbon-exefile",
