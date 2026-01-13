@@ -2,9 +2,10 @@ cmake_minimum_required(VERSION 3.16)
 
 project(Blue VERSION 1.0.0)
 
-include(cmake/CcpGlobalSettings.cmake)
 include(cmake/CcpTargetConfigurations.cmake)
+include(cmake/CcpDocsGenerator.cmake)
 include(cmake/CcpPackageConfigHelpers.cmake)
+include(cmake/CcpBuildConfigurations.cmake)
 
 find_package(carbon-core REQUIRED CONFIG)
 find_package(carbon-blueexposure REQUIRED CONFIG)
