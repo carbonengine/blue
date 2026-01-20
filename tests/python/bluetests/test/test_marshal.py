@@ -288,6 +288,16 @@ class testMarshal(blueunittest.TestCase):
         
         self.assertEqual(raisedValue.exception.args[0], TypeError)
 
+    def test_nullptr_deref_in_readobjectreference(self):
+        known_bad_payloads = (
+            b"\x7D\x01\x62\x1B\x00",  # entering via `TY_REDUCE`
+            b"\x7D\x01\x63\x1B\x00",  # entering via `TY_NEWOBJ`
+        )
+        for bad_payload in known_bad_payloads:
+            with self.assertRaises(RuntimeError):
+                blue.marshal.Load(bad_payload)
+
+
 @unittest.skipUnless("PY27_COMPATIBILITY_MODE" in os.environ, "Skipping because tests will fail when compatibility mode is off")
 class TestBackwardsCompatibility(blueunittest.TestCase):
     """
