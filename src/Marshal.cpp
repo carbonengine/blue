@@ -1264,19 +1264,24 @@ PyObject * Marshal::ReadObjectCrcCheck( ReadStream * stream, bool isShared )
 PyObject * Marshal::ReadObjectReference( ReadStream * stream, bool isShared )
 {
 	int len;
-	PyObject* ret;
+	PyObject* ret{nullptr};
 
-	if( !stream->ReadInteger( len ) ) return 0;
+	if( !stream->ReadInteger( len ) )
+	{
+		return nullptr;
+	}
 	if( stream->GetVersion() == 0 ) {
 		if( len < 1 || len > stream->mMapCount || !(ret = stream->mShared[len - 1]) ) {
 			PyErr_SetString( PyExc_ValueError, "Invalid TY_REFERENCE in stream" );
-			return 0;
+			return nullptr;
 		}
 	}
 	else {
-		if( len < 0 || len >= (int)stream->mShared.size() )
-			return PyErr_SetString( PyExc_ValueError, "Invalid TY_REFERENCE in stream" ), nullptr;
-		ret = stream->mShared[len];
+		if( len < 0 || len >= (int)stream->mShared.size() || !(ret = stream->mShared[len]) )
+		{
+			PyErr_SetString( PyExc_ValueError, "Invalid TY_REFERENCE in stream" );
+			return nullptr;
+		}
 	}
 	Py_INCREF( ret );
 	return ret;
