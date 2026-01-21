@@ -971,6 +971,7 @@ bool ReadStream::ReadInteger(int &r)
 //allocate an index when the shared object is seen
 size_t ReadStream::MarkShared_Int(PyObject *o)
 {
+	// `o` may be a `nullptr`, to reserve space for an object yet to be read from the stream.
 	if (mVersion == 0) {
 		if (mNumShared >= mMapCount)
 			return PyErr_SetString(PyExc_RuntimeError, "Shared object table overflow"), -1;
@@ -998,6 +999,12 @@ size_t ReadStream::MarkShared()
 //fill in the shared object when construction is complete
 bool ReadStream::UpdateShared(size_t ix, PyObject *o)
 {
+	// A constructed object should never be a `nullptr`.
+	if ( !o )
+	{
+		PyErr_SetString( PyExc_ValueError, "Invalid shared object read from stream");
+		return false;
+	}
 	mShared[ix] = BluePy(o, true); //new ref
 	return true;
 }
