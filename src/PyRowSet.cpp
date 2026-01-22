@@ -144,7 +144,7 @@ struct ColumnDescriptor
 	std::string mName;
 	int mOffset;
 	DBTYPE mType;
-	char mSize;
+	unsigned char mSize;
 };
 
 bool operator == (const ColumnDescriptor &a, const ColumnDescriptor &b)
