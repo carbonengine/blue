@@ -303,6 +303,29 @@ bool RowDescriptor::InitFromTypedList()
 	size_t i;
 	for(i = 0; i<mColumnList.size(); i++) {
 		ColumnDescriptor &cd = mColumnList[i];
+
+		const auto& name = cd.mName;
+		// Empty column names make no sense
+		if ( name.empty() )
+		{
+			PyErr_SetString(PyExc_ValueError, "Column names cannot be empty");
+			return false;
+		}
+
+		// It is possible to do all sorts of strange things by allowing columns that have the same
+		// name as Python's magic double-underscore attributes. For example, it is possible to use
+		// `__class__` as a column name in combination with one of the `PyObject*` storing column
+		// types to make Python think that a `blue.DBRow` is actually some other class.
+		// Therefore, columns must not have a name that is also a valid Python magic attribute.
+		// However, since that list can change over time, it is not feasible to do an exhaustive
+		// check on whether a column name conflicts with a Python magic attribute.
+		// All names starting with a double underscore are thus disallowed.
+		if ( name.length() > 1 && name[0] == '_' && name[1] == '_')
+		{
+			PyErr_SetString(PyExc_ValueError, "Column names cannot begin with an underscore");
+			return false;
+		}
+
 		int size;  //logarithm of size plus 1
 		if (!ColumnDescriptor::TypeSize(cd.mType, size))
 			return false;
@@ -635,18 +658,27 @@ bool DBRowDescriptor::Set_virtual(PyObject *l)
 		if (!newList.Append(t))
 			goto ERR2;
 	}
-	InitFromTypedList();
+	if ( ! InitFromTypedList() )
+	{
+		return false;
+	}
 	if (newLen)
 		mVirtualGetSet = newList;
 	return true;
 ERR1:
 	mColumnList = oldlist;
-	InitFromTypedList();
+	if ( ! InitFromTypedList() )
+	{
+		return false;
+	}
 	return PyErr_SetString(PyExc_TypeError, "expected list of tuples of size two"), false;
 ERR2:
 	mColumnList = oldlist;
-	InitFromTypedList();
-	return 0;
+	if ( ! InitFromTypedList() )
+	{
+		return false;
+	}
+	return false;
 }
 
 
