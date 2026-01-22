@@ -400,7 +400,15 @@ bool RowDescriptor::InitFromTypedList()
 		//Also initialize the map, while we're at it.
 		mColumnMap.insert(columnMap_t::value_type(cd.mName.c_str(), std::pair<ColumnDescriptor*, int>(&cd, (int)i)));
 	}
-	return true;	
+
+	// check if there are multiple columns with the same name
+	if ( mColumnMap.size() != mColumnList.size() )
+	{
+		PyErr_SetString( PyExc_ValueError, "Multiple columns with the same name are not allowed" );
+		return false;
+	}
+
+	return true;
 }
 	
 

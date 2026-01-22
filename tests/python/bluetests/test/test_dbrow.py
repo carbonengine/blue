@@ -84,3 +84,7 @@ class TestDBRow(blueunittest.TestCase):
 
         # However, a single underscore as starting character is fine
         _ = blue.DBRowDescriptor((("_dummy", 0x80),))
+
+        # cannot have multiple columns with the same name
+        with self.assertRaises(ValueError):
+            blue.DBRowDescriptor((('foo', 0x80), ('foo', 0x80),))
