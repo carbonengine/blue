@@ -216,6 +216,16 @@ class testMarshal(blueunittest.TestCase):
 
         self.assertEqual(raisedValue.exception.args[0], TypeError)
 
+    def test_nullptr_deref_in_readobjectreference(self):
+        known_bad_payloads = (
+            b"\x7D\x01\x57\x1B\x00",  # entering via `TY_INSTANCE`
+            b"\x7D\x01\x62\x1B\x00",  # entering via `TY_REDUCE`
+            b"\x7D\x01\x63\x1B\x00",  # entering via `TY_NEWOBJ`
+        )
+        for bad_payload in known_bad_payloads:
+            with self.assertRaises(RuntimeError):
+                blue.marshal.Load(bad_payload)
+
 class TestBackwardsCompatibility(blueunittest.TestCase):
     """
     This class adds coverage for objects marshalled in Python 3.
