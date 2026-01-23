@@ -155,6 +155,7 @@ class CarbonBuildMacOS(buildName: String, configType: String, preset: String, ag
                 filterAuthorRole = PullRequests.GitHubRoleFilter.MEMBER
                 filterTargetBranch = """
                 +:refs/heads/*
+                -:refs/heads/release/3.x
                 -:refs/heads/release/2.x
                 -:refs/heads/release/1.x
                 """
