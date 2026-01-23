@@ -69,3 +69,22 @@ class TestDBRow(blueunittest.TestCase):
         self.assertNotEqual(self.row, blue.DBRowDescriptor(self.columns))
 
         self.assertEqual(self.row, blue.DBRow(blue.DBRowDescriptor(self.columns)))
+
+    def testColumnNameConstraints(self):
+        invalid_column_names = (
+            # An empty column name makes no sense
+            "",
+            # Python's magic attributes can lead to type confusion and other interesting bits.
+            # Therefore, disallow column names starting with a double underscore.
+            "__this_might_be_a_python_magic_attribute"
+        )
+        for invalid_column_name in invalid_column_names:
+            with self.assertRaises(ValueError):
+                blue.DBRowDescriptor(((invalid_column_name, 0x80),))
+
+        # However, a single underscore as starting character is fine
+        _ = blue.DBRowDescriptor((("_dummy", 0x80),))
+
+        # cannot have multiple columns with the same name
+        with self.assertRaises(ValueError):
+            blue.DBRowDescriptor((('foo', 0x80), ('foo', 0x80),))
