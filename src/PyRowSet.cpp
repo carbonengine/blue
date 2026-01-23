@@ -322,7 +322,7 @@ bool RowDescriptor::InitFromTypedList()
 		// All names starting with a double underscore are thus disallowed.
 		if ( name.length() > 1 && name[0] == '_' && name[1] == '_')
 		{
-			PyErr_SetString(PyExc_ValueError, "Column names cannot begin with an underscore");
+			PyErr_SetString(PyExc_ValueError, "Column names cannot begin with a double underscore");
 			return false;
 		}
 
