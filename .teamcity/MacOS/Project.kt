@@ -156,6 +156,7 @@ class CarbonBuildMacOS(buildName: String, configType: String, preset: String, ag
                 filterTargetBranch = """
                 +:refs/heads/*
                 -:refs/heads/release/2.x
+                -:refs/heads/release/1.x
                 """
             }
         }

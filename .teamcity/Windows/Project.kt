@@ -212,6 +212,7 @@ class CarbonBuildWindows(buildName: String, configType: String, preset: String) 
                 filterTargetBranch = """
                 +:refs/heads/*
                 -:refs/heads/release/2.x
+                -:refs/heads/release/1.x
                 """
             }
         }
