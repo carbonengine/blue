@@ -305,12 +305,6 @@ bool RowDescriptor::InitFromTypedList()
 		ColumnDescriptor &cd = mColumnList[i];
 
 		const auto& name = cd.mName;
-		// Empty column names make no sense
-		if ( name.empty() )
-		{
-			PyErr_SetString(PyExc_ValueError, "Column names cannot be empty");
-			return false;
-		}
 
 		// It is possible to do all sorts of strange things by allowing columns that have the same
 		// name as Python's magic double-underscore attributes. For example, it is possible to use
@@ -399,13 +393,6 @@ bool RowDescriptor::InitFromTypedList()
 		}
 		//Also initialize the map, while we're at it.
 		mColumnMap.insert(columnMap_t::value_type(cd.mName.c_str(), std::pair<ColumnDescriptor*, int>(&cd, (int)i)));
-	}
-
-	// check if there are multiple columns with the same name
-	if ( mColumnMap.size() != mColumnList.size() )
-	{
-		PyErr_SetString( PyExc_ValueError, "Multiple columns with the same name are not allowed" );
-		return false;
 	}
 
 	return true;
