@@ -158,7 +158,7 @@ class CarbonBuildMacOS(buildName: String, configType: String, preset: String, ag
                 -:refs/heads/release/3.x
                 -:refs/heads/release/2.x
                 -:refs/heads/release/1.x
-                """
+                """.trimIndent()
             }
         }
         commitStatusPublisher {
