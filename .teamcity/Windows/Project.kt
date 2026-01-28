@@ -214,7 +214,7 @@ class CarbonBuildWindows(buildName: String, configType: String, preset: String) 
                 -:refs/heads/release/3.x
                 -:refs/heads/release/2.x
                 -:refs/heads/release/1.x
-                """
+                """.trimIndent()
             }
         }
         commitStatusPublisher {
