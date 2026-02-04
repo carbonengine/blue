@@ -480,7 +480,7 @@ void YamlReader::ReadValueImpl( T& dst )
 #ifdef _WIN32
 		dst = _atoi_l( (const char*)m_event->data.scalar.value, m_locale );
 #else
-		dst = atoi( (const char*)m_event->data.scalar.value );
+		dst = atoi_l( (const char*)m_event->data.scalar.value, NULL );
 #endif
 	}
 }
@@ -502,7 +502,7 @@ void YamlReader::ReadValue( uint32_t& dst )
 #ifdef _WIN32
 		dst = _strtoul_l( start, &end, 10, m_locale );
 #else
-		dst = strtoul( start, &end, 10 );
+		dst = strtoul_l( start, &end, 10, NULL );
 #endif
 	}
 }
@@ -558,7 +558,7 @@ void YamlReader::ReadValue( uint64_t& dst )
 #ifdef _WIN32
 		dst = _strtoull_l( start, &end, 10 , m_locale);
 #else
-		dst = strtoull( start, &end, 10 );
+		dst = strtoull_l( start, &end, 10, NULL);
 #endif
 	}
 }
@@ -577,7 +577,7 @@ void YamlReader::ReadValue( int64_t& dst )
 		dst = _atoi64_l( start, m_locale );
 #else
 		char* end = nullptr;
-		dst = strtoll( start, &end, 10 );
+		dst = strtoll_l( start, &end, 10, NULL );
 #endif
 	}
 }
@@ -616,7 +616,7 @@ void YamlReader::ReadValue( double& dst )
 #ifdef _WIN32
 		dst = _atof_l( (const char*)m_event->data.scalar.value, m_locale );
 #else
-		dst = atof( (const char*)m_event->data.scalar.value );
+		dst = atof_l( (const char*)m_event->data.scalar.value, NULL);
 #endif
 	}
 }
@@ -672,7 +672,7 @@ void YamlReader::ReadFloatArray( float* values, size_t count )
 #ifdef _WIN32
 				values[i] = (float)_atof_l( (const char*)m_event->data.scalar.value, m_locale );
 #else
-				values[i] = (float)atof( (const char*)m_event->data.scalar.value );
+				values[i] = (float)atof_l( (const char*)m_event->data.scalar.value, NULL );
 #endif
 				GetNextEvent();
 			}
