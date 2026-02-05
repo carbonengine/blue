@@ -226,6 +226,10 @@ class TestYamlWriterAndReader(unittest.TestCase):
     def testYamlReaderUInt64(self):
         self._testYamlReader("myUInt64",MAX_UINT64)
 
+    def testYamlReaderDouble(self):
+        self._testYamlReader("myDouble", 222.555);
+        self._testYamlReader("myDouble", -222.555);
+
     def testWriteSharedString(self):
         x = blue.BlueTestHelperAttributes()
 
