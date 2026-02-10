@@ -48,7 +48,7 @@ YamlReader::YamlReader() :
 	m_timeSlice( 0.005f ),
 	m_allowYield( false )
 #ifdef _WIN32
-,
+	,
 	m_locale( _create_locale( LC_ALL, "en_US" ) )
 #elif __APPLE__
 	,
