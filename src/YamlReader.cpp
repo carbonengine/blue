@@ -48,9 +48,13 @@ YamlReader::YamlReader() :
 	m_timeSlice( 0.005f ),
 	m_allowYield( false )
 #ifdef _WIN32
-	,
+,
 	m_locale( _create_locale( LC_ALL, "en_US" ) )
+#elif __APPLE__
+	,
+	m_locale( newlocale(LC_ALL_MASK, "C", 0 ) )
 #endif
+
 #if CCP_STACKLESS
 	,
 	m_currentTasklet( NULL )
@@ -77,6 +81,8 @@ YamlReader::~YamlReader()
 	}
 #ifdef _WIN32
 	_free_locale( m_locale );
+#elif __APPLE__
+	freelocale( m_locale );
 #endif
 }
 
@@ -480,7 +486,7 @@ void YamlReader::ReadValueImpl( T& dst )
 #ifdef _WIN32
 		dst = _atoi_l( (const char*)m_event->data.scalar.value, m_locale );
 #else
-		dst = atoi_l( (const char*)m_event->data.scalar.value, NULL );
+		dst = atoi_l( (const char*)m_event->data.scalar.value, m_locale );
 #endif
 	}
 }
@@ -502,7 +508,7 @@ void YamlReader::ReadValue( uint32_t& dst )
 #ifdef _WIN32
 		dst = _strtoul_l( start, &end, 10, m_locale );
 #else
-		dst = strtoul_l( start, &end, 10, NULL );
+		dst = strtoul_l( start, &end, 10, m_locale );
 #endif
 	}
 }
@@ -558,7 +564,7 @@ void YamlReader::ReadValue( uint64_t& dst )
 #ifdef _WIN32
 		dst = _strtoull_l( start, &end, 10 , m_locale);
 #else
-		dst = strtoull_l( start, &end, 10, NULL);
+		dst = strtoull_l( start, &end, 10, m_locale);
 #endif
 	}
 }
@@ -577,7 +583,7 @@ void YamlReader::ReadValue( int64_t& dst )
 		dst = _atoi64_l( start, m_locale );
 #else
 		char* end = nullptr;
-		dst = strtoll_l( start, &end, 10, NULL );
+		dst = strtoll_l( start, &end, 10, m_locale );
 #endif
 	}
 }
@@ -616,7 +622,7 @@ void YamlReader::ReadValue( double& dst )
 #ifdef _WIN32
 		dst = _atof_l( (const char*)m_event->data.scalar.value, m_locale );
 #else
-		dst = atof_l( (const char*)m_event->data.scalar.value, NULL);
+		dst = atof_l( (const char*)m_event->data.scalar.value, m_locale);
 #endif
 	}
 }
@@ -672,7 +678,7 @@ void YamlReader::ReadFloatArray( float* values, size_t count )
 #ifdef _WIN32
 				values[i] = (float)_atof_l( (const char*)m_event->data.scalar.value, m_locale );
 #else
-				values[i] = (float)atof_l( (const char*)m_event->data.scalar.value, NULL );
+				values[i] = (float)atof_l( (const char*)m_event->data.scalar.value, m_locale );
 #endif
 				GetNextEvent();
 			}
