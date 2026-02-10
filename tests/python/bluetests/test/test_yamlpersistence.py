@@ -226,6 +226,14 @@ class TestYamlWriterAndReader(unittest.TestCase):
     def testYamlReaderUInt64(self):
         self._testYamlReader("myUInt64",MAX_UINT64)
 
+    def testYamlReaderDouble(self):
+        import locale
+        orig = locale.setlocale(locale.LC_ALL)
+        locale.setlocale(locale.LC_ALL, 'fr_FR')
+        self._testYamlReader("myDouble", 222.555);
+        self._testYamlReader("myDouble", -222.555);
+        locale.setlocale(locale.LC_ALL, orig)
+
     def testWriteSharedString(self):
         x = blue.BlueTestHelperAttributes()
 
