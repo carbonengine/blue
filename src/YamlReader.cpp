@@ -618,8 +618,6 @@ void YamlReader::ReadValue( double& dst )
 #ifdef _WIN32
 		dst = _atof_l( (const char*)m_event->data.scalar.value, m_locale );
 #else
-		std::string currentLocale(std::setlocale(LC_NUMERIC, nullptr));
-		std::cout << "JOEJOEJOEJOEJOE " << currentLocale << std::endl;
 		dst = atof_l( (const char*)m_event->data.scalar.value, NULL);
 #endif
 	}
