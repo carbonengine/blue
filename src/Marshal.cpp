@@ -1433,7 +1433,7 @@ PyObject* Marshal::ReadObject( ReadStream *stream )
 
 	Incrementor _inc(mRecursionLevel);
 	if( !_inc.Test( sRecursionLimit ) )
-		return false;
+		return nullptr;
 
 	PYTYPES type;
 	if (!stream->ReadType(type)) return 0;
