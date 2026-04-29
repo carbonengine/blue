@@ -226,6 +226,12 @@ class testMarshal(blueunittest.TestCase):
             with self.assertRaises(RuntimeError):
                 blue.marshal.Load(bad_payload)
 
+    def test_deeply_nested_read(self):
+        depth = 10000
+        payload = b"\x7D\x01" + b"\x25" * depth + b"\x01"
+        with self.assertRaises(RuntimeError):
+            blue.marshal.Load(payload)
+
 class TestBackwardsCompatibility(blueunittest.TestCase):
     """
     This class adds coverage for objects marshalled in Python 3.
