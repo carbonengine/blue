@@ -158,10 +158,10 @@ public:
         return allocate(_Count);
     }
 
-    template <class U>
-    struct rebind {
-        using other = PyAllocator<U>;
-    };
+//    template <class U>
+//    struct rebind {
+//        using other = PyAllocator<U>;
+//    };
 };
 
 

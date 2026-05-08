@@ -22,7 +22,6 @@ find_package(BlueExposure REQUIRED NO_CMAKE_PATH)
 find_package(CURL REQUIRED NO_CMAKE_PATH)
 find_package(OpenSSL REQUIRED NO_CMAKE_PATH)
 find_package(PDM REQUIRED NO_CMAKE_PATH)
-find_package(Python REQUIRED NO_CMAKE_PATH)
 find_package(YAML REQUIRED NO_CMAKE_PATH)
 find_package(ZLIB REQUIRED NO_CMAKE_PATH)
 
@@ -311,6 +310,7 @@ target_precompile_headers(Blue PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/StdAfx.h)
 target_compile_definitions(Blue
     PUBLIC
         CCP_STACKLESS
+        $<$<BOOL:${ENABLE_PY3_COMPATIBILITY}>:PY3_COMPATIBILITY_MODE>
     )
 
 if(APPLE)
@@ -371,27 +371,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     else()
         message(FATAL_ERROR "Unsupported platform: " ${CMAKE_SYSTEM_NAME})
     endif()
-    if(WIN32)
-        set(EXE_EXTENSION ".exe")
-        set(SCRIPT_EXTENSION ".bat")
-    else()
-        set(SCRIPT_EXTENSION ".sh")
-    endif()
-    set(PYTHON_INTERPRETER_PATH "${BRANCH_ROOT_DIR}/eve/client/pythonInterpreter${SCRIPT_EXTENSION}")
-    get_target_property(LIBPYTHON Python IMPORTED_LOCATION)
-    if(DEFINED CMAKE_BUILD_TYPE AND NOT CMAKE_BUILD_TYPE MATCHES "Release")
-        set(EXEFILE_NAME exefile_${CMAKE_BUILD_TYPE}${EXE_EXTENSION})
-    else()
-        set(EXEFILE_NAME exefile${EXE_EXTENSION})
-    endif()
-    set(EXEFILE_PATH $<TARGET_FILE_DIR:Blue>/${EXEFILE_NAME})
-    add_custom_command(
-        TARGET Blue POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy -t $<TARGET_FILE_DIR:Blue>
-                ${Exefile_ROOT}/${CCP_VENDOR_BIN_PATH}/${EXEFILE_NAME}
-                ${LIBPYTHON}
-    )
-    execute_process(COMMAND ${PYTHON_INTERPRETER_PATH} discover.py
+    execute_process(COMMAND ${PYTHON_EXECUTABLE} discover.py
         OUTPUT_VARIABLE PYTHON_TESTS_STR
         OUTPUT_STRIP_TRAILING_WHITESPACE
         ERROR_STRIP_TRAILING_WHITESPACE
@@ -404,20 +384,17 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     endif()
     separate_arguments(PYTHON_TESTS UNIX_COMMAND ${PYTHON_TESTS_STR})
     foreach(PYTHON_TEST ${PYTHON_TESTS})
-        string(FIND ${PYTHON_TEST} "test" TEST_INDEX)
-        if( TEST_INDEX GREATER -1 ) # The line contains the string "test"
-            message(STATUS "Found test ${PYTHON_TEST}")
-            add_test(NAME ${PYTHON_TEST}
-                COMMAND ${EXEFILE_PATH} /inherit /buildflavor=$<LOWER_CASE:$<CONFIG>> /py -m unittest -v ${PYTHON_TEST}
+        message(STATUS "Found test ${PYTHON_TEST}")
+        add_test(NAME ${PYTHON_TEST}
+                COMMAND ${PYTHON_EXECUTABLE} -m unittest -v ${PYTHON_TEST}
                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests/python
-            )
-            if(WIN32)
-                set_tests_properties(${PYTHON_TEST} PROPERTIES ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:Blue>\;${BRANCH_ROOT_DIR}/carbon/common/stdlib\;${BRANCH_ROOT_DIR}/vendor/python/2.7.1+ccp-stackless/${CCP_VENDOR_BIN_PATH}\;${BRANCH_ROOT_DIR}/packages;BUILDFLAVOR=$<LOWER_CASE:$<CONFIG>>")
-            elseif(APPLE)
-                set_tests_properties(${PYTHON_TEST} PROPERTIES ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:Blue>:${BRANCH_ROOT_DIR}/carbon/common/stdlib:${BRANCH_ROOT_DIR}/vendor/python/2.7.1+ccp-stackless/${CCP_VENDOR_LIB_PATH}:${BRANCH_ROOT_DIR}/packages;BUILDFLAVOR=$<LOWER_CASE:$<CONFIG>>")
-            else()
-                message(FATAL_ERROR "Unsupported platform")
-            endif()
+        )
+        if(WIN32)
+            set_tests_properties(${PYTHON_TEST} PROPERTIES ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:Blue>\;${BRANCH_ROOT_DIR}/carbon/common/stdlib\;${BRANCH_ROOT_DIR}/vendor/python/2.7.1+ccp-stackless/${CCP_VENDOR_BIN_PATH}\;${BRANCH_ROOT_DIR}/packages;BUILDFLAVOR=$<LOWER_CASE:$<CONFIG>>;$<$<BOOL:${ENABLE_PY3_COMPATIBILITY}>:PY3_COMPATIBILITY_MODE=True>")
+        elseif(APPLE)
+            set_tests_properties(${PYTHON_TEST} PROPERTIES ENVIRONMENT "PYTHONPATH=$<TARGET_FILE_DIR:Blue>:${BRANCH_ROOT_DIR}/carbon/common/stdlib:${BRANCH_ROOT_DIR}/vendor/python/2.7.1+ccp-stackless/${CCP_VENDOR_BIN_PATH}:${BRANCH_ROOT_DIR}/packages;BUILDFLAVOR=$<LOWER_CASE:$<CONFIG>>;$<$<BOOL:${ENABLE_PY3_COMPATIBILITY}>:PY3_COMPATIBILITY_MODsE=True")
+        else()
+            message(FATAL_ERROR "Unsupported platform")
         endif()
     endforeach()
 
