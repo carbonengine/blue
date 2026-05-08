@@ -1675,13 +1675,13 @@ PyObject *Marshal::GetGlobalObject(PyObject *nameO)
 		else {
 			modulename = BluePyStr( dot-name, name );
 		}
+#else
+		modulename = BluePyStr(dot-name, name);
+#endif
 		name = dot+1;
 	} else {
 		modulename = BluePyStr("__builtin__");
 	}
-#else
-		modulename = BluePyStr(dot-name, name);
-#endif
 
 	BluePy module(PyImport_ImportModule((char*)modulename.Str()));
 	if (!module) return 0;
