@@ -73,10 +73,10 @@ public:
 	void Update();
 
 	// Typically used from the client.
-	void StartTelemetry( const std::string& server );
+	void StartTelemetry( const std::string& server, bool trackMemoryAllocations = false );
 
 	// Following functions are typically used from ESP for server profiling.
-	void StartTimedTelemetry( const std::string& server, float samplePeriod );
+	void StartTimedTelemetry( const std::string& server, float samplePeriod, bool trackMemoryAllocations = false );
 	void StartTelemetryDump( const std::string& dumpFolder, float samplePeriod );
 
 	void PauseTelemetry();

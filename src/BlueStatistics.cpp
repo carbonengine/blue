@@ -151,9 +151,9 @@ CcpStaticStatisticsEntry* BlueStatistics::CreateDynamicEntry( const char* name, 
 // Buffer size and sampling period hard coded in here as this
 // is typically called from the client UI for client profiling.
 // Use StartTimedTelemetry or StartTelemetryDump otherwise.
-void BlueStatistics::StartTelemetry( const std::string& server )
+void BlueStatistics::StartTelemetry( const std::string& server, bool trackMemoryAllocations /*= false*/ )
 {
-	StartTimedTelemetry( server, 0 );
+	StartTimedTelemetry( server, 0, trackMemoryAllocations );
 }
 
 void TelemetryEventHandler( CcpTelemetryEvent event, void* userdata )
@@ -163,10 +163,10 @@ void TelemetryEventHandler( CcpTelemetryEvent event, void* userdata )
 	}
 }
 
-void BlueStatistics::StartTimedTelemetry( const std::string& server, float samplePeriod )
+void BlueStatistics::StartTimedTelemetry( const std::string& server, float samplePeriod, bool trackMemoryAllocations /*= false*/ )
 {
 	using namespace std::chrono;
-	CcpStartTelemetry( CcpTelemetryConfig{ server, duration_cast<milliseconds>( duration<float>(samplePeriod) ) } );
+	CcpStartTelemetry( CcpTelemetryConfig{ server, duration_cast<milliseconds>( duration<float>(samplePeriod) ), trackMemoryAllocations } );
 	CcpRegisterTelemetryEventHandler( TelemetryEventHandler, nullptr );
 }
 
