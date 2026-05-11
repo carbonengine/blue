@@ -1558,8 +1558,13 @@ PyObject *Marshal::ReadObjectNewobj(ReadStream* stream, bool shared)
 	if (!cls) return 0;
 	
 	BluePy __new__(PyObject_GetAttr(cls, mStock_New));
+#ifdef PY3_COMPATIBILITY_MODE
 	// Marshalled new-style objects from Python3 may have to be constructed as old-style objects in Python2.7
 	BluePy r(PyObject_HasAttr( cls, mStock_New ) ? BluePy(PyObject_CallObject(__new__, args)) : BluePy(PyInstance_NewRaw(cls, 0)));
+#else
+if (!__new__) return 0;
+BluePy r(PyObject_CallObject(__new__, args));
+#endif
 	if (!r) return 0;
 
 	//object is constructed, now update r
@@ -1663,12 +1668,16 @@ PyObject *Marshal::GetGlobalObject(PyObject *nameO)
 	const char *dot = strrchr(name, '.');
 	BluePyStr modulename;
 	if (dot){
+#if PY3_COMPATIBILITY_MODE
 		if( strncmp( name, "builtins.", 9 ) == 0 ) {
 			modulename = BluePyStr( "__builtin__" );
 		}
 		else {
 			modulename = BluePyStr( dot-name, name );
 		}
+#else
+		modulename = BluePyStr(dot-name, name);
+#endif
 		name = dot+1;
 	} else {
 		modulename = BluePyStr("__builtin__");
@@ -1878,6 +1887,13 @@ bool Marshal::WriteObject(WriteStream* stream, PyObject* o)
 			{
 				RETFAIL(WriteType(stream, TY_STR_EMPTY));
 			}
+#ifndef PY3_COMPATIBILITY_MODE
+			else if (size == 1)
+			{
+				RETFAIL(WriteType(stream, TY_STR_CHAR));
+				RETFAIL(stream->Write<char>(string[0]));
+			}
+#endif
 			else
 			{
 				PyObject* index = PyDict_GetItem(mStrTable, o);

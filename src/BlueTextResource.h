@@ -32,6 +32,6 @@ protected:
 	std::string m_text;
 };
 
-TYPEDEF_BLUECLASS_SHUTDOWN( BlueTextResource );
+TYPEDEF_BLUECLASS( BlueTextResource );
 
 #endif // BlueTextResource_h

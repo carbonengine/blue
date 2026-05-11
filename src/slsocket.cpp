@@ -1150,15 +1150,14 @@ public:
 		buffers.Push(header);
 		SSIZE_T result = header.len;
 		result += SendResult::Prepare(buffers, obj, pbuf);
-		auto cargoBytes = static_cast<uint32_t>( result - sizeof(mHeader) ); //number of cargo bytes
-		if ( cargoBytes > static_cast<uint32_t>( mXtra->GetMaxPacketSize() ) ) {
+		mHeader = (DWORD)(result-sizeof(mHeader)); //number of cargo bytes
+		if (mHeader > (DWORD)mXtra->GetMaxPacketSize()) {
 			char tmp[128];
 			sprintf_s(tmp, "packet too long at %d bytes, max size is %d",
-				cargoBytes, mXtra->GetMaxPacketSize());
+		   		mHeader, mXtra->GetMaxPacketSize());
 			OutputDebugString(tmp);
 			throw std::length_error(tmp);
 		}
-		mHeader = htonl( cargoBytes );
 		return result;
 	}
 	
@@ -1277,31 +1276,30 @@ public:
       {
           mBytesRead += bytesTransfered;
           bool more;
-          uint32_t cargoBytes{ntohl( mHeader )};
           if (mBytesRead < sizeof(mHeader)) {
               //continue reading header
               more = true;
           } else if (mBytesRead == sizeof(mHeader)) {
               //just finished reading header, allocate buffer.
-              if ( cargoBytes > static_cast<uint32_t>( mXtra->GetMaxPacketSize() ) ) {
+			  if (mHeader > (DWORD)mXtra->GetMaxPacketSize()) {
                   char tmp[128];
                   sprintf_s(tmp, "too large a packet detected at %d bytes, max is %d",
                       mHeader, mXtra->GetMaxPacketSize());
                   throw std::length_error(tmp);
               }
               more = mHeader!=0;
-          } else if (mBytesRead < static_cast<int>( sizeof( mHeader ) + cargoBytes ) ) {
+		  } else if (mBytesRead < (int)(sizeof(mHeader)+mHeader)) {
               //header here but packet not finished
               more = true;
           } else {
               //packet finished.
               //did we read any of the next guy's header? (we requested next header's amount of data :)
-              uint32_t rest = mBytesRead - ( sizeof( mHeader ) + cargoBytes );
+			  DWORD rest = mBytesRead - (sizeof(mHeader) + mHeader);
               if (rest) {
                   RecvPacketResult *next = mXtra->NextRecv(this);
                   _ASSERT(next);
                   next->OnHeaderBytesRead(rest);
-                  mBytesRead = static_cast<int>( sizeof( mHeader ) + cargoBytes );
+				  mBytesRead = (int)(sizeof(mHeader)+mHeader);
               }
               mXtra->mStats.PacketReceived();
               more = false;

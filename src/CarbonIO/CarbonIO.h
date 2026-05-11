@@ -558,15 +558,15 @@ bool CarbonIO::formatPacket( char* buf,
 	int pos;
 	if ( OOBData && OOBLen )
 	{
-		*reinterpret_cast<uint32_t *>( buf ) = htonl( (dataLen + OOBLen + sizeof( uint32_t ) ) | ceHeaderExpectPayloadOffset );
-		*reinterpret_cast<uint32_t *>( buf + sizeof( uint32_t ) ) = htonl( OOBLen );
-		memcpy( buf + sizeof( uint32_t )*2, OOBData, OOBLen );
-		pos = OOBLen + sizeof( uint32_t )*2;
+		*(unsigned int *)buf = (dataLen + OOBLen + sizeof(unsigned int)) | ceHeaderExpectPayloadOffset;
+		*(unsigned int *)(buf + sizeof(unsigned int)) = OOBLen;
+		memcpy( buf + sizeof(unsigned int)*2, OOBData, OOBLen );
+		pos = OOBLen + sizeof(unsigned int)*2;
 	}
 	else
 	{
-		*reinterpret_cast<uint32_t *>( buf ) = htonl( dataLen );
-		pos = sizeof( uint32_t );
+		*(unsigned int *)buf = dataLen;
+		pos = sizeof(unsigned int);
 	}
 
 	char *outbuf = 0;
@@ -576,9 +576,9 @@ bool CarbonIO::formatPacket( char* buf,
 		 && checkAndCompress(data, dataLen, &outbuf, &outlen) )
 	{
 		*len = pos + outlen;
-		*reinterpret_cast<uint32_t *>( buf ) &= htonl( ceHeaderBitsMask ); // knock off old size
-		*reinterpret_cast<uint32_t *>( buf ) |= htonl( *len - sizeof( uint32_t ) ); // plug in NEW size
-		*reinterpret_cast<uint32_t *>( buf ) |= htonl( m_compressionType );
+		*(unsigned int *)buf &= ceHeaderBitsMask; // knock off old size
+		*(unsigned int *)buf |= *len - sizeof(unsigned int); // plug in NEW size
+		*(unsigned int *)buf |= m_compressionType;
 		memcpy( buf + pos, outbuf, outlen );
 		delete[] outbuf;
 	}
@@ -816,7 +816,7 @@ bool CarbonIO::isPacketValid( SPacket *packet )
 	return packet
 			&& packet->packetLen >= 4
 			&& (packet->auxData
-				|| ( packet->packetLen == ( ntohl( *reinterpret_cast<uint32_t *>( packet->data ) ) & ceHeaderSizeMask ) + sizeof( int ) ) );
+			 || (packet->packetLen == (*(int *)packet->data & ceHeaderSizeMask) + sizeof(int)));
 }
 
 //------------------------------------------------------------------------------
