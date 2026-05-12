@@ -153,6 +153,12 @@ class CarbonBuildMacOS(buildName: String, configType: String, preset: String, ag
                     token = "%GITHUB_TEAMCITY_TOKEN%"
                 }
                 filterAuthorRole = PullRequests.GitHubRoleFilter.MEMBER
+                filterTargetBranch = """
+                +:refs/heads/*
+                -:refs/heads/release/3.x
+                -:refs/heads/release/2.x
+                -:refs/heads/release/1.x
+                """.trimIndent()
             }
         }
         commitStatusPublisher {
@@ -187,5 +193,3 @@ class CarbonBuildMacOS(buildName: String, configType: String, preset: String, ag
         startsWith("teamcity.agent.jvm.os.arch", agentArchitecture)
     }
 })
-
-

@@ -297,6 +297,12 @@ class testMarshal(blueunittest.TestCase):
             with self.assertRaises(RuntimeError):
                 blue.marshal.Load(bad_payload)
 
+    def test_deeply_nested_read(self):
+        depth = 10000
+        payload = b"\x7D\x01" + b"\x25" * depth + b"\x01"
+        with self.assertRaises(RuntimeError):
+            blue.marshal.Load(payload)
+
 
 @unittest.skipUnless("PY27_COMPATIBILITY_MODE" in os.environ, "Skipping because tests will fail when compatibility mode is off")
 class TestBackwardsCompatibility(blueunittest.TestCase):

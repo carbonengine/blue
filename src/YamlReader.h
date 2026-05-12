@@ -12,6 +12,11 @@
 #include <yaml.h>
 #include <cstdint>
 
+#ifdef __APPLE__
+#include <clocale>
+#endif
+
+
 // Forward declare type from the <Scheduler.h> header, include will be in .cpp file
 struct PyTaskletObject;
 
@@ -203,6 +208,8 @@ private:
 #ifdef _WIN32
 	// So user locale doesn't affect parsing results
 	_locale_t m_locale;
+#elif __APPLE__
+	locale_t m_locale;
 #endif
 
 #if CCP_STACKLESS
