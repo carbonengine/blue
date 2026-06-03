@@ -51,7 +51,6 @@ set(PUBLIC_HEADER_FILES_INCLUDE
     include/BluePlatform.h
     include/BluePlatformPosix.h
     include/BluePlatformWin32.h
-    include/Rect.h
     include/stacklessio.h
 )
 
