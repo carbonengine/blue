@@ -151,9 +151,9 @@ CcpStaticStatisticsEntry* BlueStatistics::CreateDynamicEntry( const char* name, 
 // Buffer size and sampling period hard coded in here as this
 // is typically called from the client UI for client profiling.
 // Use StartTimedTelemetry or StartTelemetryDump otherwise.
-void BlueStatistics::StartTelemetry( const std::string& server, bool trackMemoryAllocations /*= false*/ )
+void BlueStatistics::StartTelemetry( const std::string& server )
 {
-	StartTimedTelemetry( server, 0, trackMemoryAllocations );
+	StartTimedTelemetry( server, 0 );
 }
 
 void TelemetryEventHandler( CcpTelemetryEvent event, void* userdata )
@@ -163,10 +163,26 @@ void TelemetryEventHandler( CcpTelemetryEvent event, void* userdata )
 	}
 }
 
-void BlueStatistics::StartTimedTelemetry( const std::string& server, float samplePeriod, bool trackMemoryAllocations /*= false*/ )
+void BlueStatistics::StartTelemetryFromConfig( BlueStatisticsTelemetryConfig* config )
+{
+	if ( config != nullptr)
+	{
+		// Map BlueStatisticsTelemetryConfig to carbon-core CcpTelemetryConfig
+		CcpTelemetryConfig coreTelemetryConfig{
+			config->m_applicationName,
+			std::chrono::milliseconds( static_cast<int>( config->m_captureDurationSec * 1000 ) ),
+			config->m_trackMemoryAllocations
+		};
+
+		CcpStartTelemetry( coreTelemetryConfig );
+		CcpRegisterTelemetryEventHandler( TelemetryEventHandler, nullptr );
+	}
+}
+
+void BlueStatistics::StartTimedTelemetry( const std::string& server, float samplePeriod )
 {
 	using namespace std::chrono;
-	CcpStartTelemetry( CcpTelemetryConfig{ server, duration_cast<milliseconds>( duration<float>(samplePeriod) ), trackMemoryAllocations } );
+	CcpStartTelemetry( CcpTelemetryConfig{ server, duration_cast<milliseconds>( duration<float>(samplePeriod) ) } );
 	CcpRegisterTelemetryEventHandler( TelemetryEventHandler, nullptr );
 }
 

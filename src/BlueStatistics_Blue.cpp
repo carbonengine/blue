@@ -93,6 +93,40 @@ const Be::ClassInfo* CcpStatisticsEntry::ExposeToBlue()
 }
 
 
+BLUE_DEFINE( BlueStatisticsTelemetryConfig );
+
+const Be::ClassInfo* BlueStatisticsTelemetryConfig::ExposeToBlue()
+{
+	EXPOSURE_BEGIN( BlueStatisticsTelemetryConfig, "Configuration for telemetry capture" )
+
+	MAP_ATTRIBUTE
+	(
+		"applicationName",
+		m_applicationName,
+		"Name provided by profiled application, displayed in the connection list of the Tracy visualizer",
+		Be::READWRITE
+	)
+
+	MAP_ATTRIBUTE
+	(
+		"captureDuration",
+		m_captureDurationSec,
+		"Capture duration for a telemetry session in seconds (0 = until manually stopped)",
+		Be::READWRITE
+	)
+
+	MAP_ATTRIBUTE
+	(
+		"trackMemory",
+		m_trackMemoryAllocations,
+		"If set, memory allocations/deallocations for profiled application are shown in Tracy",
+		Be::READWRITE
+	)
+
+	EXPOSURE_END()
+}
+
+
 BLUE_DEFINE( BlueStatistics );
 
 #if BLUE_WITH_PYTHON
@@ -636,17 +670,25 @@ const Be::ClassInfo* BlueStatistics::ExposeToBlue()
 		(
 			"StartTelemetry", 
 			StartTelemetry, 
-			"Connects to a Telemetry server and starts gathering data.\n"
-			":param server: the network address of the server to connect to."
+			"Starts a profiling/telemetry session, visible in the Tracy visualizer once connected.\n"
+			":param server: the name of the application being profiled."
+		)
+
+		MAP_METHOD_AND_WRAP
+		(
+			"StartTelemetryFromConfig",
+			StartTelemetryFromConfig,
+			"Starts a profiling/telemetry session based on config, visible in the Tracy visualizer once connected.\n"
+			":param config: the telemetry configuration to use.\n"
+			":type config: BlueStatisticsTelemetryConfig"
 		)
 
 		MAP_METHOD_AND_WRAP
 		(
 			"StartTimedTelemetry", 
-			StartTimedTelemetry, 
-			"Connects to a Telemetry server and starts gathering data.\n"
-			":param server: the network address of the server to connect to.\n"
-			"  Use 'localhost' to connect to a Visualizer on the local machine.\n"
+			StartTimedTelemetry,
+			"Starts a profiling/telemetry session for a set time, visible in the Tracy visualizer once connected.\n"
+			":param server: the name of the application being profiled.\n"
 			":param samplePeriod: Time to sample for (in seconds) default of 0 means infinite sampling."
 		)
 
