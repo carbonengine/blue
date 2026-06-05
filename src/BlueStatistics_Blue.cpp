@@ -103,7 +103,7 @@ const Be::ClassInfo* BlueStatisticsTelemetryConfig::ExposeToBlue()
 	(
 		"applicationName",
 		m_applicationName,
-		"Name provided by profiled application, displayed in the connection list of the Tracy visualizer",
+		"Name provided by profiled application, presented in connection list of a Profiler tool",
 		Be::READWRITE
 	)
 
@@ -119,7 +119,7 @@ const Be::ClassInfo* BlueStatisticsTelemetryConfig::ExposeToBlue()
 	(
 		"trackMemory",
 		m_trackMemoryAllocations,
-		"If set, memory allocations/deallocations for profiled application are shown in Tracy",
+		"If set, memory allocations/deallocations are visible in Profiler tool",
 		Be::READWRITE
 	)
 
@@ -670,7 +670,7 @@ const Be::ClassInfo* BlueStatistics::ExposeToBlue()
 		(
 			"StartTelemetry", 
 			StartTelemetry, 
-			"Starts a profiling/telemetry session, visible in the Tracy visualizer once connected.\n"
+			"Starts a profiling/telemetry session, visible in a Profiler tool.\n"
 			":param server: the name of the application being profiled."
 		)
 
@@ -678,7 +678,7 @@ const Be::ClassInfo* BlueStatistics::ExposeToBlue()
 		(
 			"StartTelemetryFromConfig",
 			StartTelemetryFromConfig,
-			"Starts a profiling/telemetry session based on config, visible in the Tracy visualizer once connected.\n"
+			"Starts a profiling/telemetry session based on config, visible in a Profiler tool.\n"
 			":param config: the telemetry configuration to use.\n"
 			":type config: BlueStatisticsTelemetryConfig"
 		)
@@ -687,7 +687,7 @@ const Be::ClassInfo* BlueStatistics::ExposeToBlue()
 		(
 			"StartTimedTelemetry", 
 			StartTimedTelemetry,
-			"Starts a profiling/telemetry session for a set time, visible in the Tracy visualizer once connected.\n"
+			"Starts a profiling/telemetry session for a set time, visible in a Profiler tool.\n"
 			":param server: the name of the application being profiled.\n"
 			":param samplePeriod: Time to sample for (in seconds) default of 0 means infinite sampling."
 		)
