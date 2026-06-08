@@ -163,6 +163,22 @@ void TelemetryEventHandler( CcpTelemetryEvent event, void* userdata )
 	}
 }
 
+void BlueStatistics::StartTelemetryFromConfig( BlueStatisticsTelemetryConfig* config )
+{
+	if ( config != nullptr)
+	{
+		// Map BlueStatisticsTelemetryConfig to carbon-core CcpTelemetryConfig
+		CcpTelemetryConfig coreTelemetryConfig{
+			config->m_applicationName,
+			std::chrono::milliseconds( static_cast<int>( config->m_captureDurationSec * 1000 ) ),
+			config->m_trackMemoryAllocations
+		};
+
+		CcpStartTelemetry( coreTelemetryConfig );
+		CcpRegisterTelemetryEventHandler( TelemetryEventHandler, nullptr );
+	}
+}
+
 void BlueStatistics::StartTimedTelemetry( const std::string& server, float samplePeriod )
 {
 	using namespace std::chrono;

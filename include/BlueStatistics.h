@@ -62,6 +62,21 @@ protected:
 
 TYPEDEF_BLUECLASS( CcpStatisticsEntry );
 
+
+BLUE_DECLARE( BlueStatisticsTelemetryConfig );
+BLUE_CLASS( BlueStatisticsTelemetryConfig ) : public IRoot
+{
+public:
+	EXPOSE_TO_BLUE();
+
+	std::string m_applicationName;
+	float m_captureDurationSec{0};  // In seconds
+	bool m_trackMemoryAllocations{false};
+};
+
+TYPEDEF_BLUECLASS( BlueStatisticsTelemetryConfig );
+
+
 BLUE_DECLARE( BlueStatistics );
 BLUE_CLASS( BlueStatistics ) : public IRoot
 {
@@ -74,6 +89,7 @@ public:
 
 	// Typically used from the client.
 	void StartTelemetry( const std::string& server );
+	void StartTelemetryFromConfig( BlueStatisticsTelemetryConfig* config );
 
 	// Following functions are typically used from ESP for server profiling.
 	void StartTimedTelemetry( const std::string& server, float samplePeriod );
