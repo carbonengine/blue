@@ -1,11 +1,10 @@
+// Copyright © 2002 CCP ehf.
+
 /* 
 	*************************************************************************
 
 	DataStructs.h
 
-	Author:    Matthias Gudmundsson
-	Created:   May. 2002
-	OS:        Win32
 	Project:   Blue
 
 	Description:   
@@ -16,8 +15,6 @@
 	Dependencies:
 
 		Blue
-
-	(c) CCP 2002
 
 	*************************************************************************
 */

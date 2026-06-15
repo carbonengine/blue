@@ -1,12 +1,8 @@
+// Copyright © 2011 CCP ehf.
+
 #pragma once
 #ifndef SIMPLELOG_HPP
 #define SIMPLELOG_HPP
-////////////////////////////////////////////////////////////
-//
-//	Creator:    Curt Hartung
-//  Created:    Jun 2011
-//  Copyright:  CCP 2011
-//
 
 #include <time.h>
 #include <stdio.h>

@@ -1,3 +1,5 @@
+// Copyright © 2016 CCP ehf.
+
 #pragma once
 #ifndef LOG_CONTROL_H
 #define LOG_CONTROL_H

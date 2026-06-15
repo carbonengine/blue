@@ -1,3 +1,5 @@
+# Copyright © 2023 CCP ehf.
+
 """Import blue for test code
 
 This package import is only necessary for blue's python test suite because those cannot run through

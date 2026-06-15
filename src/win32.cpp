@@ -1,3 +1,5 @@
+// Copyright © 2014 CCP ehf.
+
 //This file defines the blue.win32 module which exposes some quite useful win32 apis to the app
 
 

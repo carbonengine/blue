@@ -1,3 +1,5 @@
+# Copyright © 2023 CCP ehf.
+
 from . import blueunittest
 import blue
 

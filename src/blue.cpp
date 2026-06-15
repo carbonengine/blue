@@ -1,3 +1,5 @@
+// Copyright © 2014 CCP ehf.
+
 // blue.cpp : Defines the entry point for the DLL application.
 //
 

@@ -1,3 +1,5 @@
+# Copyright © 2023 CCP ehf.
+
 import unittest
 import blue
 import scheduler

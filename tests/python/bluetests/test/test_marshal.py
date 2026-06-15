@@ -1,3 +1,5 @@
+# Copyright © 2023 CCP ehf.
+
 __author__ = 'snorri.sturluson'
 
 from . import blueunittest

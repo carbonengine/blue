@@ -1,9 +1,4 @@
-//
-// Marshal.cpp
-//
-// Matthias Gudmundsson
-// (c) CCP Jan 2003
-//
+// Copyright © 2003 CCP ehf.
 
 #include "StdAfx.h"
 #if BLUE_WITH_PYTHON
@@ -2456,7 +2451,7 @@ bool Marshal::WriteObjectReduce(bool &handled, WriteStream* stream, PyObject* o)
 	if (!PyCallable_Check(callable))
 		return PyErr_Clear(), true; //no, can't reduce.
 	PyObject *args = PyTuple_GET_ITEM(rv.o, 1);
-	if (!PyTuple_Check(args)) return true; //this is some strange shit.
+	if (!PyTuple_Check(args)) return true; //unexpected: args is not a tuple.
 	
 	//check for special case, the __newobj__ thing.  See pickle.py.  basicle a tuple with class and args
 	bool newobj = false;

@@ -1,11 +1,4 @@
-////////////////////////////////////////////////////////////////////////////////
-//
-// Creator:		Snorri Sturluson
-// Created:		December 2013
-// Copyright:	CCP 2013
-//
-// Moved here from Synchro.h - originally implemented by Matthias Gudmundsson
-//
+// Copyright © 2013 CCP ehf.
 
 #pragma once
 #ifndef Heap_h

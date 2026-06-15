@@ -1,12 +1,8 @@
+// Copyright © 2011 CCP ehf.
+
 #pragma once
 #ifndef BitPacker_H
 #define BitPacker_H
-//////////////////////////////////////////////////////////////////////////////////
-//
-//  Author:    Curt Hartung
-//  Created:   Mar 2011
-//  OS:        Win32
-//  Project:   Blue
 
 #ifdef WIN32
 #pragma warning (disable : 4996) // remove Windows nagging about using _strincmp() etc

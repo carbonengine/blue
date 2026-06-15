@@ -1,11 +1,10 @@
+// Copyright © 2003 CCP ehf.
+
 /*
 	*************************************************************************
 
 	PyTemplates.h
 
-	Author:    Matthias Gudmundsson
-	Created:   Jan. 2003
-	OS:        Win32
 	Project:   Python template helpers
 
 	Description:
@@ -16,8 +15,6 @@
 	Dependencies:
 
 		Python
-
-	(c) CCP 2003
 
 	*************************************************************************
 */

@@ -1,11 +1,10 @@
+// Copyright Â© 2000 CCP ehf.
+
 /*
 	*************************************************************************
 
 	ITriFunction.h
 
-	Author:    Hilmar Veigar Pétursson
-	Created:   August 2001
-	OS:        Windows, macOS
 	Project:   Blue (Originally Trinity)
 
 	Description:
@@ -17,8 +16,6 @@
 	Dependencies:
 
 		None.
-
-	(c) CCP 2000
 
 	*************************************************************************
 */

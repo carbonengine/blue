@@ -1,3 +1,5 @@
+// Copyright © 2014 CCP ehf.
+
 #pragma once
 #ifndef BLUERESMAN_H
 #define BLUERESMAN_H

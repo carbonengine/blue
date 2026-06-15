@@ -1,11 +1,10 @@
+// Copyright Â© 2008 CCP ehf.
+
 /* 
 	*************************************************************************
 
 	IMotherLode.h
 
-	Author:    Kristján Valur Jónsson
-	Created:   Dec 2008
-	OS:        Win32
 	Project:   Blue
 
 	Description:   
@@ -15,8 +14,6 @@
 	Dependencies:
 
 		Blue
-
-	(c) CCP 2008
 
 	*************************************************************************
 */

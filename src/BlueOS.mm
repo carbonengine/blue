@@ -1,3 +1,5 @@
+// Copyright © 2021 CCP ehf.
+
 #include "BlueOS.h"
 
 #if __APPLE__

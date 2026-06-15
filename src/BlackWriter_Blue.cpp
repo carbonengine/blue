@@ -1,3 +1,5 @@
+// Copyright © 2014 CCP ehf.
+
 #include "StdAfx.h"
 #include "BlackWriter.h"
 #include "BlueMemStream.h"

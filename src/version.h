@@ -1,3 +1,5 @@
+// Copyright © 2014 CCP ehf.
+
 #ifdef _WIN32
 
 #include "windows.h"

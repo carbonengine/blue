@@ -1,7 +1,8 @@
+// Copyright © 2005 CCP ehf.
+
 /******************************************************************************
  * PyRowset.h
  * Header for the PyRowset.cpp file, which defines python implemented rowsets.
- * Kristjan Valur Jonsson, february 2005
  *****************************************************************************/
 
 #ifndef PYROWSET_H

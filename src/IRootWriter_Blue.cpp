@@ -1,9 +1,4 @@
-////////////////////////////////////////////////////////////////////////////////
-//
-// Creator:		Snorri Sturluson
-// Created:		July 2013
-// Copyright:	CCP 2013
-//
+// Copyright © 2013 CCP ehf.
 
 #include "StdAfx.h"
 #include "IRootWriter.h"

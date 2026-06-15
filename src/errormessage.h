@@ -1,12 +1,8 @@
+// Copyright © 2021 CCP ehf.
+
 #ifndef _ERRORMESSAGE_H_
 #define _ERRORMESSAGE_H_
 
-////////////////////////////////////////////////////////////
-//
-//  Created:		Feb 2021
-//  Copyright:		CCP 2023
-//  Documentation:	https://ccpgames.atlassian.net/wiki/spaces/TC/pages/177930592/Localizing+Early+Error+Messages
-//
 
 #include <string>
 

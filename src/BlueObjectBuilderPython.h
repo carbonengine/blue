@@ -1,3 +1,5 @@
+// Copyright © 2014 CCP ehf.
+
 #pragma once
 #ifndef BLUE_OBJECTBUILDER_PYTHON_H
 #define BLUE_OBJECTBUILDER_PYTHON_H

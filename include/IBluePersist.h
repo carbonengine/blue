@@ -1,11 +1,10 @@
+// Copyright © 2000 CCP ehf.
+
 /* 
 	*************************************************************************
 
 	IBluePersist.h
 
-	Author:    Matthias Gudmundsson
-	Created:   Nov. 2000
-	OS:        Win32
 	Project:   Blue
 
 	Description:   
@@ -18,8 +17,6 @@
 	Dependencies:
 
 		Blue
-
-	(c) CCP 2000
 
 	*************************************************************************
 */

@@ -1,13 +1,9 @@
+// Copyright © 2011 CCP ehf.
+
 #pragma once
 #ifndef BlueNet_H
 #define BlueNet_H
 
-////////////////////////////////////////////////////////////
-//
-//	Creator:    Curt Hartung
-//  Created:    Feb 2011
-//  Copyright:  CCP 2011
-//
 
 #pragma warning (disable : 4996) // remove Windows nagging about using _strincmp() etc
 

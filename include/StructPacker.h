@@ -1,12 +1,8 @@
+// Copyright © 2011 CCP ehf.
+
 #pragma once
 #ifndef StructPacker_H
 #define StructPacker_H
-//////////////////////////////////////////////////////////////////////////////////
-//
-//  Author:    Curt Hartung
-//  Created:   Mar 2011
-//  OS:        Win32
-//  Project:   Blue
 
 #include "BitPacker.h"
 #include <wchar.h>

@@ -1,9 +1,4 @@
-////////////////////////////////////////////////////////////
-//
-//    Creator:   Oddur Magnusson
-//    Created:   October 2011
-//    Copyright: CCP 2011
-//
+// Copyright © 2011 CCP ehf.
 
 #pragma once
 #ifndef CCP_NETWORKLOGGER_H

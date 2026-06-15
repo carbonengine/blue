@@ -1,3 +1,5 @@
+// Copyright © 2021 CCP ehf.
+
 /*****************************************************************************
  * stacklessio.h
  * StacklessIO is a system for managing asynchronous requests for python

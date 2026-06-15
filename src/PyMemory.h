@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #ifndef BLUE_PYMEMORY_H
 #define BLUE_PYMEMORY_H
 

@@ -1,9 +1,4 @@
-////////////////////////////////////////////////////////////////////////////////
-//
-// Creator:		Snorri Sturluson
-// Created:		December 2014
-// Copyright:	CCP 2014
-//
+// Copyright © 2014 CCP ehf.
 
 #pragma once
 #ifndef BlueThreadMonitor_h

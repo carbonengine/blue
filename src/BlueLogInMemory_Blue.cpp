@@ -1,9 +1,4 @@
-////////////////////////////////////////////////////////////////////////////////
-//
-// Creator:		Snorri Sturluson
-// Created:		September 2010
-// Copyright:	CCP 2010
-//
+// Copyright © 2010 CCP ehf.
 
 #include "StdAfx.h"
 #include "blueloginmemory.h"

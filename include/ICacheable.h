@@ -1,3 +1,5 @@
+// Copyright © 2014 CCP ehf.
+
 #ifndef ICacheable_h__
 #define ICacheable_h__
 

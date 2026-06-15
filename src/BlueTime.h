@@ -1,11 +1,10 @@
+// Copyright Â© 2004 CCP ehf.
+
 /* 
 	*************************************************************************
 
 	BlueTime.h
 
-	Author:    Kristján Valur Jónsson
-	Created:   sept. 2004
-	OS:        Win32
 	Project:   Blue
 
 	Description:   
@@ -21,8 +20,6 @@
 	Dependencies:
 
 	  Blue
-
-	(c) CCP 2004
 
 	*************************************************************************
 */

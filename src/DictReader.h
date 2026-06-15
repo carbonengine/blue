@@ -1,9 +1,4 @@
-////////////////////////////////////////////////////////////////////////////////
-//
-// Creator:		Snorri Sturluson
-// Created:		September 2012
-// Copyright:	CCP 2012
-//
+// Copyright © 2012 CCP ehf.
 
 // DictReader is similar to the YamlReader except it uses a Python dict as its
 // input. This is useful for the art pipeline, where the red file is read in

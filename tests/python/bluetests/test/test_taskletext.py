@@ -1,3 +1,5 @@
+# Copyright © 2023 CCP ehf.
+
 import unittest
 from bluepycore import TaskletExt, tasklets
 import blue

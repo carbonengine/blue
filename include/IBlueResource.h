@@ -1,3 +1,5 @@
+// Copyright © 2014 CCP ehf.
+
 #pragma once
 
 #ifndef IBLUERESOURCE_H

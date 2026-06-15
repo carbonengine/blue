@@ -1,3 +1,5 @@
+// Copyright © 2015 CCP ehf.
+
 #pragma once
 #ifndef BlueSocketLogger_H
 #define BlueSocketLogger_H

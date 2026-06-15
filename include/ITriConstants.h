@@ -1,11 +1,10 @@
+// Copyright Â© 2000 CCP ehf.
+
 /* 
 	*************************************************************************
 
 	ITriConstants.h
 
-	Author:    Hilmar Veigar Pétursson
-	Created:   August 2001
-	OS:        Win32
 	Project:   Trinity
 
 	Description:   
@@ -16,8 +15,6 @@
 	Dependencies:
 
 		DirectX 9.0, Probably more, ytbd.
-
-	(c) CCP 2000
 
 	*************************************************************************
 */

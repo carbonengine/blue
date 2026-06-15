@@ -1,14 +1,11 @@
+// Copyright © 2008 CCP ehf.
+
 /* 
 	*************************************************************************
 
 	MotherLode.cpp
 
-	Author:    Kristj�n Valur J�nsson
-	Created:   Dec 2008
-	OS:        Win32
-	Project:   Yep
-
-	Description:   
+	Description:
 
 		A new general instance manager for blue objects.  Stores objects
 		that support the IWeakRef interface, so that one can access them
@@ -20,8 +17,6 @@
 	Dependencies:
 
 		Blue
-
-	(c) CCP 2008
 
 	*************************************************************************
 */
@@ -269,7 +264,7 @@ void MotherLode::Housekeeping()
 		if( j == mMap.end() )
 		{
 			// This shouldn't be happening, but we're seeing crashes in the erase
-			// call below - https://jira.ccpgames.com/browse/TQ-127089
+			// call below.
 			CCP_LOGERR_CH( s_ml, "MotherLode: Iterator not found in map" );
 			mLRU.erase( front );
 			continue;

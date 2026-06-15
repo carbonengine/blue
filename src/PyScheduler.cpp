@@ -1,11 +1,10 @@
+// Copyright © 2011 CCP ehf.
+
 /* 
 	*************************************************************************
 
 	PyScheduler.h
 
-	Author:    Kristjan Valur Jonsson
-	Created:   Mai. 2011
-	OS:        Win32
 	Project:   Blue
 
 	Description:   
@@ -16,8 +15,6 @@
 	Dependencies:
 
 		Blue
-
-	(c) CCP 2008
 
 	*************************************************************************
 */

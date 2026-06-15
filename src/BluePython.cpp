@@ -1,3 +1,5 @@
+// Copyright © 2014 CCP ehf.
+
 #include <sstream>
 #include <string>
 #include "StdAfx.h"

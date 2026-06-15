@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #include <PyMemory.h>
 
 CCP_STATS_DECLARED_ELSEWHERE( pyMemory );

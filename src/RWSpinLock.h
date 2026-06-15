@@ -1,12 +1,8 @@
+// Copyright © 2011 CCP ehf.
+
 #pragma once
 #ifndef RWSPINLOCK_HPP
 #define RWSPINLOCK_HPP
-////////////////////////////////////////////////////////////
-//
-//	Creator:    Curt Hartung
-//  Created:    Jun 2011
-//  Copyright:  CCP 2011
-//
 
 #include <CcpMutex.h>
 

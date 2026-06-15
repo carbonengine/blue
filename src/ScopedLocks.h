@@ -1,12 +1,8 @@
+// Copyright © 2011 CCP ehf.
+
 #pragma once
 #ifndef SCOPEDLOCKS_HPP
 #define SCOPEDLOCKS_HPP
-////////////////////////////////////////////////////////////
-//
-//	Creator:    Curt Hartung
-//  Created:    Aug 2011
-//  Copyright:  CCP 2011
-//
 
 #include "RWSpinLock.h"
 

@@ -1,23 +1,15 @@
+// Copyright © 2000 CCP ehf.
+
 /* 
 	*************************************************************************
 
 	Blue.h
 
-	Author:    Matthias Gudmundsson
-	Created:   Oct. 2000
-	OS:        Win32
 	Project:   Blue
 
-	Description:   
+	Description:
 
 		Inclusion of all blue's main header files
-
-
-	Dependencies:
-
-		Blue
-
-	(c) CCP 2000
 
 	*************************************************************************
 */
@@ -30,7 +22,7 @@
 #include <ICrashReporter.h>
 
 #ifndef __cplusplus
-	#error Blue requires C++ compilation (use a .cpp suffix moron)
+	#error Blue requires C++ compilation (use a .cpp suffix)
 #endif
 
 extern "C"

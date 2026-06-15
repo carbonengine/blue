@@ -1,3 +1,5 @@
+// Copyright © 2021 CCP ehf.
+
 #pragma once
 
 BLUE_CLASS_IMPL( BlueClipboard )

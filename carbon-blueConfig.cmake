@@ -1,3 +1,5 @@
+# Copyright © 2025 CCP ehf.
+
 include(CMakeFindDependencyMacro)
 
 # This file is generated automatically by cmake as part of the install step

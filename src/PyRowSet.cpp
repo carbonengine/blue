@@ -1,3 +1,5 @@
+// Copyright © 2014 CCP ehf.
+
 /*
  * Here we write a custom C implementation of a python rowset.  Essentially a table.
  */

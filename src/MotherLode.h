@@ -1,12 +1,9 @@
+// Copyright © 2008 CCP ehf.
+
 /*
 	*************************************************************************
 
 	MotherLode.h
-
-	Author:    Kristj�n Valur J�nsson
-	Created:   Dec 2008
-	OS:        Win32
-	Project:   Yep
 
 	Description:
 
@@ -20,8 +17,6 @@
 	Dependencies:
 
 		Blue
-
-	(c) CCP 2008
 
 	*************************************************************************
 */

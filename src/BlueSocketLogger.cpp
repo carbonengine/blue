@@ -1,3 +1,5 @@
+// Copyright © 2015 CCP ehf.
+
 #include "StdAfx.h"
 #include "BlueSocketLogger.h"
 #ifndef _WIN32

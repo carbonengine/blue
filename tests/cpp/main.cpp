@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 const char* g_moduleName = "blue"; // required by inlined new / delete operators
 
 int main(int argc, char** argv)

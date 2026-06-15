@@ -1,3 +1,5 @@
+// Copyright © 2014 CCP ehf.
+
 #ifndef ITRICURVELENGTH_H
 #define ITRICURVELENGTH_H
 

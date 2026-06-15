@@ -2,7 +2,7 @@
   "dependencies": [
     {
       "name": "carbon-blueexposure",
-      "version>=": "2.1.0"
+      "version>=": "2.1.1"
     },
     {
       "name": "carbon-core",
@@ -10,19 +10,19 @@
     },
     {
       "name": "carbon-io",
-      "version>=": "1.3.0"
+      "version>=": "1.3.1"
     },
     {
       "name": "carbon-pdmprotowrapper",
-      "version>=": "2.0.3"
+      "version>=": "2.0.4"
     },
     {
       "name": "carbon-scheduler",
-      "version>=": "1.4.0"
+      "version>=": "1.4.2"
     },
     {
       "name": "carbon-exefile",
-      "version>=": "4.1.0",
+      "version>=": "4.1.1",
       "host": true
     },
     {

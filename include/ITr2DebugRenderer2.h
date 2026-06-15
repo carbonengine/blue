@@ -1,3 +1,5 @@
+// Copyright © 2019 CCP ehf.
+
 // There is already an outdated interface for ITr2DebugRenderer that needs to be 
 // there atm for legacy reasons. Thus why this is nr.2 (okt 2019)
 #pragma once

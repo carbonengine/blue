@@ -1,11 +1,10 @@
+// Copyright © 2000 CCP ehf.
+
 /*
 	*************************************************************************
 
 	IBluePython.h
 
-	Author:    Matthias Gudmundsson
-	Created:   Oct. 2000
-	OS:        Win32
 	Project:   Blue
 
 	Description:
@@ -26,8 +25,6 @@
 	Dependencies:
 
 		Blue, Python
-
-	(c) CCP 2000
 
 	*************************************************************************
 */

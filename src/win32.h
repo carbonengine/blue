@@ -1,3 +1,5 @@
+// Copyright © 2014 CCP ehf.
+
 //header for the win32 file
 #ifndef _WIN32_H_
 #define _WIN32_H_

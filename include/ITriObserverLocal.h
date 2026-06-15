@@ -1,3 +1,5 @@
+// Copyright © 2014 CCP ehf.
+
 #pragma once
 #ifndef ITriObserverLocal_h_
 #define ITriObserverLocal_h_

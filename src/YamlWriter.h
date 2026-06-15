@@ -1,3 +1,5 @@
+// Copyright © 2014 CCP ehf.
+
 #pragma once
 #ifndef YAMLWRITER_H
 #define YAMLWRITER_H

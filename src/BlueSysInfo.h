@@ -1,3 +1,5 @@
+// Copyright © 2015 CCP ehf.
+
 #pragma once
 #ifndef blue_BlueSysInfo_h
 #define blue_BlueSysInfo_h

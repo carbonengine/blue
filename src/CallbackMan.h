@@ -1,3 +1,5 @@
+// Copyright © 2014 CCP ehf.
+
 #ifndef _CALLBACKMAN_H_
 #define _CALLBACKMAN_H_
 

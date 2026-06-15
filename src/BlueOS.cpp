@@ -1,3 +1,5 @@
+// Copyright © 2014 CCP ehf.
+
 #include "StdAfx.h"
 
 #ifdef __APPLE__
@@ -390,7 +392,6 @@ void BlueOS::Sleep()
 // To make it easier to analyse these changes in isolation, I have tried to group them into contiguous
 // blocks of code. However, in future, I would expect to split them up a bit to reduce bloating of Blue.
 //
-// patrick.kerr@ccpgames.com, 2011/03/15
 
 // NB: "CST_TIME" stats are interpreted as being in units of seconds, with an apparent rendering-scale
 //     cap of 0.300 (i.e. 300ms). I don't want the capping, so I'm using the "CST_COUNTER_HIGH" type

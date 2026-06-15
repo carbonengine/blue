@@ -1,3 +1,5 @@
+// Copyright © 2025 CCP ehf.
+
 #include <BluePyCpp.h>
 #include <BlueResMan.h>
 #include <IBluePaths.h>

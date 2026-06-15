@@ -1,3 +1,5 @@
+# Copyright © 2014 CCP ehf.
+
 from test_blackpersistence import *
 from test_blue import *
 from test_blueexposure import *

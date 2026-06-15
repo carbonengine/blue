@@ -1,3 +1,5 @@
+// Copyright © 2014 CCP ehf.
+
 #pragma once
 #ifndef BLUEOBJECTPROXY_H
 #define BLUEOBJECTPROXY_H

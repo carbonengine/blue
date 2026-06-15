@@ -1,3 +1,5 @@
+# Copyright © 2023 CCP ehf.
+
 find_package(GTest REQUIRED)
 
 find_package(Python3 COMPONENTS Development REQUIRED)

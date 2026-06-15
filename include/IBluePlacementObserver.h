@@ -1,11 +1,10 @@
+// Copyright © 2008 CCP ehf.
+
 /* 
 	*************************************************************************
 
 	IBluePlacementObserver.h
 
-	Author:    Andri Mar Jonsson
-	Created:   Nov. 2008
-	OS:        Win32
 	Project:   Blue
 
 	Description:   
@@ -17,8 +16,6 @@
 	Dependencies:
 
 		Blue
-
-	(c) CCP 2008
 
 	*************************************************************************
 */

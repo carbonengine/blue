@@ -1,9 +1,5 @@
-////////////////////////////////////////////////////////////////////////////////
-//
-// Creator:		Vilhelm Pall Saevarsson
-// Created:		4	2013
-// Copyright:	CCP 2013
-//
+// Copyright © 2013 CCP ehf.
+
 // http://www.experts-exchange.com/Programming/System/Windows__Programming/A_3216-Fast-Base64-Encode-and-Decode.html
 #pragma once
 #ifndef Base64_h

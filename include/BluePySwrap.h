@@ -1,11 +1,10 @@
+// Copyright Â© 2003 CCP ehf.
+
 /* 
 	*************************************************************************
 
 	BlueSmartVar.h
 
-	Author:    Kristján Valur Jónsson
-	Created:   Sep. 2003
-	OS:        Win32
 	Project:   Blue
 
 	Description:   
@@ -16,10 +15,6 @@
 
 		Python
 
-	Examples:
-
-
-	(c) CCP 2003
 
 	*************************************************************************
 */

@@ -1,9 +1,4 @@
-////////////////////////////////////////////////////////////////////////////////
-//
-// Creator:		Filipp Pavlov
-// Created:		February 2024
-// Copyright:	CCP 2024
-//
+// Copyright © 2024 CCP ehf.
 
 #include "StdAfx.h"
 #include "AllReferences.h"

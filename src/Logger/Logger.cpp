@@ -1,3 +1,5 @@
+// Copyright (c) OZ.COM 1998, 1999
+
 #include "StdAfx.h"
 
 #include "Logger.h"

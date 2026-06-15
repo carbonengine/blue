@@ -1,8 +1,5 @@
-////////////////////////////////////////////////////////////////////////////////
-//
-// Creator:		Snorri Sturluson
-// Created:		September 2012
-// Copyright:	CCP 2012
+// Copyright © 2012 CCP ehf.
+
 //
 // This file contains some classes that are purely intended to help test
 // functionality of blue, such as Python exposure, persistence and resource

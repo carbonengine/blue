@@ -1,3 +1,5 @@
+// Copyright © 2017 CCP ehf.
+
 #pragma once
 
 #include "BlueAsyncRes.h"

@@ -1,9 +1,4 @@
-////////////////////////////////////////////////////////////////////////////////
-//
-// Creator:		Snorri Sturluson
-// Created:		October 2013
-// Copyright:	CCP 2013
-//
+// Copyright © 2013 CCP ehf.
 
 #pragma once
 #ifndef RemoteFileCache_h

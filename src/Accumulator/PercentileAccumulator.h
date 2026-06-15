@@ -1,3 +1,5 @@
+// Copyright © 2014 CCP ehf.
+
 #pragma once
 #ifndef PercentileAccumulator_h
 #define PercentileAccumulator_h

@@ -1,3 +1,5 @@
+# Copyright © 2017 CCP ehf.
+
 from setuptools import setup, Distribution
 import os
 import shutil

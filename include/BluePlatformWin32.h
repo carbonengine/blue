@@ -1,9 +1,7 @@
+// Copyright © 2014 CCP ehf.
 //
 //  win32.h
 //  ccpUtils
-//
-//  Created by Kristjan Valur Jonsson on 17/03/14.
-//
 //
 
 #ifndef ccputils_win32_h

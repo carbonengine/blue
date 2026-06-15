@@ -1,3 +1,5 @@
+# Copyright © 2014 CCP ehf.
+
 import blue
 import random
 import logging

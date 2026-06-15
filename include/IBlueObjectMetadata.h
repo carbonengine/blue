@@ -1,3 +1,5 @@
+// Copyright © 2017 CCP ehf.
+
 #pragma once
 
 #define BLUE_OBJECT_METADATA_KEY "__bluemetadata__"

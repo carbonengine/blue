@@ -1,11 +1,10 @@
+// Copyright Â© 2004 CCP ehf.
+
 /* 
 	*************************************************************************
 
 	ITaskletTimer.h
 
-	Author:    Kristján Valur Jónsson
-	Created:   Sept. 2004
-	OS:        Win32
 	Project:   Blue
 
 	Description:   
@@ -15,8 +14,6 @@
 	Dependencies:
 
 		Blue
-
-	(c) CCP 2004
 
 	*************************************************************************
 */
