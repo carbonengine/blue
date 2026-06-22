@@ -67,6 +67,7 @@ public:
 	std::string m_applicationName;
 	float m_captureDurationSec{0};  // In seconds
 	bool m_trackMemoryAllocations{false};
+	bool m_trackLocks{false};
 };
 
 TYPEDEF_BLUECLASS( BlueStatisticsTelemetryConfig );
