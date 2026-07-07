@@ -15,7 +15,6 @@ BLUE_REGISTER_GLOBAL_AS_MODULE_OBJECT( "statistics", g_statistics );
 static bool s_isTelemetryCppCaptureEnabled = true;
 static bool s_isTelemetryTaskletCaptureEnabled = true;
 static bool s_isTelemetryPythonCaptureEnabled = false;
-static float s_telemetrySamplePeriod = 0.0f; // In seconds
 
 #if CCP_TELEMETRY_ENABLED
 
@@ -215,7 +214,7 @@ bool BlueStatistics::IsTelemetryConnectionRequested()
 
 float BlueStatistics::TelemetrySamplingTimeLeft()
 {
-	return s_telemetrySamplePeriod;
+	return ( CcpTelemetryRemainingCaptureDuration().count() / 1000.0f );
 }
 
 bool BlueStatistics::IsTelemetryPaused()
