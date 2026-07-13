@@ -125,6 +125,14 @@ const Be::ClassInfo* BlueStatisticsTelemetryConfig::ExposeToBlue()
 		Be::READWRITE
 	)
 
+	MAP_ATTRIBUTE
+	(
+		"trackLocks",
+		m_trackLocks,
+		"If set, locks (mutexes and semaphores) are visible in Profiler tool",
+		Be::READWRITE
+	)
+
 	EXPOSURE_END()
 }
 

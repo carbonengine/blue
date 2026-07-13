@@ -166,7 +166,8 @@ void BlueStatistics::StartTelemetryFromConfig( BlueStatisticsTelemetryConfig* co
 		CcpTelemetryConfig coreTelemetryConfig{
 			config->m_applicationName,
 			std::chrono::milliseconds( static_cast<int>( config->m_captureDurationSec * 1000 ) ),
-			config->m_trackMemoryAllocations
+			config->m_trackMemoryAllocations,
+			config->m_trackLocks
 		};
 
 		CcpStartTelemetry( coreTelemetryConfig );
