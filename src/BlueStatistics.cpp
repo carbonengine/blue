@@ -15,7 +15,6 @@ BLUE_REGISTER_GLOBAL_AS_MODULE_OBJECT( "statistics", g_statistics );
 static bool s_isTelemetryCppCaptureEnabled = true;
 static bool s_isTelemetryTaskletCaptureEnabled = true;
 static bool s_isTelemetryPythonCaptureEnabled = false;
-static float s_telemetrySamplePeriod = 0.0f; // In seconds
 
 #if CCP_TELEMETRY_ENABLED
 
@@ -216,7 +215,7 @@ bool BlueStatistics::IsTelemetryConnectionRequested()
 
 float BlueStatistics::TelemetrySamplingTimeLeft()
 {
-	return s_telemetrySamplePeriod;
+	return ( CcpTelemetryRemainingCaptureDuration().count() / 1000.0f );
 }
 
 bool BlueStatistics::IsTelemetryPaused()
@@ -595,52 +594,3 @@ void CcpStatisticsEntry::SetResetPerFrame( bool val )
 		m_statsEntry->SetResetPerFrame( val );
 	}
 }
-
-#if CCP_TELEMETRY_ENABLED
-
-void TracyEnterZone( void* key, const char* name, const char* filename, uint32_t lineno )
-{
-	CcpTelemetryEnterZone( key, name, filename, lineno );
-}
-
-void TracyLeaveZone( void* key )
-{
-	CcpTelemetryLeaveZone( key );
-}
-
-void TracyZoneAddText( void* key, const char* text )
-{
-	if (text != nullptr )
-	{
-		CcpTelemetryZoneAddText( key, text );
-	}
-}
-
-TracyZone::TracyZone( uint32_t ctx, const char* name, const char* filename, uint32_t lineno, uint32_t color ) : m_fiber( new TelemetryZone( ctx, name, filename, lineno, color ) )
-{
-
-}
-
-TracyZone::TracyZone( TracyZone&& other ) noexcept
-{
-	m_fiber = other.m_fiber;
-	other.m_fiber = nullptr;
-}
-
-TracyZone::~TracyZone()
-{
-	if( m_fiber )
-	{
-		delete reinterpret_cast<TelemetryZone*>( m_fiber );
-	}
-}
-
-void TracyZone::text( const char* text ) const
-{
-	if ( m_fiber )
-	{
-		reinterpret_cast<TelemetryZone*>( m_fiber )->text( text );
-	}
-}
-
-#endif  // CCP_TELEMETRY_ENABLED

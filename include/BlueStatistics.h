@@ -154,31 +154,6 @@ extern BlueStatistics* g_statistics;
 
 #if CCP_TELEMETRY_ENABLED
 
-#include <tracy/Tracy.hpp>
-#include <tracy/TracyC.h>
-
-class [[deprecated( "Use CcpTelemetryZone from CcpCore instead" )]] TracyZone
-{
-public:
-	TracyZone() = delete;
-	BLUEIMPORT TracyZone( uint32_t ctx, const char* name, const char* filename, uint32_t lineno, uint32_t color = tracy::Color::SteelBlue4 );
-	BLUEIMPORT ~TracyZone();
-	TracyZone( TracyZone&& other ) noexcept;
-	TracyZone( const TracyZone& ) = delete;
-	TracyZone& operator=( TracyZone&& ) = delete;
-	TracyZone& operator=( const TracyZone& ) = delete;
-
-	void text( const char* text ) const;
-
-private:
-	std::optional<TracyCZoneCtx> m_telemetryContext; // now un-used
-	void* m_fiber{nullptr}; // NB: This is now a pointer to CcpTelemetryZone from core, but kept this way to keep ABI compatibility
-};
-
-[[deprecated( "Use CcpTelemetryEnterZone from CcpCore instead" )]] void BLUEIMPORT TracyEnterZone( void* key, const char* name, const char* filename, uint32_t lineno );
-[[deprecated( "Use CcpTelemetryLeaveZone from CcpCore instead" )]] void BLUEIMPORT TracyLeaveZone( void* key );
-[[deprecated( "Use CcpTelemetryZoneAddText from CcpCore instead" )]] void BLUEIMPORT TracyZoneAddText( void* key, const char* text );
-
 #define CCP_STATS_SCOPED_TIME( identifier ) \
 	TelemetryZone telemetry_zone_##__COUNTER__( TMCM_CPP, g_ccpStatistics_##identifier.GetName().c_str(), __FILE__, __LINE__ );\
 	CcpStatisticsStopwatch ccpStatsStopwatch_##identifier( g_ccpStatistics_##identifier )
