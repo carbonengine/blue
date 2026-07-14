@@ -959,6 +959,15 @@ PyObject* BlueOS::PyStacklessMain( PyObject* args )
 				}
 				TranslateMessage(&msg);
 				DispatchMessageW(&msg);
+
+				if( msg.message == WM_MOUSEMOVE || msg.message == WM_NCMOUSEMOVE )
+				{
+					// Stop processing messages if only mouse move messages are left in the queue
+					if( !GetQueueStatus( QS_ALLINPUT & ~QS_MOUSEMOVE ) )
+					{
+						break;
+					}
+				}
 			}
 #endif
 			BeOS->PumpOS();
