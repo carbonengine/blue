@@ -18,7 +18,7 @@
     },
     {
       "name": "carbon-scheduler",
-      "version>=": "1.4.2"
+      "version>=": "1.4.3"
     },
     {
       "name": "carbon-exefile",
