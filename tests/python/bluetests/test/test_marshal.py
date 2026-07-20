@@ -197,6 +197,12 @@ class testMarshal(blueunittest.TestCase):
         obj = SimpleObject()
         self.verify_round_trip([obj, obj, obj])
 
+    def test_write_stream_comparison(self):
+        obj = blue.marshal.Save(42)
+        self.assertEqual(obj, blue.marshal.Save(42))
+        self.assertNotEqual(obj, blue.marshal.Save(7))
+        self.assertNotEqual(obj, 7)
+
     def test_write_callback_called(self):
         def callback(obj):
             callback.called = True
