@@ -641,6 +641,11 @@ PyObject *WriteStream::tp_richcompare_method(PyObject *self, PyObject* other, in
 		Py_RETURN_TRUE;
 	}
 
+	if (self->ob_type != other->ob_type)
+	{
+		Py_RETURN_NOTIMPLEMENTED;
+	}
+
 	WriteStream *_self = static_cast<WriteStream*>(self);
 	WriteStream *_other = static_cast<WriteStream*>(other);
 	if (_self->mPos != _other->mPos)
