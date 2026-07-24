@@ -6,7 +6,7 @@
     },
     {
       "name": "carbon-core",
-      "version>=": "3.0.0"
+      "version>=": "3.0.1"
     },
     {
       "name": "carbon-io",
@@ -14,7 +14,7 @@
     },
     {
       "name": "carbon-pdmprotowrapper",
-      "version>=": "2.0.4"
+      "version>=": "3.0.0"
     },
     {
       "name": "carbon-scheduler",
@@ -54,10 +54,6 @@
     }
   ],
   "overrides": [
-    {
-      "name": "protobuf",
-      "version": "3.6.0.1"
-    },
     {
       "name": "openssl",
       "version": "1.1.1k#8"

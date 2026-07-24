@@ -1,5 +1,7 @@
 // Copyright © 2014 CCP ehf.
 
+
+
 #include "StdAfx.h"
 #include "IBlueObjectProxy.h"
 #include "YamlReader.h"
@@ -15,6 +17,8 @@
 #ifndef _WIN32
 #include <locale>
 #include <codecvt>
+#else
+#include <locale.h>
 #endif
 
 namespace
