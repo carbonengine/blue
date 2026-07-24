@@ -5,8 +5,6 @@
 #if BLUE_WITH_PYTHON
 #ifdef _WIN32
 
-#include <Ws2tcpip.h>
-
 #include "NetworkLogger.h"
 
 #include "zlib.h"
