@@ -1,7 +1,5 @@
 // Copyright © 2014 CCP ehf.
 
-
-
 #include "StdAfx.h"
 #include "IBlueObjectProxy.h"
 #include "YamlReader.h"
