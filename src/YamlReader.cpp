@@ -15,8 +15,8 @@
 #ifndef _WIN32
 #include <locale>
 #include <codecvt>
-#else
-#include <locale.h>
+#elif defined(_WIN32)
+#include <clocale>
 #endif
 
 namespace
