@@ -104,7 +104,7 @@ struct ColumnDescriptor
 	ColumnDescriptor(const char *name) : mName(name), mType(0), mOffset(0), mSize(0){}
 	static bool TypeSize(const DBTYPE &type, int &size)
 	{
-		switch(type & 0xff) {
+		switch(type) {
 		case DBTYPE_BOOL:
 			size = 0; break;
 		case DBTYPE_I1:
