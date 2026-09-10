@@ -8,6 +8,7 @@
 #include "Blue.h"
 #include "BluePaths.h"
 #include "BlueOS.h"
+#include "BlueStatistics.h"
 #include "ResourceLoading.h"
 #include "BlueSocketLogger.h"
 #if BLUE_WITH_PYTHON
@@ -720,6 +721,18 @@ void PatchPythonExit()
 PyMODINIT_FUNC BLUE_EXPORTED_INIT
 	CCP_CONCATENATE( PyInit_blue, CCP_BUILD_FLAVOR ) (void)
 {
+	if ( const auto& [unused, ok] = CcpTelemetryCategoryRegister( "blue" ); !ok )
+	{
+		CCP_LOGWARN( "Failed to register telemetry category for blue, no telemetry zones will be emitted" );
+	}
+
+	// Categories compare by the name they were registered with rather than by wrapper identity. This
+	// has to be set up before the type objects are finalized, which happens while BeOS starts up.
+	if ( !BlueTelemetryCategory::RegisterComparison() )
+	{
+		return nullptr;
+	}
+
 	CCP_LOG( "Initializing Resource Loading" );
 	BlueInitializeResourceLoading();
 
@@ -732,6 +745,18 @@ PyMODINIT_FUNC BLUE_EXPORTED_INIT
 	PatchPythonExit();
 
 	auto blueModule = PyOS->BlueModule();
+	if ( !blueModule )
+	{
+		return nullptr;
+	}
+
+	// The color constants can only be added once the type objects have been finalized, which
+	// happens while the module is being created.
+	if ( !BlueTelemetryColor::RegisterConstants() )
+	{
+		return nullptr;
+	}
+
 	return blueModule;
 }
 

@@ -13,7 +13,7 @@
 #include "ITaskletTimer.h"
 #include "IBluePython.h"
 
-#include "PyRowset.h"
+#include "PyRowSet.h"
 
 #include <algorithm>
 #include "zlib.h"

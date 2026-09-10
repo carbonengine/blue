@@ -2,8 +2,12 @@
 
 #include "StdAfx.h"
 #include "BlueStatistics.h"
+#include "BlueTelemetryZones.h"
 #include "IBlueOS.h"
 #include <Scheduler.h>
+
+#include <map>
+#include <stack>
 
 static CcpLogChannel_t s_ch = CCP_LOG_DEFINE_CHANNEL( "Telemetry" );
 
@@ -15,6 +19,63 @@ BLUE_REGISTER_GLOBAL_AS_MODULE_OBJECT( "statistics", g_statistics );
 static bool s_isTelemetryCppCaptureEnabled = true;
 static bool s_isTelemetryTaskletCaptureEnabled = true;
 static bool s_isTelemetryPythonCaptureEnabled = false;
+static bool s_isPythonProfilerInstalled = false;
+
+namespace
+{
+
+// Zones that were entered from Python and are waiting to be left again, keyed by the frame that
+// entered them, and the mutex guarding them.
+std::map<const void*, std::stack<TelemetryZone>> s_pythonZones;
+CcpMutex s_pythonZonesMutex( "BlueStatistics", "s_pythonZones" );
+
+}
+
+const CcpTelemetryCategory& BlueTelemetryZoneCategory()
+{
+	// Registering is idempotent, so the first caller registers the category and every caller after
+	// that gets the one already in the registry.
+	static const CcpTelemetryCategory& s_category = CcpTelemetryCategoryRegister( "blue" ).first;
+	return s_category;
+}
+
+void BlueTelemetryEnterZone( const void* key, const char* name, const char* filename, uint32_t lineno )
+{
+	if( CcpTelemetryIsStarted() )
+	{
+		CcpAutoMutex guard( s_pythonZonesMutex );
+
+		s_pythonZones[key].emplace( BlueTelemetryZoneCategory(), name, filename, lineno );
+	}
+}
+
+void BlueTelemetryLeaveZone( const void* key )
+{
+	CcpAutoMutex guard( s_pythonZonesMutex );
+
+	auto zones = s_pythonZones.find( key );
+	if( zones == s_pythonZones.end() )
+	{
+		return;
+	}
+
+	zones->second.pop();
+	if( zones->second.empty() )
+	{
+		s_pythonZones.erase( zones );
+	}
+}
+
+void BlueTelemetryZoneAddText( const void* key, const char* text )
+{
+	CcpAutoMutex guard( s_pythonZonesMutex );
+
+	auto zones = s_pythonZones.find( key );
+	if( zones != s_pythonZones.end() )
+	{
+		zones->second.top().text( text );
+	}
+}
 
 #if CCP_TELEMETRY_ENABLED
 
@@ -108,13 +169,13 @@ int PythonProfiler( PyObject* obj, PyFrameObject* frame, int what, PyObject* arg
 		auto zoneName = Immortalize( codeObj->co_name );
 		auto fileName = Immortalize( codeObj->co_filename );
 		if( zoneName && fileName )
-			CcpTelemetryEnterZone( frame, zoneName, fileName, static_cast<uint32_t>( PyFrame_GetLineNumber( frame ) ) );
+			BlueTelemetryEnterZone( frame, zoneName, fileName, static_cast<uint32_t>( PyFrame_GetLineNumber( frame ) ) );
 		Py_XDECREF( codeObj );  // Release the reference to the frame code
 	}
 	break;
 	case PyTrace_EXCEPTION:
 	case PyTrace_RETURN:
-		CcpTelemetryLeaveZone( frame );
+		BlueTelemetryLeaveZone( frame );
 		break;
 	default:
 		break;
@@ -154,6 +215,26 @@ void TelemetryEventHandler( CcpTelemetryEvent event, void* userdata )
 {
 	if ( event == CCP_TELEMETRY_STARTED && s_isTelemetryPythonCaptureEnabled ) {
 		PyEval_SetProfile( &PythonProfiler, nullptr );
+		s_isPythonProfilerInstalled = true;
+	}
+	else if ( event == CCP_TELEMETRY_STOPPED ) {
+		// Telemetry also stops without `StopTelemetry` being called - when a timed capture runs out, or
+		// the profiler client disconnects - so the Python capture is torn down here, where every stop
+		// passes through, rather than there.
+		if ( s_isPythonProfilerInstalled ) {
+			PyEval_SetProfile( nullptr, nullptr );
+			s_isPythonProfilerInstalled = false;
+		}
+
+		// Ends the zones that are still in flight, so that the profiler sees them closed and they are
+		// not left behind for the next capture.
+		{
+			CcpAutoMutex guard( s_pythonZonesMutex );
+			s_pythonZones.clear();
+		}
+
+		// The handler is registered again by whichever call starts the next capture.
+		CcpUnregisterTelemetryEventHandler( TelemetryEventHandler, nullptr );
 	}
 }
 
@@ -198,8 +279,6 @@ void BlueStatistics::ResumeTelemetry()
 
 void BlueStatistics::StopTelemetry()
 {
-	PyEval_SetProfile( nullptr, nullptr );
-	CcpUnregisterTelemetryEventHandler( TelemetryEventHandler, nullptr );
 	CcpStopTelemetry();
 }
 
@@ -409,6 +488,74 @@ uint32_t BlueStatistics::GetTelemetryMaxThreadCount() const
 void BlueStatistics::SetTelemetryMaxThreadCount( uint32_t maxThreadCount )
 {
 	m_telemetryMaxThreadCount = maxThreadCount;
+}
+
+BlueTelemetryColor* BlueTelemetryColor::Get( CcpColor color )
+{
+	// Only ever reached from the Python exposure, which holds the GIL, so the store needs no
+	// locking of its own.
+	static TrackableStdMap<CcpColor, BlueTelemetryColorPtr> s_colors( "BlueTelemetryColor/s_colors" );
+
+	BlueTelemetryColorPtr& instance = s_colors[color];
+	if( !instance )
+	{
+		instance.CreateInstance();
+		instance->SetColor( color );
+	}
+
+	return instance;
+}
+
+void BlueTelemetryColor::SetColor( CcpColor color )
+{
+	m_color = color;
+}
+
+CcpColor BlueTelemetryColor::GetColor() const
+{
+	return m_color;
+}
+
+uint32_t BlueTelemetryColor::GetValue() const
+{
+	return static_cast<uint32_t>( m_color );
+}
+
+std::string BlueTelemetryColor::GetName() const
+{
+	const std::string_view name = CcpColorToString( m_color );
+	return std::string( name );
+}
+
+void BlueTelemetryCategory::AttachCategory( const CcpTelemetryCategory* category )
+{
+	m_category = category;
+}
+
+const CcpTelemetryCategory* BlueTelemetryCategory::GetCategory() const
+{
+	return m_category;
+}
+
+const std::string& BlueTelemetryCategory::GetName() const
+{
+	if( !m_category )
+	{
+		static const std::string s_noCategory;
+		return s_noCategory;
+	}
+
+	return CcpTelemetryCategoryGetName( *m_category );
+}
+
+BlueTelemetryColor* BlueTelemetryCategory::GetColor() const
+{
+	if( !m_category )
+	{
+		return nullptr;
+	}
+
+	return BlueTelemetryColor::Get( CcpTelemetryCategoryGetColor( *m_category ) );
 }
 
 CcpStatisticsEntry::CcpStatisticsEntry( IRoot* lockobj ) :

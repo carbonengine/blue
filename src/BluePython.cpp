@@ -17,12 +17,12 @@
 #include "IBluePaths.h"
 #include <Scheduler.h>
 
-#include "blueloginmemory.h"
+#include "BlueLogInMemory.h"
 #include "LogToPython.h"
 #include "PrettyPrint.h"
 #include "BlueHeapq.h"
 #include "Marshal.h"
-#include "PyRowset.h"
+#include "PyRowSet.h"
 #include "crypto.h"
 #include "BlueClipboard.h"
 #include "errormessage.h"

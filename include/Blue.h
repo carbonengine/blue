@@ -1,6 +1,6 @@
 // Copyright © 2000 CCP ehf.
 
-/* 
+/*
 	*************************************************************************
 
 	Blue.h
@@ -17,8 +17,8 @@
 #ifndef _BLUE_H_
 #define _BLUE_H_
 
-#include <CCPMemory.h>
-#include <CCPLog.h>
+#include <CcpMemory.h>
+#include <CcpLog.h>
 #include <ICrashReporter.h>
 
 #ifndef __cplusplus

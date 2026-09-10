@@ -28,5 +28,6 @@ __pycache__/
 ### CMAKE ###
 # Intermediate cmake build flavor folders #
 cmake-build-*/
+.cmake-*
 CMakeUserPresets.json
 vcpkg_registry_cache/

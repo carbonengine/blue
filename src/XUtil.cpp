@@ -6,7 +6,7 @@
 
 #include "BluePython.h"
 #if CCP_STACKLESS
-#include "PyRowset.h"
+#include "PyRowSet.h"
 #endif
 
 // The functions in here were moved out of BluePython.cpp to reduce the size

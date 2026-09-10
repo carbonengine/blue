@@ -16,7 +16,7 @@
 #include "BlueMemStream.h"
 #include "BlueObjectRecycler.h"
 #include "MotherLode.h"
-#include "blueloginmemory.h"
+#include "BlueLogInMemory.h"
 #include "BluePaths.h"
 #include "BlueResFile.h"
 #include "BlueSocketLogger.h"

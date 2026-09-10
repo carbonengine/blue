@@ -4,7 +4,7 @@
 #ifndef CCP_NETWORKLOGGER_H
 #define CCP_NETWORKLOGGER_H
 
-#include "Logger/logger.h"
+#include "Logger/Logger.h"
 #include "Blue.h"
 
 namespace CCP

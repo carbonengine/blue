@@ -209,7 +209,7 @@ class CarbonBuildWindows(buildName: String, configType: String, preset: String, 
                 authType = token {
                     token = "%GITHUB_CARBON_PAT%"
                 }
-                filterAuthorRole = PullRequests.GitHubRoleFilter.MEMBER
+                filterAuthorRole = PullRequests.GitHubRoleFilter.EVERYBODY
                 filterTargetBranch = """
                 +:refs/heads/*
                 -:refs/heads/release/3.x

@@ -9,7 +9,7 @@
 
 #if BLUE_WITH_PYTHON
 
-#include "PyRowset.h"
+#include "PyRowSet.h"
 
 #include "PyTemplates.h"
 

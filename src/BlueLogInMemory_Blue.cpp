@@ -1,7 +1,7 @@
 // Copyright © 2010 CCP ehf.
 
 #include "StdAfx.h"
-#include "blueloginmemory.h"
+#include "BlueLogInMemory.h"
 #include "IBlueOS.h"
 
 BLUE_DEFINE_ABSTRACT( BlueLogInMemory );

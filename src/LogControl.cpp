@@ -2,7 +2,7 @@
 
 #include "StdAfx.h"
 #include "LogControl.h"
-#include <CCPLog.h>
+#include <CcpLog.h>
 
 #if BLUE_WITH_PYTHON
 
