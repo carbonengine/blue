@@ -12,9 +12,13 @@
 #include "IBluePaths.h"
 #include "IBlueObjectMetadata.h"
 #include <Scheduler.h>
-#ifndef _WIN32
+#if __APPLE__
 #include <locale>
 #include <codecvt>
+#elif _WIN32
+#include <clocale>
+#else
+#error "Unsupported platform"
 #endif
 
 namespace

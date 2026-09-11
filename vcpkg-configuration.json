@@ -8,7 +8,7 @@
     {
       "kind": "git",
       "repository": "https://github.com/carbonengine/vcpkg-registry.git",
-      "baseline": "a578f475b76a204b85f777692adc26bde7cdf01c",
+      "baseline": "bdd31d51ec7bb6e744b7c7c8871e84c2fd2296ec",
       "packages": [
         "python3",
         "carbon-*",
