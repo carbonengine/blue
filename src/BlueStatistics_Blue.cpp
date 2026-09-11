@@ -960,7 +960,7 @@ PyObject* PyRegisterTelemetryCategory( PyObject* self, PyObject* args )
 		return nullptr;
 	}
 
-	CcpColor color = CcpColor::SteelBlue;
+	CcpColor color = CcpColor::SteelBlue;  // Fallback, default color (same as assigned to category "general")
 	if( colorObject )
 	{
 		BlueTelemetryColor* telemetryColor = BluePythonCast<BlueTelemetryColor*>( colorObject );

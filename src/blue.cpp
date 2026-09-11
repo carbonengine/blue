@@ -721,7 +721,7 @@ void PatchPythonExit()
 PyMODINIT_FUNC BLUE_EXPORTED_INIT
 	CCP_CONCATENATE( PyInit_blue, CCP_BUILD_FLAVOR ) (void)
 {
-	if ( const auto& [unused, ok] = CcpTelemetryCategoryRegister( "blue" ); !ok )
+	if ( const auto& [unused, ok] = CcpTelemetryCategoryRegister( "blue", CcpColor::DodgerBlue ); !ok )
 	{
 		CCP_LOGWARN( "Failed to register telemetry category for blue, no telemetry zones will be emitted" );
 	}
