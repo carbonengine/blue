@@ -633,7 +633,7 @@ PyObject* PyEnableNetworkLogging( PyObject* self, PyObject* args )
 		bool ret = CCP::SetupNetworkLogging(  serverName, serverPort, (CCP::LogType) threshold, role, errorMessage, errorMessageBufferSize );
 		if (!ret)
 		{
-			return PyErr_SetString(PyExc_RuntimeError, errorMessage), 0;
+			return PyErr_SetString(PyExc_RuntimeError, errorMessage), nullptr;
 		}
 		Py_RETURN_TRUE;
 

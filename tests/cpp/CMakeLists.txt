@@ -29,6 +29,7 @@ target_link_libraries(BlueCppUnitTests
 if(CMAKE_IMPORT_LIBRARY_SUFFIX)
     add_custom_command(TARGET BlueCppUnitTests POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:BlueCppUnitTests> $<TARGET_FILE_DIR:BlueCppUnitTests>
+            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:Blue> $<TARGET_FILE_DIR:BlueCppUnitTests>
             COMMAND_EXPAND_LISTS
             VERBATIM
     )
