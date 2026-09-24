@@ -35,7 +35,7 @@ const CcpTelemetryCategory& BlueTelemetryZoneCategory()
 {
 	// Registering is idempotent, so the first caller registers the category and every caller after
 	// that gets the one already in the registry.
-	static const CcpTelemetryCategory& s_category = CcpTelemetryCategoryRegister( "blue", CcpColor::DodgerBlue ).first;
+	static const CcpTelemetryCategory& s_category = CcpTelemetryCategoryRegister( "blue" ).first;
 	return s_category;
 }
 
