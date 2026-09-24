@@ -218,20 +218,13 @@ extern BlueStatistics* g_statistics;
 
 #if CCP_TELEMETRY_ENABLED
 
-inline const CcpTelemetryCategory& CppTelemetryZoneCategory()
-{
-	// Registering is idempotent. First caller registers, subsequent callers get same CcpTelemetryCategory.
-	static const CcpTelemetryCategory& s_cppCategory = CcpTelemetryCategoryRegister( "cpp", CcpColor::Yellow ).first;
-	return s_cppCategory;
-}
-
 #define CCP_STATS_SCOPED_TIME( identifier ) \
-	TelemetryZone telemetry_zone_##__COUNTER__( CppTelemetryZoneCategory(), g_ccpStatistics_##identifier.GetName().c_str(), __FILE__, __LINE__ );\
+	TelemetryZone telemetry_zone_##__COUNTER__( TMCM_CPP, g_ccpStatistics_##identifier.GetName().c_str(), __FILE__, __LINE__ );\
 	CcpStatisticsStopwatch ccpStatsStopwatch_##identifier( g_ccpStatistics_##identifier )
 
 #undef CCP_STATS_ZONE
 #define CCP_STATS_ZONE( name ) \
-	TelemetryZone telemetry_zone_##__COUNTER__( CppTelemetryZoneCategory(), name, __FILE__, __LINE__ );
+	TelemetryZone telemetry_zone_##__COUNTER__( TMCM_CPP, name, __FILE__, __LINE__ );
 
 #else  // CCP_TELEMETRY_ENABLED
 
