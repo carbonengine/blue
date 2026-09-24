@@ -229,7 +229,16 @@ PyObject *TaskletTimer::EnterTaskletEx(PyObject *newContext, TASKLETFLAGS flags)
 
 	if( mDoTelemetry && IsValidStack( stack ) )
 	{
-		//Key the TelemetryZone by the Stack* (not Frame*)
+		// Key the TelemetryZone by the Stack*, NOT the Frame*.
+		// This is to fix an "Invalid order of zone begin and end events" error
+		// in Tracy that happens if we key it by Frame, reason being:
+		// 1. BlueTelemetryEnterZone opens a zone on fiber A, keyed by frame F, and stores it in s_pythonZones[F].
+		// 2. If that same frame F yields/sleeps, PyChannel_Receive() blocks the tasklet and switches fibers.
+		//    OnTaskletSwitch() then moves the active fiber to B (or the main tasklet).
+		// 3. That still‑open zone is now interleaved across a fiber switch.
+		// 4. Tracy requires zones on a fiber to be strictly nested between that fiber's TracyFiberEnter/Leave.
+		//    If not, the zone's begin/end events are out of order from Tracy's point of view, hence the error.
+
 		const char* zoneName = ImmortalizeString( newContext );
 		if( zoneName )
 		{
@@ -296,7 +305,6 @@ bool TaskletTimer::ReturnFromTasklet(PyObject *backContext)
 
 	if (mDoTelemetry && IsValidStack(stack))
 	{
-		// Key it on the Stack*, NOT the Frame* (different from what BlueTelemetryZones.h says)
 		BlueTelemetryLeaveZone(stack);
 	}
 	
