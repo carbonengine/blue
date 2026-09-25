@@ -50,6 +50,12 @@ class TestBlackWriterAndReader(unittest.TestCase):
     def testWriteStringToMemStreamAndReadBack(self):
         self._testWriteToMemStreamAndReadBack("Test String","sharedString")
 
+    def testWriteUnicodeToMemStreamAndReadBack(self):
+        self._testWriteToMemStreamAndReadBack(u"héllo wörld αβγ日本語","myUnicode")
+
+    def testWriteSharedStringWToMemStreamAndReadBack(self):
+        self._testWriteToMemStreamAndReadBack(u"héllo wörld αβγ日本語","sharedStringW")
+
     def testWriteInt32ToMemStreamAndReadBack(self):
         self._testWriteToMemStreamAndReadBack(MAX_INT32,"myInt")
         self._testWriteToMemStreamAndReadBack(-MAX_INT32-1,"myInt")
@@ -65,7 +71,7 @@ class TestBlackWriterAndReader(unittest.TestCase):
         self._testWriteToMemStreamAndReadBack(MAX_UINT64,"myUInt64")
 
     def _testWriteToFileAndReadBack(self, testValue, testAttributeName):
-        
+
         x = blue.BlueTestHelperAttributes()
         setattr(x,testAttributeName,testValue)
 
@@ -88,6 +94,12 @@ class TestBlackWriterAndReader(unittest.TestCase):
 
     def testWriteStringToFileAndReadBack(self):
         self._testWriteToFileAndReadBack("Test String","myString")
+
+    def testWriteUnicodeToFileAndReadBack(self):
+        self._testWriteToFileAndReadBack(u"héllo wörld αβγ日本語","myUnicode")
+
+    def testWriteSharedStringWToFileAndReadBack(self):
+        self._testWriteToFileAndReadBack(u"héllo wörld αβγ日本語","sharedStringW")
 
     def testWriteInt32ToFileAndReadBack(self):
         self._testWriteToFileAndReadBack(MAX_INT32,"myInt")
