@@ -27,6 +27,7 @@
 #if CCP_STACKLESS
 
 #include "BlueOS.h"
+#include "BlueTelemetryZones.h"
 #include "TaskletTimer.h"
 #include "SimpleJson.h"
 
@@ -87,6 +88,25 @@ static void ClearStatsMap()
 		CCP_DELETE stat;
 	}
 	s_statsMap.clear();
+}
+
+
+static const char* ImmortalizeString( PyObject* context )
+{
+	if ( context == NULL || context == Py_None )
+	{
+		return "";
+	}
+	if ( !PyUnicode_Check( context ) )
+	{
+		PyErr_SetString( PyExc_TypeError, "string expected" );
+		return NULL;
+	}
+	Py_INCREF( context ); //must own the reference we intern
+	PyUnicode_InternInPlace( &context );
+	const char *result = PyUnicode_AsUTF8( context );
+	Py_DECREF( context );
+	return result;
 }
 
 TaskletTimer::TaskletTimer() : 
@@ -207,6 +227,25 @@ PyObject *TaskletTimer::EnterTaskletEx(PyObject *newContext, TASKLETFLAGS flags)
 	f = stack->Push(mFrameTrees, newContext, now);
 	f->mNCalls++;
 
+	if( mDoTelemetry && IsValidStack( stack ) )
+	{
+		// Key the TelemetryZone by the Stack*, NOT the Frame*.
+		// This is to fix an "Invalid order of zone begin and end events" error
+		// in Tracy that happens if we key it by Frame, reason being:
+		// 1. BlueTelemetryEnterZone opens a zone on fiber A, keyed by frame F, and stores it in s_pythonZones[F].
+		// 2. If that same frame F yields/sleeps, PyChannel_Receive() blocks the tasklet and switches fibers.
+		//    OnTaskletSwitch() then moves the active fiber to B (or the main tasklet).
+		// 3. That still‑open zone is now interleaved across a fiber switch.
+		// 4. Tracy requires zones on a fiber to be strictly nested between that fiber's TracyFiberEnter/Leave.
+		//    If not, the zone's begin/end events are out of order from Tracy's point of view, hence the error.
+
+		const char* zoneName = ImmortalizeString( newContext );
+		if( zoneName )
+		{
+			BlueTelemetryEnterZone( stack, zoneName, __FILE__, __LINE__ );
+		}
+	}
+
 	res = of?of->Key():Py_None;
 	Py_INCREF(res);
 
@@ -263,6 +302,11 @@ bool TaskletTimer::ReturnFromTasklet(PyObject *backContext)
 
 	if (mSliceWarning)
 		WarnSlice(now, stack, 0, false);
+
+	if (mDoTelemetry && IsValidStack(stack))
+	{
+		BlueTelemetryLeaveZone(stack);
+	}
 	
 	stack->Pop();
 	int id = stack->CurrentFrame() ? stack->CurrentFrame()->Id() : -1;
