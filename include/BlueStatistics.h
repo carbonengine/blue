@@ -219,12 +219,12 @@ extern BlueStatistics* g_statistics;
 #if CCP_TELEMETRY_ENABLED
 
 #define CCP_STATS_SCOPED_TIME( identifier ) \
-	TelemetryZone telemetry_zone_##__COUNTER__( TMCM_CPP, g_ccpStatistics_##identifier.GetName().c_str(), __FILE__, __LINE__ );\
+	TelemetryZone telemetry_zone_##__COUNTER__( TMCM_CPP, g_ccpStatistics_##identifier.GetName().c_str(), __FILE__, __LINE__, CcpColor::Yellow );\
 	CcpStatisticsStopwatch ccpStatsStopwatch_##identifier( g_ccpStatistics_##identifier )
 
 #undef CCP_STATS_ZONE
 #define CCP_STATS_ZONE( name ) \
-	TelemetryZone telemetry_zone_##__COUNTER__( TMCM_CPP, name, __FILE__, __LINE__ );
+	TelemetryZone telemetry_zone_##__COUNTER__( TMCM_CPP, name, __FILE__, __LINE__, CcpColor::Yellow );
 
 #else  // CCP_TELEMETRY_ENABLED
 
