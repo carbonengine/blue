@@ -9,6 +9,7 @@
 #include "BluePython.h"
 
 #include <BlueStatistics.h>
+#include "BlueStatsMacros.h"
 
 #include "IBlueOS.h"
 #include "IMotherLode.h"
@@ -816,14 +817,14 @@ int BluePyOS::PumpPython(bool quit)
 		PyFlushError("PumpPython::start");
 
 	{
-		CCP_STATS_ZONE( "Blue/CarbonIO" );
+		BLUE_STATS_ZONE( "Blue/CarbonIO" );
 		SafeAutoTasklet _at(&mTTimer, TIMERS[TIMER_STACKLESSIO].mContext);
 		mSocketAPI->dispatch();
 	}
 
 	// Synchro.  This will make tasklets runnable
 	{
-		CCP_STATS_ZONE( "Blue/synchro" );
+		BLUE_STATS_ZONE( "Blue/synchro" );
 
 		SafeAutoTasklet _at(&mTTimer, TIMERS[TIMER_TICK].mContext);
 		if (!quit && !mSynchro->Tick())
@@ -832,7 +833,7 @@ int BluePyOS::PumpPython(bool quit)
 
 	// Run from the runnable queue
 	{
-		CCP_STATS_ZONE( "Blue/RunWatchdog" );
+		BLUE_STATS_ZONE( "Blue/RunWatchdog" );
 
 		SafeAutoTasklet _at(&mTTimer, TIMERS[TIMER_RUNWATCHDOG].mContext);
 		if( !mScheduler.Run() )

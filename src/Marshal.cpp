@@ -9,6 +9,7 @@
 #include "BlueMemStream.h"
 #include "BlueResFile.h"
 #include <BlueStatistics.h>
+#include "BlueStatsMacros.h"
 #include "PyTemplates.h"
 #include "ITaskletTimer.h"
 #include "IBluePython.h"
@@ -1429,7 +1430,7 @@ PyObject * Marshal::ReadObjectTuple1( ReadStream * stream, bool isShared )
 
 PyObject* Marshal::ReadObject( ReadStream *stream )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	Incrementor _inc(mRecursionLevel);
 	if( !_inc.Test( sRecursionLimit ) )

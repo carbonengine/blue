@@ -5,6 +5,7 @@
 #include "IBlueResMan.h"
 #include "BlueRemoteStream.h"
 #include <BlueStatistics.h>
+#include "BlueStatsMacros.h"
 
 
 BlueNetworkStream::BlueNetworkStream()
@@ -260,7 +261,7 @@ void BlueNetworkStream::PerformTransferHelper( void* context )
 
 size_t BlueNetworkStream::WriteMemoryCallback( void* contents, size_t size, size_t nmemb, void* context )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	size_t realsize = size * nmemb;
 	auto self = static_cast<BlueNetworkStream*>( context );
@@ -270,7 +271,7 @@ size_t BlueNetworkStream::WriteMemoryCallback( void* contents, size_t size, size
 
 size_t BlueNetworkStream::WriteHeaderCallback( void* contents, size_t size, size_t nmemb, void* context )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	size_t realsize = size * nmemb;
 	auto self = static_cast<BlueNetworkStream*>( context );

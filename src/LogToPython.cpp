@@ -2,6 +2,7 @@
 
 #include "StdAfx.h"
 #include <BlueStatistics.h>
+#include "BlueStatsMacros.h"
 
 #if BLUE_WITH_PYTHON
 
@@ -12,7 +13,7 @@ static bool s_logCallbackErrorReported = false;
 
 void LogToPython( CcpLogChannel_t& logObject, CCP::LogType type, unsigned long userData, const char* message )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	// Echo to python if callback is installed
 	if( s_logCallback && s_logCallback != Py_None && !s_logCallbackErrorReported)

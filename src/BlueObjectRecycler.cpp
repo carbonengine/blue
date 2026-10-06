@@ -5,6 +5,7 @@
 #include "BlueObjectRecycler.h"
 #include "BlueFileUtil.h"
 #include <BlueStatistics.h>
+#include "BlueStatsMacros.h"
 #include "IBlueResMan.h"
 #include "IBlueOS.h"
 
@@ -104,7 +105,7 @@ IRoot* BlueObjectRecycler::Recycle( const std::wstring& key )
 
 bool BlueObjectRecycler::RecycleOrLoad( const wchar_t* resPath, IRoot** obj )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	std::wstring normalizedPath;
 	NormalizeResPath( resPath, normalizedPath );
@@ -127,7 +128,7 @@ bool BlueObjectRecycler::RecycleOrLoad( const wchar_t* resPath, IRoot** obj )
 
 bool BlueObjectRecycler::RecycleOrCopy( const wchar_t* key, IRoot* srcObj, IRoot** obj )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	auto result = Recycle( key );
 	if( !result )
@@ -146,7 +147,7 @@ bool BlueObjectRecycler::RecycleOrCopy( const wchar_t* key, IRoot* srcObj, IRoot
 
 void BlueObjectRecycler::Clear()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	m_objectInfosWithInstances.clear();
 
@@ -178,7 +179,7 @@ void BlueObjectRecycler::Clear()
 
 void BlueObjectRecycler::Update( Be::Time time )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	std::vector<TrackableStdSet<ObjectInfo*>::iterator> toRemove;
 	for( auto it = m_objectInfosWithInstances.begin(); it != m_objectInfosWithInstances.end(); ++it )

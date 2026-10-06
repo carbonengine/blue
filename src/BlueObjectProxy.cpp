@@ -4,6 +4,7 @@
 
 #include "BlueObjectProxy.h"
 #include <BlueStatistics.h>
+#include "BlueStatsMacros.h"
 #include "IBlueOS.h"
 #include "IUnloadable.h"
 
@@ -41,7 +42,7 @@ IRoot* BlueObjectProxy::GetObject( )
 {
 	if( m_isUnloaded && m_object )
 	{
-		CCP_STATS_ZONE( CCP_STRINGIZE( __FUNCTION__ ) "ReloadWhenReferenced" );
+		BLUE_STATS_ZONE( CCP_STRINGIZE( __FUNCTION__ ) "ReloadWhenReferenced" );
 		IUnloadablePtr objectAsUnloadable = BlueCastPtr( m_object );
 		// Shouldn't need a nullptr check here - m_isUnloaded only becomes true if this
 		// interface is supported.
@@ -51,7 +52,7 @@ IRoot* BlueObjectProxy::GetObject( )
 
 	if( !m_object && m_builder )
 	{
-		CCP_STATS_ZONE( CCP_STRINGIZE( __FUNCTION__ ) "CreateObject" );
+		BLUE_STATS_ZONE( CCP_STRINGIZE( __FUNCTION__ ) "CreateObject" );
 		m_object.Attach( m_builder->CreateObject( m_objectMarker, this ) );
 	}
 
@@ -88,7 +89,7 @@ bool BlueObjectProxy::Update( Be::Time time, Be::Time timeout )
 			IUnloadablePtr objectAsUnloadable = BlueCastPtr( m_object );
 			if( objectAsUnloadable )
 			{
-				CCP_STATS_ZONE( CCP_STRINGIZE( __FUNCTION__ ) "UnloadWhenUnreferenced" );
+				BLUE_STATS_ZONE( CCP_STRINGIZE( __FUNCTION__ ) "UnloadWhenUnreferenced" );
 				objectAsUnloadable->UnloadWhenUnreferenced();
 				m_isUnloaded = true;
 			}

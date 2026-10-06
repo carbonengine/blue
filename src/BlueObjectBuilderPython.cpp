@@ -3,6 +3,7 @@
 #include "StdAfx.h"
 
 #include <BlueStatistics.h>
+#include "BlueStatsMacros.h"
 
 #if BLUE_WITH_PYTHON
 
@@ -82,7 +83,7 @@ void BlueObjectBuilderPython::OnSelected( unsigned objectMarker, IRoot* callingP
 
 IRoot* BlueObjectBuilderPython::CreateObjectWithYield( unsigned int objectMarker, IRoot* callingProxy )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	PyObject* result = DoCallback( m_createMethod, objectMarker, callingProxy );
 	

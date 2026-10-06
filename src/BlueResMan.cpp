@@ -13,6 +13,7 @@
 #include "BlueResFile.h"
 #include "BlueAsyncRes.h"
 #include <BlueStatistics.h>
+#include "BlueStatsMacros.h"
 #include "IBlueResource.h"
 #include "IBluePersist.h"
 #include "IBlueOS.h"
@@ -129,7 +130,7 @@ void BlueResMan::Shutdown()
 
 bool BlueResMan::GetResource( const std::string& path, const std::string& ex, const Be::IID& iid, void** resource, IBlueResManNotifications* notifications )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	CA2W p(path.c_str());
 	CA2W e(ex.c_str());
@@ -142,7 +143,7 @@ bool BlueResMan::GetResource( const std::string& path, const std::string& ex, co
 
 bool BlueResMan::GetResourceW( const std::wstring& path, const std::wstring& ex, const Be::IID& iid, void** resource, IBlueResManNotifications* notifications )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	CCP_ASSERT( resource );
 	
@@ -165,7 +166,7 @@ bool BlueResMan::GetResourceW( const std::wstring& path, const std::wstring& ex,
 
 IBlueResource* BlueResMan::GetResourceHelper( const std::wstring& path, const std::wstring& ex, IBlueResManNotifications* notifications )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	if( path.empty() )
 	{ 
@@ -345,7 +346,7 @@ bool BlueResMan::AddToQueue( BlueResManQueue q, IBlueCallbackMan::CallbackFunc p
 
 void BlueResMan::CancelFromQueue( BlueResManQueue q, uint32_t id )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	CCP_ASSERT( q < BRMQ_COUNT );
 
@@ -438,7 +439,7 @@ void BlueResMan::OnTick( Be::Time realTime, Be::Time simTime, void* cookie )
 
 void BlueResMan::Update()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	CCP_ASSERT( m_threadQueues[BRMQ_MAIN] );
 	CCP_ASSERT( m_threadQueues[BRMQ_BACKGROUND] );
@@ -652,7 +653,7 @@ private:
 
 IRootPtr BlueResMan::LoadObject(const wchar_t* unnormalizedName, Be::LOADOBJECT_INIT_FLAG init /* = LDOBJ_INITIALIZE */)
 {
-	CCP_STATS_SCOPED_TIME(resManLoadObject);
+	BLUE_STATS_SCOPED_TIME(resManLoadObject);
 	CCP_STATS_INC(resManLoadObjectCalls);
 
 	std::wstring nameString;
@@ -843,7 +844,7 @@ void BlueResMan::GetReaderForStream( std::wstring filename, IBlueStream* sourceS
 #if BLUE_WITH_PYTHON
 PyObject* BlueResMan::PyLoadObjectFromYamlString( PyObject* self, PyObject* args )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	PyObject* pyCharStream;
 
@@ -934,7 +935,7 @@ Be::Result<std::string> BlueResMan::GetResourceFromScript( const std::wstring& p
 
 Be::Result<std::string> BlueResMan::Wait()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	unsigned int pendingLoads = GetPendingLoads();
 	unsigned int pendingPrepares = GetPendingPrepares();

@@ -9,6 +9,7 @@
 #include "IBluePython.h"
 #include "ITaskletTimer.h"
 #include <BlueStatistics.h>
+#include "BlueStatsMacros.h"
 #include <Scheduler.h>
 
 static CcpLogChannel_t s_ch = CCP_LOG_DEFINE_CHANNEL( "Synchro" );
@@ -328,7 +329,7 @@ bool Synchro::CatchMain()
 //--------------------------------------------------------------------
 PyObject* Synchro::SleepWallclock(PyObject* millisec)
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	if (CatchMain())
 		return 0;
@@ -353,7 +354,7 @@ PyObject* Synchro::SleepWallclock(PyObject* millisec)
 //--------------------------------------------------------------------
 PyObject* Synchro::SleepSim(PyObject* millisec)
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	if (CatchMain())
 		return 0;
@@ -377,7 +378,7 @@ PyObject* Synchro::SleepSim(PyObject* millisec)
 
 PyObject* Synchro::SleepUntilWallclock(PyObject* dueO)
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	if (CatchMain())
 		return 0;
@@ -400,7 +401,7 @@ PyObject* Synchro::SleepUntilWallclock(PyObject* dueO)
 
 PyObject* Synchro::SleepUntilSim(PyObject* dueO)
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	if (CatchMain())
 		return 0;
@@ -423,7 +424,7 @@ PyObject* Synchro::SleepUntilSim(PyObject* dueO)
 
 PyObject* Synchro::SleepWallclock(int ms, const int64_t &due)
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	// Check millisec constraints
 	if (ms < 0 || ms > 172800000)
@@ -461,7 +462,7 @@ PyObject* Synchro::SleepWallclock(int ms, const int64_t &due)
 
 PyObject* Synchro::SleepSim(int ms, const int64_t &due)
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	// Check millisec constraints
 	if (ms < 0 || ms > 86400000)
@@ -518,7 +519,7 @@ bool Synchro::FindTasklet(PyObject *tasklet, Heap<Sleeper> &sleeperHeap, Sleeper
 
 PyObject* Synchro::Wakeup(PyObject *args)
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	PyObject *tasklet;
 	PyObject *arg = Py_None;
@@ -551,7 +552,7 @@ PyObject* Synchro::Wakeup(PyObject *args)
 //--------------------------------------------------------------------
 PyObject *Synchro::WakeupAtWallclock(PyObject *args)
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	PyObject *tasklet;
 	Be::Time newdue = 0;
@@ -593,7 +594,7 @@ PyObject *Synchro::WakeupAtWallclock(PyObject *args)
 //--------------------------------------------------------------------
 PyObject *Synchro::WakeupAtSim(PyObject *args)
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	PyObject *tasklet;
 	Be::Time newdue = 0;
@@ -638,7 +639,7 @@ PyObject *Synchro::WakeupAtSim(PyObject *args)
 //--------------------------------------------------------------------
 PyObject* Synchro::Yield()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	if (CatchMain())
 		return 0;

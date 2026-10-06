@@ -4,6 +4,7 @@
 #include "BlackReader.h"
 #include "BlueMemStream.h"
 #include <BlueStatistics.h>
+#include "BlueStatsMacros.h"
 #include "IRootReader.h"
 #include "IBlueObjectProxy.h"
 #include "IBluePaths.h"
@@ -88,7 +89,7 @@ IRoot* BlackReader::ReadFromStream( IBlueStream* stream )
 
 bool BlackReader::ReadForCachingFromStream( IBlueStream* stream )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	m_errorMessage = "";
 
@@ -207,7 +208,7 @@ IRoot* BlackReader::CreateObject( unsigned int objectMarker, IRoot * callingProx
 
 IRoot* BlackReader::CreateObjectHelper( unsigned int objectMarker, IRoot * callingProxy, YR_YIELD_BEHAVIOR yieldBehavior )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	CCP_ASSERT( objectMarker < m_objectMarkers.size() );
 
@@ -306,7 +307,7 @@ IRoot* BlackReader::CreateObjectHelper( unsigned int objectMarker, IRoot * calli
 
 IRoot* BlackReader::ReadIRootClass()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	IRootPtr instance;
 
@@ -341,7 +342,7 @@ IRoot* BlackReader::ReadIRootClass()
 	const char* typeName = ReadString();
 
 	{
-		CCP_STATS_ZONE( CCP_STRINGIZE( __FUNCTION__ ) ": CreateInstance" );
+		BLUE_STATS_ZONE( CCP_STRINGIZE( __FUNCTION__ ) ": CreateInstance" );
 
 		// need to create our own using the factory
 		if( !BeClasses->CreateInstanceFromName( typeName, GetIRootIID(), (void**)&instance ) )
@@ -397,7 +398,7 @@ IRoot* BlackReader::ReadIRootClass()
 		IInitializePtr init( BlueCastPtr( instance ) );
 		if( init )
 		{
-			CCP_STATS_ZONE( CCP_STRINGIZE( __FUNCTION__ ) ": Initialize" );
+			BLUE_STATS_ZONE( CCP_STRINGIZE( __FUNCTION__ ) ": Initialize" );
 			init->Initialize();
 		}
 	}
@@ -409,7 +410,7 @@ IRoot* BlackReader::ReadIRootClass()
 
 void BlackReader::ReadMembers( IRoot* instance, uint8_t* streamEnd )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	// Unless IInitialize is present, we look for INotify to pass down
 	// to HandleProperty, to issue notifications to the object.
@@ -481,7 +482,7 @@ const wchar_t* BlackReader::ReadWString()
 
 void BlackReader::ReadList( IList* list )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	list->Remove( -1 );
 
@@ -511,7 +512,7 @@ void BlackReader::ReadList( IList* list )
 
 void BlackReader::ReadDict( IBlueDict* dict )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	int numEntries;
 	ReadValue( numEntries );
@@ -533,7 +534,7 @@ void BlackReader::ReadDict( IBlueDict* dict )
 
 void BlackReader::PatchStringsInStructureList( IBlueStructureList* structureList )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	// Changes string table indexes stored in structure list data to actual
 	// BlueSharedString instances
@@ -572,7 +573,7 @@ void BlackReader::PatchStringsInStructureList( IBlueStructureList* structureList
 
 void BlackReader::ReadStructureList( IBlueStructureList* structureList )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	int32_t numItems;
 	uint16_t structureSize;
@@ -598,7 +599,7 @@ void BlackReader::ReadStructureList( IBlueStructureList* structureList )
 
 void BlackReader::ReadBinaryBlock( ICustomPersist* cPersist, const char* propertyName )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	int32_t size;
 	ReadValue( size );
@@ -615,7 +616,7 @@ void BlackReader::ReadBinaryBlock( ICustomPersist* cPersist, const char* propert
 
 void BlackReader::ReadIRoot( IRoot& obj )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	unsigned int dataSize;
 	ReadValue( dataSize );

@@ -6,6 +6,7 @@
 #include "IBlueResMan.h"
 #include "IBluePaths.h"
 #include <BlueStatistics.h>
+#include "BlueStatsMacros.h"
 #include "IBlueThreadMonitor.h"
 
 #define ASYNCLOADEDRESOURCE_DEBUGGING 0
@@ -46,7 +47,7 @@ BlueAsyncRes::BlueAsyncRes() :
 
 void BlueAsyncRes::Shutdown()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	if( m_isLoading )
 	{
@@ -77,7 +78,7 @@ void BlueAsyncRes::StaticLoadAsync(void *pContext)
 // This normally gets called on the background loading thread
 void BlueAsyncRes::LoadAsync()
 {
-	CCP_STATS_ZONE( "BlueAsyncRes/LoadAsync" );
+	BLUE_STATS_ZONE( "BlueAsyncRes/LoadAsync" );
 
 	ScopedThreadStatus threadStatus( IBlueThreadMonitor::BTS_WORKING );
 
@@ -144,7 +145,7 @@ void BlueAsyncRes::StaticPrepareAsync(void *pContext)
 // This gets called on the main thread
 void BlueAsyncRes::PrepareAsync()
 {
-	CCP_STATS_ZONE( "BlueAsyncRes/PrepareAsync" );
+	BLUE_STATS_ZONE( "BlueAsyncRes/PrepareAsync" );
 
 	BeTimer t;
 
@@ -190,7 +191,7 @@ void BlueAsyncRes::StaticFailedLoadNotify( void* pContext )
 
 void BlueAsyncRes::InitializeImpl( const wchar_t* name, const wchar_t* ext )
 {
-	CCP_STATS_ZONE( "BlueAsyncRes/Initialize" );
+	BLUE_STATS_ZONE( "BlueAsyncRes/Initialize" );
 
 	m_queryArguments.clear();
 	auto query = wcschr( name, L'?' );
@@ -232,7 +233,7 @@ void BlueAsyncRes::InitializeImpl( const wchar_t* name, const wchar_t* ext )
 
 void BlueAsyncRes::CancelPendingLoad()
 {
-	CCP_STATS_ZONE( "BlueAsyncRes/CancelPendingLoad" );
+	BLUE_STATS_ZONE( "BlueAsyncRes/CancelPendingLoad" );
 
 	uint32_t loadCbId = m_loadCbId;
 	if( loadCbId )
