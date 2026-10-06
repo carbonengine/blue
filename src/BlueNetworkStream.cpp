@@ -14,9 +14,9 @@ BlueNetworkStream::BlueNetworkStream()
 	m_readPosition( 0 ),
 	m_size( 0 ),
 	m_receivedSize( 0 ),
-	m_sizeAvailable( 0, 1 ),
+	m_sizeAvailable( "BlueHttpStream::m_sizeAvailable", 0, 1 ),
 	m_dataMutex( "BlueHttpStream", "m_dataMutex" ),
-	m_dataAvailable( 0, 1 ),
+	m_dataAvailable( "BlueHttpStream::m_dataAvailable", 0, 1 ),
 	m_backgroundCallId( 0 ),
 	m_state( UNINITIALIZED ),
 	m_transferResult( CURLE_OK )

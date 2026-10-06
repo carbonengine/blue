@@ -43,7 +43,7 @@ namespace CCP
 	static unsigned long long s_logID = 1;
 
 	static FileMessageCircularBuffer * s_fileLogMessageBuffer = nullptr;
-	static CcpSemaphore s_logMessageWritten;
+	static CcpSemaphore s_logMessageWritten( "FileLogger::s_logMessageWritten" );
 	static CcpThreadHandle_t s_fileLoggingThreadHandle = 0;
 
 	FileMessageCircularBuffer::FileMessageCircularBuffer(unsigned int size) : 
