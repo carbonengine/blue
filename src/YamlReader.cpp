@@ -9,6 +9,7 @@
 #include "Base64.h"
 #include "BlueMemStream.h"
 #include <BlueStatistics.h>
+#include "BlueStatsMacros.h"
 #include "IBluePaths.h"
 #include "IBlueObjectMetadata.h"
 #include <Scheduler.h>
@@ -105,7 +106,7 @@ int YamlReader::YamlReadFromStream( unsigned char* buffer, size_t size, size_t* 
 
 IRoot* YamlReader::ReadFromStream( IBlueStream* stream )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	IRoot* ret = NULL;
 
@@ -158,7 +159,7 @@ IRoot* YamlReader::ReadFromStream( IBlueStream* stream )
 
 bool YamlReader::ReadForCachingFromStream( IBlueStream* stream )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	ClearCachedEvents();
 
@@ -245,7 +246,7 @@ bool YamlReader::ReadForCachingFromStream( IBlueStream* stream )
 
 IRoot* YamlReader::CreateObjectHelper( unsigned int objectMarker, IRoot* callingProxy, YR_YIELD_BEHAVIOR yieldBehavior )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	CCP_ASSERT( objectMarker < m_objectMarkers.size() );
 
@@ -333,14 +334,14 @@ IRoot* YamlReader::CreateObjectHelper( unsigned int objectMarker, IRoot* calling
 
 IRoot* YamlReader::CreateObjectWithYield( unsigned int objectMarker, IRoot* callingProxy )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	return CreateObjectHelper( objectMarker, callingProxy, YR_ALLOW_YIELD );
 }
 
 IRoot* YamlReader::CreateObject( unsigned int objectMarker, IRoot* callingProxy )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	return CreateObjectHelper( objectMarker, callingProxy, YR_DONT_ALLOW_YIELD );
 }
@@ -417,7 +418,7 @@ bool YamlReader::VerifyEvent( yaml_event_type_t expectedType ) const
 
 void YamlReader::GetNextEvent()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 #if CCP_STACKLESS
 	if( m_allowYield && ( m_timeSinceYield.GetSeconds() > m_timeSlice ) )
@@ -538,7 +539,7 @@ void YamlReader::ReadValue( bool& dst )
 
 void YamlReader::ReadBinaryBlock( ICustomPersist* customPersist, const char* propertyName )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 	// The standard way to store binary in text format
 	//http://en.wikipedia.org/wiki/Base64
 
@@ -558,7 +559,7 @@ void YamlReader::ReadBinaryBlock( ICustomPersist* customPersist, const char* pro
 
 void YamlReader::ReadValue( uint64_t& dst )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	GetNextEvent();
 
@@ -577,7 +578,7 @@ void YamlReader::ReadValue( uint64_t& dst )
 
 void YamlReader::ReadValue( int64_t& dst )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	GetNextEvent();
 
@@ -596,7 +597,7 @@ void YamlReader::ReadValue( int64_t& dst )
 
 void YamlReader::SkipValue()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	GetNextEvent();
 	yaml_event_type_t type = m_event->type;
@@ -618,7 +619,7 @@ void YamlReader::SkipValue()
 
 void YamlReader::ReadValue( double& dst )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	GetNextEvent();
 
@@ -669,7 +670,7 @@ void YamlReader::ReadFloat16( uint16_t& dst )
 
 void YamlReader::ReadFloatArray( float* values, size_t count )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	GetNextEvent();
 
@@ -798,7 +799,7 @@ void YamlReader::ReadFloatArray( float* values, size_t count )
 
 const wchar_t* YamlReader::ReadWString()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	GetNextEvent();
 
@@ -833,7 +834,7 @@ const wchar_t* YamlReader::ReadWString()
 
 const char* YamlReader::ReadString()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	GetNextEvent();
 
@@ -858,7 +859,7 @@ const char* YamlReader::ReadString()
 
 bool YamlReader::ReadClsid( Be::Clsid& clsid )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	// Read the type
 	const char* type;
@@ -885,7 +886,7 @@ bool YamlReader::ReadClsid( Be::Clsid& clsid )
 
 void YamlReader::ReadIRoot( IRoot& instance )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	// We have essentially four types of values, SCALARS, ALIASES, SEQUENCES and MAPPINGS.
 	// By reading the next event we can find out which of these we will get.
@@ -928,7 +929,7 @@ void YamlReader::ReadIRoot( IRoot& instance )
 
 uint64_t YamlReader::ExtractAnchorFromMappingStart()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	uint64_t anchorID = 0;
 	const char* anchor = (const char*)m_event->data.mapping_start.anchor;
@@ -949,7 +950,7 @@ uint64_t YamlReader::ExtractAnchorFromMappingStart()
 
 IRoot* YamlReader::ReadIRootClassInternal()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	// We have a class. Can be of any derived type from IRoot.
 
@@ -1025,7 +1026,7 @@ IRoot* YamlReader::ReadIRootClassInternal()
 		IInitializePtr init( BlueCastPtr( instance ) );
 		if( init )
 		{
-			CCP_STATS_ZONE( "Blue/yamlReader/init" );
+			BLUE_STATS_ZONE( "Blue/yamlReader/init" );
 			init->Initialize();
 		}
 	}
@@ -1040,7 +1041,7 @@ IRoot* YamlReader::ReadIRootClassInternal()
 
 IRoot* YamlReader::ReadIRootClass()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	IRoot* instance = NULL;
 	// We have essentially three types of values, SCALARS, SEQUENCES and MAPPINGS.
@@ -1124,7 +1125,7 @@ IRoot* YamlReader::ReadIRootClass()
 
 bool YamlReader::ReadVectorBegin()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	GetNextEvent();
 
@@ -1150,7 +1151,7 @@ bool YamlReader::ReadVectorBegin()
 
 bool YamlReader::ReadVectorNext()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	GetNextEvent();
 
@@ -1167,7 +1168,7 @@ bool YamlReader::ReadVectorNext()
 
 bool YamlReader::ReadVectorEnd()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	if( m_event->type == YAML_SEQUENCE_END_EVENT )
 	{
@@ -1182,7 +1183,7 @@ bool YamlReader::ReadVectorEnd()
 
 void YamlReader::ReadClassType( const char*& type )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	const char* key;
 	ReadScalar( key );
@@ -1198,7 +1199,7 @@ void YamlReader::ReadClassType( const char*& type )
 
 bool YamlReader::ReadMemberName( std::string& name )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	// Pump YAML for scalar event
 	GetNextEvent();
@@ -1218,7 +1219,7 @@ bool YamlReader::ReadMemberName( std::string& name )
 
 void YamlReader::ReadScalar( const char*& scalar )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	// Pump YAML for scalar event
 	GetNextEvent();
@@ -1248,7 +1249,7 @@ bool YamlReader::IsParserExhausted() const
 
 void YamlReader::ParseUntilMatchingEnd( yaml_event_type_t start, yaml_event_type_t end )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	int level = 1;
 	while( level && !IsParserExhausted() )
@@ -1267,21 +1268,21 @@ void YamlReader::ParseUntilMatchingEnd( yaml_event_type_t start, yaml_event_type
 
 void YamlReader::ParseUntilMatchingMappingEnd()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	ParseUntilMatchingEnd( YAML_MAPPING_START_EVENT, YAML_MAPPING_END_EVENT );
 }
 
 void YamlReader::ParseUntilMatchingSequenceEnd()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	ParseUntilMatchingEnd( YAML_SEQUENCE_START_EVENT, YAML_SEQUENCE_END_EVENT );
 }
 
 void YamlReader::ClearCachedEvents()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	for( EventList_t::iterator it = m_eventList.begin(); it != m_eventList.end(); ++it )
 	{
@@ -1340,7 +1341,7 @@ void YamlReader::ReadMetadata( IRoot* instance )
 
 void YamlReader::ReadMembers( IRoot* instance )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	std::string name;
 
@@ -1395,7 +1396,7 @@ size_t YamlReader::GetMemoryUsage()
 
 void YamlReader::ReadList( IList* list )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	list->Remove( -1 );
 
@@ -1430,7 +1431,7 @@ void YamlReader::ReadList( IList* list )
 
 void YamlReader::ReadDict( IBlueDict* dict )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	if( ReadVectorBegin() )
 	{

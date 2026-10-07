@@ -6,6 +6,7 @@
 #include "BlueFileStream.h"
 #include "BlueRemoteStream.h"
 #include <BlueStatistics.h>
+#include "BlueStatsMacros.h"
 #include "IBlueOS.h"
 #include "IBluePaths.h"
 
@@ -37,7 +38,7 @@ bool ResFile::Close()
 
 bool ResFile::OpenW( const wchar_t* filename, bool readOnly )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	if( readOnly )
 	{
@@ -60,7 +61,7 @@ bool ResFile::OpenW( const wchar_t* filename, bool readOnly )
 
 bool ResFile::CreateW( const wchar_t* filename )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	std::wstring filenameOnDisk = BePaths->ResolvePathForWritingW( filename );
 
@@ -85,7 +86,7 @@ bool ResFile::CreateW( const wchar_t* filename )
 
 bool ResFile::FileExistsW( const wchar_t* filename )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	return BePaths->FileExists( filename );
 }
@@ -102,7 +103,7 @@ bool ResFile::PreloadInProgress()
 
 ptrdiff_t ResFile::Read( void* dest, ptrdiff_t count )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	if( m_stream )
 	{
@@ -114,7 +115,7 @@ ptrdiff_t ResFile::Read( void* dest, ptrdiff_t count )
 
 ptrdiff_t ResFile::Write( const void* source, size_t count )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	if( m_stream )
 	{
@@ -126,7 +127,7 @@ ptrdiff_t ResFile::Write( const void* source, size_t count )
 
 ptrdiff_t ResFile::Seek( ptrdiff_t distance, SeekOrigin method )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	if( m_stream )
 	{
@@ -138,7 +139,7 @@ ptrdiff_t ResFile::Seek( ptrdiff_t distance, SeekOrigin method )
 
 ptrdiff_t ResFile::GetPosition()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	if( m_stream )
 	{
@@ -150,7 +151,7 @@ ptrdiff_t ResFile::GetPosition()
 
 ptrdiff_t ResFile::GetSize()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	if( m_stream )
 	{
@@ -162,7 +163,7 @@ ptrdiff_t ResFile::GetSize()
 
 bool ResFile::LockData( void** data, size_t size )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	if( m_stream )
 	{
@@ -174,7 +175,7 @@ bool ResFile::LockData( void** data, size_t size )
 
 bool ResFile::UnlockData()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	if( m_stream )
 	{

@@ -11,6 +11,7 @@
 #include <string>
 
 #include <BlueStatistics.h>
+#include "BlueStatsMacros.h"
 
 //---------------------------------------------------
 // Uncomment this define to turn this files optimization off
@@ -348,7 +349,7 @@ namespace CCP
 
 	void LogToNetwork( CcpLogChannel_t& logObject, CCP::LogType type, unsigned long userData, const char* message )
 	{
-		CCP_STATS_ZONE( __FUNCTION__ );
+		BLUE_STATS_ZONE( __FUNCTION__ );
 		CCP_STATS_INC(networkLoggingMessages);
 		if ( !s_networkLoggingEnabled )
 		{
@@ -394,7 +395,7 @@ namespace CCP
 
 	void CCP::NetworkLoggingThreadFunc( void* arg )
 	{
-		CCP_STATS_ZONE( __FUNCTION__ );
+		BLUE_STATS_ZONE( __FUNCTION__ );
 		int ret = 0;
 		int waitTime = INFINITE;
 

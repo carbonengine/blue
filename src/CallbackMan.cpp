@@ -5,6 +5,7 @@
 #include "CallbackMan.h"
 #include <CcpTime.h>
 #include <BlueStatistics.h>
+#include "BlueStatsMacros.h"
 #include "IBlueThreadMonitor.h"
 
 static CcpLogChannel_t s_ch = CCP_LOG_DEFINE_CHANNEL( "CallbackMan" );
@@ -48,6 +49,8 @@ BlueCallbackMan::BlueCallbackMan( IRoot* lockobj )
 	, m_isRunningOwnThreads( false )
 	, m_threads( "BlueCallbackMan/m_threads" )
 	, m_threadPriority( 0 )
+	, m_alarm( "BlueCallbackMan::m_alarm" )
+	, m_pauseSemaphore( "BlueCallbackMan::m_pauseSemaphore" )
 	, m_pauseCounter( 0 )
 	, m_stop( false )
 	, m_timeInQueueMax( 0 )
@@ -93,7 +96,7 @@ void BlueCallbackMan::SetThreadCount( unsigned int threadCount )
 
 bool BlueCallbackMan::Add( CallbackFunc pCb, void* pContext, uint32_t flags, CcpAtomic<uint32_t>* pId )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	m_queueMutex.Acquire();
 
@@ -137,7 +140,7 @@ bool BlueCallbackMan::Add( CallbackFunc pCb, void* pContext, uint32_t flags, Ccp
 
 	if( m_isRunningOwnThreads )
 	{
-		CCP_STATS_ZONE( CCP_STRINGIZE( __FUNCTION__ ) " signal");
+		BLUE_STATS_ZONE( CCP_STRINGIZE( __FUNCTION__ ) " signal");
 
 		m_alarm.Signal();
 	}
@@ -147,7 +150,7 @@ bool BlueCallbackMan::Add( CallbackFunc pCb, void* pContext, uint32_t flags, Ccp
 
 void BlueCallbackMan::Cancel( uint32_t id )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	m_queueMutex.Acquire();
 
@@ -317,7 +320,7 @@ bool BlueCallbackMan::Update()
 
 bool BlueCallbackMan::UpdateThread( struct ThreadData* td )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	ScopedThreadStatus threadStatus( IBlueThreadMonitor::BTS_WORKING );
 

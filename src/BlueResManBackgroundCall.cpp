@@ -8,6 +8,7 @@
 #include "IBlueResMan.h"
 #include "IBluePython.h"
 #include "BlueStatistics.h"
+#include "BlueStatsMacros.h"
 #include <Scheduler.h>
 
 
@@ -47,7 +48,7 @@ void BlueResManBackgroundCall::AddToQueue()
 
 bool BlueResManBackgroundCall::Wait()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 #if CCP_STACKLESS
 	if( !PyOS->CanYield() )
@@ -91,7 +92,7 @@ bool BlueResManBackgroundCall::Wait()
 
 void BlueResManBackgroundCall::DoTheCall( void* pContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	BlueResManBackgroundCall* args = static_cast<BlueResManBackgroundCall*>( pContext );
 
@@ -108,7 +109,7 @@ void BlueResManBackgroundCall::DoTheCall( void* pContext )
 
 void BlueResManBackgroundCall::MarkAsDone( void* pContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 #if CCP_STACKLESS
 	BlueResManBackgroundCall* args = static_cast<BlueResManBackgroundCall*>( pContext );

@@ -6,6 +6,7 @@
 #include "BlueMemStream.h"
 #include "BlueResManBackgroundCall.h"
 #include <BlueStatistics.h>
+#include "BlueStatsMacros.h"
 #include "IBlueOS.h"
 
 #if CCP_STACKLESS
@@ -120,7 +121,7 @@ void BlueFileStream::Close()
 
 ptrdiff_t BlueFileStream::Read( void* dest, ptrdiff_t count )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	PY_ALLOWTHREADS();
 
@@ -148,7 +149,7 @@ ptrdiff_t BlueFileStream::Read( void* dest, ptrdiff_t count )
 
 ptrdiff_t BlueFileStream::Write( const void* source, size_t count )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	if( m_fileDescriptor == INVALID_FILE )
 	{
@@ -173,7 +174,7 @@ ptrdiff_t BlueFileStream::Write( const void* source, size_t count )
 
 ptrdiff_t BlueFileStream::Seek( ptrdiff_t distance, SeekOrigin method )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	if( CcpLseek( m_fileDescriptor, (long)distance, method ) )
 	{
@@ -191,7 +192,7 @@ ptrdiff_t BlueFileStream::GetPosition()
 
 ptrdiff_t BlueFileStream::GetSize()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	if( m_fileDescriptor == INVALID_FILE )
 	{
@@ -215,7 +216,7 @@ ptrdiff_t BlueFileStream::GetSize()
 
 bool BlueFileStream::LockData( void** data, size_t size )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	if( m_data )
 	{
@@ -254,7 +255,7 @@ bool BlueFileStream::LockData( void** data, size_t size )
 
 bool BlueFileStream::UnlockData()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	if( !m_data )
 	{
@@ -270,7 +271,7 @@ bool BlueFileStream::UnlockData()
 
 Be::Result<std::string> BlueFileStream::ReadEntireFile( const wchar_t* filename, std::string& contents )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	PY_ALLOWTHREADS();
 
@@ -304,7 +305,7 @@ Be::Result<std::string> BlueFileStream::ReadEntireFile( const wchar_t* filename,
 
 Be::Result<std::string> BlueFileStream::ReadEntireFileWithYield( const wchar_t* filename, std::string& contents )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 #if CCP_STACKLESS
 	BackgroundReader* reader = CCP_NEW( "ReadEntireFileWithYield/reader" )

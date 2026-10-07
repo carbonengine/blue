@@ -1,6 +1,7 @@
 // Copyright © 2014 CCP ehf.
 
 #include "StdAfx.h"
+#include "BlueStatsMacros.h"
 
 #ifdef __APPLE__
 #include <CoreFoundation/CoreFoundation.h>
@@ -477,7 +478,7 @@ void BlueOS::DoSlug( float deltaTime )
 
 void BlueOS::ComputeTimeValues(Be::Time* ptrActualTime, float* ptrDeltaT_sec)
 {
-	CCP_STATS_ZONE( "BlueOS/ComputeTimeValues" );
+	BLUE_STATS_ZONE( "BlueOS/ComputeTimeValues" );
 
 
 	// The so-called "ActualTime" is a fairly raw wallclock-time from the system,
@@ -645,7 +646,7 @@ void BlueOS::PumpOS()
 
 void BlueOS::PumpOSInternal()
 {
-	CCP_STATS_ZONE( "BlueOS/PumpOS" );
+	BLUE_STATS_ZONE( "BlueOS/PumpOS" );
 	if( BeCrashes )
 	{
 		char timeStr[64];
@@ -687,7 +688,7 @@ void BlueOS::PumpOSInternal()
 
 	SafeAutoTasklet _at(PyOS->GetTaskletTimer(), TASKLETS[BLUETASKLET].mContext);
 	{
-		CCP_STATS_ZONE( "BlueOS/PumpOS/DoSleep" );
+		BLUE_STATS_ZONE( "BlueOS/PumpOS/DoSleep" );
 		Sleep();
 	}
 
@@ -946,7 +947,7 @@ PyObject* BlueOS::PyStacklessMain( PyObject* args )
 	while( !quit )
 	{
 		{
-			CCP_STATS_ZONE( "Main loop");
+			BLUE_STATS_ZONE( "Main loop");
 #if _WIN32
 			MSG msg;
 			while(PeekMessageW(&msg, 0, 0, 0, PM_REMOVE))

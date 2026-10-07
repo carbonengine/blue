@@ -8,6 +8,7 @@
 #include "IBluePaths.h"
 #include "BlueFileUtil.h"
 #include <BlueStatistics.h>
+#include "BlueStatsMacros.h"
 
 #ifdef __ANDROID__
 #include <errno.h>
@@ -107,7 +108,7 @@ void RemoteFileCache::SetPrefix( const char* prefix )
 
 Be::Result<std::string> RemoteFileCache::GetStreamFromPathW( const wchar_t* resPath, IBlueStream** stream )
 {
-	CCP_STATS_SCOPED_TIME( remoteFileCacheGetStream );
+	BLUE_STATS_SCOPED_TIME( remoteFileCacheGetStream );
 	CCP_STATS_INC( remoteFileCacheGetStreamCount );
 
 	*stream = nullptr;
@@ -228,7 +229,7 @@ Be::Result<std::string> RemoteFileCache::GetStreamFromPathW( const wchar_t* resP
 
 bool VerifyChecksum( IBlueStream* stream, const std::string& expectedChecksum )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	auto size = stream->GetSize();
 	CcpMallocBuffer data( "VerifyChecksum/data", size );
@@ -252,7 +253,7 @@ bool VerifyChecksum( IBlueStream* stream, const std::string& expectedChecksum )
 
 Be::Result<std::string> RemoteFileCache::CreateFileStreamForCachedFile( const std::wstring &cachedName, const std::string& checksum, IBlueStream** stream )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	BlueFileStreamPtr fileStream;
 	fileStream.CreateInstance();
@@ -502,7 +503,7 @@ namespace
 
 void RemoteFileCache::CacheContentsOfRemoteStream( BlueRemoteStream* stream, const std::wstring& cachedName, const wchar_t* resPath )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	// Write contents to a temp file, then rename. This prevents cases where the file
 	// was found but another process was still writing to it.

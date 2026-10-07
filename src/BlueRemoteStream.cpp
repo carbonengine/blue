@@ -4,6 +4,7 @@
 
 #include "BlueRemoteStream.h"
 #include <BlueStatistics.h>
+#include "BlueStatsMacros.h"
 #include "IBlueOS.h"
 #include "IBluePaths.h"
 
@@ -80,7 +81,7 @@ namespace
 #ifdef _WIN32
 void GetIEProxySettings( bool& autoProxy, std::wstring& autoConfigUrl, std::string& explicitProxy, std::string& explicitProxyBypass )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	autoProxy = false;
 	autoConfigUrl = L"";
@@ -134,7 +135,7 @@ void GetIEProxySettings( bool& autoProxy, std::wstring& autoConfigUrl, std::stri
 
 void GetAutoProxyUrl( const char* url, const wchar_t* autoConfigUrl, std::string& proxy, std::string& proxyBypass )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	static HINTERNET http = nullptr;
 	static bool createdHttp = false;
@@ -174,7 +175,7 @@ void GetAutoProxyUrl( const char* url, const wchar_t* autoConfigUrl, std::string
 
 
 	{
-		CCP_STATS_ZONE( __FUNCTION__ "WinHttpGetProxyForUrl");
+		BLUE_STATS_ZONE( __FUNCTION__ "WinHttpGetProxyForUrl");
 
 		WINHTTP_PROXY_INFO proxyInfo;
 		if( WinHttpGetProxyForUrl( http, CA2W( url ), &proxyOptions, &proxyInfo ) )
@@ -203,7 +204,7 @@ void GetAutoProxyUrl( const char* url, const wchar_t* autoConfigUrl, std::string
 
 void ConvertProxySettingToServer( const char* url, const char* setting, std::string& proxyServer )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	if( !strchr( setting, '=' ) )
 	{
@@ -268,7 +269,7 @@ bool FindHeader( const char* headers, const char* name, std::string& value )
 void GetProxySettings( const char* url, CURL* connection )
 {
 #ifdef _WIN32
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	static bool gotIESettings = false;
 	static bool autoProxy = false;
@@ -336,7 +337,7 @@ BlueRemoteStream::~BlueRemoteStream()
 
 bool BlueRemoteStream::Open( const char* resUrl, size_t expectedSize, const wchar_t* niceName )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 #if CCP_STACKLESS
 	Ccp::PyAllowThreads allowThreads( true );
@@ -370,7 +371,7 @@ bool BlueRemoteStream::Open( const char* resUrl, size_t expectedSize, const wcha
 	CURLcode res;
 	
 	{
-		CCP_STATS_ZONE( CCP_STRINGIZE( __FUNCTION__ ) " curl_easy_perform");
+		BLUE_STATS_ZONE( CCP_STRINGIZE( __FUNCTION__ ) " curl_easy_perform");
 		res = curl_easy_perform( connection );
 	}
 
@@ -430,7 +431,7 @@ bool BlueRemoteStream::Open( const char* resUrl, size_t expectedSize, const wcha
 
 ptrdiff_t BlueRemoteStream::Read( void* dest, ptrdiff_t count )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 #ifdef CCP_STACKLESS
 	Ccp::PyAllowThreads allowThreads( true );
@@ -473,7 +474,7 @@ ptrdiff_t BlueRemoteStream::Write( const void* source, size_t count )
 
 ptrdiff_t BlueRemoteStream::Seek( ptrdiff_t distance, SeekOrigin method )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	if( method == SO_BEGIN )
 	{
@@ -515,14 +516,14 @@ ptrdiff_t BlueRemoteStream::GetPosition()
 
 ptrdiff_t BlueRemoteStream::GetSize()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	return m_dataSize;
 }
 
 bool BlueRemoteStream::LockData( void** data, size_t size )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	if( m_data && m_dataSize && ((size == m_dataSize) || (size == 0)) )
 	{
@@ -535,14 +536,14 @@ bool BlueRemoteStream::LockData( void** data, size_t size )
 
 bool BlueRemoteStream::UnlockData()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	return true;
 }
 
 size_t BlueRemoteStream::WriteMemoryCallback( void* contents, size_t size, size_t nmemb, void* context )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	size_t realsize = size * nmemb;
 	BlueRemoteStream* pThis = reinterpret_cast<BlueRemoteStream*>( context );
@@ -551,7 +552,7 @@ size_t BlueRemoteStream::WriteMemoryCallback( void* contents, size_t size, size_
 
 size_t BlueRemoteStream::WriteHeaderCallback( void* contents, size_t size, size_t nmemb, void* context )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	size_t realsize = size * nmemb;
 	BlueRemoteStream* pThis = reinterpret_cast<BlueRemoteStream*>( context );
@@ -567,7 +568,7 @@ int BlueRemoteStream::ProgressCallback( void* context, curl_off_t dltotal, curl_
 
 size_t BlueRemoteStream::ReceiveData( void* data, size_t size )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	m_timeOfLastDataReceived = CcpGetTimestamp();
 
@@ -602,7 +603,7 @@ void BlueRemoteStream::InitializeCurl()
 
 bool BlueRemoteStream::VerifyContents( const char* expectedChecksum )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	if( !m_data )
 	{
@@ -649,7 +650,7 @@ void BlueRemoteStream::TrimHeaders()
 
 CURL* BlueRemoteStream::PrepareConnection( const char* resUrl )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	CURL* connection = s_connectionManager.GetConnection();
 

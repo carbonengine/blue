@@ -4,6 +4,7 @@
 #include "IRootReader.h"
 #include "IBluePersist.h"
 #include <BlueStatistics.h>
+#include "BlueStatsMacros.h"
 
 BLUE_DEFINE_INTERFACE( IRootReader );
 
@@ -302,7 +303,7 @@ void IRootReaderBase::HandlePropertySharedStringW( Be::Var* var, const Be::VarEn
 
 const Be::VarEntry* IRootReaderBase::FindEntry( const char* name, const Be::ClassInfo* type, ssize_t& offs )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	// Loop over all entries - this double loop covers chaining
 	for (; type; offs += type->mOffsetToParent, type = type->mParentClassInfo)

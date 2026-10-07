@@ -85,6 +85,8 @@ public:
 		m_stop( 0 ),
 		m_messages( "BlueSocketLogger::m_messages" ),
 		m_queueMutex( "BlueSocketLogger", "m_queueMutex" ),
+		m_queueSignal( "BlueSocketLogger::m_queueSignal" ),
+		m_queueProcessedSignal( "BlueSocketLogger::m_queueProcessedSignal" ),
 		m_availableMessages( "BlueSocketLogger::m_availableMessages" ),
 		m_availableMutex( "BlueSocketLogger", "m_availableMutex" )
 	{

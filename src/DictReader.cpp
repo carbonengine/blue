@@ -3,6 +3,7 @@
 #include "StdAfx.h"
 
 #include <BlueStatistics.h>
+#include "BlueStatsMacros.h"
 
 #if BLUE_WITH_PYTHON
 
@@ -87,7 +88,7 @@ IRoot* DictReader::CreateObjectInternal()
 		IInitializePtr init( BlueCastPtr( instance ) );
 		if( init )
 		{
-			CCP_STATS_ZONE( CCP_STRINGIZE( __FUNCTION__ ) ": Initialize" );
+			BLUE_STATS_ZONE( CCP_STRINGIZE( __FUNCTION__ ) ": Initialize" );
 			init->Initialize();
 		}
 	}
@@ -147,7 +148,7 @@ void DictReader::ReadIRoot( IRoot& instance )
 		IInitializePtr init( BlueCastPtr( &instance ) );
 		if( init )
 		{
-			CCP_STATS_ZONE( CCP_STRINGIZE( __FUNCTION__ ) ": Initialize" );
+			BLUE_STATS_ZONE( CCP_STRINGIZE( __FUNCTION__ ) ": Initialize" );
 			init->Initialize();
 		}
 	}
@@ -426,7 +427,7 @@ IRoot* DictReader::ReadIRootClass()
 
 void DictReader::ReadList( IList* list )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	if( !PyList_Check( m_currentSource ) )
 	{
@@ -478,7 +479,7 @@ void DictReader::ReadList( IList* list )
 
 void DictReader::ReadDict( IBlueDict* dict )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	// The reason we're expecting a list here rather than a dict has to do with the
 	// way the YamlWriter outputs BlueDicts.
@@ -531,7 +532,7 @@ void DictReader::ReadDict( IBlueDict* dict )
 
 void DictReader::ReadStructureList( IBlueStructureList* structureList )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	if( !PyDict_Check( m_currentSource ) )
 	{
@@ -685,7 +686,7 @@ void DictReader::CleanupAfterCreate()
 
 const Be::VarEntry* DictReader::FindEntry( const char* name, const Be::ClassInfo* type, ssize_t& offs )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	// Loop over all entries - this double loop covers chaining
 	for (; type; offs += type->mOffsetToParent, type = type->mParentClassInfo)

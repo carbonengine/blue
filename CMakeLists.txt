@@ -149,6 +149,7 @@ ccp_add_library(Blue SHARED
     src/BlueSocketLogger.h
     src/BlueStatistics.cpp
     src/BlueStatistics_Blue.cpp
+    src/BlueStatsMacros.h
     src/BlueStreamMethods.cpp
     src/BlueSysInfo.cpp
     src/BlueSysInfo.h

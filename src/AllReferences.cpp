@@ -3,6 +3,7 @@
 #include "StdAfx.h"
 #include "AllReferences.h"
 #include <BlueStatistics.h>
+#include "BlueStatsMacros.h"
 
 
 bool AllReferences::Reference::operator==(const Reference& other) const
@@ -23,7 +24,7 @@ AllReferences::~AllReferences()
 
 bool AllReferences::Update( float sec )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 
 	if( !m_root )
 	{
@@ -139,7 +140,7 @@ bool AllReferences::Update( float sec )
 
 bool AllReferences::CleanReferences( uint64_t endTime )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	BLUE_STATS_ZONE( __FUNCTION__ );
 	uint32_t count = 0;
 	while( m_clearReferencesIt != end( m_references ) )
 	{
