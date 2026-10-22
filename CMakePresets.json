@@ -12,11 +12,12 @@
       "binaryDir": "${sourceDir}/.cmake-build-${presetName}",
       "cacheVariables": {
         "VCPKG_USE_HOST_TOOLS": "ON",
-        "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/vendor/github.com/carbonengine/vcpkg-registry/triplets"
+          "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/vendor/github.com/carbonengine/vcpkg-registry/triplets",
+	  "VCPKG_INSTALL_OPTIONS": "--x-abi-tools-use-exact-versions"
       },
       "environment": {
         "PATH_TO_VCPKG_ROOT": "${sourceDir}/vendor/github.com/microsoft/vcpkg",
-        "VCPKG_FORCE_DOWNLOADED_BINARIES": "1"
+          "VCPKG_FORCE_DOWNLOADED_BINARIES": "1"
       },
       "hidden": true
     },
