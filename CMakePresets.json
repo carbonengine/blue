@@ -16,7 +16,7 @@
       },
       "environment": {
         "PATH_TO_VCPKG_ROOT": "${sourceDir}/vendor/github.com/microsoft/vcpkg",
-        "VCPKG_FORCE_DOWNLOADED_BINARIES": true
+        "VCPKG_FORCE_DOWNLOADED_BINARIES": "1"
       },
       "hidden": true
     },
