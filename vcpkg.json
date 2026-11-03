@@ -31,9 +31,12 @@
     },
     {
       "name": "python3",
-      "version>=": "3.12.9#1"
+      "version>=": "3.12.16"
     },
-    "openssl",
+    {
+      "name": "openssl",
+      "version>=": "3.6.5#2"
+    },
     {
       "name": "libyaml",
       "version>=": "0.2.5#5"
@@ -44,19 +47,7 @@
     },
     {
       "name": "curl",
-      "version>=": "7.78.0",
-      "features": [
-        {
-          "name": "schannel",
-          "platform": "windows"
-        }
-      ]
-    }
-  ],
-  "overrides": [
-    {
-      "name": "openssl",
-      "version": "1.1.1k#8"
+      "version>=": "8.23.0"
     }
   ]
 }
