@@ -60,10 +60,25 @@ Be::Result<std::string> BlackWriter::WriteObjectToStream( const IRoot* root, IBl
 	{
 		const std::wstring& s = *it;
 		size_t len = wcslen( s.c_str() );
-		m_outputStream->Write( s.c_str(), sizeof( wchar_t ) * len );
 
-		wchar_t terminator = 0;
-		m_outputStream->Write( &terminator, sizeof( terminator) );
+		if( sizeof( wchar_t ) == 2 )
+		{
+			m_outputStream->Write( s.c_str(), sizeof( wchar_t ) * len );
+
+			wchar_t terminator = 0;
+			m_outputStream->Write( &terminator, sizeof( terminator) );
+		}
+		else
+		{
+			std::vector<char16_t> narrow( len + 1 );
+			for( size_t i = 0; i < len; ++i )
+			{
+				narrow[i] = static_cast<char16_t>( s[i] );
+			}
+			narrow[len] = 0;
+
+			m_outputStream->Write( narrow.data(), sizeof( char16_t ) * narrow.size() );
+		}
 	}
 
 	// Switch back to the main stream
