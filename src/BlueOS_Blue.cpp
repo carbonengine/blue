@@ -69,7 +69,7 @@ MAP_FUNCTION_AND_WRAP(
 	IsCrashReportingEnabled,
 	"Check if crash report uploading is currently enabled" );
 
-#ifdef _WIN32
+#if _WIN32
 static PyObject *PyGetExeFilePids( PyObject* self, PyObject* args)
 {
 	if( !PyArg_ParseTuple( args, "" ) )
@@ -162,6 +162,18 @@ static PyObject *PyGetExeFilePids( PyObject* self, PyObject* args)
 
     return list;
 }
+
+#elif __linux__
+static PyObject* PyGetExeFilePids( PyObject* self, PyObject* args )
+{
+	//LINUX-TODO
+	PyObject* list = PyList_New( 0 );
+
+	return list;
+}
+
+#else
+#error "Unsupported platform"
 #endif
 #endif
 

@@ -151,7 +151,7 @@ BLUE_INTERFACE(IBlueOS) : public IRoot
 #if _WIN32
     typedef DWORD OsErrorType;
 #else
-    typedef errno_t OsErrorType;
+    typedef int OsErrorType;
 #endif
     
 	struct Error

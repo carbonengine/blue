@@ -231,10 +231,22 @@ class TestYamlWriterAndReader(unittest.TestCase):
     def testYamlReaderDouble(self):
         import locale
         orig = locale.setlocale(locale.LC_ALL)
-        locale.setlocale(locale.LC_ALL, 'fr_FR')
-        self._testYamlReader("myDouble", 222.555);
-        self._testYamlReader("myDouble", -222.555);
-        locale.setlocale(locale.LC_ALL, orig)
+        # A locale that uses ',' as the decimal separator, to prove parsing ignores the user locale.
+        # Names differ by platform; one must be installed or the test fails.
+        for name in ('fr_FR', 'fr_FR.UTF-8', 'fr_FR.utf8', 'French_France'):
+            try:
+                locale.setlocale(locale.LC_ALL, name)
+                break
+            except locale.Error:
+                continue
+        else:
+            self.fail("No French locale available (tried fr_FR, fr_FR.UTF-8, fr_FR.utf8, French_France); "
+                      "install one, e.g. 'locale-gen fr_FR.UTF-8' on Linux")
+        try:
+            self._testYamlReader("myDouble", 222.555)
+            self._testYamlReader("myDouble", -222.555)
+        finally:
+            locale.setlocale(locale.LC_ALL, orig)
 
     def testWriteSharedString(self):
         x = blue.BlueTestHelperAttributes()

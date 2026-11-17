@@ -56,10 +56,17 @@ set(PUBLIC_HEADER_FILES_INCLUDE
     include/stacklessio.h
 )
 
+set(PLATFORM_SOURCES)
+if(APPLE)
+    list(APPEND PLATFORM_SOURCES src/BlueSysInfo.mm src/BlueClipboard.mm src/BlueOS.mm)
+elseif(LINUX)
+    list(APPEND PLATFORM_SOURCES src/BlueSysInfoLinux.cpp src/BlueClipboardLinux.cpp)
+endif()
+
 
 ccp_add_library(Blue SHARED
+    ${PLATFORM_SOURCES}
     src/Logger/Logger.cpp
-    src/BlueSysInfo.mm
     src/Accumulator/PercentileAccumulator.cpp
     src/Accumulator/PercentileAccumulator_Blue.cpp
     src/AllReferences.cpp
@@ -79,7 +86,6 @@ ccp_add_library(Blue SHARED
     src/BlueAsyncRes_Blue.cpp
     src/BlueClipboard.cpp
     src/BlueClipboard.h
-    src/BlueClipboard.mm
     src/BlueClipboard_Blue.cpp
     src/BlueEventToPython.cpp
     src/BlueEventToPython.h
@@ -105,7 +111,6 @@ ccp_add_library(Blue SHARED
     src/BlueNetworkStream_Blue.cpp
     src/BlueOS.cpp
     src/BlueOS.h
-    src/BlueOS.mm
     src/BlueOS_Blue.cpp
     src/BlueObjectBuilderPython.cpp
     src/BlueObjectBuilderPython.h
@@ -381,7 +386,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
             )
             if(WIN32)
                 set_tests_properties(${PYTHON_TEST} PROPERTIES ENVIRONMENT  "PYTHONPATH=$<TARGET_FILE_DIR:Blue>\;${CMAKE_CURRENT_SOURCE_DIR}/python\;${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin\;${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib\;${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin/python\;${Python3_STDLIB};BUILDFLAVOR=$<LOWER_CASE:$<CONFIG>>")
-            elseif (APPLE)
+            elseif (APPLE OR LINUX)
                  set_tests_properties(${PYTHON_TEST} PROPERTIES ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/tests/python:$<TARGET_FILE_DIR:Blue>:${CMAKE_CURRENT_SOURCE_DIR}/python:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib/python3.12/lib-dynload:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin/python:${Python3_STDLIB};BUILDFLAVOR=$<LOWER_CASE:$<CONFIG>>")
             else()
                 message(FATAL_ERROR "Unsupported platform")

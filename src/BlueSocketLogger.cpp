@@ -7,9 +7,12 @@
 #else
 #include <WS2tcpip.h>
 #endif
-#ifdef __APPLE__
+#if __APPLE__
 #include <sys/sysctl.h>
 #include <mach-o/dyld.h>
+#endif
+
+#if __APPLE__ || __linux__
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>

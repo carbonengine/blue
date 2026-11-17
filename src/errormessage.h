@@ -19,6 +19,7 @@
 #define IDS_VERIFYFAIL_INCORRECTCRC 112
 #define IDS_INVALIDMACOS 113
 #define IDS_INVALIDOS 114
+#define IDS_INVALIDLINUX 115
 
 // Exposed so invalid os dialogs can be requested externally to blue
 extern "C" BLUEIMPORT void BlueShowInvalidOSVersionError();

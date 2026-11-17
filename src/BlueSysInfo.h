@@ -52,6 +52,7 @@ public:
 	{
 		WINDOWS,
 		OSX,
+		LINUX
 	};
 
 	enum Suite

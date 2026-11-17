@@ -101,6 +101,7 @@ const Be::VarChooser BlueSysInfoOs_Platform_Chooser[] =
 {
 	{ "WINDOWS", BeCast( BlueSysInfoOs::WINDOWS ), "Windows" },
 	{ "OSX", BeCast( BlueSysInfoOs::OSX ), "OSX" },
+	{ "LINUX", BeCast( BlueSysInfoOs::LINUX ), "LINUX" },
 	{ 0 }
 };
 

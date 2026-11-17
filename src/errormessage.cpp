@@ -265,6 +265,9 @@ std::string GetOSLanguageCode()
 	CFRelease( langs );
 
 	return *result;
+#elif __linux__
+	//LINUX-TODO
+	return en;
 #else
 #error Unsupported platform!
 #endif
@@ -329,6 +332,8 @@ void BlueShowInvalidOSVersionError()
 	std::string localizedMessage = TranslateErrorMessage( "Windows 10 or higher required", IDS_INVALIDWINDOWS );
 #elif __APPLE__
 	std::string localizedMessage = TranslateErrorMessage( "Invalid macOS version", IDS_INVALIDMACOS );
+#elif __linux__
+	std::string localizedMessage = TranslateErrorMessage( "Invalid macOS version", IDS_INVALIDLINUX );
 #else
 	#error Unsupported platform!
 #endif
@@ -365,6 +370,8 @@ void DisplayErrorMessageBox( const char* title, const char* message )
 	{
 		CFRelease( messageRef );
 	}
+#elif __linux__
+	//LINUX-TODO + Test coverage but that might be not possible
 #else
 #error Unsupported platform!
 #endif

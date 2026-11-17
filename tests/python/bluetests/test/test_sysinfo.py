@@ -119,6 +119,8 @@ class TestOs(unittest.TestCase):
             self.assertEqual(blue.sysinfo.os.platform, blue.OsPlatform.WINDOWS)
         elif sys.platform == 'darwin':
             self.assertEqual(blue.sysinfo.os.platform, blue.OsPlatform.OSX)
+        elif sys.platform == 'linux':
+            self.assertEqual(blue.sysinfo.os.platform, blue.OsPlatform.LINUX)
 
     def testOsVersionIsCorrect(self):
         if sys.platform == 'win32':
@@ -126,6 +128,8 @@ class TestOs(unittest.TestCase):
             return
         elif sys.platform == 'darwin':
             platformVersion = [int(x) for x in platform.mac_ver()[0].split('.')]
+        elif sys.platform == 'linux':
+            platformVersion = [int(x) for x in platform.freedesktop_os_release()["VERSION"].split(' ')[0].split('.')]
         else:
             return
         self.assertEqual(blue.sysinfo.os.majorVersion, platformVersion[0])

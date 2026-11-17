@@ -207,11 +207,13 @@ private:
 	// Timer used to determine when to yield, if allowed
 	BeTimer m_timeSinceYield;
 
-#ifdef _WIN32
+#if _WIN32
 	// So user locale doesn't affect parsing results
 	_locale_t m_locale;
-#elif __APPLE__
+#elif __APPLE__ || __linux__
 	locale_t m_locale;
+#else
+#error "Unsupported platform"
 #endif
 
 #if CCP_STACKLESS

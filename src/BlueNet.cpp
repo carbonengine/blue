@@ -626,7 +626,7 @@ bool BlueNet::SendPacketToClientList( const unsigned long long* clientList,
 
 				for( int j=0; j<list[i].num; j++ ) // append in the targets
 				{
-					packer.Pack( list[i].recipients[j] );
+					packer.Pack( (uint64_t)list[i].recipients[j] );
 				}
 
 				ret = SendPacketEx( list[i].transport, data, len, headerData, packer.Finalize(), PRIORITY_HIGH ) ? ret : false;
@@ -1985,7 +1985,7 @@ void BlueNet::Route( BlueNetHeader* header,
 			int forkedCount = header->forkedAddresses; // preserve list but blank the header for retransmit
 			header->forkedAddresses = 0;
 
-			unsigned long long forkTargetClientID;
+			uint64_t forkTargetClientID;
 			for( int i=0; i<forkedCount; i++)
 			{
 				if ( !packer->Unpack(forkTargetClientID) )

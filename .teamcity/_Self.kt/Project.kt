@@ -20,6 +20,7 @@ object Project : Project({
     
     subProject(Windows.Project)
     subProject(MacOS.Project)
+    subProject(Linux.Project)
 
     buildType(PublishToPerforce)
     buildType(SyncToMirror)

@@ -587,7 +587,7 @@ bool BitPackerCore::Pack( const int64_t value )
 	if ( value == 0 )
 	{
 		QueueBits( (char*)&value, 1 );
-		Pack( 0ULL );
+		Pack( (uint64_t)0ULL );
 	}
 	else if ( value > 0 )
 	{
@@ -776,7 +776,7 @@ bool BitPackerCore::Pack( const double value, unsigned int places )
 	QueueBits( (char*)&val, 1 );
 
 	val = (unsigned long long)(value * (double)(1UL<<places));
-	return Pack( val );
+	return Pack( (uint64_t)val );
 }
 
 //------------------------------------------------------------------------------
@@ -822,7 +822,7 @@ bool BitPackerCore::Unpack( int &value )
 }
 
 //------------------------------------------------------------------------------
-bool BitPackerCore::Unpack( unsigned long long &value )
+bool BitPackerCore::Unpack( uint64_t& value )
 {
 	value = 0;
 	DeQueueBits( (char*)&value, 3 );
@@ -836,18 +836,18 @@ bool BitPackerCore::Unpack( unsigned long long &value )
 }
 
 //------------------------------------------------------------------------------
-bool BitPackerCore::Unpack( long long &value )
+bool BitPackerCore::Unpack( int64_t& value )
 {
 	value = 0;
 	DeQueueBits( (char *)&value, 1 );
 	if ( value )
 	{
-		Unpack( (unsigned long long&)value );
+		Unpack( (uint64_t&)value );
 		value = -value;
 	}
 	else
 	{
-		Unpack( (unsigned long long&)value );
+		Unpack( (uint64_t&)value );
 	}
 
 	return Valid();
@@ -1020,7 +1020,7 @@ bool BitPackerCore::Unpack( double &value )
 //------------------------------------------------------------------------------
 bool BitPackerCore::Unpack( double &value, unsigned int places )
 {
-	unsigned long long val = 0;
+	uint64_t val = 0;
 	DeQueueBits( (char*)&val, 1 );
 
 	if ( val == 0 )

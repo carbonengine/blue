@@ -13,7 +13,7 @@
 #include "IBluePaths.h"
 #include "IBlueObjectMetadata.h"
 #include <Scheduler.h>
-#if __APPLE__
+#if __APPLE__ || __linux__
 #include <locale>
 #include <codecvt>
 #elif _WIN32
@@ -54,12 +54,14 @@ YamlReader::YamlReader() :
 	m_doInitialize( true ),
 	m_timeSlice( 0.005f ),
 	m_allowYield( false )
-#ifdef _WIN32
+#if _WIN32
 	,
 	m_locale( _create_locale( LC_ALL, "en_US" ) )
-#elif __APPLE__
+#elif __APPLE__ || __linux__
 	,
 	m_locale( newlocale(LC_ALL_MASK, "C", 0 ) )
+#else
+#error "Unsupported platform"
 #endif
 
 #if CCP_STACKLESS
@@ -86,10 +88,12 @@ YamlReader::~YamlReader()
 			CCP_FREE( *it );
 		}
 	}
-#ifdef _WIN32
+#if _WIN32
 	_free_locale( m_locale );
-#elif __APPLE__
+#elif __APPLE__ || __linux__
 	freelocale( m_locale );
+#else
+#error "Unsupported platform"
 #endif
 }
 
@@ -490,10 +494,14 @@ void YamlReader::ReadValueImpl( T& dst )
 	dst = 0;
 	if( VerifyEvent( YAML_SCALAR_EVENT ) )
 	{
-#ifdef _WIN32
+#if _WIN32
 		dst = _atoi_l( (const char*)m_event->data.scalar.value, m_locale );
-#else
+#elif __APPLE__
 		dst = atoi_l( (const char*)m_event->data.scalar.value, m_locale );
+#elif __linux__
+		dst = atoi( (const char*)m_event->data.scalar.value );
+#else
+#error "Unsupported platform"
 #endif
 	}
 }
@@ -626,10 +634,14 @@ void YamlReader::ReadValue( double& dst )
 	dst = 0.0;
 	if( VerifyEvent( YAML_SCALAR_EVENT ) )
 	{
-#ifdef _WIN32
+#if _WIN32
 		dst = _atof_l( (const char*)m_event->data.scalar.value, m_locale );
-#else
+#elif __APPLE__
 		dst = atof_l( (const char*)m_event->data.scalar.value, m_locale);
+#elif __linux__
+		dst = strtod_l( (const char*)m_event->data.scalar.value, NULL, m_locale );
+#else
+#error "Unsupported platform"
 #endif
 	}
 }
@@ -682,10 +694,14 @@ void YamlReader::ReadFloatArray( float* values, size_t count )
 		{
 			if( m_event->type == YAML_SCALAR_EVENT )
 			{
-#ifdef _WIN32
+#if _WIN32
 				values[i] = (float)_atof_l( (const char*)m_event->data.scalar.value, m_locale );
-#else
+#elif __APPLE__
 				values[i] = (float)atof_l( (const char*)m_event->data.scalar.value, m_locale );
+#elif __linux__
+				values[i] = strtod_l( (const char*)m_event->data.scalar.value, NULL, m_locale );
+#else
+#error "Unsupported platform"
 #endif
 				GetNextEvent();
 			}

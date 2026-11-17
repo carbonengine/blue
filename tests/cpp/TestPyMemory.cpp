@@ -80,11 +80,20 @@ TEST_F( PythonMemoryAllocatorTest, TracksAllocatedAmount )
 
 	auto mem = observed.malloc( observed.ctx, 128 );
 	CcpStatistics::Update();
+#if __linux__
+	// glibc's malloc_usable_size can round up, so only a lower bound holds
+	EXPECT_GE( int64_t( CCP_STATS_GET( pyMemory ) ), initial + 128 ) << "Malloc failed for Domain: " << domain;
+#else
 	EXPECT_EQ( int64_t( CCP_STATS_GET( pyMemory ) ), initial + 128 ) << "Malloc failed for Domain: " << domain;
+#endif
 
 	mem = observed.realloc( observed.ctx, mem, 256 );
 	CcpStatistics::Update();
+#if __linux__
+	EXPECT_GE( int64_t( CCP_STATS_GET( pyMemory ) ), initial + 256 ) << "Realloc failed for Domain: " << domain;
+#else
 	EXPECT_EQ( int64_t( CCP_STATS_GET( pyMemory ) ), initial + 256 ) << "Realloc failed for Domain: " << domain;
+#endif
 
 	observed.free( observed.ctx, mem );
 	CcpStatistics::Update();
@@ -92,7 +101,11 @@ TEST_F( PythonMemoryAllocatorTest, TracksAllocatedAmount )
 
 	mem = observed.calloc( observed.ctx, 4, 256 );
 	CcpStatistics::Update();
+#if __linux__
+	EXPECT_GE( int64_t( CCP_STATS_GET( pyMemory ) ), initial + 1024 ) << "Calloc failed for Domain: " << domain;
+#else
 	EXPECT_EQ( int64_t( CCP_STATS_GET( pyMemory ) ), initial + 1024 ) << "Calloc failed for Domain: " << domain;
+#endif
 
 	observed.free( observed.ctx, mem );
 	CcpStatistics::Update();
