@@ -2,7 +2,7 @@
   "dependencies": [
     {
       "name": "carbon-blueexposure",
-      "version>=": "2.1.1"
+      "version>=": "2.3.0"
     },
     {
       "name": "carbon-core",
@@ -22,7 +22,7 @@
     },
     {
       "name": "carbon-exefile",
-      "version>=": "4.1.1",
+      "version>=": "4.3.0#1",
       "host": true
     },
     {
